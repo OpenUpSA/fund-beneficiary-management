@@ -3,6 +3,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { fetchFormTemplate } from "@/lib/data"
 import Editor from "@/components/form-templates/editor"
+import { revalidateTag } from "next/cache"
 
 interface FormTemplatePageProps {
   params: { form_template_id: string }
@@ -16,6 +17,11 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
     title: `${t('page title')} - ${tM('title')}`,
     description: tM('description')
   }
+}
+
+const dataChanged = async () => {
+  "use server"
+  revalidateTag('form-templates')
 }
 
 export default async function Page({ params }: FormTemplatePageProps) {
@@ -36,7 +42,7 @@ export default async function Page({ params }: FormTemplatePageProps) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Editor formTemplate={formTemplate} />
+      <Editor formTemplate={formTemplate} dataChanged={dataChanged} />
     </div>
   )
 }

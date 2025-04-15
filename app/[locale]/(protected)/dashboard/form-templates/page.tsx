@@ -7,11 +7,11 @@ import { fetchFormTemplates } from "@/lib/data"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Link } from "@/i18n/routing"
-import { Button } from "@/components/ui/button"
-import { PlusIcon } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFormWithRelations } from "@/types/models"
+import { FormDialog } from "@/components/form-templates/form"
+import { revalidateTag } from "next/cache"
 
 
 export async function generateMetadata({ params: { locale }
@@ -25,6 +25,11 @@ export async function generateMetadata({ params: { locale }
     title: `${t('page title')} - ${tM('title')}`,
     description: tM('description')
   }
+}
+
+const dataChanged = async () => {
+  "use server"
+  revalidateTag('form-templates')
 }
 
 export default async function Page() {
@@ -43,10 +48,7 @@ export default async function Page() {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Form Templates</h1>
         <div className="space-x-2">
-          <Button>
-            <span className="hidden md:inline">Add form template</span>
-            <PlusIcon />
-          </Button>
+          <FormDialog callback={dataChanged} />
         </div>
       </div>
       <div className="sm:flex sm:space-x-4 mt-4">

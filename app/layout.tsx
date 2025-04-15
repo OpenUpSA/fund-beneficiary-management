@@ -24,7 +24,7 @@ export default async function Layout({
     <SessionWrapper>
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased text-foreground bg-muted`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased text-foreground bg-muted h-auto`}
         >
           {children}
           <Toaster />

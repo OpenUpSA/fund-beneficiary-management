@@ -151,7 +151,7 @@ export default function DynamicForm({ form, callback }: { form: FormTemplate["fo
         </Card>
       ))}
 
-      <Button type="submit">Submit</Button>
+      <Button className="bg-white text-black dark:bg-black dark:text-white" type="submit">Submit</Button>
     </form>
   )
 }
