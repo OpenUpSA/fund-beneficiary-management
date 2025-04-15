@@ -1,0 +1,204 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_URL_NON_POOLING")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id                       Int                      @id @default(autoincrement())
+  name                     String
+  email                    String                   @unique
+  passwordHash             String
+  approved                 Boolean                  @default(false)
+  role                     Role                     @default(USER)
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  localDevelopmentAgencies LocalDevelopmentAgency[]
+}
+
+model FundingStatus {
+  id                       Int                      @id @default(autoincrement())
+  label                    String                   @unique
+  description              String
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  funds                    Fund[]
+  funders                  Funder[]
+  localDevelopmentAgencies LocalDevelopmentAgency[]
+}
+
+model Funder {
+  id                   Int                @id @default(autoincrement())
+  name                 String             @unique
+  amount               Decimal            @db.Money
+  about                String
+  fundingStatusId      Int
+  fundingStart         DateTime           @default(now())
+  fundingEnd           DateTime           @default(now())
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  funds                Fund[]
+  fundingStatus        FundingStatus      @relation(fields: [fundingStatusId], references: [id])
+  focusAreas           FocusArea[]        @relation("FunderToFocusArea")
+  locations            Location[]         @relation("FunderToLocation")
+  organisationDetailId Int
+  organisationDetail   OrganisationDetail @relation(fields: [organisationDetailId], references: [id])
+  contacts             Contact[]          @relation("ContactToFunder")
+}
+
+model Location {
+  id                       Int                      @id @default(autoincrement())
+  label                    String                   @unique
+  short                    String                   @unique
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  localDevelopmentAgencies LocalDevelopmentAgency[]
+  funds                    Fund[]                   @relation("FundToLocation")
+  funders                  Funder[]                 @relation("FunderToLocation")
+}
+
+model FocusArea {
+  id                       Int                      @id @default(autoincrement())
+  label                    String                   @unique
+  icon                     String
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  funds                    Fund[]                   @relation("FundToFocusArea")
+  funders                  Funder[]                 @relation("FunderToFocusArea")
+  localDevelopmentAgencies LocalDevelopmentAgency[] @relation("LocalDevelopmentAgencyToFocusArea")
+}
+
+model Fund {
+  id                       Int                      @id @default(autoincrement())
+  name                     String
+  about                    String
+  funderId                 Int
+  fundingStatusId          Int
+  amount                   Decimal                  @db.Money
+  fundingStart             DateTime                 @default(now())
+  fundingEnd               DateTime                 @default(now())
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  funder                   Funder                   @relation(fields: [funderId], references: [id])
+  fundingStatus            FundingStatus            @relation(fields: [fundingStatusId], references: [id])
+  focusAreas               FocusArea[]              @relation("FundToFocusArea")
+  localDevelopmentAgencies LocalDevelopmentAgency[] @relation("FundToLocalDevelopmentAgency")
+  locations                Location[]               @relation("FundToLocation")
+  organisationDetailId     Int
+  organisationDetail       OrganisationDetail       @relation(fields: [organisationDetailId], references: [id])
+  contacts                 Contact[]                @relation("ContactToFund")
+}
+
+model DevelopmentStage {
+  id                       Int                      @id @default(autoincrement())
+  label                    String                   @unique
+  description              String
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  localDevelopmentAgencies LocalDevelopmentAgency[]
+}
+
+model LocalDevelopmentAgency {
+  id                         Int                          @id @default(autoincrement())
+  name                       String                       @unique
+  about                      String
+  totalFundingRounds         Int
+  amount                     Decimal                      @db.Money
+  fundingStart               DateTime                     @default(now())
+  fundingEnd                 DateTime                     @default(now())
+  developmentStageId         Int
+  fundingStatusId            Int
+  locationId                 Int
+  programmeOfficerId         Int
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  organisationDetailId       Int
+  developmentStage           DevelopmentStage             @relation(fields: [developmentStageId], references: [id])
+  fundingStatus              FundingStatus                @relation(fields: [fundingStatusId], references: [id])
+  location                   Location                     @relation(fields: [locationId], references: [id])
+  organisationDetail         OrganisationDetail           @relation(fields: [organisationDetailId], references: [id])
+  programmeOfficer           User                         @relation(fields: [programmeOfficerId], references: [id])
+  LocalDevelopmentAgencyForm LocalDevelopmentAgencyForm[]
+  funds                      Fund[]                       @relation("FundToLocalDevelopmentAgency")
+  focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")
+  contacts                   Contact[]                    @relation("ContactToLocalDevelopmentAgency")
+}
+
+model FormStatus {
+  id                          Int                          @id @default(autoincrement())
+  label                       String
+  icon                        String
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
+  localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
+}
+
+model FormTemplate {
+  id                          Int                          @id @default(autoincrement())
+  name                        String                       @unique
+  description                 String
+  form                        Json                         @default("{}")
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
+  localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
+}
+
+model LocalDevelopmentAgencyForm {
+  id                       Int                    @id @default(autoincrement())
+  localDevelopmentAgencyId Int
+  formStatusId             Int
+  formTemplateId           Int
+  formData                 Json
+  title                    String
+  dueDate                  DateTime               @default(now())
+  submitted                DateTime               @default(now())
+  approved                 DateTime               @default(now())
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  formStatus               FormStatus             @relation(fields: [formStatusId], references: [id])
+  formTemplate             FormTemplate           @relation(fields: [formTemplateId], references: [id])
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+}
+
+model OrganisationDetail {
+  id                       Int                      @id @default(autoincrement())
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  contactNumber            String                   @default("")
+  email                    String                   @default("")
+  website                  String                   @default("")
+  addressStreet            String                   @default("")
+  addressComplex           String                   @default("")
+  addressCity              String                   @default("")
+  addressProvince          String                   @default("")
+  coordinates              String                   @default("")
+  LocalDevelopmentAgencies LocalDevelopmentAgency[]
+  Funds                    Fund[]
+  Funders                  Funder[]
+}
+
+model Contact {
+  id                       Int                      @id @default(autoincrement())
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  name                     String
+  contactNumber            String                   @default("")
+  email                    String                   @default("")
+  position                 String                   @default("")
+  info                     String                   @default("")
+  localDevelopmentAgencies LocalDevelopmentAgency[] @relation("ContactToLocalDevelopmentAgency")
+  funders                  Funder[]                 @relation("ContactToFunder")
+  funds                    Fund[]                   @relation("ContactToFund")
+}
+
+enum Role {
+  USER
+  PROGRAMME_OFFICER
+  ADMIN
+}

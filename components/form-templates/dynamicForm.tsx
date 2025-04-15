@@ -1,0 +1,157 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { FieldError, useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { z, ZodObject, ZodRawShape } from "zod"
+
+type FieldType = "string" | "number" | "textarea" | "email";
+
+interface Field {
+  name: string;
+  type: FieldType;
+  label: string;
+  required?: boolean;
+  min?: number;
+}
+
+interface Section {
+  title: string;
+  fields: Field[];
+}
+
+interface Form {
+  title: string;
+  sections: Section[];
+}
+
+const validTypes = ["string", "number", "textarea", "email"] as const;
+
+function createZodSchema(form: Form) {
+  const schema: Record<string, z.ZodTypeAny> = {}
+
+  form.sections.forEach((section: Section) => {
+    section.fields.forEach((field: Field) => {
+      let fieldSchema: z.ZodTypeAny
+
+      if (field.type === "number") {
+        fieldSchema = z.preprocess((val) => {
+          if (typeof val === "string") {
+            const numberVal = parseFloat(val)
+            if (isNaN(numberVal)) {
+              return undefined
+            }
+            return numberVal
+          }
+          return val
+        }, z.number())
+      } else if (field.type === "email") {
+        fieldSchema = z.string().email("Invalid email format")
+      } else {
+        fieldSchema = z.string()
+      }
+
+      if (field.required) {
+        if (fieldSchema instanceof z.ZodString) {
+          fieldSchema = fieldSchema.min(1, `${field.label} is required`)
+        } else if (fieldSchema instanceof z.ZodNumber) {
+          fieldSchema = fieldSchema.refine((val) => val !== undefined, {
+            message: `${field.label} is required`,
+          })
+        }
+      }
+
+      if (field.min !== undefined) {
+        if (fieldSchema instanceof z.ZodString || fieldSchema instanceof z.ZodNumber) {
+          fieldSchema = fieldSchema.min(field.min, `${field.label} must be at least ${field.min}`)
+        }
+      }
+
+      schema[field.name] = fieldSchema
+    })
+  })
+
+  return z.object(schema)
+}
+
+type FormTemplate = {
+  id: number
+  name: string
+  description: string
+  form: Form
+}
+
+function sanitizeForm(formTemplate: FormTemplate["form"]): Form {
+  return {
+    title: formTemplate.title,
+    sections: formTemplate.sections.map((section) => ({
+      title: section.title,
+      fields: section.fields.map((field) => ({
+        ...field,
+        type: validTypes.includes(field.type as FieldType) ? (field.type as FieldType) : "string",
+      })),
+    })),
+  };
+}
+
+type FormData = Record<string, string>;
+
+export default function DynamicForm({ form, callback }: { form: FormTemplate["form"], callback: React.Dispatch<React.SetStateAction<FormData>> }) {
+  const [validationSchema, setValidationSchema] = useState<ZodObject<ZodRawShape> | null>(null);
+
+  useEffect(() => {
+    const sanitizedForm = sanitizeForm(form);
+    const schema = createZodSchema(sanitizedForm);
+    setValidationSchema(schema)
+  }, [form])
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: validationSchema ? zodResolver(validationSchema) : undefined,
+  })
+
+  const onSubmit = (data: Record<string, string>) => {
+    callback(data)
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <h1 className="text-2xl font-bold">{form.title}</h1>
+
+      {form.sections.map((section, sectionIndex) => (
+        <Card key={sectionIndex} className="p-4">
+          <CardHeader className="text-lg font-semibold">{section.title}</CardHeader>
+          <CardContent className="space-y-4">
+            {section.fields.map((field) => (
+              <div key={field.name}>
+                <label className="block text-sm font-medium">{field.label}</label>
+                {field.type === "textarea" ? (
+                  <Textarea
+                    {...register(field.name)}
+                    className={errors[field.name] ? "border-red-500" : ""}
+                  />
+                ) : (
+                  <Input
+                    type={field.type}
+                    {...register(field.name)}
+                    className={errors[field.name] ? "border-red-500" : ""}
+                  />
+                )}
+                {errors[field.name] && (
+                  <p className="text-red-500 text-sm">
+                    {(errors[field.name] as FieldError)?.message || "An error occurred"}
+                  </p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ))}
+
+      <Button type="submit">Submit</Button>
+    </form>
+  )
+}

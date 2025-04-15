@@ -1,0 +1,126 @@
+{
+  "metadata": {
+    "title": "SCAT CRM",
+    "description": "Fund Beneficiary Management by OpenUp"
+  },
+  "Manifest": {
+    "name": "next-intl example"
+  },
+  "navigation": {
+    "Account": "Account",
+    "logo alt": "The Social Change Assistance Trust logo",
+    "Funders": "Funders",
+    "LDAs": "LDAs",
+    "Funds": "Funds",
+    "Applications And Reports": "Applications & Reports",
+    "Media": "Media",
+    "Dashboard": "Dashboard"
+  },
+  "NotFoundPage": {
+    "description": "Please double-check the browser address bar or use the navigation to go to a known page.",
+    "title": "Page not found"
+  },
+  "common": {
+    "Email": "Email",
+    "Password": "Password",
+    "Password confirm": "Confirm password",
+    "Sign In": "Sign In",
+    "Sign in": "Sign in",
+    "Sign up": "Sign up",
+    "Sign Up": "Sign Up",
+    "Sign Out": "Sign Out",
+    "Name": "Name",
+    "Send": "Send",
+    "Home": "Home",
+    "Save Changes": "Save Changes",
+    "roles": {
+      "USER": "User",
+      "PROGRAMME_OFFICER": "Programme Officer",
+      "ADMIN": "Admin"
+    }
+  },
+  "SignInPage": {
+    "page title": "Sign In",
+    "title": "Welcome back",
+    "sub-title": "Sign in to your SCAT CRM account.",
+    "forgot password": "Forgot your password?",
+    "account sign up": "Don't have an account?",
+    "image alt": "Photo of Mount Frere women"
+  },
+  "SignUpPage": {
+    "page title": "Sign Up",
+    "title": "Hello",
+    "sub-title": "Sign up and a SCAT CRM member will review.",
+    "already have account": "Already have an account?",
+    "image alt": "Photo of women working in field"
+  },
+  "SignUpPendingPage": {
+    "page title": "Sign Up Pending",
+    "title": "Pending",
+    "sub-title": "Thank you for signing up. A SCAT CRM member will review.",
+    "image alt": "Photo of women working in field",
+    "already have account": "Already have an account?"
+  },
+  "ForgotPasswordPage": {
+    "page title": "Forgot Password",
+    "title": "Forgot Password",
+    "sub-title": "Enter your email address and we will email you a password reset.",
+    "image alt": "Photo of women working in field",
+    "back to sign in": "Remembered your password?"
+  },
+  "ForgotPasswordResetSentPage": {
+    "page title": "Forgotten Password Reset Sent",
+    "title": "Password Reset Sent",
+    "sub-title": "Please check your email for the password reset. It might be in your spam folder so check there too.",
+    "image alt": "Photo of women working in field"
+  },
+  "DashboardPage": {
+    "page title": "Dashboard"
+  },
+  "LDAsPage": {
+    "page title": "LDAs"
+  },
+  "FundersPage": {
+    "page title": "Funders"
+  },
+  "FundsPage": {
+    "page title": "Funds"
+  },
+  "FormTemplatePage": {
+    "page title": "Form Template"
+  },
+  "UsersPage": {
+    "page title": "Users"
+  },
+  "FunderPage": {
+    "page title": "Funder"
+  },
+  "UserPage": {
+    "page title": "User"
+  },
+  "FundPage": {
+    "page title": "Fund"
+  },
+  "ApplicationsAndReportsPage": {
+    "page title": "Applications & Reports"
+  },
+  "MediaPage": {
+    "page title": "Media"
+  },
+  "AccountPage": {
+    "page title": "Your Account",
+    "title": "Your Account",
+    "Change Password": "Change Password",
+    "Change Avatar": "Change Avatar",
+    "change avatar alt": "Avatar changer",
+    "image alt": "Photo of women working in field"
+  },
+  "AccountChangePasswordPage": {
+    "page title": "Change Password",
+    "title": "Change Your Password",
+    "New Password": "New Password",
+    "New Password Confirm": "Confirm New Password",
+    "Save New Password": "Save New Password",
+    "image alt": "Photo of women working in field"
+  }
+}
