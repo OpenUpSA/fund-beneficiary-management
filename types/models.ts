@@ -48,6 +48,16 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
         }
       }
     }
+    documents: {
+      include: {
+        localDevelopmentAgency: {
+          include: {
+            focusAreas: true,
+            developmentStage: true
+          }
+        }
+      }
+    }
   }
 }>
 
@@ -68,6 +78,17 @@ export type LocalDevelopmentAgencyFormWithRelations = Prisma.LocalDevelopmentAge
 }>
 
 export type MediaFull = Prisma.MediaGetPayload<{
+  include: {
+    localDevelopmentAgency: {
+      include: {
+        focusAreas: true,
+        developmentStage: true
+      }
+    }
+  }
+}>
+
+export type DocumentFull = Prisma.DocumentGetPayload<{
   include: {
     localDevelopmentAgency: {
       include: {

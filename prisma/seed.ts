@@ -719,6 +719,19 @@ async function main() {
         mediaType: 'GRAPHIC'
       }
     })
+
+  await prisma.document.create(
+    {
+      data: {
+        title: "Chairperson’s Report",
+        description: "Notice is hereby given that an Annual General Meeting of Social Change Assistance Trust (SCAT) – Trust Registration No, T70/85 will be hold via Zoom on Wednesday 22 June 2022 from 16h00 to 17h00.",
+        filePath: await uploadFile('db/seed/documents/Chairpersons-Report-2021_v4_20June.pdf'),
+        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
+        documentType: 'DOC',
+        validFromDate: new Date(new Date().setMonth(new Date().getMonth() - 3)),
+        validUntilDate: new Date(new Date().setMonth(new Date().getMonth() + 3))
+      }
+    })
 }
 
 main()

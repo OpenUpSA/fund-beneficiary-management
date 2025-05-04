@@ -272,7 +272,6 @@ export function FormDialog({ funder, fundingStatuses, locations, focusAreas, cal
                   </FormItem>
                 )}
               />
-
             </div>
 
             <div className="flex gap-4">
