@@ -26,7 +26,7 @@ export function DeleteDialog({ document, callback }: Props) {
       headers: { "Content-Type": "application/json" },
     })
     callback()
-    router.push('/dashboard/document')
+    router.push('/dashboard/documents')
     toast({
       title: 'Document deleted.',
       variant: 'warning'
