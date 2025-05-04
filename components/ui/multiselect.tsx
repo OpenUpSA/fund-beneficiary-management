@@ -264,7 +264,10 @@ export const InputMultiSelectTrigger = React.forwardRef<
                     )}
                   >
                     {option?.icon && <option.icon className="mr-1 h-3.5 w-3.5" />}
-                    {option?.label}
+                    <span className="truncate max-w-[15ch] inline-block align-middle">
+
+                      {option?.label}
+                    </span>
                     <X
                       className="ml-1 h-3.5 w-3.5 cursor-pointer text-muted-foreground hover:text-foreground"
                       onClick={(e) => {

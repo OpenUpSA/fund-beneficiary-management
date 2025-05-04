@@ -104,7 +104,7 @@ export function FormDialog({ contact, connectOnCreate, callback }: FormDialogPro
         {contact ?
           <PencilIcon className="hover:cursor-pointer" size={10} />
           :
-          <Button variant="outline"><span className="hidden md:inline">Add Contact</span><PlusIcon /></Button>
+          <Button variant="outline"><span className="hidden md:inline">Add Media</span><PlusIcon /></Button>
         }
       </DialogTrigger>
       <DialogContent className="min-w-[40vw]">

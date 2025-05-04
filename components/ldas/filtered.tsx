@@ -1,17 +1,17 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect";
+import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEffect, useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { AlertTriangleIcon, Clock3Icon } from "lucide-react";
-import { Badge } from "../ui/badge";
-import Link from "next/link";
-import { availableReportingStatuses } from "@/app/data";
-import { LocalDevelopmentAgencyFull } from "@/types/models";
-import { FocusArea, FundingStatus, Location, DevelopmentStage } from "@prisma/client";
-import { DynamicIcon } from "../dynamicIcon";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
+import { AlertTriangleIcon, Clock3Icon } from "lucide-react"
+import { Badge } from "../ui/badge"
+import Link from "next/link"
+import { availableReportingStatuses } from "@/app/data"
+import { LocalDevelopmentAgencyFull } from "@/types/models"
+import { FocusArea, FundingStatus, Location, DevelopmentStage } from "@prisma/client"
+import { DynamicIcon } from "../dynamicIcon"
 
 const getInitials = (name: string) =>
   name.split(" ").map(word => word[0]).join("")
@@ -52,12 +52,12 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
     new Map(ldas.flatMap((lda) => lda.developmentStage).map((item) => [item.id, item])).values()
   )
 
-  const years = new Set<number>();
+  const years = new Set<number>()
 
   ldas.forEach((lda) => {
-    if (lda.fundingStart) years.add(new Date(lda.fundingStart).getFullYear());
-    if (lda.fundingEnd) years.add(new Date(lda.fundingEnd).getFullYear());
-  });
+    if (lda.fundingStart) years.add(new Date(lda.fundingStart).getFullYear())
+    if (lda.fundingEnd) years.add(new Date(lda.fundingEnd).getFullYear())
+  })
 
   const [filteredLDAs, setFilteredLDAs] = useState<LocalDevelopmentAgencyFull[]>(ldas)
 
@@ -75,25 +75,25 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
 
       const locationMatch =
         selectedLocations.length === 0 ||
-        selectedLocations.includes(String(lda.locationId));
+        selectedLocations.includes(String(lda.locationId))
 
       const developmentStageMatch =
         selectedDevelopmentStages.length === 0 ||
-        selectedDevelopmentStages.includes(String(lda.developmentStageId));
+        selectedDevelopmentStages.includes(String(lda.developmentStageId))
 
       const fundingStatusMatch =
         selectedFundingStatuses.length === 0 ||
-        selectedFundingStatuses.includes(String(lda.fundingStatusId));
+        selectedFundingStatuses.includes(String(lda.fundingStatusId))
 
       const searchMatch =
         searchTerm.trim() === "" ||
-        lda.name.toLowerCase().includes(searchTerm.toLowerCase());
+        lda.name.toLowerCase().includes(searchTerm.toLowerCase())
 
-      return focusAreaMatch && fundingStatusMatch && searchMatch && locationMatch && funderMatch && developmentStageMatch;
-    });
+      return focusAreaMatch && fundingStatusMatch && searchMatch && locationMatch && funderMatch && developmentStageMatch
+    })
 
-    setFilteredLDAs(filtered);
-  }, [selectedFocusAreas, selectedFundingStatuses, searchTerm, selectedLocations, selectedFunders, selectedDevelopmentStages, ldas]);
+    setFilteredLDAs(filtered)
+  }, [selectedFocusAreas, selectedFundingStatuses, searchTerm, selectedLocations, selectedFunders, selectedDevelopmentStages, ldas])
 
   return (
     <div className="sm:flex sm:space-x-4 mt-4">

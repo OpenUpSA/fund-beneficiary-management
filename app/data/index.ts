@@ -254,10 +254,6 @@ export const availableMediaTypes = [
     label: "Photographs",
   },
   {
-    value: "Videos",
-    label: "Videos",
-  },
-  {
     value: "Graphics",
     label: "Graphics",
   }

@@ -1,5 +1,6 @@
 import { z } from "zod"
 export const RoleEnum = z.enum(["USER", "PROGRAMME_OFFICER", "ADMIN"])
+export const MediaTypeEnum = z.enum(["PHOTOGRAPH", "GRAPHIC"])
 
 export const UserFormSchema = (requirePassword: boolean) =>
   z

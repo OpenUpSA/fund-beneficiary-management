@@ -37,6 +37,14 @@
       "USER": "User",
       "PROGRAMME_OFFICER": "Programme Officer",
       "ADMIN": "Admin"
+    },
+    "mediaTypes": {
+      "PHOTOGRAPH": "Photograph",
+      "GRAPHIC": "Graphic"
+    },
+    "mediaTypesPlural": {
+      "PHOTOGRAPH": "Photographs",
+      "GRAPHIC": "Graphics"
     }
   },
   "SignInPage": {

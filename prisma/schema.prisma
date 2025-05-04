@@ -128,6 +128,7 @@ model LocalDevelopmentAgency {
   funds                      Fund[]                       @relation("FundToLocalDevelopmentAgency")
   focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")
   contacts                   Contact[]                    @relation("ContactToLocalDevelopmentAgency")
+  media                      Media[]
 }
 
 model FormStatus {
@@ -197,8 +198,25 @@ model Contact {
   funds                    Fund[]                   @relation("ContactToFund")
 }
 
+model Media {
+  id                       Int                    @id @default(autoincrement())
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  title                    String
+  description              String
+  filePath                 String
+  mediaType                MediaType              @default(PHOTOGRAPH)
+  localDevelopmentAgencyId Int
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+}
+
 enum Role {
   USER
   PROGRAMME_OFFICER
   ADMIN
+}
+
+enum MediaType {
+  PHOTOGRAPH
+  GRAPHIC
 }
