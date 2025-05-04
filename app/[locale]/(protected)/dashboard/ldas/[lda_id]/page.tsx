@@ -139,13 +139,18 @@ export default async function Page({ params }: LDAPageProps) {
           </div>
         </TabsContent>
         <TabsContent value="documents">
-          <FilteredDocuments />
+          <FilteredDocuments
+            documents={lda.documents}
+            lda={lda}
+            dataChanged={dataChanged}
+          />
         </TabsContent>
         <TabsContent value="media">
           <FilteredMedia
             media={lda.media}
             lda={lda}
-            dataChanged={dataChanged} />
+            dataChanged={dataChanged}
+          />
         </TabsContent>
       </Tabs>
     </div >

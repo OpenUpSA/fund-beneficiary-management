@@ -9,7 +9,8 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   MapPinHouse,
-  Users
+  Users,
+  Files
 } from "lucide-react"
 
 import { NavGroup } from "@/components/nav-group"
@@ -70,6 +71,11 @@ const data = {
       url: '/dashboard/media',
       title: 'Media',
       icon: Images
+    },
+    {
+      url: '/dashboard/documents',
+      title: 'Documents',
+      icon: Files
     }
   ],
 }

@@ -45,6 +45,14 @@
     "mediaTypesPlural": {
       "PHOTOGRAPH": "Photographs",
       "GRAPHIC": "Graphics"
+    },
+    "documentTypes": {
+      "DOC": "Document",
+      "SPREADSHEET": "Spreadsheet"
+    },
+    "documentTypesPlural": {
+      "DOC": "Documents",
+      "SPREADSHEET": "Spreadsheets"
     }
   },
   "SignInPage": {
@@ -108,6 +116,12 @@
   },
   "FundPage": {
     "page title": "Fund"
+  },
+  "DocumentsPage": {
+    "page title": "Documents"
+  },
+  "DocumentPage": {
+    "page title": "Document"
   },
   "ApplicationsAndReportsPage": {
     "page title": "Applications & Reports"

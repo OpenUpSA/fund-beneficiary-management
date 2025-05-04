@@ -23,7 +23,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
       },
       organisationDetail: true,
       contacts: true,
-      media: true
+      media: true,
+      documents: true
     },
   })
 

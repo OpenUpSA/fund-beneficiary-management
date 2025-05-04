@@ -145,7 +145,7 @@ export default async function Page({ params }: FunderPageProps) {
           </div>
         </TabsContent>
         <TabsContent value="documents">
-          <FilteredDocuments />
+          <FilteredDocuments dataChanged={dataChanged} documents={[]} />
         </TabsContent>
         <TabsContent value="media">
           <FilteredMedia dataChanged={dataChanged} media={[]} />

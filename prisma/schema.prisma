@@ -129,6 +129,7 @@ model LocalDevelopmentAgency {
   focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")
   contacts                   Contact[]                    @relation("ContactToLocalDevelopmentAgency")
   media                      Media[]
+  documents                  Document[]
 }
 
 model FormStatus {
@@ -210,6 +211,20 @@ model Media {
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 }
 
+model Document {
+  id                       Int                    @id @default(autoincrement())
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  title                    String
+  description              String
+  filePath                 String
+  documentType             DocumentType           @default(DOC)
+  validFromDate            DateTime
+  validUntilDate           DateTime
+  localDevelopmentAgencyId Int
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+}
+
 enum Role {
   USER
   PROGRAMME_OFFICER
@@ -219,4 +234,9 @@ enum Role {
 enum MediaType {
   PHOTOGRAPH
   GRAPHIC
+}
+
+enum DocumentType {
+  DOC
+  SPREADSHEET
 }
