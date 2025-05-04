@@ -1,10 +1,11 @@
 import { getTranslations } from "next-intl/server"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
-import { PlusIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 import { FilteredMedia } from "@/components/media/filtered"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { fetchAllMedia, fetchLocalDevelopmentAgencies } from "@/lib/data"
+import { FormDialog } from "@/components/media/form"
+import { revalidateTag } from "next/cache"
 
 export async function generateMetadata({ params: { locale }
 }: Readonly<{
@@ -19,27 +20,36 @@ export async function generateMetadata({ params: { locale }
   }
 }
 
-export default function Page() {
+const dataChanged = async () => {
+  "use server"
+  revalidateTag('ldas')
+}
+
+export default async function Page() {
+  const media = await fetchAllMedia()
+  const ldas = await fetchLocalDevelopmentAgencies()
+
   return (
     <div>
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
             <SidebarTrigger />
-            <BreadcrumbPage>Applications &amp; Reports</BreadcrumbPage>
+            <BreadcrumbPage>Media</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Media</h1>
         <div className="space-x-2">
-          <Button>
-            <span className="hidden md:inline">Add media</span>
-            <PlusIcon />
-          </Button>
+          <FormDialog
+            ldas={ldas}
+            callback={dataChanged} />
         </div>
       </div>
-      <FilteredMedia />
+      <FilteredMedia
+        media={media}
+        dataChanged={dataChanged} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFull } from "@/types/models"
+import { FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFull, MediaFull } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, User } from "@prisma/client"
 
 export async function fetchFunders() {
@@ -73,5 +73,15 @@ export async function fetchFormTemplate(form_template_id: string): Promise<FormT
 
 export async function fetchFormTemplates(): Promise<FormTemplateWithRelations[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template`)
+  return res.json()
+}
+
+export async function fetchMedia(media_id: string): Promise<MediaFull> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/${media_id}`, { next: { tags: ['ldas'] } })
+  return res.json()
+}
+
+export async function fetchAllMedia(): Promise<MediaFull[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`, { next: { tags: ['ldas'] } })
   return res.json()
 }

@@ -1,8 +1,33 @@
 import { PrismaClient } from '@prisma/client'
 import { createHash } from '@/lib/hash'
+import imagekit from "@/lib/imagekit"
+import fs from 'fs'
+import path from 'path'
+
+
+// Uploads to ImageKit storage and returns the URL
+// Test/seed files in @/db/seed e.g. 
+// @/db/seed/media/cdra_legacy.jpg
+const uploadFile = async (filename: string) => {
+  const filePath = path.join(process.cwd(), filename)
+  const fileBuffer = fs.readFileSync(filePath)
+  const fileBase64 = fileBuffer.toString("base64");
+  const fileName = filename.split('/').pop()
+
+  if (!fileName) throw new Error('Invalid filename')
+
+  const uploadResponse = await imagekit.upload({
+    file: fileBase64,
+    fileName: fileName,
+  })
+
+  return uploadResponse.filePath
+}
 
 const prisma = new PrismaClient()
+
 async function main() {
+  await prisma.media.deleteMany()
   await prisma.localDevelopmentAgencyForm.deleteMany()
   await prisma.localDevelopmentAgency.deleteMany()
   await prisma.developmentStage.deleteMany()
@@ -26,7 +51,7 @@ async function main() {
       }
     })
 
-  const userSihle = await prisma.user.create(
+  await prisma.user.create(
     {
       data: {
         email: 'sihle@test.test',
@@ -36,7 +61,7 @@ async function main() {
       }
     })
 
-  const userConstance = await prisma.user.create(
+  await prisma.user.create(
     {
       data: {
         email: 'constance@test.test',
@@ -652,7 +677,7 @@ async function main() {
       }
     })
 
-  const localDevelopmentAgencyFormGrantFundingApplication = await prisma.localDevelopmentAgencyForm.create(
+  await prisma.localDevelopmentAgencyForm.create(
     {
       data: {
         formStatusId: formStatusApproved.id,
@@ -660,6 +685,38 @@ async function main() {
         formTemplateId: formTemplateGrantFundingApplication.id,
         formData: {},
         title: 'Grant Funding Application (2024)'
+      }
+    })
+
+  await prisma.media.create(
+    {
+      data: {
+        title: "The CDRA Legacy",
+        description: "SCAT is grateful for the legacy of the Community Development Resource Association (CDRA) which we are benefitting from in many ways. SCAT has been gifted CDRA House at 52-54 Francis Street in Woodstock, Cape Town.",
+        filePath: await uploadFile('db/seed/media/cdra_legacy.jpg'),
+        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
+      }
+    })
+
+  await prisma.media.create(
+    {
+      data: {
+        title: "Community Mapping",
+        description: "So the last blog made me reflect on community mapping experiences and if it would be a good idea to share a way to do it. I decided that it would be.",
+        filePath: await uploadFile('db/seed/media/community_mapping.jpg'),
+        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
+        mediaType: 'PHOTOGRAPH'
+      }
+    })
+
+  await prisma.media.create(
+    {
+      data: {
+        title: "The Basic Income Grant Campaign",
+        description: "SCAT is part of a group of civil society organizations that have seen a need to robustly engage our government about the socio – economic situation of the South Africa citizens who have little or no income.",
+        filePath: await uploadFile('db/seed/media/the_basic_income_grant_campaign.jpg'),
+        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
+        mediaType: 'GRAPHIC'
       }
     })
 }
