@@ -8,9 +8,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { AlertTriangleIcon, BuildingIcon, Clock3Icon } from "lucide-react"
-import { Badge } from "../ui/badge"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { DynamicIcon } from '../dynamicIcon'
+import { DynamicIcon } from "@/components/dynamicIcon"
 import { format } from "date-fns"
 import { FundingStatus, FocusArea } from '@prisma/client'
 
@@ -135,7 +135,7 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders }) => 
                 <TableHead className="text-nowrap">Start date</TableHead>
                 <TableHead className="text-nowrap">End date</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>LDAs</TableHead>
+                <TableHead><abbr title="Local Development Agencies">LDAs</abbr></TableHead>
                 <TableHead>Overdue</TableHead>
                 <TableHead className="text-nowrap">Focus Areas</TableHead>
               </TableRow>

@@ -1,13 +1,35 @@
-import { PersonStandingIcon, ThermometerIcon, UtensilsIcon, ScanSearchIcon, TrophyIcon, LeafIcon, PlaneIcon } from "lucide-react"
+import {
+  CalendarIcon,
+  CheckIcon,
+  ClockIcon,
+  LeafIcon,
+  PauseIcon,
+  PersonStandingIcon,
+  PlaneIcon,
+  PlayIcon,
+  ScanSearchIcon,
+  ThermometerIcon,
+  TriangleAlertIcon,
+  TrophyIcon,
+  UtensilsIcon,
+  XIcon,
+} from "lucide-react"
 
 const iconMap = {
-  Thermometer: ThermometerIcon,
-  PersonStanding: PersonStandingIcon,
-  Utensils: UtensilsIcon,
-  Trophy: TrophyIcon,
+  Calendar: CalendarIcon,
+  Check: CheckIcon,
+  Clock: ClockIcon,
   Leaf: LeafIcon,
-  Transport: PlaneIcon
-
+  Pause: PauseIcon,
+  PersonStanding: PersonStandingIcon,
+  Plane: PlaneIcon,
+  Play: PlayIcon,
+  ScanSearch: ScanSearchIcon,
+  Thermometer: ThermometerIcon,
+  TriangleAlert: TriangleAlertIcon,
+  Triophy: TrophyIcon,
+  Utensils: UtensilsIcon,
+  X: XIcon
 } as const
 
 // Usage example:

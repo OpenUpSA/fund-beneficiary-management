@@ -8,26 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { z, ZodObject, ZodRawShape } from "zod"
-
-type FieldType = "string" | "number" | "textarea" | "email";
-
-interface Field {
-  name: string;
-  type: FieldType;
-  label: string;
-  required?: boolean;
-  min?: number;
-}
-
-interface Section {
-  title: string;
-  fields: Field[];
-}
-
-interface Form {
-  title: string;
-  sections: Section[];
-}
+import { Field, FieldType, Form, Section } from "@/types/forms"
 
 const validTypes = ["string", "number", "textarea", "email"] as const;
 

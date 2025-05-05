@@ -71,7 +71,7 @@ async function main() {
       }
     })
 
-  const formStatusPaused = await prisma.formStatus.create(
+  await prisma.formStatus.create(
     {
       data: { label: 'Paused', icon: 'Pause' }
     }
@@ -83,31 +83,31 @@ async function main() {
     }
   )
 
-  const formStatusPending = await prisma.formStatus.create(
+  await prisma.formStatus.create(
     {
       data: { label: 'Pending', icon: 'Clock' }
     }
   )
 
-  const formStatusUpcoming = await prisma.formStatus.create(
+  await prisma.formStatus.create(
     {
       data: { label: 'Upcoming', icon: 'Calendar' }
     }
   )
 
-  const formStatusOverdue = await prisma.formStatus.create(
+  await prisma.formStatus.create(
     {
       data: { label: 'Overdue', icon: 'TriangleAlert' }
     }
   )
 
-  const formStatusUnderway = await prisma.formStatus.create(
+  await prisma.formStatus.create(
     {
       data: { label: 'Underway', icon: 'Play' }
     }
   )
 
-  const formStatusRejected = await prisma.formStatus.create(
+  await prisma.formStatus.create(
     {
       data: { label: 'Rejected', icon: 'X' }
     }

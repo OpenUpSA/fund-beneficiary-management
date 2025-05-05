@@ -58,7 +58,7 @@ export default async function Page() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-full">Template Name</TableHead>
-                  <TableHead>LDAs</TableHead>
+                  <TableHead><abbr title="Local Development Agencies">LDAs</abbr></TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Usage</TableHead>
                 </TableRow>
