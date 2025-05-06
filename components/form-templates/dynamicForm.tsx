@@ -8,28 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { z, ZodObject, ZodRawShape } from "zod"
-
-type FieldType = "string" | "number" | "textarea" | "email";
-
-interface Field {
-  name: string;
-  type: FieldType;
-  label: string;
-  required?: boolean;
-  min?: number;
-}
-
-interface Section {
-  title: string;
-  fields: Field[];
-}
-
-interface Form {
-  title: string;
-  sections: Section[];
-}
-
-const validTypes = ["string", "number", "textarea", "email"] as const;
+import { Field, FieldType, Form, Section, FormData, validTypes } from "@/types/forms"
 
 function createZodSchema(form: Form) {
   const schema: Record<string, z.ZodTypeAny> = {}
@@ -95,26 +74,48 @@ function sanitizeForm(formTemplate: FormTemplate["form"]): Form {
         type: validTypes.includes(field.type as FieldType) ? (field.type as FieldType) : "string",
       })),
     })),
-  };
+  }
 }
 
-type FormData = Record<string, string>;
-
-export default function DynamicForm({ form, callback }: { form: FormTemplate["form"], callback: React.Dispatch<React.SetStateAction<FormData>> }) {
-  const [validationSchema, setValidationSchema] = useState<ZodObject<ZodRawShape> | null>(null);
+export default function DynamicForm({
+  form,
+  setData,
+  saveData,
+  defaultValues = {},
+}: {
+  form: FormTemplate["form"]
+  setData?: React.Dispatch<React.SetStateAction<FormData>>
+  saveData?: (data: FormData) => void
+  defaultValues?: FormData
+}) {
+  const [validationSchema, setValidationSchema] = useState<ZodObject<ZodRawShape> | null>(null)
 
   useEffect(() => {
-    const sanitizedForm = sanitizeForm(form);
-    const schema = createZodSchema(sanitizedForm);
+    const sanitizedForm = sanitizeForm(form)
+    const schema = createZodSchema(sanitizedForm)
     setValidationSchema(schema)
   }, [form])
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: validationSchema ? zodResolver(validationSchema) : undefined,
+    defaultValues,
   })
 
+  useEffect(() => {
+    const handler = () => {
+      handleSubmit(onSubmit)()
+    }
+    window.addEventListener("submit-dynamic-form", handler)
+    return () => window.removeEventListener("submit-dynamic-form", handler)
+  }, [handleSubmit])
+
   const onSubmit = (data: Record<string, string>) => {
-    callback(data)
+    if (setData) {
+      setData(data)
+    }
+    if (saveData) {
+      saveData(data)
+    }
   }
 
   return (
@@ -132,6 +133,7 @@ export default function DynamicForm({ form, callback }: { form: FormTemplate["fo
                   <Textarea
                     {...register(field.name)}
                     className={errors[field.name] ? "border-red-500" : ""}
+                    rows={8}
                   />
                 ) : (
                   <Input
@@ -151,7 +153,9 @@ export default function DynamicForm({ form, callback }: { form: FormTemplate["fo
         </Card>
       ))}
 
-      <Button className="bg-white text-black dark:bg-black dark:text-white" type="submit">Submit</Button>
+      {!saveData && <Button className="bg-white text-black dark:bg-black dark:text-white" type="submit">
+        Submit
+      </Button>}
     </form>
   )
 }

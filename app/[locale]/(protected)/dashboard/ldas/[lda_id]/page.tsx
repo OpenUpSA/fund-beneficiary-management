@@ -3,7 +3,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { FilteredApplicationsAndReports } from "@/components/applications-and-reports/filtered"
+import { FilteredLDAForms } from "@/components/lda-forms/filtered"
 import { FilteredMedia } from "@/components/media/filtered"
 
 import { OrganisationDetails } from "@/components/organisations/details"
@@ -12,11 +12,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { FilteredDocuments } from "@/components/documents/filtered"
 import { Overview } from "@/components/ldas/overview"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { fetchDevelopmentStages, fetchFocusAreas, fetchFundingStatuses, fetchFunds, fetchLocalDevelopmentAgency, fetchLocations, fetchUsers } from "@/lib/data"
+import { fetchDevelopmentStages, fetchFocusAreas, fetchFormStatuses, fetchFormTemplates, fetchFundingStatuses, fetchFunds, fetchLocalDevelopmentAgency, fetchLocalDevelopmentAgencyFormsForLDA, fetchLocations, fetchUsers } from "@/lib/data"
 import { FormDialog } from "@/components/ldas/form"
 import { FormDialog as OrganisationDetailFormDialog } from "@/components/organisations/form"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
 import { revalidateTag } from "next/cache"
+import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/types/models"
+import { FormStatus } from "@prisma/client"
 
 
 export async function generateMetadata({ params: { locale }
@@ -45,6 +47,10 @@ export default async function Page({ params }: LDAPageProps) {
   const focusAreas = await fetchFocusAreas()
   const developmentStages = await fetchDevelopmentStages()
   const programmeOfficers = await fetchUsers()
+
+  const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
+  const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchLocalDevelopmentAgencyFormsForLDA(String(lda.id))
+  const formStatuses: FormStatus[] = await fetchFormStatuses()
 
   const dataChanged = async () => {
     "use server"
@@ -100,7 +106,13 @@ export default async function Page({ params }: LDAPageProps) {
           <Overview lda={lda} />
         </TabsContent>
         <TabsContent value="applicationsAndReports">
-          <FilteredApplicationsAndReports />
+          <FilteredLDAForms
+            formTemplates={formTemplates}
+            formStatuses={formStatuses}
+            lda={lda}
+            ldaForms={ldaForms}
+            dataChanged={dataChanged}
+          />
         </TabsContent>
         <TabsContent value="contact">
           <div className="sm:flex gap-4 mt-4">

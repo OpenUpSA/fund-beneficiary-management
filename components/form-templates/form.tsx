@@ -94,14 +94,14 @@ export function FormDialog({ formTemplate, callback }: FormDialogProps) {
             <PencilIcon />
           </>
             : <>
-              <span className="hidden md:inline">Add form template</span>
+              <span className="hidden md:inline">Create form template</span>
               <PlusIcon />
             </>}
         </Button>
       </DialogTrigger>
       <DialogContent className="min-w-[40vw]">
         <DialogHeader>
-          <DialogTitle>{formTemplate ? "Edit" : "Add"} form template</DialogTitle>
+          <DialogTitle>{formTemplate ? "Edit" : "Create"} form template</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

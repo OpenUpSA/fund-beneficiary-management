@@ -1,0 +1,127 @@
+import { getTranslations } from "next-intl/server"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import { fetchFormStatuses, fetchFormTemplates, fetchLDAForm } from "@/lib/data"
+import { revalidateTag } from "next/cache"
+import { FormDialog } from "@/components/lda-forms/form"
+import { DeleteDialog } from "@/components/lda-forms/delete"
+import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/types/models"
+import { FormStatus } from "@prisma/client"
+import { Card, CardContent } from "@/components/ui/card"
+import { format } from "date-fns"
+import LDAFormDataView from "@/components/lda-forms/data-view"
+import { Form } from "@/types/forms"
+import { Button } from "@/components/ui/button"
+import { Link } from "@/i18n/routing"
+import { NotebookPenIcon } from "lucide-react"
+
+interface FormTemplatePageProps {
+  params: { lda_form_id: string }
+}
+
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>) {
+  const tM = await getTranslations({ locale, namespace: 'metadata' })
+  const t = await getTranslations({ locale, namespace: 'FormTemplatePage' })
+
+  return {
+    title: `${t('page title')} - ${tM('title')}`,
+    description: tM('description')
+  }
+}
+
+const dataChanged = async () => {
+  "use server"
+  revalidateTag('ldas')
+}
+
+export default async function Page({ params }: FormTemplatePageProps) {
+  const { lda_form_id } = params
+  const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
+  const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
+  const formStatuses: FormStatus[] = await fetchFormStatuses()
+
+  return (
+    <div>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <SidebarTrigger />
+            <BreadcrumbLink href="/dashboard/applications-reports">Applications &amp; Reports</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{ldaForm.title}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div>
+        <div className="flex flex-wrap items-center justify-between mb-4">
+          <h1 className="text-xl md:text-2xl font-semibold">{ldaForm.title}</h1>
+          <div className="space-x-2">
+            <Button asChild>
+              <Link href={`/dashboard/applications-reports/${ldaForm.id}/fill/`}>
+                <span className="hidden md:inline">Fill</span>
+                <NotebookPenIcon />
+              </Link>
+            </Button>
+            <FormDialog
+              formTemplates={formTemplates}
+              formStatuses={formStatuses}
+              ldaForm={ldaForm}
+              callback={dataChanged} />
+            <DeleteDialog
+              ldaForm={ldaForm}
+              callback={dataChanged} />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-4">
+        <div className="sm:flex gap-4">
+          <Card className="w-full sm:w-[40%]">
+            <CardContent className="pt-2 space-y-2 text-sm py-4">
+              <div className="flex justify-between">
+                <span className="font-medium">Form Template:</span>
+                <span>{ldaForm.formTemplate.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium"><abbr title="Local Development Agency">LDA</abbr>:</span>
+                <span>{ldaForm.localDevelopmentAgency.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Form Status:</span>
+                <span>{ldaForm.formStatus.label}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Submitted:</span>
+                <span>{format(ldaForm.submitted, 'PPpp')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Due:</span>
+                <span>{format(ldaForm.dueDate, 'PPpp')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Approved:</span>
+                <span>{format(ldaForm.approved, 'PPpp')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Created At:</span>
+                <span>{format(ldaForm.createdAt, 'PPpp')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Updated At:</span>
+                <span>{format(ldaForm.updatedAt, 'PPpp')}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="w-full">
+            <CardContent className="p-5">
+              {ldaForm.formTemplate.form && <LDAFormDataView
+                data={ldaForm.formData as Record<string, string>}
+                form={ldaForm.formTemplate.form as unknown as Form} />}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}

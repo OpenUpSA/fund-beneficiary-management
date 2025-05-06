@@ -1,15 +1,27 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect";
-import { Card, CardContent } from "@/components/ui/card"
+import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { PauseIcon } from "lucide-react";
-import Link from "next/link";
-import { allApplications, availableApplicationsAndReportsTypes, availableStatuses, availableFundingPeriods } from "@/app/data";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
+import Link from "next/link"
+import { availableApplicationsAndReportsTypes, availableStatuses, availableFundingPeriods } from "@/app/data"
+import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull } from "@/types/models"
+import { format } from "date-fns"
+import { DynamicIcon } from "@/components/dynamicIcon"
+import { FormStatus } from "@prisma/client"
+import { FormDialog } from "@/components/lda-forms/form"
 
-export const FilteredApplicationsAndReports = () => {
+interface Props {
+  ldaForms: LocalDevelopmentAgencyFormFull[]
+  lda?: LocalDevelopmentAgencyFull,
+  formTemplates: FormTemplateWithRelations[],
+  formStatuses: FormStatus[],
+  dataChanged: () => void
+}
+
+export const FilteredLDAForms: React.FC<Props> = ({ ldaForms, lda, formTemplates, formStatuses, dataChanged }) => {
   const [selectedFundingPeriods, setSelectedFundingPeriods] = useState<string[]>([])
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
   const [selectedApplicationsAndReportsTypes, setSelectedApplicationsAndReportsTypes] = useState<string[]>([])
@@ -59,63 +71,58 @@ export const FilteredApplicationsAndReports = () => {
         </div>
       </div>
       <Card className="w-full">
+        <CardHeader className="pb-0">
+          <div className="flex items-center justify-between">
+            <span>All Applications &amp; Reports</span>
+            <div>
+              {lda && <FormDialog
+                formTemplates={formTemplates}
+                formStatuses={formStatuses}
+                lda={lda}
+                callback={dataChanged} />}
+            </div>
+          </div>
+        </CardHeader>
         <CardContent>
           <Table className="text-xs w-full">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-full">Type</TableHead>
+                {!lda && <TableHead><abbr title="Local Development Ageny">LDA</abbr></TableHead>}
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Due date</TableHead>
+                <TableHead className="text-nowrap">Due date</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead>Approved</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allApplications.map((application) => (
+              {ldaForms.map((ldaForm) => (
                 <>
-                  <TableRow key={`application-${application.id}`}>
-                    <TableCell>
-                      <Link href={`/dashboard/applications-reports/applications/${application.id}`} className="flex items-center space-x-1">
-                        <span>{application.type}</span>
+                  <TableRow key={`application-${ldaForm.id}`}>
+                    <TableCell className="text-nowrap">
+                      <Link href={`/dashboard/applications-reports/${ldaForm.id}`} className="flex items-center space-x-1">
+                        {ldaForm.title}
                       </Link>
                     </TableCell>
+                    {!lda && <TableCell className="text-nowrap">{ldaForm.localDevelopmentAgency.name}</TableCell>}
                     <TableCell>
                       <div className="flex items-center space-x-1">
-                        <PauseIcon size={10} />
-                        <div>{application.status}</div>
+                        <DynamicIcon name={ldaForm.formStatus.icon} size={10} />
+                        <div>{ldaForm.formStatus.label}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{application.amount}</TableCell>
-                    <TableCell>{application.dueDate}</TableCell>
-                    <TableCell>{application.submittedDate}</TableCell>
-                    <TableCell>{application.approvedDate}</TableCell>
-                  </TableRow>
-                  {application.reports.map((report) => (
-                    <TableRow key={`appliation-${application.id}-report-${report.id}`}>
-                      <TableCell className="pl-5">
-                        <Link href={`/dashboard/applications-reports/applications/${application.id}/reports/${report.id}`} className="flex items-center space-x-1">
-                          <span>{report.type}</span>
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <PauseIcon size={10} />
-                          <div>{report.status}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>-</TableCell>
-                      <TableCell>{report.dueDate}</TableCell>
-                      <TableCell>{report.submittedDate}</TableCell>
-                      <TableCell>{report.approvedDate}</TableCell>
-                    </TableRow>
-                  ))}
+                    <TableCell className="text-nowrap">R126,000</TableCell>
+                    <TableCell className="text-nowrap">{format(ldaForm.dueDate, 'PP')}</TableCell>
+                    <TableCell className="text-nowrap">{ldaForm.submitted && format(ldaForm.submitted, 'PP')}</TableCell>
+                    <TableCell className="text-nowrap">{ldaForm.approved && format(ldaForm.approved, 'PP')}</TableCell>
+                  </TableRow >
                 </>
               ))}
             </TableBody >
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </div >
   )
 }

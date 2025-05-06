@@ -98,3 +98,16 @@ export type DocumentFull = Prisma.DocumentGetPayload<{
     }
   }
 }>
+
+export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGetPayload<{
+  include: {
+    localDevelopmentAgency: {
+      include: {
+        focusAreas: true,
+        developmentStage: true
+      }
+    }
+    formStatus: true
+    formTemplate: true
+  }
+}>
