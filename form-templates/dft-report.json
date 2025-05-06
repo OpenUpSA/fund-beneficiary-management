@@ -1,0 +1,128 @@
+{
+  "title": "DFT Report | SCAT Data Process Form",
+  "sections": [
+    {
+      "title": "Overview",
+      "fields": [
+        {
+          "name": "description",
+          "type": "textarea",
+          "label": "Provide an overview of the training or campaign activities that took place",
+          "required": false
+        },
+        {
+          "name": "what_training_about",
+          "type": "textarea",
+          "label": "What was the training or campaign about?",
+          "required": true
+        },
+        {
+          "name": "why_training_needed",
+          "type": "textarea",
+          "label": "Why was the training needed?",
+          "required": true
+        },
+        {
+          "name": "intended_outcome",
+          "type": "textarea",
+          "label": "What was the intended outcome/ or purpose of the training or campaign?",
+          "required": true
+        },
+        {
+          "name": "total_participants",
+          "type": "textarea",
+          "label": "What was the total number of participants who attended the training or campaign?",
+          "required": true
+        },
+        {
+          "name": "who_attended",
+          "type": "textarea",
+          "label": "Who attended the training?",
+          "required": true
+        },
+        {
+          "name": "who_facilitated",
+          "type": "textarea",
+          "label": "Who facilitated the training?",
+          "required": true
+        },
+        {
+          "name": "partnership",
+          "type": "textarea",
+          "label": "Was the training or campaign conducted in partnership with other external partners/stakeholders? If yes, please name them and the role they played.",
+          "required": true
+        },
+        {
+          "name": "date_took_place",
+          "type": "textarea",
+          "label": "What date did the training or campaign take place?",
+          "required": true
+        },
+        {
+          "name": "venue",
+          "type": "textarea",
+          "label": "At what venue did the training or campaign take place.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Review the budget",
+      "fields": [
+        {
+          "name": "line_item_1",
+          "type": "input",
+          "label": "Line Item #1",
+          "required": true
+        },
+        {
+          "name": "line_item_2",
+          "type": "input",
+          "label": "Line Item #2",
+          "required": false
+        },
+        {
+          "name": "line_item_3",
+          "type": "input",
+          "label": "Line Item #3",
+          "required": false
+        },
+        {
+          "name": "line_item_4",
+          "type": "input",
+          "label": "Line Item #4",
+          "required": false
+        },
+        {
+          "name": "line_item_5",
+          "type": "input",
+          "label": "Line Item #5",
+          "required": false
+        },
+        {
+          "name": "line_item_6",
+          "type": "input",
+          "label": "Line Item #6",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Sign the Applications Form",
+      "fields": [
+        {
+          "name": "signature",
+          "type": "input",
+          "label": "Digital Signature: Please type your full name as your digital signature",
+          "required": true
+        },
+        {
+          "name": "signature_date",
+          "type": "input",
+          "label": "Date of signature",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

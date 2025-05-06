@@ -1,0 +1,204 @@
+{
+  "title": "Grant Funding Application | SCAT Data Process",
+  "sections": [
+    {
+      "title": "SECTION 1: ORGANISATIONAL DETAILS",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "label": "Name of the organisation (LDA)",
+          "required": true
+        },
+        {
+          "name": "address",
+          "type": "textarea",
+          "label": "Physical address of the organisation (Name of street, section and place)",
+          "required": true
+        },
+        {
+          "name": "status",
+          "type": "textarea",
+          "label": "Registration status (NPO or PBO number and date of registration)",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 2: GOVERNANCE AND MANAGEMENT",
+      "fields": [
+        {
+          "name": "list",
+          "type": "textarea",
+          "label": "List the names, surnames, and positions of the LDA Management Committee members (Board members)",
+          "required": true
+        },
+        {
+          "name": "list2",
+          "type": "textarea",
+          "label": "List the names and surnames of LDA staff (EG, coordinator, administrator, field worker, etc)  "
+        }
+      ]
+    },
+    {
+      "title": "SECTION 3: VISION & MISSION",
+      "fields": [
+        {
+          "name": "vision",
+          "type": "textarea",
+          "label": "Vision",
+          "required": true
+        },
+        {
+          "name": "mission",
+          "type": "textarea",
+          "label": "Mission",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 4: OBJECTIVES And ACTIVITIES",
+      "fields": [
+        {
+          "name": "objectives",
+          "type": "textarea",
+          "label": "Main objectives (What the organisation is aiming to achieve through its programmes and activities)",
+          "required": true
+        },
+        {
+          "name": "programatic",
+          "type": "textarea",
+          "label": "Main programmatic areas (The organisation’s programs and projects carried out to achieve its objective)",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 5: STRATEGIC FOCUS AREAS",
+      "fields": [
+        {
+          "name": "access_to_justice",
+          "type": "textarea",
+          "label": "Access to Justice",
+          "required": true
+        },
+        {
+          "name": "gender_equity",
+          "type": "textarea",
+          "label": "Gender equity (including women empowerment)",
+          "required": true
+        },
+        {
+          "name": "youth_empowerement",
+          "type": "textarea",
+          "label": "Youth empowerment",
+          "required": true
+        },
+        {
+          "name": "food_security",
+          "type": "textarea",
+          "label": "Food security, nutrition, and Local Economic Development",
+          "required": true
+        },
+        {
+          "name": "climate_change",
+          "type": "textarea",
+          "label": "Climate Change",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 6: PARTNERSHIPS AND NETWORKS",
+      "fields": [
+        {
+          "name": "work_with",
+          "type": "textarea",
+          "label": "Who do you work with within and outside your community? (E.g. CBO partners, key stakeholders, traditional leadership, etc.).",
+          "required": true
+        },
+        {
+          "name": "connected_national_advocacy",
+          "type": "textarea",
+          "label": "Are you connected to any national advocacy strategies or campaigns? If yes, please provide details",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 7: SUSTAINABILITY",
+      "fields": [
+        {
+          "name": "fundraising_strategies",
+          "type": "textarea",
+          "label": "What are the local and other fundraising strategies the LDA is implementing to raise funding?",
+          "required": true
+        },
+        {
+          "name": "ensure_org_not_reliant",
+          "type": "textarea",
+          "label": "What are you doing to ensure that your organisation is not reliant on SCAT only for funding?",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 8: MONITORING AND LEARNING",
+      "fields": [
+        {
+          "name": "process_monitor_progress",
+          "type": "textarea",
+          "label": "What processes do you use in your organisation to monitor your progress and learn from your experiences? (EG, planning, reviewing of organisational plans, etc.)",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 9: RESULTS ACHIEVED 2024",
+      "fields": [
+        {
+          "name": "progress_9_month",
+          "type": "textarea",
+          "label": "Progress made on your plans for the nine (9) month period.",
+          "required": true
+        },
+        {
+          "name": "challenges_faced",
+          "type": "textarea",
+          "label": "Challenges faced in the community and lessons learned.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "SECTION 10: BUDGET AND EXPENDITURE",
+      "fields": [
+        {
+          "name": "total_income",
+          "type": "textarea",
+          "label": "What is the organisation’s total income budget for 2025?",
+          "required": true
+        },
+        {
+          "name": "total_expenditure",
+          "type": "textarea",
+          "label": "What is the organisation’s total expenditure budget for 2025?",
+          "required": true
+        },
+        {
+          "name": "income_9_months",
+          "type": "textarea",
+          "label": "What is the organisation’s income for the last nine (9) months? (January to September 2025)",
+          "required": true
+        },
+        {
+          "name": "expenditure_9_months",
+          "type": "textarea",
+          "label": "What is the organisation’s expenditure for the last nine (9) months? (January to September 2025)",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

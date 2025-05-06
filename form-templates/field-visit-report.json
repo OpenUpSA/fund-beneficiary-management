@@ -1,0 +1,115 @@
+{
+  "title": "Field Visit Report  | SCAT Data Process",
+  "sections": [
+    {
+      "title": "Site Visit Information",
+      "fields": [
+        {
+          "name": "province",
+          "type": "input",
+          "label": "Province",
+          "required": true
+        },
+        {
+          "name": "funder",
+          "type": "input",
+          "label": "Funder",
+          "required": true
+        },
+        {
+          "name": "site_visited",
+          "type": "input",
+          "label": "Site/Organization Visited",
+          "required": true
+        },
+        {
+          "name": "venue",
+          "type": "input",
+          "label": "Venue",
+          "required": true
+        },
+        {
+          "name": "staff_met",
+          "type": "textarea",
+          "label": "Staff Representatives Met",
+          "required": true
+        },
+        {
+          "name": "committee_met",
+          "type": "textarea",
+          "label": "Committee Representatives Met",
+          "required": true
+        },
+        {
+          "name": "date_of_visit",
+          "type": "input",
+          "label": "Date of Visit",
+          "required": true
+        },
+        {
+          "name": "fieldworker",
+          "type": "input",
+          "label": "Fieldworker / Compiled By",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Field Visit Notes",
+      "fields": [
+        {
+          "name": "profile_of_orgs",
+          "type": "input",
+          "label": "Profile of organisation/site visited (To be completed if there are organizational changes)",
+          "required": true
+        },
+        {
+          "name": "objectives",
+          "type": "input",
+          "label": "Objectives of the visit",
+          "required": true
+        },
+        {
+          "name": "activities",
+          "type": "input",
+          "label": "Programme activities & highlights",
+          "required": true
+        },
+        {
+          "name": "community_profile",
+          "type": "input",
+          "label": "Community Profile",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Organisational Governance and Management / Comment on SCAT’s funding criteria",
+      "fields": [
+        {
+          "name": "systems_and_controls",
+          "type": "input",
+          "label": "Systems and controls",
+          "required": true
+        },
+        {
+          "name": "current_funders",
+          "type": "input",
+          "label": "Current Funders",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Next steps",
+      "fields": [
+        {
+          "name": "way_forward",
+          "type": "input",
+          "label": "Way forward and date of next mentoring visit",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "title": "DFT Application",
+  "sections": [
+    {
+      "title": "Provide an overview of the training",
+      "fields": [
+        {
+          "name": "who_will_attend",
+          "type": "textarea",
+          "label": "Who will the attend the training?",
+          "required": true
+        },
+        {
+          "name": "why_training_needed",
+          "type": "textarea",
+          "label": "Why is the training needed?",
+          "required": true
+        },
+        {
+          "name": "how_many_participants",
+          "type": "textarea",
+          "label": "How many participants will attend?",
+          "required": true
+        },
+        {
+          "name": "who_will_facilitate",
+          "type": "textarea",
+          "label": "Who will facilitate the training?",
+          "required": true
+        },
+        {
+          "name": "when_and_where",
+          "type": "textarea",
+          "label": "When and where will the training be held?",
+          "required": true
+        }
+      ]
+    },
+    {
+      "title": "Create the budget",
+      "fields": [
+        {
+          "name": "line_item_1",
+          "type": "input",
+          "label": "Line Item #1",
+          "required": true
+        },
+        {
+          "name": "line_item_2",
+          "type": "input",
+          "label": "Line Item #2",
+          "required": false
+        },
+        {
+          "name": "line_item_3",
+          "type": "input",
+          "label": "Line Item #3",
+          "required": false
+        },
+        {
+          "name": "line_item_4",
+          "type": "input",
+          "label": "Line Item #4",
+          "required": false
+        },
+        {
+          "name": "line_item_5",
+          "type": "input",
+          "label": "Line Item #5",
+          "required": false
+        },
+        {
+          "name": "line_item_6",
+          "type": "input",
+          "label": "Line Item #6",
+          "required": false
+        }
+      ]
+    },
+    {
+      "title": "Sign the Applications Form",
+      "fields": [
+        {
+          "name": "signature",
+          "type": "input",
+          "label": "Digital Signature: Please type your full name as your digital signature",
+          "required": true
+        },
+        {
+          "name": "signature_date",
+          "type": "input",
+          "label": "Date of signature",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
