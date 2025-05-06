@@ -21,7 +21,7 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 
 const dataChanged = async () => {
   "use server"
-  revalidateTag('form-templates')
+  revalidateTag('ldas')
 }
 
 export default async function Page({ params }: FormTemplatePageProps) {

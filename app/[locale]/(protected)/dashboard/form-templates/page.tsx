@@ -12,7 +12,6 @@ import { FormTemplateWithRelations } from "@/types/models"
 import { FormDialog } from "@/components/form-templates/form"
 import { revalidateTag } from "next/cache"
 
-
 export async function generateMetadata({ params: { locale }
 }: Readonly<{
   params: { locale: string }
@@ -28,7 +27,7 @@ export async function generateMetadata({ params: { locale }
 
 const dataChanged = async () => {
   "use server"
-  revalidateTag('form-templates')
+  revalidateTag('ldas')
 }
 
 export default async function Page() {

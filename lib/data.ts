@@ -67,12 +67,12 @@ export async function fetchUser(user_id: string): Promise<User> {
 }
 
 export async function fetchFormTemplate(form_template_id: string): Promise<FormTemplate> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template/${form_template_id}`)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template/${form_template_id}`, { next: { tags: ['ldas'] } })
   return res.json()
 }
 
 export async function fetchFormTemplates(): Promise<FormTemplateWithRelations[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template`)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template`, { next: { tags: ['ldas'] } })
   return res.json()
 }
 
