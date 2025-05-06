@@ -58,7 +58,6 @@ export default async function Page() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-full">Template Name</TableHead>
-                  <TableHead><abbr title="Local Development Agencies">LDAs</abbr></TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Usage</TableHead>
                 </TableRow>
@@ -70,9 +69,6 @@ export default async function Page() {
                       <Link href={`/dashboard/form-templates/${formTemplate.id}`}>
                         {formTemplate.name}
                       </Link>
-                    </TableCell>
-                    <TableCell className="text-nowrap">
-                      {formTemplate.localDevelopmentAgencyForms.map((localDevelopmentAgencyForm: LocalDevelopmentAgencyFormWithRelations) => <Badge key={`localDevelopmentAgencyForm-${localDevelopmentAgencyForm.id}`} variant="outline">{localDevelopmentAgencyForm.localDevelopmentAgency.name}</Badge>)}
                     </TableCell>
                     <TableCell className="text-nowrap">{formTemplate.description}</TableCell>
                     <TableCell>
