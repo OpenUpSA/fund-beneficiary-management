@@ -17,3 +17,7 @@ export interface Section {
   title: string;
   fields: Field[];
 }
+
+export type FormData = Record<string, string>
+
+export const validTypes = ["string", "number", "textarea", "email"] as const

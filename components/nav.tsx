@@ -84,7 +84,7 @@ export function Nav() {
   const tN = useTranslations('navigation')
   const {data: session} = useSession()
   return (
-    <Sidebar>
+    <Sidebar id="sidebar">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

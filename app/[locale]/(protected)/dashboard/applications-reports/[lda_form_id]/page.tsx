@@ -11,6 +11,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import LDAFormDataView from "@/components/lda-forms/data-view"
 import { Form } from "@/types/forms"
+import { Button } from "@/components/ui/button"
+import { Link } from "@/i18n/routing"
+import { NotebookPenIcon } from "lucide-react"
 
 interface FormTemplatePageProps {
   params: { lda_form_id: string }
@@ -55,6 +58,12 @@ export default async function Page({ params }: FormTemplatePageProps) {
         <div className="flex flex-wrap items-center justify-between mb-4">
           <h1 className="text-xl md:text-2xl font-semibold">{ldaForm.title}</h1>
           <div className="space-x-2">
+            <Button asChild>
+              <Link href={`/dashboard/applications-reports/${ldaForm.id}/fill/`}>
+                <span className="hidden md:inline">Fill</span>
+                <NotebookPenIcon />
+              </Link>
+            </Button>
             <FormDialog
               formTemplates={formTemplates}
               formStatuses={formStatuses}

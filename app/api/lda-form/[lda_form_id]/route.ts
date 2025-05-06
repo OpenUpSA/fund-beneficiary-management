@@ -32,14 +32,16 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     const updated = await prisma.localDevelopmentAgencyForm.update({
       where: { id: ldaFormId },
       data: {
-        title: data.title,
-        submitted: data.submitted,
-        dueDate: data.dueDate,
-        approved: data.approved,
-        formStatus: {
-          connect: { id: data.formStatusId },
-        },
-
+        ...(data.title && { title: data.title }),
+        ...(data.submitted !== undefined && { submitted: data.submitted }),
+        ...(data.dueDate && { dueDate: data.dueDate }),
+        ...(data.approved !== undefined && { approved: data.approved }),
+        ...(data.formData && { formData: data.formData }),
+        ...(data.formStatusId && {
+          formStatus: {
+            connect: { id: data.formStatusId },
+          },
+        }),
       }
     })
 

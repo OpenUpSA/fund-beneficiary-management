@@ -107,11 +107,11 @@ export async function fetchLocalDevelopmentAgencyFormsForLDA(lda_id: string): Pr
 }
 
 export async function fetchFormStatuses(): Promise<FormStatus[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-status`)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-status`, { next: { tags: ['ldas'] } })
   return res.json()
 }
 
 export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmentAgencyFormFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/${lda_form_id}`)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/${lda_form_id}`, { next: { tags: ['ldas'] } })
   return res.json()
 }

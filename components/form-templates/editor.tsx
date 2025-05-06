@@ -8,26 +8,7 @@ import { EyeIcon, SaveIcon } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
-
-type FieldType = "string" | "number" | "textarea" | "email";
-
-interface Field {
-  name: string;
-  type: FieldType;
-  label: string;
-  required?: boolean;
-  min?: number;
-}
-
-interface Section {
-  title: string;
-  fields: Field[];
-}
-
-interface Form {
-  title: string;
-  sections: Section[];
-}
+import { Form } from "@/types/forms"
 
 export default function Editor({ formTemplate, dataChanged }: { formTemplate: FormTemplate, dataChanged: () => void }) {
   const [form, setForm] = useState<Form>()
@@ -99,7 +80,7 @@ export default function Editor({ formTemplate, dataChanged }: { formTemplate: Fo
           {jsonError && <div className="text-red-500 mt-2">{jsonError}</div>}
           {form && <DynamicForm
             form={form}
-            callback={setData}
+            setData={setData}
           />}
         </div>
       </div>
