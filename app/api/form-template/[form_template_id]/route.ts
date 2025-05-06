@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -32,7 +33,7 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
       where: { id: id },
       data: data
     })
-
+    revalidateTag('ldas')
     return NextResponse.json(updated)
   } catch {
     return NextResponse.json({ error: "Failed to update" }, { status: 500 })
@@ -45,6 +46,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { form_temp
     const deletedFormTemplate = await prisma.formTemplate.delete({
       where: { id: formTemplateId }
     })
+    revalidateTag('ldas')
     return NextResponse.json(deletedFormTemplate)
   } catch {
     return NextResponse.json({ error: "Failed to delete form template" }, { status: 500 })

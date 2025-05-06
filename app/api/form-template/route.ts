@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       data: data
     }
     const record = await prisma.formTemplate.create(query)
-
+    revalidateTag('ldas')
     return NextResponse.json(record)
   } catch {
     return NextResponse.json({ error: "Failed to create" }, { status: 500 })
