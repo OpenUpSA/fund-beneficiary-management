@@ -112,7 +112,7 @@ export const FilteredLDAForms: React.FC<Props> = ({ ldaForms, lda, formTemplates
                         <div>{ldaForm.formStatus.label}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-nowrap">R126,000</TableCell>
+                    <TableCell className="text-nowrap"></TableCell>
                     <TableCell className="text-nowrap">{format(ldaForm.dueDate, 'PP')}</TableCell>
                     <TableCell className="text-nowrap">{ldaForm.submitted && format(ldaForm.submitted, 'PP')}</TableCell>
                     <TableCell className="text-nowrap">{ldaForm.approved && format(ldaForm.approved, 'PP')}</TableCell>
