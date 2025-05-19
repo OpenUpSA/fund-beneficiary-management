@@ -1,4 +1,4 @@
-export type FieldType = "string" | "number" | "textarea" | "email";
+export type FieldType = "string" | "number" | "textarea" | "email" | "datepicker";
 
 export interface Form {
   title: string;
@@ -20,4 +20,4 @@ export interface Section {
 
 export type FormData = Record<string, string>
 
-export const validTypes = ["string", "number", "textarea", "email"] as const
+export const validTypes = ["string", "number", "textarea", "email", "datepicker"] as const

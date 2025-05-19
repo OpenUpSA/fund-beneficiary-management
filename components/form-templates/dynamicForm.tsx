@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FieldError, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { z, ZodObject, ZodRawShape } from "zod"
 import { Field, FieldType, Form, Section, FormData, validTypes } from "@/types/forms"
+import { FormField } from "./FormField"
 
 function createZodSchema(form: Form) {
   const schema: Record<string, z.ZodTypeAny> = {}
@@ -127,27 +126,13 @@ export default function DynamicForm({
           <CardHeader className="text-lg font-semibold">{section.title}</CardHeader>
           <CardContent className="space-y-4">
             {section.fields.map((field) => (
-              <div key={field.name}>
-                <label className="block text-sm font-medium">{field.label}</label>
-                {field.type === "textarea" ? (
-                  <Textarea
-                    {...register(field.name)}
-                    className={errors[field.name] ? "border-red-500" : ""}
-                    rows={8}
-                  />
-                ) : (
-                  <Input
-                    type={field.type}
-                    {...register(field.name)}
-                    className={errors[field.name] ? "border-red-500" : ""}
-                  />
-                )}
-                {errors[field.name] && (
-                  <p className="text-red-500 text-sm">
-                    {(errors[field.name] as FieldError)?.message || "An error occurred"}
-                  </p>
-                )}
-              </div>
+              <FormField
+                key={field.name}
+                field={field}
+                register={register}
+                error={errors[field.name]}
+                defaultValue={defaultValues[field.name]}
+              />
             ))}
           </CardContent>
         </Card>
