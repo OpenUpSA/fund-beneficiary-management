@@ -2,7 +2,6 @@
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { DatePicker } from "@/components/ui/datepicker"
 import { Field, FormData } from "@/types/forms"
 import { FieldError, UseFormRegister } from "react-hook-form"
 
@@ -19,22 +18,6 @@ const fieldComponents = {
       {...props.register(props.field.name)}
       className={props.error ? "border-red-500" : ""}
       rows={8}
-    />
-  ),
-  datepicker: (props: FormFieldProps) => (
-    <DatePicker
-      {...props.register(props.field.name)}
-      className={props.error ? "border-red-500" : ""}
-      date={props.defaultValue ? new Date(props.defaultValue) : undefined}
-      onDateChange={(date) => {
-        const event = {
-          target: {
-            name: props.field.name,
-            value: date ? date.toISOString() : ""
-          }
-        }
-        props.register(props.field.name).onChange(event)
-      }}
     />
   ),
   default: (props: FormFieldProps) => (
