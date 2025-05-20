@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio"
 import { Field, FormData } from "@/types/forms"
 import { FieldError, UseFormRegister } from "react-hook-form"
 
@@ -20,6 +21,25 @@ const fieldComponents = {
       rows={8}
     />
   ),
+  radio: (props: FormFieldProps) => {
+    const { onChange } = props.register(props.field.name);
+    return (
+      <RadioGroup
+        defaultValue={props.defaultValue?.toString()}
+        onValueChange={(value: string) => onChange({ target: { value } })}
+        className="flex flex-col space-y-2"
+      >
+        {props.field.options?.map((option) => (
+          <div key={option.value} className="flex items-center space-x-2">
+            <RadioGroupItem value={option.value} id={`${props.field.name}-${option.value}`} />
+            <label htmlFor={`${props.field.name}-${option.value}`} className="text-sm">
+              {option.label}
+            </label>
+          </div>
+        ))}
+      </RadioGroup>
+    )
+  },
   default: (props: FormFieldProps) => (
     <Input
       type={props.field.type}
