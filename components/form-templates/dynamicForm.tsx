@@ -125,6 +125,9 @@ export default function DynamicForm({
         <Card key={sectionIndex} className="p-4">
           <CardHeader className="text-lg font-semibold">{section.title}</CardHeader>
           <CardContent className="space-y-4">
+            {section.description && (
+              <p className="text-sm text-muted-foreground mb-4">{section.description}</p>
+            )}
             {section.fields.map((field) => (
               <FormField
                 key={field.name}
