@@ -15,6 +15,7 @@ export interface Field {
 
 export interface Section {
   title: string;
+  description?: string;
   fields: Field[];
 }
 

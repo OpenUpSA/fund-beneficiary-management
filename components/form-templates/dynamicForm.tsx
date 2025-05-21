@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FieldError, useForm } from "react-hook-form"
+import { useForm, FieldError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { FormField } from "@/components/form-templates/form-field"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { z, ZodObject, ZodRawShape } from "zod"
-import { Field, FieldType, Form, Section, FormData, validTypes } from "@/types/forms"
+import { Field, FieldType, Form, FormData, validTypes } from "@/types/forms"
+import type { Section } from "@/types/forms"
 
 function createZodSchema(form: Form) {
   const schema: Record<string, z.ZodTypeAny> = {}
@@ -69,6 +69,7 @@ function sanitizeForm(formTemplate: FormTemplate["form"]): Form {
     title: formTemplate.title,
     sections: formTemplate.sections.map((section) => ({
       title: section.title,
+      description: section.description,
       fields: section.fields.map((field) => ({
         ...field,
         type: validTypes.includes(field.type as FieldType) ? (field.type as FieldType) : "string",
@@ -96,7 +97,11 @@ export default function DynamicForm({
     setValidationSchema(schema)
   }, [form])
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: formErrors },
+  } = useForm({
     resolver: validationSchema ? zodResolver(validationSchema) : undefined,
     defaultValues,
   })
@@ -124,30 +129,20 @@ export default function DynamicForm({
 
       {form.sections.map((section, sectionIndex) => (
         <Card key={sectionIndex} className="p-4">
-          <CardHeader className="text-lg font-semibold">{section.title}</CardHeader>
+          <CardHeader>
+            <h3 className="text-lg font-semibold">{section.title}</h3>
+            {section.description && (
+              <p className="text-sm text-muted-foreground mt-1">{section.description}</p>
+            )}
+          </CardHeader>
           <CardContent className="space-y-4">
             {section.fields.map((field) => (
-              <div key={field.name}>
-                <label className="block text-sm font-medium">{field.label}</label>
-                {field.type === "textarea" ? (
-                  <Textarea
-                    {...register(field.name)}
-                    className={errors[field.name] ? "border-red-500" : ""}
-                    rows={8}
-                  />
-                ) : (
-                  <Input
-                    type={field.type}
-                    {...register(field.name)}
-                    className={errors[field.name] ? "border-red-500" : ""}
-                  />
-                )}
-                {errors[field.name] && (
-                  <p className="text-red-500 text-sm">
-                    {(errors[field.name] as FieldError)?.message || "An error occurred"}
-                  </p>
-                )}
-              </div>
+              <FormField
+                key={field.name}
+                field={field}
+                register={register}
+                errors={formErrors as Record<string, FieldError | undefined>}
+              />
             ))}
           </CardContent>
         </Card>
