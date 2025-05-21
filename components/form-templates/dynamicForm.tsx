@@ -64,12 +64,6 @@ type FormTemplate = {
   form: Form
 }
 
-interface Section {
-  title: string
-  description?: string
-  fields: Field[]
-}
-
 function sanitizeForm(formTemplate: FormTemplate["form"]): Form {
   return {
     title: formTemplate.title,
