@@ -34,55 +34,65 @@ const data = {
       title: "Form Templates",
       url: "/dashboard/form-templates",
       icon: LayoutTemplate,
+      requiredRoles: ['ADMIN']
     },
     {
       title: "Users",
       url: "/dashboard/users",
       icon: Users,
+      requiredRoles: ['ADMIN']
     }
   ],
   navMain: [
     {
       url: '/dashboard',
       title: 'Dashboard',
-      icon: LayoutDashboard
+      icon: LayoutDashboard,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER']
     },
     {
       url: '/dashboard/ldas',
       title: 'LDAs',
-      icon: MapPinHouse
+      icon: MapPinHouse,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER']
     },
     {
       url: '/dashboard/funders',
       title: 'Funders',
-      icon: HandCoins
+      icon: HandCoins,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
     },
     {
       url: '/dashboard/funds',
       title: 'Funds',
-      icon: BanknoteIcon
+      icon: BanknoteIcon,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
     },
     {
       url: '/dashboard/applications-reports',
       title: 'Applications And Reports',
-      icon: ClipboardPlus
+      icon: ClipboardPlus,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
     },
     {
       url: '/dashboard/media',
       title: 'Media',
-      icon: Images
+      icon: Images,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
     },
     {
       url: '/dashboard/documents',
       title: 'Documents',
-      icon: Files
+      icon: Files,
+      requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
     }
   ],
 }
 
 export function Nav() {
   const tN = useTranslations('navigation')
-  const {data: session} = useSession()
+  const { data: session } = useSession()
+
   return (
     <Sidebar id="sidebar">
       <SidebarHeader>
@@ -97,8 +107,8 @@ export function Nav() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavGroup items={data.navMain} />
-        {session && session.user.role === 'ADMIN' && <NavGroup label="Admin" items={data.navAdmin} className="mt-auto" />}
+        {session && <NavGroup session={session} items={data.navMain} />}
+        {session && session.user.role === 'ADMIN' && <NavGroup session={session} label="Admin" items={data.navAdmin} className="mt-auto" />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
