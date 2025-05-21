@@ -5,11 +5,19 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
+      ldaIds: number[];
     } & DefaultSession["user"];
   }
 
-  interface User extends DefaultUser {
+  interface JWT {
     id: string;
     role: string;
+    ldaIds: number[];
+  }
+
+  interface User extends DefaultUser {
+    id: number;
+    role: string;
+    localDevelopmentAgencies?: Array<{ id: number }>;
   }
 }

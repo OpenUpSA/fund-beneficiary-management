@@ -13,7 +13,8 @@ export const UserFormSchema = (requirePassword: boolean) =>
         : z.string().optional(),
       passwordConfirm: requirePassword ? z.string() : z.string().optional(),
       approved: z.boolean(),
-      role: RoleEnum
+      role: RoleEnum,
+      ldaId: z.string().optional()
     })
     .superRefine((data, ctx) => {
       if (requirePassword && !data.password) {

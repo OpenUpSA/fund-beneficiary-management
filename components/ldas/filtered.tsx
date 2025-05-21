@@ -226,8 +226,8 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="bg-slate-400 text-white dark:text-black rounded-full w-5 h-5 text-[0.5rem] flex items-center justify-center" title={lda.programmeOfficer.name}>
-                      {getInitials(lda.programmeOfficer.name)}
+                    <div className="bg-slate-400 text-white dark:text-black rounded-full w-5 h-5 text-[0.5rem] flex items-center justify-center" title={lda.programmeOfficer?.name ?? ""}>
+                      {getInitials(lda.programmeOfficer?.name ?? "")}
                     </div>
                   </TableCell>
                 </TableRow>

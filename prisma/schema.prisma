@@ -115,7 +115,7 @@ model LocalDevelopmentAgency {
   developmentStageId         Int
   fundingStatusId            Int
   locationId                 Int
-  programmeOfficerId         Int
+  programmeOfficerId         Int?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt
   organisationDetailId       Int
@@ -123,7 +123,7 @@ model LocalDevelopmentAgency {
   fundingStatus              FundingStatus                @relation(fields: [fundingStatusId], references: [id])
   location                   Location                     @relation(fields: [locationId], references: [id])
   organisationDetail         OrganisationDetail           @relation(fields: [organisationDetailId], references: [id])
-  programmeOfficer           User                         @relation(fields: [programmeOfficerId], references: [id])
+  programmeOfficer           User?                        @relation(fields: [programmeOfficerId], references: [id])
   LocalDevelopmentAgencyForm LocalDevelopmentAgencyForm[]
   funds                      Fund[]                       @relation("FundToLocalDevelopmentAgency")
   focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")

@@ -10,24 +10,27 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Link } from "@/i18n/routing"
+import { Session } from "next-auth"
 
 interface NavGroupProps extends React.ComponentPropsWithoutRef<typeof SidebarGroup> {
   label?: string,
+  session: Session,
   items: {
     title: string
     url: string
-    icon: LucideIcon
+    icon: LucideIcon,
+    requiredRoles: string[]
   }[]
 }
 
-export function NavGroup({ label, items, ...props }: NavGroupProps) {
+export function NavGroup({ label, items, session, ...props }: NavGroupProps) {
   return (
     <SidebarGroup {...props}>
       {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
 
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
+          {items.filter((item) => item.requiredRoles?.includes(session?.user?.role || '')).map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
                 <Link href={item.url}>

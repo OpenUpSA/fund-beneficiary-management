@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Overview } from "@/components/users/overview"
 import { revalidateTag } from "next/cache"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { fetchUser } from "@/lib/data"
+import { fetchUser, fetchLocalDevelopmentAgencies } from "@/lib/data"
 import { FormDialog } from "@/components/users/form"
 import { DeleteDialog } from "@/components/users/delete"
 import { use } from "react"
@@ -36,6 +36,7 @@ export default function Page({ params }: UserPageProps) {
   const { user_id } = params
   const session = use(getServerSession(NEXT_AUTH_OPTIONS))
   const user = use(fetchUser(user_id))
+  const ldas = use(fetchLocalDevelopmentAgencies())
 
   const dataChanged = async () => {
     "use server"
@@ -59,7 +60,7 @@ export default function Page({ params }: UserPageProps) {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{user.name}</h1>
         <div className="space-x-2">
-          <FormDialog user={user} callback={dataChanged} />
+          <FormDialog user={user} callback={dataChanged} ldas={ldas} />
           {(session?.user.id !== user.id.toString()) && <DeleteDialog user={user} callback={dataChanged} />}
         </div>
       </div>

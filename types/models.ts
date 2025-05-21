@@ -1,5 +1,11 @@
 import { Prisma } from "@prisma/client"
 
+export type UserFull = Prisma.UserGetPayload<{
+  include: {
+    localDevelopmentAgencies: true
+  }
+}>
+
 export type FunderFull = Prisma.FunderGetPayload<{
   include: {
     fundingStatus: true,
