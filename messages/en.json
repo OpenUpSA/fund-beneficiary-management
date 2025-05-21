@@ -34,7 +34,7 @@
     "Home": "Home",
     "Save Changes": "Save Changes",
     "roles": {
-      "USER": "User",
+      "USER": "LDA User",
       "PROGRAMME_OFFICER": "Programme Officer",
       "ADMIN": "Admin"
     },
