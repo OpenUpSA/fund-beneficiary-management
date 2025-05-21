@@ -1,10 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FieldError, useForm } from "react-hook-form"
+import { useForm, FieldError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { FormField } from "@/components/form-templates/form-field"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { z, ZodObject, ZodRawShape } from "zod"
@@ -96,7 +95,11 @@ export default function DynamicForm({
     setValidationSchema(schema)
   }, [form])
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: formErrors },
+  } = useForm({
     resolver: validationSchema ? zodResolver(validationSchema) : undefined,
     defaultValues,
   })
@@ -127,27 +130,12 @@ export default function DynamicForm({
           <CardHeader className="text-lg font-semibold">{section.title}</CardHeader>
           <CardContent className="space-y-4">
             {section.fields.map((field) => (
-              <div key={field.name}>
-                <label className="block text-sm font-medium">{field.label}</label>
-                {field.type === "textarea" ? (
-                  <Textarea
-                    {...register(field.name)}
-                    className={errors[field.name] ? "border-red-500" : ""}
-                    rows={8}
-                  />
-                ) : (
-                  <Input
-                    type={field.type}
-                    {...register(field.name)}
-                    className={errors[field.name] ? "border-red-500" : ""}
-                  />
-                )}
-                {errors[field.name] && (
-                  <p className="text-red-500 text-sm">
-                    {(errors[field.name] as FieldError)?.message || "An error occurred"}
-                  </p>
-                )}
-              </div>
+              <FormField
+                key={field.name}
+                field={field}
+                register={register}
+                errors={formErrors as Record<string, FieldError | undefined>}
+              />
             ))}
           </CardContent>
         </Card>
