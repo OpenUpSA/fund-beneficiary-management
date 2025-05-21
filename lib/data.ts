@@ -1,5 +1,7 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull } from "@/types/models"
+import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, User, FormStatus } from "@prisma/client"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 
 export async function fetchFunders() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder`, { next: { tags: ['funders'] } })
@@ -47,8 +49,18 @@ export async function fetchFocusAreas(): Promise<FocusArea[]> {
 }
 
 export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentAgencyFull[]> {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda`, { next: { tags: ['ldas'] } })
-  return res.json()
+  const ldas = await res.json()
+
+  // If no user or role is ADMIN/PROGRAMME_OFFICER, return all LDAs
+  if (!user || user.role === 'ADMIN' || user.role === 'PROGRAMME_OFFICER') {
+    return ldas
+  }
+
+  // For USER role, filter by their LDA IDs
+  return ldas.filter((lda: LocalDevelopmentAgencyFull) => user.ldaIds?.includes(lda.id))
 }
 
 export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull> {
@@ -61,7 +73,7 @@ export async function fetchUsers(): Promise<User[]> {
   return res.json()
 }
 
-export async function fetchUser(user_id: string): Promise<User> {
+export async function fetchUser(user_id: string): Promise<UserFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${user_id}`)
   return res.json()
 }

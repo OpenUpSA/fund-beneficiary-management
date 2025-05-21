@@ -13,14 +13,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      approved: true,
-      createdAt: true,
-      updatedAt: true
+    include: {
+      localDevelopmentAgencies: true
     }
   })
 
@@ -34,22 +28,46 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
-    const updateData = body
     const userId = Number(params.id)
 
+    // First check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { localDevelopmentAgencies: true }
+    })
+
+    if (!existingUser) {
+      return NextResponse.json({ error: `User not found` }, { status: 404 })
+    }
+
+    const { ldaId, ...rest } = body
+
+    // If switching to USER role, require an LDA
+    if (rest.role === 'USER' && !ldaId) {
+      return NextResponse.json({ 
+        error: "An LDA must be selected when the role is USER" 
+      }, { status: 400 })
+    }
+
+    // Handle role changes and LDA connections
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: updateData,
-      select: {
-        name: true,
-        email: true,
-        approved: true,
-        role: true
+      data: {
+        ...rest,
+        localDevelopmentAgencies: {
+          set: rest.role === 'USER' 
+            ? [{ id: parseInt(ldaId) }]  // For USER role, set to selected LDA
+            : []  // For non-USER roles, clear all LDAs
+        }
       },
+      include: {
+        localDevelopmentAgencies: true
+      }
     })
 
     return NextResponse.json(updatedUser)
-  } catch {
+  } catch (error) {
+    console.error("Failed to update user:", error)
     return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
   }
 }

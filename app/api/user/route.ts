@@ -33,7 +33,15 @@ export async function POST(req: NextRequest) {
         role: data.role,
         approved: data.approved,
         passwordHash: hashedPassword,
+        ...(data.ldaId && {
+          localDevelopmentAgencies: {
+            connect: [{ id: parseInt(data.ldaId) }]
+          }
+        })
       },
+      include: {
+        localDevelopmentAgencies: true
+      }
     }
     const record = await prisma.user.create(query)
 
