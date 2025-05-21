@@ -30,8 +30,7 @@ export default async function Layout({
       <NextIntlClientProvider messages={messages} locale={locale}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
         >
           {children}
         </ThemeProvider>
