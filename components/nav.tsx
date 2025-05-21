@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import { useMemo } from "react"
 import {
   BanknoteIcon,
   ClipboardPlus,
@@ -28,30 +28,38 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/routing"
 import { useSession } from "next-auth/react"
 
-const data = {
-  navAdmin: [
-    {
-      title: "Form Templates",
-      url: "/dashboard/form-templates",
-      icon: LayoutTemplate,
-    },
-    {
-      title: "Users",
-      url: "/dashboard/users",
-      icon: Users,
-    }
-  ],
-  navMain: [
-    {
-      url: '/dashboard',
-      title: 'Dashboard',
-      icon: LayoutDashboard
-    },
-    {
-      url: '/dashboard/ldas',
-      title: 'LDAs',
-      icon: MapPinHouse
-    },
+export function Nav() {
+  const tN = useTranslations('navigation')
+  const {data: session} = useSession()
+  const user = session?.user as { role: string; ldaIds?: number[] } | undefined
+
+  // Memoize navigation data based on user role and LDA
+  const data = useMemo(() => ({
+    navAdmin: [
+      {
+        title: "Form Templates",
+        url: "/dashboard/form-templates",
+        icon: LayoutTemplate,
+      },
+      {
+        title: "Users",
+        url: "/dashboard/users",
+        icon: Users,
+      }
+    ],
+    navMain: [
+      {
+        url: '/dashboard',
+        title: 'Dashboard',
+        icon: LayoutDashboard
+      },
+      {
+        url: user?.role === 'USER' && user?.ldaIds?.length === 1
+          ? `/dashboard/ldas/${user.ldaIds[0]}`
+          : '/dashboard/ldas',
+        title: 'LDAs',
+        icon: MapPinHouse
+      },
     {
       url: '/dashboard/funders',
       title: 'Funders',
@@ -77,12 +85,9 @@ const data = {
       title: 'Documents',
       icon: Files
     }
-  ],
-}
+  ]
+}), [user?.role, user?.ldaIds])
 
-export function Nav() {
-  const tN = useTranslations('navigation')
-  const {data: session} = useSession()
   return (
     <Sidebar id="sidebar">
       <SidebarHeader>
