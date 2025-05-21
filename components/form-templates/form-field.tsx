@@ -2,7 +2,10 @@
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import { FieldError, UseFormRegister } from "react-hook-form"
+
 
 type FormValues = Record<string, string | number | boolean>
 
@@ -12,6 +15,7 @@ interface FormFieldProps {
     label: string
     type: string
     required?: boolean
+    options?: { value: string; label: string }[]
   }
   register: UseFormRegister<FormValues>
   errors: Record<string, FieldError | undefined>
@@ -35,6 +39,20 @@ export function FormField({ field, register, errors }: FormFieldProps) {
                 className={errorClass}
                 rows={8}
               />
+            )
+          case "radio":
+            return (
+              <RadioGroup
+                {...register(field.name)}
+                className="flex flex-col space-y-1"
+              >
+                {field.options?.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
+                    <Label htmlFor={`${field.name}-${option.value}`}>{option.label}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
             )
           default:
             return (
