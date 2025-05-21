@@ -30,63 +30,71 @@ import { useSession } from "next-auth/react"
 
 export function Nav() {
   const tN = useTranslations('navigation')
-  const {data: session} = useSession()
+  const { data: session } = useSession()
   const user = session?.user as { role: string; ldaIds?: number[] } | undefined
 
-  // Memoize navigation data based on user role and LDA
   const data = useMemo(() => ({
     navAdmin: [
       {
         title: "Form Templates",
         url: "/dashboard/form-templates",
         icon: LayoutTemplate,
+        requiredRoles: ['ADMIN']
       },
       {
         title: "Users",
         url: "/dashboard/users",
         icon: Users,
+        requiredRoles: ['ADMIN']
       }
     ],
     navMain: [
       {
         url: '/dashboard',
         title: 'Dashboard',
-        icon: LayoutDashboard
+        icon: LayoutDashboard,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER']
       },
       {
         url: user?.role === 'USER' && user?.ldaIds?.length === 1
           ? `/dashboard/ldas/${user.ldaIds[0]}`
           : '/dashboard/ldas',
         title: 'LDAs',
-        icon: MapPinHouse
+        icon: MapPinHouse,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER']
       },
-    {
-      url: '/dashboard/funders',
-      title: 'Funders',
-      icon: HandCoins
-    },
-    {
-      url: '/dashboard/funds',
-      title: 'Funds',
-      icon: BanknoteIcon
-    },
-    {
-      url: '/dashboard/applications-reports',
-      title: 'Applications And Reports',
-      icon: ClipboardPlus
-    },
-    {
-      url: '/dashboard/media',
-      title: 'Media',
-      icon: Images
-    },
-    {
-      url: '/dashboard/documents',
-      title: 'Documents',
-      icon: Files
-    }
-  ]
-}), [user?.role, user?.ldaIds])
+      {
+        url: '/dashboard/funders',
+        title: 'Funders',
+        icon: HandCoins,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      },
+      {
+        url: '/dashboard/funds',
+        title: 'Funds',
+        icon: BanknoteIcon,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      },
+      {
+        url: '/dashboard/applications-reports',
+        title: 'Applications And Reports',
+        icon: ClipboardPlus,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      },
+      {
+        url: '/dashboard/media',
+        title: 'Media',
+        icon: Images,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      },
+      {
+        url: '/dashboard/documents',
+        title: 'Documents',
+        icon: Files,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      }
+    ]
+  }), [user?.role, user?.ldaIds])
 
   return (
     <Sidebar id="sidebar">
@@ -102,8 +110,8 @@ export function Nav() {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavGroup items={data.navMain} />
-        {session && session.user.role === 'ADMIN' && <NavGroup label="Admin" items={data.navAdmin} className="mt-auto" />}
+        {session && <NavGroup session={session} items={data.navMain} />}
+        {session && session.user.role === 'ADMIN' && <NavGroup session={session} label="Admin" items={data.navAdmin} className="mt-auto" />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

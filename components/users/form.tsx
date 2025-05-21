@@ -14,7 +14,7 @@ import {
   FormLabel,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { LocalDevelopmentAgency, User } from '@prisma/client'
+import { LocalDevelopmentAgency } from '@prisma/client'
 
 import {
   Dialog,
@@ -30,11 +30,10 @@ import { UserFormSchema, RoleEnum } from "@/types/formSchemas"
 import { Checkbox } from "../ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { useTranslations } from "next-intl"
+import { UserFull } from "@/types/models"
 
 interface FormDialogProps {
-  user?: User & {
-    localDevelopmentAgencies: LocalDevelopmentAgency[]
-  }
+  user?: UserFull
   callback: () => void
   ldas: LocalDevelopmentAgency[]
 }
