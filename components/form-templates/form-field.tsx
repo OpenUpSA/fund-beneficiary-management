@@ -11,6 +11,7 @@ interface FormFieldProps {
     name: string
     label: string
     type: string
+    required?: boolean
   }
   register: UseFormRegister<FormValues>
   errors: Record<string, FieldError | undefined>
@@ -19,7 +20,10 @@ interface FormFieldProps {
 export function FormField({ field, register, errors }: FormFieldProps) {
   return (
     <div key={field.name}>
-      <label className="block text-sm font-medium">{field.label}</label>
+      <label className="block text-sm font-medium">
+        {field.label}
+        {field.required && <span className="text-red-500 ml-1">*</span>}
+      </label>
       {(() => {
         const errorClass = errors[field.name] ? "border-red-500" : ""
         
