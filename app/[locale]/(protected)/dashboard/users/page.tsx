@@ -3,7 +3,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/co
 
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
-import { fetchUsers } from "@/lib/data"
+import { fetchUsers, fetchLocalDevelopmentAgencies } from "@/lib/data"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Link } from "@/i18n/routing"
@@ -32,6 +32,7 @@ export async function generateMetadata({ params: { locale }
 export default function Page() {
   const tC = useTranslations('common')
   const users: User[] = use(fetchUsers())
+  const ldas = use(fetchLocalDevelopmentAgencies())
 
   const dataChanged = async () => {
     "use server"
@@ -51,7 +52,7 @@ export default function Page() {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Users</h1>
         <div className="space-x-2">
-          <FormDialog callback={dataChanged} />
+          <FormDialog callback={dataChanged} ldas={ldas} />
         </div>
       </div>
       <div className="sm:flex sm:space-x-4 mt-4">

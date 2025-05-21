@@ -14,7 +14,7 @@ import {
   FormLabel,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { User } from '@prisma/client'
+import { LocalDevelopmentAgency, User } from '@prisma/client'
 
 import {
   Dialog,
@@ -32,11 +32,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useTranslations } from "next-intl"
 
 interface FormDialogProps {
-  user?: User
+  user?: User & {
+    localDevelopmentAgencies: LocalDevelopmentAgency[]
+  }
   callback: () => void
+  ldas: LocalDevelopmentAgency[]
 }
 
-export function FormDialog({ user, callback }: FormDialogProps) {
+export function FormDialog({ user, callback, ldas }: FormDialogProps) {
   const [open, setOpen] = useState(false)
   const formSchema = UserFormSchema(user ? false : true)
   const tC = useTranslations('common')
@@ -48,58 +51,88 @@ export function FormDialog({ user, callback }: FormDialogProps) {
       email: user ? user.email : '',
       approved: user ? user.approved : false,
       role: user ? user.role : undefined,
+      ldaId: user?.localDevelopmentAgencies?.[0]?.id?.toString() || '',
       password: '',
       passwordConfirm: '',
     },
   })
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
-    setOpen(false)
+    try {
+      setOpen(false)
 
-    if (user) {
-      toast({
-        title: 'Updating user...',
-        variant: 'processing'
-      })
-      const userData = {
-        name: data.name,
-        email: data.email,
-        approved: data.approved,
-        role: data.role
+      // Only include ldaId if role is USER and ldaId is selected
+      const shouldIncludeLda = data.role === 'USER' && data.ldaId
+
+      if (user) {
+        toast({
+          title: 'Updating user...',
+          variant: 'processing'
+        })
+
+        const userData = {
+          name: data.name,
+          email: data.email,
+          approved: data.approved,
+          role: data.role,
+          ...(shouldIncludeLda ? { ldaId: data.ldaId } : {})
+        }
+
+        const response = await fetch(`/api/user/${user?.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to update user')
+        }
+
+        toast({
+          title: 'User updated',
+          variant: 'success'
+        })
+      } else {
+        toast({
+          title: 'Creating user...',
+          variant: 'processing'
+        })
+
+        const userData = {
+          name: data.name,
+          email: data.email,
+          approved: data.approved,
+          role: data.role,
+          ...(shouldIncludeLda ? { ldaId: data.ldaId } : {}),
+          password: data.password
+        }
+
+        const response = await fetch(`/api/user/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(userData),
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Failed to create user')
+        }
+
+        toast({
+          title: 'User created',
+          variant: 'success'
+        })
       }
-      await fetch(`/api/user/${user?.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      })
+
+      callback()
+    } catch (error) {
+      console.error('Form submission error:', error)
       toast({
-        title: 'User updated',
-        variant: 'success'
-      })
-    } else {
-      toast({
-        title: 'Creating user...',
-        variant: 'processing'
-      })
-      const userData = {
-        name: data.name,
-        email: data.email,
-        approved: data.approved,
-        role: data.role,
-        password: data.password
-      }
-      await fetch(`/api/user/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      })
-      toast({
-        title: 'User created',
-        variant: 'success'
+        title: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive'
       })
     }
-
-    callback()
   }
 
   return (
@@ -174,6 +207,38 @@ export function FormDialog({ user, callback }: FormDialogProps) {
                   </Select>
                 </FormItem>
               )} />
+
+            {form.watch('role') === 'USER' && (
+              <FormField
+                control={form.control}
+                name="ldaId"
+                render={({ field }) => (
+                  <FormItem className="flex-1 w-full">
+                    <FormLabel>Local Development Agency</FormLabel>
+                    <Select 
+                      value={field.value?.toString() || ''} 
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {ldas.map((lda) => (
+                          <SelectItem
+                            key={lda.id}
+                            value={lda.id.toString()}
+                          >
+                            {lda.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
