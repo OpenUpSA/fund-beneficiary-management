@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { FilteredLDAForms } from "@/components/lda-forms/filtered"
 import { FilteredMedia } from "@/components/media/filtered"
 import { OrganisationDetails } from "@/components/organisations/details"
@@ -7,20 +6,13 @@ import { Contacts } from "@/components/contacts/list"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { FilteredDocuments } from "@/components/documents/filtered"
 import { Overview } from "@/components/ldas/overview"
-import { SidebarTrigger } from "@/components/ui/sidebar"
 import { 
-  fetchDevelopmentStages, 
-  fetchFocusAreas, 
   fetchFormStatuses, 
   fetchFormTemplates, 
-  fetchFundingStatuses, 
-  fetchFunds, 
   fetchLocalDevelopmentAgency, 
   fetchLocalDevelopmentAgencyFormsForLDA, 
-  fetchLocations, 
-  fetchUsers 
 } from "@/lib/data"
-import { FormDialog } from "@/components/ldas/form"
+
 import { FormDialog as OrganisationDetailFormDialog } from "@/components/organisations/form"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
 import { revalidateTag } from "next/cache"
@@ -45,18 +37,8 @@ interface LDATabPageProps {
   params: { lda_id: string, tab: string }
 }
 
-const tabLabels: Record<string, string> = {
-  overview: "Overview",
-  applicationsAndReports: "Applications & Reports",
-  contact: "Contact",
-  documents: "Documents",
-  media: "Media",
-};
-
 export default async function Page({ params }: LDATabPageProps) {
   const { lda_id, tab } = params
-
-  console.log("TAB HERE");
   
   // Validate tab parameter
   const validTabs = ["overview", "applicationsAndReports", "contact", "documents", "media"]
@@ -65,12 +47,6 @@ export default async function Page({ params }: LDATabPageProps) {
   }
   
   const lda = await fetchLocalDevelopmentAgency(lda_id)
-  const funds = await fetchFunds()
-  const fundingStatuses = await fetchFundingStatuses()
-  const locations = await fetchLocations()
-  const focusAreas = await fetchFocusAreas()
-  const developmentStages = await fetchDevelopmentStages()
-  const programmeOfficers = await fetchUsers()
 
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchLocalDevelopmentAgencyFormsForLDA(String(lda.id))
@@ -91,36 +67,8 @@ export default async function Page({ params }: LDATabPageProps) {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/ldas">LDAs</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/dashboard/ldas/${lda_id}/overview`}>{lda.name}</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="flex flex-wrap items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">{lda.name}</h1>
-        <div className="space-x-2">
-          <FormDialog
-            lda={lda}
-            funds={funds}
-            fundingStatuses={fundingStatuses}
-            locations={locations}
-            focusAreas={focusAreas}
-            developmentStages={developmentStages}
-            programmeOfficers={programmeOfficers}
-            callback={dataChanged} />
-        </div>
-      </div>
-      
       {/* Tab Content */}
-      <div className="pt-4">
+      <div>
         {(() => {
           switch (tab) {
             case "overview":
