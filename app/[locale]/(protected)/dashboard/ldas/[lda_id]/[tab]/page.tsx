@@ -45,6 +45,14 @@ interface LDATabPageProps {
   params: { lda_id: string, tab: string }
 }
 
+const tabLabels: Record<string, string> = {
+  overview: "Overview",
+  applicationsAndReports: "Applications & Reports",
+  contact: "Contact",
+  documents: "Documents",
+  media: "Media",
+};
+
 export default async function Page({ params }: LDATabPageProps) {
   const { lda_id, tab } = params
 
@@ -94,15 +102,6 @@ export default async function Page({ params }: LDATabPageProps) {
             <BreadcrumbLink href={`/dashboard/ldas/${lda_id}/overview`}>{lda.name}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {tab === "overview" && "Overview"}
-              {tab === "applicationsAndReports" && "Applications & Reports"}
-              {tab === "contact" && "Contact"}
-              {tab === "documents" && "Documents"}
-              {tab === "media" && "Media"}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex flex-wrap items-center justify-between">
