@@ -122,72 +122,82 @@ export default async function Page({ params }: LDATabPageProps) {
       
       {/* Tab Content */}
       <div className="pt-4">
-        {tab === "overview" && (
-          <Overview lda={lda} />
-        )}
-        
-        {tab === "applicationsAndReports" && (
-          <FilteredLDAForms
-            formTemplates={formTemplates}
-            formStatuses={formStatuses}
-            lda={lda}
-            ldaForms={ldaForms}
-            dataChanged={dataChanged}
-          />
-        )}
-        
-        {tab === "contact" && (
-          <div className="sm:flex gap-4 mt-4">
-            <Card className="w-full sm:w-[40rem]">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span>Organisation</span>
-                  <div>
-                    <OrganisationDetailFormDialog
-                      organisationDetail={lda.organisationDetail}
-                      callback={dataChanged} />
-                  </div>
+        {(() => {
+          switch (tab) {
+            case "overview":
+              return <Overview lda={lda} />;
+              
+            case "applicationsAndReports":
+              return (
+                <FilteredLDAForms
+                  formTemplates={formTemplates}
+                  formStatuses={formStatuses}
+                  lda={lda}
+                  ldaForms={ldaForms}
+                  dataChanged={dataChanged}
+                />
+              );
+              
+            case "contact":
+              return (
+                <div className="sm:flex gap-4 mt-4">
+                  <Card className="w-full sm:w-[40rem]">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <span>Organisation</span>
+                        <div>
+                          <OrganisationDetailFormDialog
+                            organisationDetail={lda.organisationDetail}
+                            callback={dataChanged} />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-2 space-y-2 text-sm">
+                      <OrganisationDetails
+                        organisationDetail={lda.organisationDetail} />
+                    </CardContent>
+                  </Card>
+                  <Card className="w-full">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <span>Leadership</span>
+                        <div>
+                          <ContactFormDialog
+                            connectOnCreate={contactConnectCommand}
+                            callback={dataChanged} />
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Contacts
+                        contacts={lda.contacts} />
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-2 space-y-2 text-sm">
-                <OrganisationDetails
-                  organisationDetail={lda.organisationDetail} />
-              </CardContent>
-            </Card>
-            <Card className="w-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span>Leadership</span>
-                  <div>
-                    <ContactFormDialog
-                      connectOnCreate={contactConnectCommand}
-                      callback={dataChanged} />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Contacts
-                  contacts={lda.contacts} />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-        
-        {tab === "documents" && (
-          <FilteredDocuments
-            documents={lda.documents}
-            lda={lda}
-            dataChanged={dataChanged}
-          />
-        )}
-        
-        {tab === "media" && (
-          <FilteredMedia
-            media={lda.media}
-            lda={lda}
-            dataChanged={dataChanged}
-          />
-        )}
+              );
+              
+            case "documents":
+              return (
+                <FilteredDocuments
+                  documents={lda.documents}
+                  lda={lda}
+                  dataChanged={dataChanged}
+                />
+              );
+              
+            case "media":
+              return (
+                <FilteredMedia
+                  media={lda.media}
+                  lda={lda}
+                  dataChanged={dataChanged}
+                />
+              );
+              
+            default:
+              return null;
+          }
+        })()}
       </div>
     </div>
   )
