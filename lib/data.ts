@@ -28,6 +28,11 @@ export async function fetchFunds(): Promise<FundFull[]> {
   return res.json()
 }
 
+export async function fetchFund(fund_id: string): Promise<FundFull> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund/${fund_id}`, { next: { tags: ['funds'] } })
+  return res.json()
+}
+
 export async function fetchFundingStatuses(): Promise<FundingStatus[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funding-status`)
   return res.json()

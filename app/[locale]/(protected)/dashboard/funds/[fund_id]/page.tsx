@@ -4,7 +4,6 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { FilteredMedia } from "@/components/media/filtered"
-
 import { OrganisationDetails } from "@/components/organisations/details"
 import { Contacts } from "@/components/contacts/list"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -13,14 +12,13 @@ import { Overview } from "@/components/funds/overview"
 import { FilteredLDAs } from "@/components/ldas/filtered"
 import { FilteredForms } from "@/components/forms/filtered"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { fetchFocusAreas, fetchFunder, fetchFunderFund, fetchFundingStatuses, fetchLocalDevelopmentAgencies, fetchLocations } from "@/lib/data"
+import { fetchFocusAreas, fetchFund, fetchFundingStatuses, fetchLocalDevelopmentAgencies, fetchLocations } from "@/lib/data"
 
 import { FormDialog } from '@/components/funds/form'
 import { revalidateTag } from "next/cache"
 
 import { FormDialog as OrganisationDetailFormDialog } from "@/components/organisations/form"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
-
 
 export async function generateMetadata({ params: { locale }
 }: Readonly<{
@@ -35,15 +33,13 @@ export async function generateMetadata({ params: { locale }
   }
 }
 
-interface FunderPageProps {
-  params: { funder_id: string, fund_id: string }
+interface FundPageProps {
+  params: { fund_id: string }
 }
 
-export default async function Page({ params }: FunderPageProps) {
-
-  const { funder_id, fund_id } = params
-  const funder = await fetchFunder(funder_id)
-  const fund = await fetchFunderFund(funder_id, fund_id)
+export default async function Page({ params }: FundPageProps) {
+  const { fund_id } = params
+  const fund = await fetchFund(fund_id)
   const fundingStatuses = await fetchFundingStatuses()
   const locations = await fetchLocations()
   const focusAreas = await fetchFocusAreas()
@@ -68,11 +64,7 @@ export default async function Page({ params }: FunderPageProps) {
         <BreadcrumbList>
           <BreadcrumbItem>
             <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/funders">Funders</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/dashboard/funders/${funder.id}`}>{funder.name}</BreadcrumbLink>
+            <BreadcrumbLink href="/dashboard/funds">Funds</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -83,66 +75,34 @@ export default async function Page({ params }: FunderPageProps) {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{fund.name}</h1>
         <div className="space-x-2">
-          <FormDialog
-            funders={[funder]}
-            fund={fund}
-            fundingStatuses={fundingStatuses}
-            locations={locations}
-            focusAreas={focusAreas}
-            callback={dataChanged} />
+          <FormDialog fund={fund} fundingStatuses={fundingStatuses} locations={locations} focusAreas={focusAreas} callback={dataChanged} />
         </div>
       </div>
       <Tabs defaultValue="overview" className="pt-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="funded">Funded LDAs</TabsTrigger>
+          <TabsTrigger value="ldas">LDAs</TabsTrigger>
           <TabsTrigger value="forms">Forms</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
+          <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="media">Media</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="pt-2">
+        <TabsContent value="overview">
           <Overview fund={fund} />
         </TabsContent>
-        <TabsContent value="funded">
+        <TabsContent value="ldas">
           <FilteredLDAs ldas={ldas} />
         </TabsContent>
         <TabsContent value="forms">
           <FilteredForms />
         </TabsContent>
-        <TabsContent value="contact">
-          <div className="sm:flex gap-4 mt-4">
-            <Card className="w-full sm:w-[40rem]">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span>Organisation</span>
-                  <div>
-                    <OrganisationDetailFormDialog
-                      organisationDetail={fund.organisationDetail}
-                      callback={dataChanged} />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-2 space-y-2 text-sm">
-                <OrganisationDetails organisationDetail={fund.organisationDetail} />
-              </CardContent>
-            </Card>
-            <Card className="w-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <span>Leadership</span>
-                  <div>
-                    <ContactFormDialog
-                      connectOnCreate={contactConnectCommand}
-                      callback={dataChanged} />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Contacts contacts={fund.contacts} />
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="contacts">
+          <Card className="w-full">
+            <CardHeader>Contacts</CardHeader>
+            <CardContent>
+              <Contacts contacts={fund.contacts} />
+            </CardContent>
+          </Card>
         </TabsContent>
         <TabsContent value="documents">
           <FilteredDocuments dataChanged={dataChanged} documents={[]} />
@@ -151,6 +111,6 @@ export default async function Page({ params }: FunderPageProps) {
           <FilteredMedia dataChanged={dataChanged} media={[]} />
         </TabsContent>
       </Tabs>
-    </div >
+    </div>
   )
 }

@@ -165,7 +165,7 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds }) => {
               {filteredFunds.map((fund) => (
                 <TableRow key={fund.id}>
                   <TableCell>
-                    <Link href={`/dashboard/funders/${fund.funderId}/funds/${fund.id}`}>
+                    <Link href={`/dashboard/funds/${fund.id}`}>
                       {fund.name}
                     </Link>
                   </TableCell>
