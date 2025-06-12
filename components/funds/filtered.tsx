@@ -16,6 +16,8 @@ interface FilteredFundsProps {
   funds: FundFull[]
 }
 
+
+
 export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds }) => {
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
   const [selectedFundingPeriods, setSelectedFundingPeriods] = useState<number[]>([]);
