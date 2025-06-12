@@ -1,5 +1,4 @@
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { FundsTabs } from "@/components/funds/tabs"
 import { FormDialog } from '@/components/funds/form'
 import { revalidateTag } from "next/cache"
@@ -31,18 +30,13 @@ export default async function Layout({ children, params }: FundLayoutProps) {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/funds">Funds</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{fund.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav 
+        className="mb-4"
+        links={[
+          { label: "Funds", href: "/dashboard/funds" },
+          { label: fund.name, isCurrent: true }
+        ]}
+      />
 
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{fund.name}</h1>

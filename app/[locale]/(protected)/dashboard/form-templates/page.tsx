@@ -1,7 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
-
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { fetchFormTemplates } from "@/lib/data"
 import { Card, CardContent } from "@/components/ui/card"
@@ -35,14 +33,12 @@ export default async function Page() {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbPage>Form Templates</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Form Templates", isCurrent: true }
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Form Templates</h1>
         <div className="space-x-2">

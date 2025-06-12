@@ -1,7 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchDocument } from "@/lib/data"
 import { FormDialog } from "@/components/documents/form"
 import { DeleteDialog } from "@/components/documents/delete"
@@ -39,18 +37,13 @@ export default async function Page({ params }: Props) {
 
   return (
     <div className="space-y-4">
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/documents">Documents</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{document.title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Documents", href: "/dashboard/documents" },
+          { label: document.title, isCurrent: true }
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{document.title}</h1>
         <div className="space-x-2">

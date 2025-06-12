@@ -1,8 +1,7 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { FilteredLDAForms } from "@/components/lda-forms/filtered"
-import { SidebarTrigger } from "@/components/ui/sidebar"
 
 import { FormDialog } from "@/components/lda-forms/form"
 import { revalidateTag } from "next/cache"
@@ -36,14 +35,12 @@ export default async function Page() {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbPage>Applications &amp; Reports</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Applications & Reports", isCurrent: true }
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Applications &amp; Reports</h1>
         <div className="space-x-2">

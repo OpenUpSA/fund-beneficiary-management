@@ -1,10 +1,8 @@
 "use server"
 import { revalidateTag } from 'next/cache'
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
-
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { FilteredFunds } from "@/components/funds/filtered"
-import { SidebarTrigger } from "@/components/ui/sidebar"
 import { fetchFocusAreas, fetchFunders, fetchFundingStatuses, fetchFunds, fetchLocations } from "@/lib/data"
 import { FormDialog } from '@/components/funds/form'
 
@@ -35,14 +33,12 @@ export default async function Page() {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbPage>Funds</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Funds", isCurrent: true }
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Funds</h1>
         <div className="space-x-2">

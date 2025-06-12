@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchFormTemplate } from "@/lib/data"
 import Editor from "@/components/form-templates/editor"
 import { revalidateTag } from "next/cache"
@@ -30,18 +29,13 @@ export default async function Page({ params }: FormTemplatePageProps) {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/form-templates">Form Templates</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{formTemplate.name}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Form Templates", href: "/dashboard/form-templates" },
+          { label: formTemplate.name, isCurrent: true }
+        ]}
+      />
       <Editor formTemplate={formTemplate} dataChanged={dataChanged} />
     </div>
   )

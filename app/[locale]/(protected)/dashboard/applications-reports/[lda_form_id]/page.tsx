@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchFormStatuses, fetchFormTemplates, fetchLDAForm } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { FormDialog } from "@/components/lda-forms/form"
@@ -16,7 +15,8 @@ import { Link } from "@/i18n/routing"
 import { NotebookPenIcon } from "lucide-react"
 
 interface FormTemplatePageProps {
-  params: { lda_form_id: string }
+  params: { lda_form_id: string, locale: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>) {
@@ -34,26 +34,23 @@ const dataChanged = async () => {
   revalidateTag('ldas')
 }
 
-export default async function Page({ params }: FormTemplatePageProps) {
+export default async function Page({ params, searchParams }: FormTemplatePageProps) {
   const { lda_form_id } = params
+  const { from } = searchParams
+  console.log({ params, searchParams, from });
   const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   const formStatuses: FormStatus[] = await fetchFormStatuses()
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/applications-reports">Applications &amp; Reports</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{ldaForm.title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav 
+        className="mb-4"
+        links={[
+          { label: "Applications & Reports", href: "/dashboard/applications-reports" },
+          { label: ldaForm.title, isCurrent: true }
+        ]}
+      />
       <div>
         <div className="flex flex-wrap items-center justify-between mb-4">
           <h1 className="text-xl md:text-2xl font-semibold">{ldaForm.title}</h1>
