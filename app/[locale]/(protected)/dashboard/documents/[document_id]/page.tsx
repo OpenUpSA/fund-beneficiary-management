@@ -30,19 +30,40 @@ const dataChanged = async () => {
 
 interface Props {
   params: { document_id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default async function Page({ params }: Props) {
+interface BreadcrumbLink {
+  label: string
+  href?: string
+  isCurrent?: boolean
+}
+
+export default async function Page({ params, searchParams }: Props) {
   const document = await fetchDocument(params.document_id)
+  const { from } = searchParams
+
+  let breadcrumbLinks: BreadcrumbLink[] = [
+    { label: "Documents", href: "/dashboard/documents" },
+    { label: document.title, isCurrent: true }
+  ]
+
+  if (from && typeof from === 'string') {
+    if(from==="lda") {
+      if (document?.localDevelopmentAgency?.id) {
+        breadcrumbLinks = [{
+          label: document?.localDevelopmentAgency.name,
+          href: `/dashboard/ldas/${document?.localDevelopmentAgency.id}`
+        }, ...breadcrumbLinks]
+      }
+    }
+  }
 
   return (
     <div className="space-y-4">
       <BreadcrumbNav
         className="mb-4"
-        links={[
-          { label: "Documents", href: "/dashboard/documents" },
-          { label: document.title, isCurrent: true }
-        ]}
+        links={breadcrumbLinks}
       />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{document.title}</h1>

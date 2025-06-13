@@ -10,10 +10,20 @@ import { Badge } from "../ui/badge";
 import Link from "next/link";
 import { allFunders, availableStatuses } from "@/app/data";
 
-export const FilteredForms = () => {
+interface Props {
+  navigatedFrom?: string
+}
+
+export const FilteredForms = ({ navigatedFrom }: Props) => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
 
   const allForms = allFunders.flatMap((funder) => funder.funds).flatMap((fund) => fund.forms) || []
+
+  const getFormLink = (formId: number): string => {
+    return navigatedFrom
+      ? `/dashboard/forms/${formId}?from=${navigatedFrom}`
+      : `/dashboard/forms/${formId}`;
+  }
 
   return (
     <div className="sm:flex sm:space-x-4 mt-4">
@@ -58,7 +68,7 @@ export const FilteredForms = () => {
               {allForms.map((form) => (
                 <TableRow key={form.id}>
                   <TableCell>
-                    <Link href={`/dashboard/funders/1/funds/1/forms/${form.id}`}>
+                    <Link href={getFormLink(form.id)}>
                       {form.name}
                     </Link>
                   </TableCell>

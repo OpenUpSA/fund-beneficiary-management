@@ -18,9 +18,10 @@ const getInitials = (name: string) =>
 
 interface FilteredLDAsProps {
   ldas: LocalDevelopmentAgencyFull[]
+  navigatedFrom?: string
 }
 
-export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
+export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom }) => {
 
   const [selectedDevelopmentStages, setSelectedDevelopmentStages] = useState<string[]>([])
   const [selectedReportingStatuses, setSelectedReportingStatuses] = useState<string[]>([])
@@ -60,6 +61,12 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
   })
 
   const [filteredLDAs, setFilteredLDAs] = useState<LocalDevelopmentAgencyFull[]>(ldas)
+
+  const getLDAlink = (ldaid: number): string => {
+    return navigatedFrom
+      ? `/dashboard/ldas/${ldaid}?from=${navigatedFrom}`
+      : `/dashboard/ldas/${ldaid}`;
+  }
 
   useEffect(() => {
     const filtered = ldas.filter((lda) => {
@@ -192,7 +199,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
               {filteredLDAs.map((lda) => (
                 <TableRow key={lda.id}>
                   <TableCell>
-                    <Link href={`/dashboard/ldas/${lda.id}`}>
+                    <Link href={getLDAlink(lda.id)}>
                       {lda.name}
                     </Link>
                   </TableCell>

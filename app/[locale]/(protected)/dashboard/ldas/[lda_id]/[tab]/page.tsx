@@ -82,6 +82,7 @@ export default async function Page({ params }: LDATabPageProps) {
                   lda={lda}
                   ldaForms={ldaForms}
                   dataChanged={dataChanged}
+                  navigatedFrom="lda"
                 />
               );
               
@@ -129,6 +130,7 @@ export default async function Page({ params }: LDATabPageProps) {
                   documents={lda.documents}
                   lda={lda}
                   dataChanged={dataChanged}
+                  navigatedFrom="lda"
                 />
               );
               
@@ -138,6 +140,7 @@ export default async function Page({ params }: LDATabPageProps) {
                   media={lda.media}
                   lda={lda}
                   dataChanged={dataChanged}
+                  navigatedFrom="lda"
                 />
               );
               

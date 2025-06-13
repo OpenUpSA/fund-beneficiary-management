@@ -19,6 +19,12 @@ interface FormTemplatePageProps {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
+interface BreadcrumbLink {
+  label: string;
+  href?: string;
+  isCurrent?: boolean;
+}
+
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>) {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FormTemplatePage' })
@@ -37,19 +43,31 @@ const dataChanged = async () => {
 export default async function Page({ params, searchParams }: FormTemplatePageProps) {
   const { lda_form_id } = params
   const { from } = searchParams
-  console.log({ params, searchParams, from });
   const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   const formStatuses: FormStatus[] = await fetchFormStatuses()
+
+  let breadcrumbLinks: BreadcrumbLink[] = [
+    { label: "Applications & Reports", href: "/dashboard/applications-reports" },
+    { label: ldaForm.title, isCurrent: true }
+  ]
+
+  if (from && typeof from === 'string') {
+    if(from==="lda") {
+      if (ldaForm?.localDevelopmentAgency?.id) {
+        breadcrumbLinks = [{
+          label: ldaForm?.localDevelopmentAgency.name,
+          href: `/dashboard/ldas/${ldaForm?.localDevelopmentAgency.id}`
+        }, ...breadcrumbLinks]
+      }
+    }
+  }
 
   return (
     <div>
       <BreadcrumbNav 
         className="mb-4"
-        links={[
-          { label: "Applications & Reports", href: "/dashboard/applications-reports" },
-          { label: ldaForm.title, isCurrent: true }
-        ]}
+        links={breadcrumbLinks}
       />
       <div>
         <div className="flex flex-wrap items-center justify-between mb-4">

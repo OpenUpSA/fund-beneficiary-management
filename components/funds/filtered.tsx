@@ -14,11 +14,12 @@ import { format } from "date-fns";
 
 interface FilteredFundsProps {
   funds: FundFull[]
+  navigatedFrom?: string
 }
 
 
 
-export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds }) => {
+export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFrom }) => {
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
   const [selectedFundingPeriods, setSelectedFundingPeriods] = useState<number[]>([]);
   const [selectedFundingStatuses, setSelectedFundingStatuses] = useState<string[]>([])
@@ -52,6 +53,12 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds }) => {
   const availableFundingPeriods = Array.from(years)
     .sort((a, b) => a - b)
     .map((year) => ({ value: String(year), label: String(year) }));
+
+  const getFundLink = (fundId: number): string => {
+    return navigatedFrom
+      ? `/dashboard/funds/${fundId}?from=${navigatedFrom}`
+      : `/dashboard/funds/${fundId}`;
+  }
 
   useEffect(() => {
     const filtered = funds.filter((fund) => {
@@ -167,7 +174,7 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds }) => {
               {filteredFunds.map((fund) => (
                 <TableRow key={fund.id}>
                   <TableCell>
-                    <Link href={`/dashboard/funds/${fund.id}`}>
+                    <Link href={getFundLink(fund.id)}>
                       {fund.name}
                     </Link>
                   </TableCell>

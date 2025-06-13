@@ -17,10 +17,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 interface Props {
   documents: DocumentFull[],
   lda?: LocalDevelopmentAgency,
-  dataChanged: () => void
+  dataChanged: () => void,
+  navigatedFrom?: string
 }
 
-export function FilteredDocuments({ documents, dataChanged, lda }: Props) {
+export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }: Props) {
   const tC = useTranslations('common')
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
@@ -34,6 +35,11 @@ export function FilteredDocuments({ documents, dataChanged, lda }: Props) {
     label: tC(`documentTypesPlural.${type}`),
   }))
 
+  const getDocumentLink = (documentId: number): string => {
+    return navigatedFrom
+      ? `/dashboard/documents/${documentId}?from=${navigatedFrom}`
+      : `/dashboard/documents/${documentId}`;
+  }
   let availableLDAs: { id: string; label: string }[] = []
   let focusAreas: FocusArea[] = []
   let availableFundingPeriods: { value: string; label: string }[] = [];
@@ -199,7 +205,7 @@ export function FilteredDocuments({ documents, dataChanged, lda }: Props) {
               {filteredDocuments.map((document) => (
                 <TableRow key={document.id}>
                   <TableCell>
-                    <Link href={`/dashboard/documents/${document.id}`} className="flex items-center space-x-1">
+                    <Link href={getDocumentLink(document.id)} className="flex items-center space-x-1">
                       <span>{document.filePath.replace(/^\/+/, '')}</span>
                     </Link>
                   </TableCell>
