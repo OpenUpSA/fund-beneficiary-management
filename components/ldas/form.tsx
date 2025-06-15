@@ -143,7 +143,7 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
             </>}
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>{lda ? "Manage" : "Add"} LDA</DialogTitle>
         </DialogHeader>
@@ -177,12 +177,12 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
               )}
             />
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <FormField
                 control={form.control}
                 name="amount"
                 render={({ field }) => (
-                  <FormItem className="w-full flex-1">
+                  <FormItem className="w-full">
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
                       <Input {...field} />
@@ -195,7 +195,7 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 control={form.control}
                 name="totalFundingRounds"
                 render={({ field }) => (
-                  <FormItem className="w-full flex-1">
+                  <FormItem className="w-full">
                     <FormLabel>Total Funding Rounds</FormLabel>
                     <FormControl>
                       <Input {...field} />
@@ -205,12 +205,12 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
               />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <FormField
                 control={form.control}
                 name="fundingStatusId"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Funding Status</FormLabel>
                     <Select value={field.value?.toString()} onValueChange={field.onChange}>
                       <FormControl>
@@ -236,7 +236,7 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 control={form.control}
                 name="locationId"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Location</FormLabel>
                     <Select value={field.value?.toString()} onValueChange={field.onChange}>
                       <FormControl>
@@ -259,12 +259,12 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                   </FormItem>
                 )} />
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <FormField
                 control={form.control}
                 name="fundingStart"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Funding Start</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -296,7 +296,7 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 control={form.control}
                 name="fundingEnd"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Funding End</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -326,12 +326,12 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
             </div>
 
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <FormField
                 control={form.control}
                 name="programmeOfficerId"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Programme Officer</FormLabel>
                     <Select value={field.value?.toString()} onValueChange={field.onChange}>
                       <FormControl>
@@ -358,7 +358,7 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 control={form.control}
                 name="developmentStageId"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Development Stage</FormLabel>
                     <Select value={field.value?.toString()} onValueChange={field.onChange}>
                       <FormControl>
@@ -382,13 +382,13 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 )} />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
 
               <FormField
                 control={form.control}
                 name="focusAreas"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Focus Areas</FormLabel>
                     <InputMultiSelect
                       options={focusAreas.map((focusArea) => ({
@@ -410,7 +410,7 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 control={form.control}
                 name="funds"
                 render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
+                  <FormItem className="w-full">
                     <FormLabel>Funds</FormLabel>
                     <InputMultiSelect
                       options={funds.map((fund) => ({
