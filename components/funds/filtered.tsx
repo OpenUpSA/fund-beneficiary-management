@@ -197,7 +197,13 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
                     </div>
                   </TableCell>
                   <TableCell>{fund.localDevelopmentAgencies.length}</TableCell>
-                  <TableCell><Badge variant="outline">{fund.funder.name}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {fund.funders.map((funder: { id: number; name: string }) => (
+                        <Badge key={`funder-${funder.id}`} variant="outline">{funder.name}</Badge>
+                      ))}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -10,7 +10,7 @@ export async function GET() {
       fundingStatus: true,
       focusAreas: true,
       locations: true,
-      funder: true,
+      funders: true,
       localDevelopmentAgencies: {
         select: {
           id: true

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
       developmentStage: true,
       funds: {
         include: {
-          funder: true
+          funders: true
         }
       },
       organisationDetail: true,

@@ -14,6 +14,8 @@ interface Props {
 }
 
 export const Overview: React.FC<Props> = ({ lda }: Props) => {
+
+  console.log(lda.funds)
   return (
     <div className="space-y-4">
       <div className="sm:flex gap-4 ">
@@ -53,7 +55,11 @@ export const Overview: React.FC<Props> = ({ lda }: Props) => {
             <div className="flex justify-between">
               <span className="font-medium">Funders:</span>
               <span className="flex space-x-2">
-                {lda.funds.map((fund) => <Badge key={`fund-${fund.id}`} variant="outline">{fund.funder.name}</Badge>)}
+                {lda.funds.flatMap((fund) =>
+                  fund.funders.map((funder) =>
+                    <Badge key={`funder-${fund.id}-${funder.id}`} variant="outline">{funder.name}</Badge>
+                  )
+                )}
               </span>
             </div>
             <div className="flex justify-between">

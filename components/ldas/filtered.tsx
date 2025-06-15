@@ -31,8 +31,15 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom 
   const [selectedFunders, setSelectedFunders] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
 
+  // Extract all unique funders from the funds' funders arrays
   const funders = [...new Map(
-    ldas.flatMap(lda => lda.funds.map(fund => [fund.funder.id, { id: fund.funder.id, label: fund.funder.name }]))
+    ldas.flatMap(lda =>
+      lda.funds.flatMap(fund =>
+        fund.funders.map((funder: { id: number; name: string }) =>
+          [funder.id, { id: funder.id, label: funder.name }]
+        )
+      )
+    )
   ).values()]
 
   const fundingStatuses: FundingStatus[] = Array.from(
@@ -72,7 +79,9 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom 
     const filtered = ldas.filter((lda) => {
       const funderMatch =
         selectedFunders.length === 0 ||
-        lda.funds.some((fund) => selectedFunders.includes(String(fund.funder.id)))
+        lda.funds.some((fund) =>
+          fund.funders.some((funder: { id: number }) => selectedFunders.includes(String(funder.id)))
+        )
 
       const focusAreaMatch =
         selectedFocusAreas.length === 0 ||
@@ -216,7 +225,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom 
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {
-                        [...new Set(lda.funds.map((fund) => fund.funder.id))].length
+                        [...new Set(lda.funds.flatMap((fund) => fund.funders.map(funder => funder.id)))].length
                       }
                     </div>
                   </TableCell>

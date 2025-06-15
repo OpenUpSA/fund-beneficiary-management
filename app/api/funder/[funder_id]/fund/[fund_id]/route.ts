@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { funder_id: s
       fundingStatus: true,
       locations: true,
       focusAreas: true,
-      funder: true,
+      funders: true,
       localDevelopmentAgencies: true,
       organisationDetail: true,
       contacts: true
@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: { funder_id: s
     const updated = await prisma.fund.update({
       where: { id: fundId },
       data: {
-        funder: {
+        funders: {
           connect: { id: funderId }
         },
         name: data.name,

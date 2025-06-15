@@ -43,7 +43,7 @@ model Funder {
   fundingEnd           DateTime           @default(now())
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
-  funds                Fund[]
+  funds                Fund[]             @relation("FunderToFund")
   fundingStatus        FundingStatus      @relation(fields: [fundingStatusId], references: [id])
   focusAreas           FocusArea[]        @relation("FunderToFocusArea")
   locations            Location[]         @relation("FunderToLocation")
@@ -78,14 +78,12 @@ model Fund {
   id                       Int                      @id @default(autoincrement())
   name                     String
   about                    String
-  funderId                 Int
   fundingStatusId          Int
   amount                   Decimal                  @db.Money
   fundingStart             DateTime                 @default(now())
   fundingEnd               DateTime                 @default(now())
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
-  funder                   Funder                   @relation(fields: [funderId], references: [id])
   fundingStatus            FundingStatus            @relation(fields: [fundingStatusId], references: [id])
   focusAreas               FocusArea[]              @relation("FundToFocusArea")
   localDevelopmentAgencies LocalDevelopmentAgency[] @relation("FundToLocalDevelopmentAgency")
@@ -93,6 +91,7 @@ model Fund {
   organisationDetailId     Int
   organisationDetail       OrganisationDetail       @relation(fields: [organisationDetailId], references: [id])
   contacts                 Contact[]                @relation("ContactToFund")
+  funders                  Funder[]                 @relation("FunderToFund")
 }
 
 model DevelopmentStage {

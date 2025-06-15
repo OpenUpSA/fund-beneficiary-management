@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: { fund_id: str
       fundingStatus: true,
       locations: true,
       focusAreas: true,
-      funder: true,
+      funders: true,
       localDevelopmentAgencies: true,
       organisationDetail: true,
       contacts: true

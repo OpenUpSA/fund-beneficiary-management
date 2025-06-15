@@ -14,7 +14,7 @@ export async function GET() {
       developmentStage: true,
       funds: {
         include: {
-          funder: true
+          funders: true
         }
       }
     },

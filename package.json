@@ -16,7 +16,8 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "postinstall": "prisma generate",
-    "vercel-build": "npx prisma generate && next build"
+    "vercel-build": "npx prisma generate && next build",
+    "data-migration:update-funder-fund": "tsx ./prisma/scripts/migrate-funder-fund.ts"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
