@@ -25,16 +25,22 @@ export function TabNav({ tabs, className, baseUrl = "" }: TabNavProps) {
   const currentTab = pathParts[pathParts.length - 1]
   
   return (
-    <Tabs value={currentTab} defaultValue={tabs[0]?.value} className={cn("mb-6", className)}>
-      <TabsList>
-        {tabs.map((tab) => (
-          <Link key={tab.value} href={`${baseUrl}${tab.href}`} passHref legacyBehavior>
-            <TabsTrigger value={tab.value} asChild>
-              <a>{tab.label}</a>
-            </TabsTrigger>
-          </Link>
-        ))}
-      </TabsList>
-    </Tabs>
+    <div className="overflow-x-auto pb-1">
+      <Tabs value={currentTab} defaultValue={tabs[0]?.value} className={cn("mb-6", className)}>
+        <TabsList className="w-max">
+          {tabs.map((tab) => (
+            <Link key={tab.value} href={`${baseUrl}${tab.href}`} passHref legacyBehavior>
+              <TabsTrigger 
+                value={tab.value} 
+                asChild 
+                className="text-xs sm:text-sm whitespace-nowrap"
+              >
+                <a>{tab.label}</a>
+              </TabsTrigger>
+            </Link>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
   )
 }

@@ -34,7 +34,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { CalendarIcon, PencilIcon, PlusIcon } from "lucide-react"
+import { CalendarIcon, PencilIcon, PlusIcon, SettingsIcon } from "lucide-react"
 import { useState } from "react"
 import { InputMultiSelect, InputMultiSelectTrigger } from "../ui/multiselect";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
@@ -132,20 +132,20 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="secondary" className="gap-2 items-center" size="default">
           {lda ? <>
-            <span className="hidden md:inline">Edit details</span>
-            <PencilIcon />
+            <SettingsIcon className="h-4 w-4" />
+            <span>Manage LDA</span>
           </>
             : <>
-              <span className="hidden md:inline">Add LDA</span>
-              <PlusIcon />
+              <PlusIcon className="h-4 w-4" />
+              <span>Add LDA</span>
             </>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-w-[40vw]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>{lda ? "Edit" : "Add"} LDA</DialogTitle>
+          <DialogTitle>{lda ? "Manage" : "Add"} LDA</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
