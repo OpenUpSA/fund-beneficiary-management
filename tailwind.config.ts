@@ -40,15 +40,15 @@ const config: Config = {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
   			},
-        warning: {
+  			warning: {
   				DEFAULT: 'hsl(var(--warning))',
   				foreground: 'hsl(var(--warning-foreground))'
   			},
-        processing: {
+  			processing: {
   				DEFAULT: 'hsl(var(--processing))',
   				foreground: 'hsl(var(--processing-foreground))'
   			},
-        success: {
+  			success: {
   				DEFAULT: 'hsl(var(--success))',
   				foreground: 'hsl(var(--success-foreground))'
   			},
