@@ -144,21 +144,31 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
             </>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <DialogTitle>{lda ? "Edit LDA" : "Create LDA"}</DialogTitle>
+      <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0">
+        {/* Fixed Header */}
+        <DialogHeader className="p-5">
+          <DialogTitle>{lda ? "Manage LDA" : "Create LDA"}</DialogTitle>
         </DialogHeader>
+        
         <Form {...form}>
-          <form className="space-y-6">
-            <Tabs defaultValue="admin" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-gray-50">
-                <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Admin</TabsTrigger>
-                <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Details</TabsTrigger>
-                <TabsTrigger value="operations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Operations</TabsTrigger>
-                <TabsTrigger value="staff" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Staff & Board</TabsTrigger>
-                <TabsTrigger value="access" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">User Access</TabsTrigger>
-              </TabsList>
-              
+          <form className="h-full">
+            {/* Fixed Tabs Navigation */}
+            <div>
+              <Tabs defaultValue="admin">
+                <div className="bg-gray-100 p-2 px-4">
+                  <div className="max-w-[90vw] overflow-x-auto">
+                    <TabsList className="gap-2">
+                      <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Admin</TabsTrigger>
+                      <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Details</TabsTrigger>
+                      <TabsTrigger value="operations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Operations</TabsTrigger>
+                    <TabsTrigger value="staff" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Staff & Board</TabsTrigger>
+                    <TabsTrigger value="access" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">User Access</TabsTrigger>
+                  </TabsList>
+                </div>
+                </div>
+                
+                {/* Scrollable Content Area */}
+                <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
               <TabsContent value="admin" className="space-y-4 mt-4">
                 <FormField
                   control={form.control}
@@ -178,27 +188,31 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                   name="about"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>About</FormLabel>
+                      <FormLabel>Organisational summary</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="LDA about" {...field} />
+                        <Textarea 
+                          placeholder="Enter details here" 
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
                       </FormControl>
                     </FormItem>
                   )}
                 />
 
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="fundingStatusId"
                     render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Funding Status</FormLabel>
+                      <FormItem>
+                        <FormLabel>NPO/BPO Registration status</FormLabel>
                         <Select value={field.value?.toString()} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Registered NPO" />
                             </SelectTrigger>
-                          </FormControl>
+                        </FormControl>
                           <SelectContent>
                             {fundingStatuses.map((fundingStatus) => (
                               <SelectItem
@@ -215,14 +229,236 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
 
                   <FormField
                     control={form.control}
+                    name="fundingEnd"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Registration expiry</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className="w-full pl-3 text-left font-normal"
+                              >
+                                {field.value ? format(field.value, "dd MMM yyyy") : "12 Dec 2025"}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date("1900-01-01")
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="focusAreas"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Focus areas</FormLabel>
+                      <InputMultiSelect
+                        options={focusAreas.map((focusArea) => ({
+                          value: focusArea.id.toString(),
+                          label: focusArea.label,
+                        }))}
+                        value={field.value.map(String)}
+                        onValueChange={(values: string[]) => field.onChange(values.map(Number))}
+                        placeholder="Climate, Youth, Gender"
+                      >
+                        {(provided) => <InputMultiSelectTrigger {...provided} />}
+                      </InputMultiSelect>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="developmentStageId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Development stage</FormLabel>
+                      <Select value={field.value?.toString()} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Established" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {developmentStages.map((developmentStage) => (
+                            <SelectItem
+                              key={developmentStage.id}
+                              value={developmentStage.id.toString()}
+                            >
+                              {developmentStage.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+
+                <FormField
+                  control={form.control}
+                  name="programmeOfficerId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assigned programme officer(s)</FormLabel>
+                      <Select value={field.value?.toString()} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="James Smith" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {programmeOfficers.map((programmeOfficer) => (
+                            <SelectItem
+                              key={programmeOfficer.id}
+                              value={programmeOfficer.id.toString()}
+                            >
+                              {programmeOfficer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+
+                <FormField
+                  control={form.control}
+                  name="locationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select value={field.value?.toString()} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {locations.map((location) => (
+                            <SelectItem
+                              key={location.id}
+                              value={location.id.toString()}
+                            >
+                              {location.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+              </TabsContent>
+
+              <TabsContent value="details" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Funding Amount</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="totalFundingRounds"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Total Funding Rounds</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="0" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="funds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Associated Funds</FormLabel>
+                      <InputMultiSelect
+                        options={funds.map((fund) => ({
+                          value: fund.id.toString(),
+                          label: fund.name,
+                        }))}
+                        value={field.value.map(String)}
+                        onValueChange={(values: string[]) => field.onChange(values.map(Number))}
+                        placeholder="Select funds"
+                      >
+                        {(provided) => <InputMultiSelectTrigger {...provided} />}
+                      </InputMultiSelect>
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="operations" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="fundingStart"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Funding Start Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className="w-full pl-3 text-left font-normal"
+                              >
+                                {field.value ? format(field.value, "dd MMM yyyy") : "Pick a date"}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date("1900-01-01")
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="locationId"
                     render={({ field }) => (
-                      <FormItem className="w-full">
+                      <FormItem>
                         <FormLabel>Location</FormLabel>
                         <Select value={field.value?.toString()} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue />
+                              <SelectValue placeholder="Select location" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -241,204 +477,10 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                 </div>
               </TabsContent>
 
-              <TabsContent value="details" className="space-y-4 mt-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <FormField
-                    control={form.control}
-                    name="amount"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Amount</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="Funding amount" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="totalFundingRounds"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Total Funding Rounds</FormLabel>
-                        <FormControl>
-                          <Input type="number" placeholder="Number of rounds" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <FormField
-                    control={form.control}
-                    name="focusAreas"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Focus Areas</FormLabel>
-                        <InputMultiSelect
-                          options={focusAreas.map((focusArea) => ({
-                            value: focusArea.id.toString(),
-                            label: focusArea.label,
-                          }))}
-                          value={field.value.map(String)}
-                          onValueChange={(values: string[]) => field.onChange(values.map(Number))}
-                          placeholder="Select focus areas"
-                        >
-                          {(provided) => <InputMultiSelectTrigger {...provided} />}
-                        </InputMultiSelect>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="funds"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Funds</FormLabel>
-                        <InputMultiSelect
-                          options={funds.map((fund) => ({
-                            value: fund.id.toString(),
-                            label: fund.name,
-                          }))}
-                          value={field.value.map(String)}
-                          onValueChange={(values: string[]) => field.onChange(values.map(Number))}
-                          placeholder="Select funds"
-                        >
-                          {(provided) => <InputMultiSelectTrigger {...provided} />}
-                        </InputMultiSelect>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="operations" className="space-y-4 mt-4">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fundingStart"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Funding Start</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className="w-full pl-3 text-left font-normal"
-                              >
-                                {field.value ? format(field.value, "PPP") : "Pick a date"}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="fundingEnd"
-                    render={({ field }) => (
-                      <FormItem className="w-full">
-                        <FormLabel>Funding End</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className="w-full pl-3 text-left font-normal"
-                              >
-                                {field.value ? format(field.value, "PPP") : "Pick a date"}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="developmentStageId"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Development Stage</FormLabel>
-                      <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {developmentStages.map((developmentStage) => (
-                            <SelectItem
-                              key={developmentStage.id}
-                              value={developmentStage.id.toString()}
-                            >
-                              {developmentStage.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
-              </TabsContent>
-
               <TabsContent value="staff" className="space-y-4 mt-4">
-                <FormField
-                  control={form.control}
-                  name="programmeOfficerId"
-                  render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Programme Officer</FormLabel>
-                      <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {programmeOfficers.map((programmeOfficer) => (
-                            <SelectItem
-                              key={programmeOfficer.id}
-                              value={programmeOfficer.id.toString()}
-                            >
-                              {programmeOfficer.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )} />
+                <div className="text-center py-8 text-gray-500">
+                  <p>Staff and board member management will be available here.</p>
+                </div>
               </TabsContent>
 
               <TabsContent value="access" className="space-y-4 mt-4">
@@ -446,13 +488,16 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                   <p>User access settings will be available here.</p>
                 </div>
               </TabsContent>
-            </Tabs>
+                </div>
+              </Tabs>
+            </div>
           </form>
         </Form>
-        <DialogFooter>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>{lda ? "Save changes" : "Create LDA"}</Button>
+        <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
+          <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+          <Button type="submit" onClick={form.handleSubmit(onSubmit)} className="sm:order-2 order-1">{lda ? "Save and close" : "Create LDA"}</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog >
+    </Dialog>
   )
 }

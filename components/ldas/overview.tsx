@@ -15,7 +15,6 @@ interface Props {
 
 export const Overview: React.FC<Props> = ({ lda }: Props) => {
 
-  console.log(lda.funds)
   return (
     <div className="space-y-4">
       <div className="sm:flex gap-4 ">
