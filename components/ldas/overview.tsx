@@ -8,6 +8,9 @@ import { LocalDevelopmentAgencyFull } from "@/types/models"
 import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import { FocusArea, Fund } from '@prisma/client'
+// import { Map } from "../leaflet/maps"
+
+
 
 interface Props {
   lda: LocalDevelopmentAgencyFull
@@ -18,7 +21,7 @@ export const Overview: React.FC<Props> = ({ lda }: Props) => {
   return (
     <div className="space-y-4">
       <div className="sm:flex gap-4 ">
-        <Card className="w-full sm:w-[0.5]">
+        <Card className="w-full sm:w-1/2">
           <CardContent className="pt-2 space-y-2 text-sm py-4">
             <div className="flex justify-between">
               <span className="font-medium">Funding status:</span>

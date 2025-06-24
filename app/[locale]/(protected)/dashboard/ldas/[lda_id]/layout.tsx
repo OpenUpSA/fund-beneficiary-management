@@ -2,6 +2,7 @@ import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { LDATabs } from "@/components/ldas/tabs"
 import { FormDialog } from "@/components/ldas/form"
 import { revalidateTag } from "next/cache"
+import 'leaflet/dist/leaflet.css';
 import { 
   fetchDevelopmentStages, 
   fetchFocusAreas, 
@@ -9,7 +10,8 @@ import {
   fetchFunds, 
   fetchLocalDevelopmentAgency,
   fetchLocations, 
-  fetchUsers 
+  fetchUsers,
+  fetchProvinces
 } from "@/lib/data"
 
 interface LDALayoutProps {
@@ -26,6 +28,7 @@ export default async function Layout({ children, params }: LDALayoutProps) {
   const focusAreas = await fetchFocusAreas()
   const developmentStages = await fetchDevelopmentStages()
   const programmeOfficers = await fetchUsers()
+  const provinces = await fetchProvinces()
 
   const dataChanged = async () => {
     "use server"
@@ -53,6 +56,7 @@ export default async function Layout({ children, params }: LDALayoutProps) {
             focusAreas={focusAreas}
             developmentStages={developmentStages}
             programmeOfficers={programmeOfficers}
+            provinces={provinces}
             callback={dataChanged} />
         </div>
       </div>

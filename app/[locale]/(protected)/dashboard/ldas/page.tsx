@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { FilteredLDAs } from "@/components/ldas/filtered"
-import { fetchDevelopmentStages, fetchFocusAreas, fetchFundingStatuses, fetchFunds, fetchLocalDevelopmentAgencies, fetchLocations, fetchUsers } from "@/lib/data"
+import { fetchDevelopmentStages, fetchFocusAreas, fetchFundingStatuses, fetchFunds, fetchLocalDevelopmentAgencies, fetchLocations, fetchUsers, fetchProvinces } from "@/lib/data"
 import { FormDialog } from "@/components/ldas/form"
 import { revalidateTag } from "next/cache"
 
@@ -27,6 +27,7 @@ export default async function Page() {
   const ldas = await fetchLocalDevelopmentAgencies()
   const developmentStages = await fetchDevelopmentStages()
   const programmeOfficers = await fetchUsers()
+  const provinces = await fetchProvinces()
 
   const dataChanged = async (tag: string) => {
     "use server"
@@ -51,6 +52,7 @@ export default async function Page() {
             focusAreas={focusAreas}
             developmentStages={developmentStages}
             programmeOfficers={programmeOfficers}
+            provinces={provinces}
             callback={dataChanged} />
         </div>
       </div>

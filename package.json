@@ -17,7 +17,8 @@
     "db:pull": "prisma db pull",
     "postinstall": "prisma generate",
     "vercel-build": "npx prisma generate && next build",
-    "data-migration:update-funder-fund": "tsx ./prisma/scripts/migrate-funder-fund.ts"
+    "data-migration:update-funder-fund": "tsx ./prisma/scripts/migrate-funder-fund.ts",
+    "data-migration:seed-provinces": "tsx ./prisma/scripts/seed-provinces.ts"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
@@ -63,6 +64,8 @@
     "embla-carousel-react": "^8.6.0",
     "imagekit": "^6.0.0",
     "input-otp": "^1.4.2",
+    "leaflet": "^1.9.4",
+    "leaflet-geosearch": "^4.2.0",
     "lucide-react": "^0.515.0",
     "next": "14.2.26",
     "next-auth": "^4.24.11",
@@ -72,6 +75,7 @@
     "react-day-picker": "^9.7.0",
     "react-dom": "^18",
     "react-hook-form": "^7.58.0",
+    "react-leaflet": "^4.2.1",
     "react-resizable-panels": "^3.0.3",
     "recharts": "^2.15.3",
     "sonner": "^2.0.5",
@@ -83,6 +87,7 @@
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/imagekit": "^3.1.5",
+    "@types/leaflet": "^1.9.8",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

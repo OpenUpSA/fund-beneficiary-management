@@ -12,7 +12,7 @@ import { Form } from "@/components/ui/form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { FundingStatus, Location, FocusArea, Fund, DevelopmentStage, User } from '@prisma/client'
-import { LocalDevelopmentAgencyFull } from '@/types/models'
+import { LocalDevelopmentAgencyFull, Province } from '@/types/models'
 
 import {
   Dialog,
@@ -40,30 +40,20 @@ interface FormDialogProps {
   locations: Location[]
   developmentStages: DevelopmentStage[]
   focusAreas: FocusArea[]
+  provinces: Province[]
   programmeOfficers: User[]
   callback: (tag: string) => void
 }
 
 // FormSchema is now imported from form-schema.ts
 
-export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas, developmentStages, programmeOfficers, callback }: FormDialogProps) {
+export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: lda ? lda.name : "",
-      about: lda ? lda.about : "",
-      amount: lda ? Number(lda.amount) : 0,
-      totalFundingRounds: lda ? lda.totalFundingRounds : 0,
-      fundingStatusId: lda ? lda.fundingStatusId : fundingStatuses[0].id,
-      locationId: lda ? lda.locationId : locations[0].id,
-      programmeOfficerId: lda?.programmeOfficerId ?? programmeOfficers[0].id,
-      developmentStageId: lda ? lda.developmentStageId : developmentStages[0].id,
-      focusAreas: lda ? lda.focusAreas.map((focusArea: FocusArea) => focusArea.id) : [],
-      funds: lda ? lda.funds.map((fund: Fund) => fund.id) : [],
-      fundingStart: lda ? new Date(lda.fundingStart) : new Date(),
-      fundingEnd: lda ? new Date(lda.fundingEnd) : new Date()
     },
   })
 
@@ -156,7 +146,8 @@ export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas,
                   <TabsContent value="details">
                     <DetailsTab 
                       form={form} 
-                      funds={funds} 
+                      funds={funds}
+                      provinces={provinces}
                     />
                   </TabsContent>
 

@@ -1,3 +1,5 @@
+"use client"
+
 import { 
   FormControl, 
   FormField, 
@@ -23,6 +25,7 @@ import { FundingStatus, Location, FocusArea, DevelopmentStage, User } from '@pri
 import { UseFormReturn } from "react-hook-form"
 
 import { FormValues } from "./form-schema"
+import { RegistrationStatus, OrganisationStatus } from "@/constants/lda"
 
 interface AdminTabProps {
   form: UseFormReturn<FormValues>
@@ -65,7 +68,7 @@ export function AdminTab({
             <FormControl>
               <Textarea 
                 placeholder="Enter details here" 
-                className="min-h-[80px]"
+                className="min-h-[80px] resize-none"
                 {...field} 
               />
             </FormControl>
@@ -73,67 +76,79 @@ export function AdminTab({
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-2">
         <FormField
-          control={form.control}
-          name="fundingStatusId"
-          render={({ field }) => (
+            control={form.control}
+            name="registrationStatus"
+            render={({ field }) => (
             <FormItem>
-              <FormLabel>NPO/BPO Registration status</FormLabel>
-              <Select value={field.value?.toString()} onValueChange={field.onChange}>
+                <FormLabel>NPO/BPO Registration status</FormLabel>
+                <Select value={field.value?.toString()} onValueChange={field.onChange}>
                 <FormControl>
-                  <SelectTrigger>
+                    <SelectTrigger>
                     <SelectValue placeholder="Registered NPO" />
-                  </SelectTrigger>
-              </FormControl>
+                    </SelectTrigger>
+                </FormControl>
                 <SelectContent>
-                  {fundingStatuses.map((fundingStatus) => (
+                    {RegistrationStatus.map((registrationStatus) => (
                     <SelectItem
-                      key={fundingStatus.id}
-                      value={fundingStatus.id.toString()}
+                        key={registrationStatus}
+                        value={registrationStatus}
                     >
-                      {fundingStatus.label}
+                        {registrationStatus}
                     </SelectItem>
-                  ))}
+                    ))}
                 </SelectContent>
-              </Select>
+                </Select>
             </FormItem>
-          )} />
+        )} />
 
-        <FormField
-          control={form.control}
-          name="fundingEnd"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Registration expiry</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className="w-full pl-3 text-left font-normal"
-                    >
-                      {field.value ? format(field.value, "dd MMM yyyy") : "12 Dec 2025"}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </FormItem>
-          )}
-        />
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="registrationCode"
+                render={({ field }) => (
+                <FormItem>
+                    <FormControl>
+                        <Input placeholder="Registration code" {...field} />
+                    </FormControl>
+                </FormItem>
+            )} />
+            
+            <FormField
+                control={form.control}
+                name="registrationDate"
+                render={({ field }) => (
+                <FormItem>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                                <Button
+                                    variant={"outline"}
+                                    className="w-full pl-3 text-left font-normal text-gray-500"
+                                >
+                                    {field.value ? format(field.value, "dd MMM yyyy") : "Pick a date"}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                    date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </FormItem>
+            )} />
+
+        </div>
+    </div>
 
       <FormField
         control={form.control}
@@ -146,9 +161,9 @@ export function AdminTab({
                 value: focusArea.id.toString(),
                 label: focusArea.label,
               }))}
-              value={field.value.map(String)}
-              onValueChange={(values: string[]) => field.onChange(values.map(Number))}
-              placeholder="Climate, Youth, Gender"
+              value={field?.value?.map(String)}
+              onValueChange={(values: string[]) => field?.onChange(values.map(Number))}
+              placeholder="select focus areas"
             >
               {(provided) => <InputMultiSelectTrigger {...provided} />}
             </InputMultiSelect>
@@ -208,31 +223,33 @@ export function AdminTab({
           </FormItem>
         )} />
 
-      <FormField
-        control={form.control}
-        name="locationId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Status</FormLabel>
-            <Select value={field.value?.toString()} onValueChange={field.onChange}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {locations.map((location) => (
-                  <SelectItem
-                    key={location.id}
-                    value={location.id.toString()}
-                  >
-                    {location.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormItem>
-        )} />
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select value={field.value?.toString()} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Active" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {OrganisationStatus.map((organisationStatus) => (
+                    <SelectItem
+                      key={organisationStatus}
+                      value={organisationStatus}
+                    >
+                      {organisationStatus}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+
     </div>
   )
 }

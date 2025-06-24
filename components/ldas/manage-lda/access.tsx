@@ -1,3 +1,5 @@
+"use client"
+
 export function AccessTab() {
   return (
     <div className="space-y-4 mt-4">

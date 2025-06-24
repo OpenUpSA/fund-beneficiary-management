@@ -224,6 +224,15 @@ model Document {
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 }
 
+model Province {
+  id                       Int                     @id @default(autoincrement())
+  name                     String                  @unique
+  code                     String                  @unique
+  districts                Json                    // Stored as JSON array of district objects
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+}
+
 enum Role {
   USER
   PROGRAMME_OFFICER

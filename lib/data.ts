@@ -1,4 +1,4 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull } from "@/types/models"
+import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull, Province } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, User, FormStatus } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
@@ -130,5 +130,18 @@ export async function fetchFormStatuses(): Promise<FormStatus[]> {
 
 export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmentAgencyFormFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/${lda_form_id}`, { next: { tags: ['ldas'] } })
+  return res.json()
+}
+
+export async function fetchProvinces(): Promise<Province[]> {
+  console.log("Fetching provinces...")
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces`)
+  const data = await res.json();
+  console.log('Province data:', data);
+  return data;
+}
+
+export async function fetchProvince(province_code: string): Promise<Province> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces/${province_code}`, { next: { tags: ['provinces'] } })
   return res.json()
 }

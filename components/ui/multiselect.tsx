@@ -260,8 +260,9 @@ export const InputMultiSelectTrigger = React.forwardRef<
                   <Badge
                     key={`${index}-${value}`}
                     className={cn(
-                      "mr-1 cursor-default border-transparent bg-muted text-foreground hover:bg-muted",
+                      "mr-1 h-5 min-w-5 rounded-md px-1 font-mono tabular-nums text-xs text-muted-foreground",
                     )}
+                    variant="outline"
                   >
                     {option?.icon && <option.icon className="mr-1 h-3.5 w-3.5" />}
                     <span className="truncate max-w-[15ch] inline-block align-middle">
@@ -298,7 +299,7 @@ export const InputMultiSelectTrigger = React.forwardRef<
           </div>
         ) : (
           <div className="flex items-center justify-between w-full mx-auto">
-            <span className="mx-3 text-sm">{placeholder}</span>
+            <span className="mx-3 text-sm text-muted-foreground">{placeholder}</span>
             <ChevronDown className="h-4 mx-2 cursor-pointer text-muted-foreground" />
           </div>
         )}
