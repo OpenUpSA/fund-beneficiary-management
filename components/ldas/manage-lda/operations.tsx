@@ -25,70 +25,48 @@ interface OperationsTabProps {
   locations: Location[]
 }
 
-export function OperationsTab({ form, locations }: OperationsTabProps) {
-  return (
-    <div className="space-y-4 mt-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="fundingStart"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Funding Start Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className="w-full pl-3 text-left font-normal"
-                    >
-                      {field.value ? format(field.value, "dd MMM yyyy") : "Pick a date"}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </FormItem>
-          )}
-        />
+import { InlineEditableField } from "@/components/ui/inline-editable-field";
+import { useState } from "react";
 
-        <FormField
-          control={form.control}
-          name="locationId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {locations.map((location) => (
-                    <SelectItem
-                      key={location.id}
-                      value={location.id.toString()}
-                    >
-                      {location.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )} />
-      </div>
+export function OperationsTab({ form, locations }: OperationsTabProps) {
+  // Example: You would get these from form state or props
+  const [vision, setVision] = useState(
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius velit sodales, sollicitudin ipsum in, mollis ligula. Vestibulum efficitur odio quam. In hac habitasse platea dictumst. Aenean aliquam justo et dui varius, ac consequat felis vehicula. Vestibulum vestibulum rutrum ligula et volutpat. Integer efficitur ullamcorper elit, in viverra ante ornare vitae. Praesent metus dui, volutpat eget elit vulputate, pellentesque interdum libero. Nullam scelerisque nulla nisl, sit amet rhoncus erat gravida at."
+  );
+  const [mission, setMission] = useState(
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius velit sodales, sollicitudin ipsum in, mollis ligula. Vestibulum efficitur odio quam. In hac habitasse platea dictumst. Aenean aliquam justo et dui varius"
+  );
+
+  // Example PUT request handler
+  async function handleSave(field: "vision" | "mission", value: string) {
+    // Replace with your actual endpoint and payload structure
+    await fetch(`/api/lda/organisation`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [field]: value }),
+    });
+    if (field === "vision") setVision(value);
+    if (field === "mission") setMission(value);
+  }
+
+  return (
+    <div className="space-y-8 mt-4">
+      <h2 className="text-2xl font-bold mb-6">Vision & Mission</h2>
+      <InlineEditableField
+        label="Vision of organisation"
+        value={vision}
+        fieldName="vision"
+        multiline
+        onSave={value => handleSave("vision", value)}
+      />
+      <InlineEditableField
+        label="Mission of organisation"
+        value={mission}
+        fieldName="mission"
+        multiline
+        onSave={value => handleSave("mission", value)}
+      />
     </div>
-  )
+  );
 }
+
