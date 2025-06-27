@@ -8,7 +8,6 @@ import { LocalDevelopmentAgencyFull } from "@/types/models"
 import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import { FocusArea, Fund } from '@prisma/client'
-// import { Map } from "../leaflet/maps"
 
 
 

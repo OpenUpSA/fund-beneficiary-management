@@ -2,8 +2,7 @@ import {
   FormControl, 
   FormField, 
   FormItem, 
-  FormLabel,
-  FormDescription
+  FormLabel
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { FundFull } from "@/types/models"
@@ -18,12 +17,11 @@ import {
   SelectValue 
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { useState, useEffect } from "react"
-import Map from "@/components/map";
+import { useState, useEffect, useMemo } from "react"
+import Map from "@/components/ldas/map";
 
 interface DetailsTabProps {
   form: UseFormReturn<FormValues>
-  funds: FundFull[],
   provinces: Province[]
 }
 
@@ -32,7 +30,9 @@ interface District {
   code: string;
 }
 
-export function DetailsTab({ form, funds, provinces }: DetailsTabProps) {
+
+
+export function DetailsTab({ form, provinces }: DetailsTabProps) {
   // State to store districts based on selected province
   const [districts, setDistricts] = useState<District[]>([]);
   const [postalDistricts, setPostalDistricts] = useState<District[]>([]);
@@ -49,36 +49,48 @@ export function DetailsTab({ form, funds, provinces }: DetailsTabProps) {
   
   // Update districts when province changes
   useEffect(() => {
-    // Reset district when province changes
-    form.setValue('physicalDistrict', '');
-    form.setValue('postalDistrict', '');
-    
     if (selectedPhysicalProvinceCode) {
       // Find the selected province and get its districts
       const selectedProvince = provinces.find(p => p.code === selectedPhysicalProvinceCode);
       if (selectedProvince && selectedProvince.districts) {
-        setDistricts(selectedProvince.districts);
+        // Cast to unknown first, then to District[] to satisfy TypeScript
+        const districtsArray = selectedProvince.districts as unknown as District[];
+        setDistricts(districtsArray);
+        
+        if (districtsArray.length > 0) {
+          form.setValue('physicalDistrict', districtsArray[0].code);
+        }
       } else {
         setDistricts([]);
       }
     } else {
-      // Clear districts when no province is selected
       setDistricts([]);
     }
+  }, [selectedPhysicalProvinceCode, provinces, form]);
 
+  // Update postal districts when postal province changes
+  useEffect(() => {
     if (selectedPostalProvinceCode) {
       // Find the selected province and get its districts
       const selectedProvince = provinces.find(p => p.code === selectedPostalProvinceCode);
       if (selectedProvince && selectedProvince.districts) {
-        setPostalDistricts(selectedProvince.districts);
+        // Cast to unknown first, then to District[] to satisfy TypeScript
+        const districtsArray = selectedProvince.districts as unknown as District[];
+        setPostalDistricts(districtsArray);
+        
+        if (districtsArray.length > 0) {
+          form.setValue('postalDistrict', districtsArray[0].code);
+        }
       } else {
         setPostalDistricts([]);
       }
     } else {
-      // Clear districts when no province is selected
       setPostalDistricts([]);
     }
+  }, [selectedPostalProvinceCode, provinces, form]);
 
+
+  useEffect(() => {
     if (!useDifferentPostalAddress) {
       form.setValue('postalStreet', form.getValues('physicalStreet'));
       form.setValue('postalComplexName', form.getValues('physicalComplexName'));
@@ -88,8 +100,6 @@ export function DetailsTab({ form, funds, provinces }: DetailsTabProps) {
       form.setValue('postalDistrict', selectedPhysicalDistrictCode);
     }
   }, [
-    selectedPhysicalProvinceCode,
-    selectedPostalProvinceCode,
     selectedPhysicalStreet,
     selectedPhysicalComplexName,
     selectedPhysicalComplexNumber,
@@ -97,8 +107,43 @@ export function DetailsTab({ form, funds, provinces }: DetailsTabProps) {
     selectedPhysicalProvinceCode,
     selectedPhysicalDistrictCode,
     provinces,
+    useDifferentPostalAddress,
     form
 ]);
+
+  const physicalAddress = useMemo(() => {
+    // Find province and district names from their codes
+    const selectedProvince = provinces.find(p => p.code === selectedPhysicalProvinceCode);
+    const provinceName = selectedProvince?.name || selectedPhysicalProvinceCode;
+    
+    const selectedDistrict = districts.find(d => d.code === selectedPhysicalDistrictCode);
+    const districtName = selectedDistrict?.name || selectedPhysicalDistrictCode;
+    
+    const parts = [
+      selectedPhysicalStreet,
+      selectedPhysicalComplexName,
+      selectedPhysicalComplexNumber,
+      selectedPhysicalCity,
+      provinceName,
+      districtName
+    ].filter(part => part && part.trim() !== '');
+    
+    // Only add South Africa if we have at least one valid part
+    if (parts.length > 0) {
+      return parts.join(', ') + ', South Africa';
+    }
+    
+    return '';
+  }, [
+    selectedPhysicalStreet,
+    selectedPhysicalComplexName,
+    selectedPhysicalComplexNumber,
+    selectedPhysicalCity,
+    selectedPhysicalProvinceCode,
+    selectedPhysicalDistrictCode,
+    provinces,
+    districts
+  ])
 
   return (
     <div className="space-y-4 mt-4">
@@ -262,7 +307,7 @@ export function DetailsTab({ form, funds, provinces }: DetailsTabProps) {
         </FormItem>
       )} />
 
-      <div className="space-y-2">
+      <div className="space-y-2" hidden={!useDifferentPostalAddress}>
         <FormField
           control={form.control}
           name="postalStreet"
@@ -359,11 +404,16 @@ export function DetailsTab({ form, funds, provinces }: DetailsTabProps) {
             </FormItem>
           )} />
       </div>
-      <div className="mt-6">
-        <h3 className="text-lg font-medium mb-2">Location on Map</h3>
-        <p className="text-sm text-muted-foreground mb-4">Click on the map to set the location or search for an address</p>
-        <Map />
-      </div>
+      <FormField
+          control={form.control}
+          name="officeContactNumber"
+          render={() => (
+            <FormItem>
+              <FormLabel>Mapped location</FormLabel>
+              <Map seachedAddress={physicalAddress} />
+            </FormItem>
+          )}
+        />
     </div>
   )
 }

@@ -15,7 +15,7 @@ export interface MapProps {
 const LoadingPlaceholder = () => (
   <div 
     style={{ 
-      height: "400px", 
+      height: "300px", 
       width: "100%", 
       display: "flex", 
       alignItems: "center", 
@@ -30,7 +30,7 @@ const LoadingPlaceholder = () => (
 
 // Dynamically import the vanilla JS Leaflet map with no SSR
 const Map = dynamic(
-  () => import("./leaflet-map"),
+  () => import("./map"),
   {
     ssr: false,
     loading: () => <LoadingPlaceholder />
