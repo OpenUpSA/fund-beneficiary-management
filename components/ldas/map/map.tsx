@@ -5,11 +5,13 @@ import L from "leaflet";
 // Import fullscreen control
 import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomControl } from "react-leaflet";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import { UseFormReturn } from "react-hook-form";
+import { FormValues } from "../form-schema";
 
 // South Africa coordinates
 const southAfricaCenter: [number, number] = [-30.5595, 22.9375];
@@ -57,16 +59,13 @@ function CurrentLocationMarker({ position, text }: { position: [number, number];
 }
 
 function ClickHandler({
-  setPosition,
-  setAddress,
+  handleLocationSelect
 }: {
-  setPosition: (pos: [number, number]) => void;
-  setAddress: (addr: string) => void;
+  handleLocationSelect: (pos: [number, number], addr: string) => void;
 }) {
   useMapEvents({
     click: async (e) => {
       const coords: [number, number] = [e.latlng.lat, e.latlng.lng];
-      setPosition(coords);
 
       // Reverse geocode
       try {
@@ -74,10 +73,10 @@ function ClickHandler({
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords[0]}&lon=${coords[1]}`
         );
         const data = await res.json();
-        setAddress(data?.display_name || "Unknown location");
+        handleLocationSelect(coords, data?.display_name || "Unknown location");
       } catch (err) {
         console.error("Reverse geocoding failed", err);
-        setAddress("Location selected");
+        handleLocationSelect(coords, "Location selected");
       }
     },
   });
@@ -85,39 +84,48 @@ function ClickHandler({
 }
 
 interface MapProps {
-  onLocationSelect?: (location: { lat: number; lng: number; address?: string }) => void;
-  seachedAddress?: string;
+  form: UseFormReturn<FormValues>,
 }
 
-export default function Map({ onLocationSelect, seachedAddress }: MapProps) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
-  const [markerText, setMarkerText] = useState<string>("");
-  const [search, setSearch] = useState<string>(seachedAddress || "");
+export default function Map({ form }: MapProps) {
+
+  const coordinates = useMemo(() => {
+    if (form.getValues('latitude') && form.getValues('longitude')) {
+      return [form.getValues('latitude'), form.getValues('longitude')];
+    }
+    return null;
+  }, [form]);
+
+  const mapAddress = useMemo(() => {
+    if (form.getValues('mapAddress')) {
+      return form.getValues('mapAddress');
+    }
+    return "";
+  }, [form]);
+
+  const [position, setPosition] = useState<[number, number] | null>(coordinates);
+  const [markerText, setMarkerText] = useState<string>(mapAddress);
+  const [search, setSearch] = useState<string>("");
   
   // Handle location selection and notify parent component if callback provided
   const handleLocationSelect = useCallback((coords: [number, number], address: string) => {
-    if (onLocationSelect) {
-      onLocationSelect({
-        lat: coords[0],
-        lng: coords[1],
-        address: address
-      });
-    }
-  }, [onLocationSelect]);
+    setPosition(coords);
+    setMarkerText(address);
+    form.setValue('latitude', coords[0]);
+    form.setValue('longitude', coords[1]);
+    form.setValue('mapAddress', address);
+  }, [form, setPosition, setMarkerText]);
 
   const autoLocate = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
         const coords: [number, number] = [latitude, longitude];
-        setPosition(coords);
-        setMarkerText("You are here");
-        
         // Notify parent component if callback provided
         handleLocationSelect(coords, "You are here");
       });
     }
-  }, [setPosition, setMarkerText, handleLocationSelect]);
+  }, [handleLocationSelect]);
 
   const handleSearch = useCallback(async () => {
     if (!search) return;
@@ -128,14 +136,11 @@ export default function Map({ onLocationSelect, seachedAddress }: MapProps) {
     if (data && data[0]) {
       const lat = parseFloat(data[0].lat);
       const lon = parseFloat(data[0].lon);
-      const coords: [number, number] = [lat, lon];
-      setPosition(coords);
-      setMarkerText(data[0].display_name);
-      
+      const coords: [number, number] = [lat, lon];      
       // Notify parent component if callback provided
       handleLocationSelect(coords, data[0].display_name);
     }
-  }, [search, setPosition, setMarkerText, handleLocationSelect]);
+  }, [search, handleLocationSelect]);
 
   // Debounce timer reference
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -213,7 +218,7 @@ export default function Map({ onLocationSelect, seachedAddress }: MapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {position && <CurrentLocationMarker position={position} text={markerText} />}
-        <ClickHandler setPosition={setPosition} setAddress={setMarkerText} />
+        <ClickHandler handleLocationSelect={handleLocationSelect}/>
         <ZoomControl position="bottomright" />
         <FullscreenControl />
       </MapContainer>

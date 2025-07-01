@@ -1,16 +1,11 @@
-export const RegistrationStatus = [
-    "Not registered",
-    "Registered NPO",
-    "Registered BPO"
-] as const;
+export const RegistrationStatus = {
+    not_registered: "Not registered",
+    registered_npo: "Registered NPO",
+    registered_bpo: "Registered BPO"
+} as const;
 
-export const OrganisationStatus = [
-    "Active",
-    "Inactive",
-    "Archived"
-] as const;
-
-
-
-type RegistrationStatus = typeof RegistrationStatus[number];
-type OrganisationStatus = typeof OrganisationStatus[number];
+export const OrganisationStatus = {
+    active: "Active",
+    inactive: "Inactive",
+    archived: "Archived"
+} as const;

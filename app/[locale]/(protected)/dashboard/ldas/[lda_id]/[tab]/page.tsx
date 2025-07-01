@@ -48,6 +48,10 @@ export default async function Page({ params }: LDATabPageProps) {
   
   const lda = await fetchLocalDevelopmentAgency(lda_id)
 
+  console.log(
+    lda
+  )
+
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchLocalDevelopmentAgencyFormsForLDA(String(lda.id))
   const formStatuses: FormStatus[] = await fetchFormStatuses()

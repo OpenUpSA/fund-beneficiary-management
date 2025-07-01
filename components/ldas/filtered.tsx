@@ -43,21 +43,21 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom 
   ).values()]
 
   const fundingStatuses: FundingStatus[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.fundingStatus).map((item) => [item.id, item])).values()
+    new Map(ldas.flatMap((lda) => lda.fundingStatus || []).map((item) => [item.id, item])).values()
   )
 
   const focusAreas: FocusArea[] = [
     ...new Map(
-      ldas.flatMap((lda) => lda.focusAreas).map((item) => [item.id, item])
+      ldas.flatMap((lda) => lda.focusAreas || []).map((item) => [item.id, item])
     ).values(),
   ]
 
   const locations: Location[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.location).map((item) => [item.id, item])).values()
+    new Map(ldas.flatMap((lda) => lda.location || []).map((item) => [item.id, item])).values()
   )
 
   const developmentStages: DevelopmentStage[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.developmentStage).map((item) => [item.id, item])).values()
+    new Map(ldas.flatMap((lda) => lda.developmentStage || []).map((item) => [item.id, item])).values()
   )
 
   const years = new Set<number>()
@@ -212,10 +212,10 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom 
                       {lda.name}
                     </Link>
                   </TableCell>
-                  <TableCell><Badge variant="outline">{lda.fundingStatus.label}</Badge></TableCell>
-                  <TableCell className="text-nowrap">R{Number(lda.amount)}</TableCell>
-                  <TableCell><Badge variant="outline">{lda.developmentStage.label}</Badge></TableCell>
-                  <TableCell className="text-nowrap"><Badge variant="outline">{lda.location.label}</Badge></TableCell>
+                  <TableCell>{lda.fundingStatus && <Badge variant="outline">{lda.fundingStatus.label}</Badge>}</TableCell>
+                  <TableCell className="text-nowrap">{lda.amount && `R${Number(lda.amount)}`}</TableCell>
+                  <TableCell>{lda.developmentStage && <Badge variant="outline">{lda.developmentStage.label}</Badge>}</TableCell>
+                  <TableCell className="text-nowrap">{lda.location && <Badge variant="outline">{lda.location.label}</Badge>}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {lda.focusAreas.map((focusArea) => <DynamicIcon key={`lda-${lda.id}-focusArea-${focusArea.id}`} name={focusArea.icon} size={10} />)}

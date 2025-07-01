@@ -70,6 +70,7 @@ export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentA
 
 export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, { next: { tags: ['ldas'] } })
+  console.log(res)
   return res.json()
 }
 

@@ -18,7 +18,8 @@
     "postinstall": "prisma generate",
     "vercel-build": "npx prisma generate && next build",
     "data-migration:update-funder-fund": "tsx ./prisma/scripts/migrate-funder-fund.ts",
-    "data-migration:seed-provinces": "tsx ./prisma/scripts/seed-provinces.ts"
+    "data-migration:seed-provinces": "tsx ./prisma/scripts/seed-provinces.ts",
+    "data-migration:add-operations-to-lda": "tsx ./prisma/scripts/add-operations-to-lda.ts"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"

@@ -1,72 +1,166 @@
-import { 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel 
-} from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select"
-import { Location } from "@prisma/client"
-import { UseFormReturn } from "react-hook-form"
-import { FormValues } from "./form-schema"
-
-interface OperationsTabProps {
-  form: UseFormReturn<FormValues>
-  locations: Location[]
-}
+"use client"
 
 import { InlineEditableField } from "@/components/ui/inline-editable-field";
-import { useState } from "react";
 
-export function OperationsTab({ form, locations }: OperationsTabProps) {
-  // Example: You would get these from form state or props
-  const [vision, setVision] = useState(
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius velit sodales, sollicitudin ipsum in, mollis ligula. Vestibulum efficitur odio quam. In hac habitasse platea dictumst. Aenean aliquam justo et dui varius, ac consequat felis vehicula. Vestibulum vestibulum rutrum ligula et volutpat. Integer efficitur ullamcorper elit, in viverra ante ornare vitae. Praesent metus dui, volutpat eget elit vulputate, pellentesque interdum libero. Nullam scelerisque nulla nisl, sit amet rhoncus erat gravida at."
-  );
-  const [mission, setMission] = useState(
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius velit sodales, sollicitudin ipsum in, mollis ligula. Vestibulum efficitur odio quam. In hac habitasse platea dictumst. Aenean aliquam justo et dui varius"
-  );
+// Define a type for the operations data to ensure consistency
+// All fields are optional to handle cases where they might be null or undefined initially.
+type OperationsData = {
+  vision?: { value: string; originalValue: string; edited: boolean };
+  mission?: { value: string; originalValue: string; edited: boolean };
+  objectives?: { value: string; originalValue: string; edited: boolean };
+  programmaticAreas?: { value: string; originalValue: string; edited: boolean };
+  climateFocus?: { value: string; originalValue: string; edited: boolean };
+  youthFocus?: { value: string; originalValue: string; edited: boolean };
+  genderFocus?: { value: string; originalValue: string; edited: boolean };
+  fundraisingStrategies?: { value: string; originalValue: string; edited: boolean };
+  partnershipsWithinOutside?: { value: string; originalValue: string; edited: boolean };
+  ensureOrgNotReliantOnScatOnly?: { value: string; originalValue: string; edited: boolean };
+  nationalAdvocacyStrategies?: { value: string; originalValue: string; edited: boolean };
+  monitoringAndLearning?: { value: string; originalValue: string; edited: boolean };
+};
 
-  // Example PUT request handler
-  async function handleSave(field: "vision" | "mission", value: string) {
-    // Replace with your actual endpoint and payload structure
-    await fetch(`/api/lda/organisation`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    });
-    if (field === "vision") setVision(value);
-    if (field === "mission") setMission(value);
-  }
+interface OperationsTabProps {
+  operationsData: OperationsData;
+  onSave: (field: keyof OperationsData, value: string) => void;
+  onChange: (field: keyof OperationsData, value: string, isEdited: boolean) => void;
+}
 
+export function OperationsTab({ operationsData, onSave, onChange }: OperationsTabProps) {
+  console.log(operationsData);
   return (
     <div className="space-y-8 mt-4">
-      <h2 className="text-2xl font-bold mb-6">Vision & Mission</h2>
-      <InlineEditableField
-        label="Vision of organisation"
-        value={vision}
-        fieldName="vision"
-        multiline
-        onSave={value => handleSave("vision", value)}
-      />
-      <InlineEditableField
-        label="Mission of organisation"
-        value={mission}
-        fieldName="mission"
-        multiline
-        onSave={value => handleSave("mission", value)}
-      />
+
+      <div> 
+        <h2 className="text-sm font-medium mb-2">Vision & Mission</h2>
+        <InlineEditableField
+          label="Vision of organisation"
+          value={operationsData.vision?.value || ""}
+          originalValue={operationsData.vision?.originalValue || ""}
+          edited={operationsData.vision?.edited || false}
+          multiline
+          onSave={value => onSave("vision", value)}
+          onChange={(value, isEdited) => onChange("vision", value, isEdited)}
+        />
+        <InlineEditableField
+          label="Mission of organisation"
+          value={operationsData.mission?.value || ""}
+          originalValue={operationsData.mission?.originalValue || ""}
+          edited={operationsData.mission?.edited || false}
+          multiline
+          onSave={value => onSave("mission", value)}
+          onChange={(value, isEdited) => onChange("mission", value, isEdited)}
+        />
+      </div>
+    
+      <div className="space-y-4 border-t py-4"> 
+      <h2 className="text-sm font-medium mb-2">Objectives & Activities</h2>
+          <InlineEditableField
+            label="Main objectives of organisation"
+            value={operationsData.objectives?.value || ""}
+            originalValue={operationsData.objectives?.originalValue || ""}
+            edited={operationsData.objectives?.edited || false}
+            multiline
+            onSave={value => onSave("objectives", value)}
+            onChange={(value, isEdited) => onChange("objectives", value, isEdited)}
+          />
+          <InlineEditableField
+            label="Main programmatic areas"
+            value={operationsData.programmaticAreas?.value || ""}
+            originalValue={operationsData.programmaticAreas?.originalValue || ""}
+            edited={operationsData.programmaticAreas?.edited || false}
+            multiline
+            onSave={value => onSave("programmaticAreas", value)}
+            onChange={(value, isEdited) => onChange("programmaticAreas", value, isEdited)}
+          />
+      </div>
+
+      <div className="space-y-4 border-t py-4"> 
+      <h2 className="text-sm font-medium mb-2">Focus Areas</h2>
+          <InlineEditableField
+            label="How does the organisation contribute to climate"
+            value={operationsData.climateFocus?.value || ""}
+            originalValue={operationsData.climateFocus?.originalValue || ""}
+            edited={operationsData.climateFocus?.edited || false}
+            multiline
+            onSave={value => onSave("climateFocus", value)}
+            onChange={(value, isEdited) => onChange("climateFocus", value, isEdited)}
+          />
+          <InlineEditableField
+            label="How does the organisation contribute to youth"
+            value={operationsData.youthFocus?.value || ""}
+            originalValue={operationsData.youthFocus?.originalValue || ""}
+            edited={operationsData.youthFocus?.edited || false}
+            multiline
+            onSave={value => onSave("youthFocus", value)}
+            onChange={(value, isEdited) => onChange("youthFocus", value, isEdited)}
+          />
+          <InlineEditableField
+            label="How does the organisation contribute to gender"
+            value={operationsData.genderFocus?.value || ""}
+            originalValue={operationsData.genderFocus?.originalValue || ""}
+            edited={operationsData.genderFocus?.edited || false}
+            multiline
+            onSave={value => onSave("genderFocus", value)}
+            onChange={(value, isEdited) => onChange("genderFocus", value, isEdited)}
+          />
+      </div>
+
+      <div className="space-y-4 border-t py-4"> 
+      <h2 className="text-sm font-medium mb-2">Sustainability</h2>
+          <InlineEditableField
+            label="What are the local and other fundraising strategies the LDA is implementing to raise funding?"
+            value={operationsData.fundraisingStrategies?.value || ""}
+            originalValue={operationsData.fundraisingStrategies?.originalValue || ""}
+            edited={operationsData.fundraisingStrategies?.edited || false}
+            multiline
+            onSave={value => onSave("fundraisingStrategies", value)}
+            onChange={(value, isEdited) => onChange("fundraisingStrategies", value, isEdited)}
+          />
+          <InlineEditableField
+            label="What are you doing to ensure that your organisation is not reliant on SCAT only for funding?"
+            value={operationsData.ensureOrgNotReliantOnScatOnly?.value || ""}
+            originalValue={operationsData.ensureOrgNotReliantOnScatOnly?.originalValue || ""}
+            edited={operationsData.ensureOrgNotReliantOnScatOnly?.edited || false}
+            multiline
+            onSave={value => onSave("ensureOrgNotReliantOnScatOnly", value)}
+            onChange={(value, isEdited) => onChange("ensureOrgNotReliantOnScatOnly", value, isEdited)}
+          />
+      </div>
+
+      <div className="space-y-4 border-t py-4"> 
+      <h2 className="text-sm font-medium mb-2">Partnerships & Networks</h2>
+          <InlineEditableField
+            label="Who do you work with within and outside your community? (E.g. CBO partners, key stakeholders, traditional leadership, etc.)"
+            value={operationsData.partnershipsWithinOutside?.value || ""}
+            originalValue={operationsData.partnershipsWithinOutside?.originalValue || ""}
+            edited={operationsData.partnershipsWithinOutside?.edited || false}
+            multiline
+            onSave={value => onSave("partnershipsWithinOutside", value)}
+            onChange={(value, isEdited) => onChange("partnershipsWithinOutside", value, isEdited)}
+          />
+          <InlineEditableField
+            label="Are you connected to any national advocacy strategies or campaigns? If yes, please provide details"
+            value={operationsData.nationalAdvocacyStrategies?.value || ""}
+            originalValue={operationsData.nationalAdvocacyStrategies?.originalValue || ""}
+            edited={operationsData.nationalAdvocacyStrategies?.edited || false}
+            multiline
+            onSave={value => onSave("nationalAdvocacyStrategies", value)}
+            onChange={(value, isEdited) => onChange("nationalAdvocacyStrategies", value, isEdited)}
+          />
+      </div>
+
+      <div className="space-y-4 border-t py-4"> 
+      <h2 className="text-sm font-medium mb-2">Monitoring & Learning</h2>
+          <InlineEditableField
+            label="What processes do you use in your organisation to monitor your progress and learn from your experiences? (EG, planning, reviewing of organisational plans, etc.)"
+            value={operationsData.monitoringAndLearning?.value || ""}
+            originalValue={operationsData.monitoringAndLearning?.originalValue || ""}
+            edited={operationsData.monitoringAndLearning?.edited || false}
+            multiline
+            onSave={value => onSave("monitoringAndLearning", value)}
+            onChange={(value, isEdited) => onChange("monitoringAndLearning", value, isEdited)}
+          />
+      </div>
     </div>
   );
 }
-

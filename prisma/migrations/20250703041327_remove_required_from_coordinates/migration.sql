@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "OrganisationDetail" ALTER COLUMN "latitude" DROP NOT NULL,
+ALTER COLUMN "latitude" DROP DEFAULT,
+ALTER COLUMN "longitude" DROP NOT NULL,
+ALTER COLUMN "longitude" DROP DEFAULT;

@@ -63,6 +63,9 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
         }
       }
     }
+    operations: true,
+    userAccess: true,
+    staffMembers: true,
   }
 }>
 

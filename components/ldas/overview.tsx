@@ -24,7 +24,7 @@ export const Overview: React.FC<Props> = ({ lda }: Props) => {
           <CardContent className="pt-2 space-y-2 text-sm py-4">
             <div className="flex justify-between">
               <span className="font-medium">Funding status:</span>
-              <span>{lda.fundingStatus.label}</span>
+              <span>{lda.fundingStatus && lda.fundingStatus.label}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Current funding period:</span>
@@ -36,11 +36,11 @@ export const Overview: React.FC<Props> = ({ lda }: Props) => {
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Development stage:</span>
-              <span><Badge variant="outline">{lda.developmentStage.label}</Badge></span>
+              <span><Badge variant="outline">{lda.developmentStage && lda.developmentStage.label}</Badge></span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Location:</span>
-              <span><Badge variant="outline">{lda.location.label}</Badge></span>
+              <span><Badge variant="outline">{lda.location && lda.location.label}</Badge></span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Current focus areas:</span>

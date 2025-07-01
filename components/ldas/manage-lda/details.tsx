@@ -5,7 +5,6 @@ import {
   FormLabel
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { FundFull } from "@/types/models"
 import { UseFormReturn } from "react-hook-form"
 import { FormValues } from "./form-schema"
 import { Province } from "@/types/models"
@@ -96,20 +95,13 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
       form.setValue('postalComplexName', form.getValues('physicalComplexName'));
       form.setValue('postalComplexNumber', form.getValues('physicalComplexNumber'));
       form.setValue('postalCity', form.getValues('physicalCity'));
-      form.setValue('postalProvince', selectedPhysicalProvinceCode);
-      form.setValue('postalDistrict', selectedPhysicalDistrictCode);
+      form.setValue('postalProvince', form.getValues('physicalProvince'));
+      form.setValue('postalDistrict', form.getValues('physicalDistrict'));
     }
   }, [
-    selectedPhysicalStreet,
-    selectedPhysicalComplexName,
-    selectedPhysicalComplexNumber,
-    selectedPhysicalCity,
-    selectedPhysicalProvinceCode,
-    selectedPhysicalDistrictCode,
-    provinces,
     useDifferentPostalAddress,
-    form
-]);
+    form,
+  ]);
 
   const physicalAddress = useMemo(() => {
     // Find province and district names from their codes
@@ -145,13 +137,19 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
     districts
   ])
 
+  useEffect(() => {
+    if (physicalAddress) {
+      form.setValue('mapAddress', physicalAddress);
+    }
+  }, [physicalAddress, form]);
+
   return (
     <div className="space-y-4 mt-4">
 
       <div className="space-y-2">
         <FormField
           control={form.control}
-          name="officeContactNumber"
+          name="contactNumber"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Office contact details</FormLabel>
@@ -163,7 +161,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
         />
         <FormField
             control={form.control}
-            name="officeEmail"
+            name="email"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -174,7 +172,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
           />
           <FormField
             control={form.control}
-            name="organisationWebsite"
+            name="website"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -405,12 +403,12 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
           )} />
       </div>
       <FormField
+          name="mapAddress"
           control={form.control}
-          name="officeContactNumber"
           render={() => (
             <FormItem>
               <FormLabel>Mapped location</FormLabel>
-              <Map seachedAddress={physicalAddress} />
+              <Map form={form}/>
             </FormItem>
           )}
         />

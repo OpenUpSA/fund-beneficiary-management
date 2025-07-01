@@ -1,52 +1,46 @@
 import { z } from "zod"
-import { RegistrationStatus } from "@/constants/lda";
+import { RegistrationStatus, OrganisationStatus } from "@/constants/lda";
 
 export const FormSchema = z.object({
   // Admin tab fields
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  name: z.string().min(1, 'Name is required'),
   about: z.string().optional(),
-  registrationStatus: z.enum(RegistrationStatus).optional(),
+  registrationStatus: z.enum(Object.keys(RegistrationStatus) as [string, ...string[]]).optional(),
   registrationCode: z.string().optional(),
   registrationDate: z.date().optional(),
   focusAreas: z.array(z.number()).optional(),
-  developmentStageId: z.coerce.number().optional(),
-  programmeOfficerId: z.coerce.number().optional(),
-  status: z.string().optional(),
+  developmentStageId: z.string().optional(),
+  programmeOfficerId: z.string().optional(),
+  organisationStatus: z.enum(Object.keys(OrganisationStatus) as [string, ...string[]]).optional(),
+  contactNumber: z.string().optional(),
+  email: z.string().optional(),
+  website: z.string().optional(),
   
   // Details tab fields
-  // Office contact details
-  officeContactNumber: z.string().optional(),
-  officeEmail: z.string().optional(),
-  organisationWebsite: z.string().optional(),
-  
   // Physical address
-  physicalStreet: z.string().min(2, { message: "Street must be at least 2 characters." }),
+  physicalStreet: z.string().optional(),
   physicalComplexName: z.string().optional(),
   physicalComplexNumber: z.string().optional(),
-  physicalCity: z.string().min(2, { message: "City must be at least 2 characters." }),
+  physicalCity: z.string().optional(),
   physicalPostalCode: z.string().optional(),
-  physicalProvince: z.string().min(1, { message: "Province is required." }),
-  physicalDistrict: z.string().min(1, { message: "District is required." }),
+  physicalProvince: z.string().optional(),
+  physicalDistrict: z.string().optional(),
   
   // Postal address
-  useDifferentPostalAddress: z.boolean().default(false),
+  useDifferentPostalAddress: z.boolean(),
   postalStreet: z.string().optional(),
   postalComplexName: z.string().optional(),
   postalComplexNumber: z.string().optional(),
   postalCity: z.string().optional(),
-  postalDistrict: z.string().optional(),
+  postalCode: z.string().optional(),
   postalProvince: z.string().optional(),
+  postalDistrict: z.string().optional(),
   
   // Mapped location
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   mapAddress: z.string().optional(),
-  
-  // Operations tab fields
-  
-  // Staff & Board tab fields - placeholder for future features
-  
-  // User Access tab fields - placeholder for future features
+  funds: z.array(z.number()).optional(),
 })
 
 export type FormValues = z.infer<typeof FormSchema>

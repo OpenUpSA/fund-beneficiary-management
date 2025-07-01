@@ -432,7 +432,7 @@ async function main() {
   const fundCommunityGardeningFund = await prisma.fund.create(
     {
       data: {
-        funder: { connect: { id: funderWoolworths.id } },
+        funders: { connect: [{ id: funderWoolworths.id }] },
         name: 'Community Gardening fund',
         about: 'How can learners stay safe when many schools throughout South Africa don’t have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.',
         amount: 9999999,
@@ -492,7 +492,7 @@ async function main() {
   const fundCricket = await prisma.fund.create(
     {
       data: {
-        funder: { connect: { id: funderCSA.id } },
+        funders: { connect: [{ id: funderCSA.id }] },
         name: 'Strikers Cricket Fund ',
         about: 'A fund for cricket lovers in parternship with Strikers',
         amount: 500,
@@ -553,7 +553,7 @@ async function main() {
   const fundYouthDevelopmentFund = await prisma.fund.create(
     {
       data: {
-        funder: { connect: { id: funderShoprite.id } },
+        funders: { connect: [{ id: funderShoprite.id }] },
         name: 'Youth Development Fund',
         about: 'How can learners stay safe when many schools throughout South Africa don’t have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.',
         amount: 891289,

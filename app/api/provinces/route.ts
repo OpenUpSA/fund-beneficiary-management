@@ -7,7 +7,6 @@ import prisma from "@/db"
  */
 export async function GET() {
 
-  console.log('Fetching provinces...');
   try {
     const provinces = await prisma.province.findMany();
     return NextResponse.json(provinces)

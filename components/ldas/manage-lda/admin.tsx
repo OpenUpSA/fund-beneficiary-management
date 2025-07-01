@@ -21,7 +21,7 @@ import {
   SelectValue 
 } from "@/components/ui/select"
 import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
-import { FundingStatus, Location, FocusArea, DevelopmentStage, User } from '@prisma/client'
+import { FocusArea, DevelopmentStage, User } from '@prisma/client'
 import { UseFormReturn } from "react-hook-form"
 
 import { FormValues } from "./form-schema"
@@ -29,8 +29,6 @@ import { RegistrationStatus, OrganisationStatus } from "@/constants/lda"
 
 interface AdminTabProps {
   form: UseFormReturn<FormValues>
-  fundingStatuses: FundingStatus[]
-  locations: Location[]
   focusAreas: FocusArea[]
   developmentStages: DevelopmentStage[]
   programmeOfficers: User[]
@@ -38,8 +36,6 @@ interface AdminTabProps {
 
 export function AdminTab({ 
   form, 
-  fundingStatuses, 
-  locations, 
   focusAreas, 
   developmentStages, 
   programmeOfficers 
@@ -75,7 +71,6 @@ export function AdminTab({
           </FormItem>
         )}
       />
-
     <div className="space-y-2">
         <FormField
             control={form.control}
@@ -90,13 +85,10 @@ export function AdminTab({
                     </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                    {RegistrationStatus.map((registrationStatus) => (
-                    <SelectItem
-                        key={registrationStatus}
-                        value={registrationStatus}
-                    >
-                        {registrationStatus}
-                    </SelectItem>
+                    {Object.entries(RegistrationStatus).map(([key, value]) => (
+                      <SelectItem key={key} value={key}>
+                        {value}
+                      </SelectItem>
                     ))}
                 </SelectContent>
                 </Select>
@@ -146,10 +138,8 @@ export function AdminTab({
                     </Popover>
                 </FormItem>
             )} />
-
         </div>
     </div>
-
       <FormField
         control={form.control}
         name="focusAreas"
@@ -161,8 +151,8 @@ export function AdminTab({
                 value: focusArea.id.toString(),
                 label: focusArea.label,
               }))}
-              value={field?.value?.map(String)}
-              onValueChange={(values: string[]) => field?.onChange(values.map(Number))}
+              value={field.value?.map(String) ?? []}
+              onValueChange={(values: string[]) => field.onChange(values.map(Number))}
               placeholder="select focus areas"
             >
               {(provided) => <InputMultiSelectTrigger {...provided} />}
@@ -170,7 +160,6 @@ export function AdminTab({
           </FormItem>
         )}
       />
-
       <FormField
         control={form.control}
         name="developmentStageId"
@@ -202,7 +191,7 @@ export function AdminTab({
         name="programmeOfficerId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Assigned programme officer(s)</FormLabel>
+            <FormLabel>Assigned programme officer</FormLabel>
             <Select value={field.value?.toString()} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger>
@@ -225,7 +214,7 @@ export function AdminTab({
 
         <FormField
           control={form.control}
-          name="status"
+          name="organisationStatus"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
@@ -236,12 +225,9 @@ export function AdminTab({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {OrganisationStatus.map((organisationStatus) => (
-                    <SelectItem
-                      key={organisationStatus}
-                      value={organisationStatus}
-                    >
-                      {organisationStatus}
+                  {Object.entries(OrganisationStatus).map(([key, value]) => (
+                    <SelectItem key={key} value={key}>
+                      {value}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -249,7 +235,6 @@ export function AdminTab({
             </FormItem>
           )}
         />
-
     </div>
   )
 }
