@@ -564,7 +564,9 @@ async function main() {
           connect: { id: fundCommunityGardeningFund.id }
         },
         programmeOfficer: { connect: { id: userNala.id } },
-        organisationDetail: {},
+        organisationDetail: {
+          create: {},
+        },
       },
     },
   )
