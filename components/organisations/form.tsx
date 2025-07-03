@@ -52,11 +52,11 @@ export function FormDialog({ organisationDetail, callback }: FormDialogProps) {
       contactNumber: organisationDetail ? organisationDetail.contactNumber : '',
       email: organisationDetail ? organisationDetail.email : '',
       website: organisationDetail ? organisationDetail.website : '',
-      addressStreet: organisationDetail ? organisationDetail.addressStreet : '',
-      addressComplex: organisationDetail ? organisationDetail.addressComplex : '',
-      addressCity: organisationDetail ? organisationDetail.addressCity : '',
-      addressProvince: organisationDetail ? organisationDetail.addressProvince : '',
-      coordinates: organisationDetail ? organisationDetail.coordinates : '',
+      addressStreet: organisationDetail ? organisationDetail.physicalStreet : '',
+      addressComplex: organisationDetail ? organisationDetail.physicalComplexName : '',
+      addressCity: organisationDetail ? organisationDetail.physicalCity : '',
+      addressProvince: organisationDetail ? organisationDetail.physicalProvince : '',
+      coordinates: organisationDetail ? organisationDetail.latitude + ", " + organisationDetail.longitude : '',
     },
   })
 

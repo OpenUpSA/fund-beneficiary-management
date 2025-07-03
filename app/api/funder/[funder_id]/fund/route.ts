@@ -8,12 +8,12 @@ export async function GET(req: NextRequest, { params }: { params: { funder_id: s
   const funderId = parseInt(params.funder_id, 10);
 
   const records = await prisma.fund.findMany({
-    where: { funderId: funderId },
+    where: { funders: { some: { id: funderId } } },
     include: {
       fundingStatus: true,
       focusAreas: true,
       locations: true,
-      funder: true,
+      funders: true,
       localDevelopmentAgencies: true
     },
   });
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const data = await req.json()
     const query = {
       data: {
-        funder: {
+        funders: {
           connect: { id: data.funderId }
         },
         name: data.name,

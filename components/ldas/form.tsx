@@ -319,7 +319,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                         <StaffTab staffMembers={lda.staffMembers ?? []} ldaId={lda.id} />
                       </TabsContent>
                       <TabsContent value="access">
-                        <AccessTab users={lda.userAccess ?? []} ldaId={lda.id} />
+                        <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} />
                       </TabsContent>
                     </>
                   )}

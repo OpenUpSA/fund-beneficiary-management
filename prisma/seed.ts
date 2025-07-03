@@ -415,16 +415,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       },
     })
@@ -447,16 +438,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       },
     })
@@ -475,16 +457,7 @@ async function main() {
           connect: [{ id: focusAreaTransport.id }]
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -504,16 +477,7 @@ async function main() {
           connect: [{ id: focusAreaTransport.id }]
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -536,16 +500,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -568,16 +523,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       },
     })
@@ -596,16 +542,7 @@ async function main() {
         funds: { connect: { id: fundCricket.id } },
         programmeOfficer: { connect: { id: userNala.id } },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -627,20 +564,10 @@ async function main() {
           connect: { id: fundCommunityGardeningFund.id }
         },
         programmeOfficer: { connect: { id: userNala.id } },
-        organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
-        },
-      }
-    })
+        organisationDetail: {},
+      },
+    },
+  )
 
   const organisationDetailLdaZanoncedoEmpowermentCentre = await prisma.organisationDetail.create(
     {
@@ -648,11 +575,18 @@ async function main() {
         contactNumber: '+27613280567',
         email: 'contact@test.test',
         website: 'https://www.test.test',
-        addressStreet: '12 Smith Street',
-        addressComplex: 'Unit 2, James Park',
-        addressCity: 'Jameserton',
-        addressProvince: 'Free State',
-        coordinates: '52.681950; -2.590400'
+        physicalStreet: '12 Smith Street',
+        physicalComplexName: 'Unit 2, James Park',
+        physicalCity: 'Jameserton',
+        physicalProvince: 'Free State',
+        useDifferentPostalAddress: false,
+        postalStreet: '12 Smith Street',
+        postalComplexName: 'Unit 2, James Park',
+        postalCity: 'Jameserton',
+        postalProvince: 'Free State',
+        latitude: 52.681950,
+        longitude: -2.590400,
+        mapAddress: '12 Smith Street, Unit 2, James Park, Jameserton, Free State',
       }
     })
 

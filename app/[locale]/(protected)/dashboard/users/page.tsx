@@ -79,7 +79,7 @@ export default function Page() {
                       {user.email}
                     </TableCell>
                     <TableCell>
-                      <Badge className="w-full justify-center" variant={user.approved ? 'success' : 'destructive'}>{user.approved ? 'Yes' : 'No'}</Badge>
+                      <Badge className="w-full justify-center" variant={user.approved ? 'default' : 'destructive'}>{user.approved ? 'Yes' : 'No'}</Badge>
                     </TableCell>
                     <TableCell className="text-nowrap">
                       {format(user.updatedAt, 'PPpp')}

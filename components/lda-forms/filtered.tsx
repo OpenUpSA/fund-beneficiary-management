@@ -19,7 +19,7 @@ interface Props {
   formTemplates: FormTemplateWithRelations[],
   formStatuses: FormStatus[],
   dataChanged: () => void,
-  navigatedFrom: string
+  navigatedFrom?: string
 }
 
 export const FilteredLDAForms: React.FC<Props> = ({ ldaForms, lda, formTemplates, formStatuses, dataChanged, navigatedFrom }) => {

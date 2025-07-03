@@ -6,10 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import { 
   fetchDevelopmentStages, 
   fetchFocusAreas, 
-  fetchFundingStatuses, 
-  fetchFunds, 
   fetchLocalDevelopmentAgency,
-  fetchLocations, 
   fetchUsers,
   fetchProvinces
 } from "@/lib/data"
@@ -22,9 +19,6 @@ interface LDALayoutProps {
 export default async function Layout({ children, params }: LDALayoutProps) {
   const { lda_id } = params
   const lda = await fetchLocalDevelopmentAgency(lda_id)
-  const funds = await fetchFunds()
-  const fundingStatuses = await fetchFundingStatuses()
-  const locations = await fetchLocations()
   const focusAreas = await fetchFocusAreas()
   const developmentStages = await fetchDevelopmentStages()
   const programmeOfficers = await fetchUsers()
@@ -50,9 +44,6 @@ export default async function Layout({ children, params }: LDALayoutProps) {
         <div className="space-x-2">
           <FormDialog
             lda={lda}
-            funds={funds}
-            fundingStatuses={fundingStatuses}
-            locations={locations}
             focusAreas={focusAreas}
             developmentStages={developmentStages}
             programmeOfficers={programmeOfficers}

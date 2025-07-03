@@ -21,12 +21,12 @@ async function main() {
       where: { code: provinceData.code },
       update: {
         name: provinceData.name,
-        districts: provinceData.districts, // Store districts as JSON
+        districts: provinceData.districts ? JSON.parse(JSON.stringify(provinceData.districts)) : [], // Store districts as JSON
       },
       create: {
         name: provinceData.name,
         code: provinceData.code,
-        districts: provinceData.districts, // Store districts as JSON
+        districts: provinceData.districts ? JSON.parse(JSON.stringify(provinceData.districts)) : [], // Store districts as JSON
       },
     });
   }

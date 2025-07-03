@@ -28,7 +28,7 @@ export const Overview: React.FC<Props> = ({ user }: Props) => {
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Approved:</span>
-              <Badge variant={user.approved ? 'success' : 'destructive'}>{user.approved ? 'Yes' : 'No'}</Badge>
+              <Badge variant={user.approved ? 'default' : 'destructive'}>{user.approved ? 'Yes' : 'No'}</Badge>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Role:</span>

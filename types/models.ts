@@ -120,11 +120,5 @@ export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGe
   }
 }>
 
-export type Province = Prisma.ProvinceGetPayload<{
-  include: {
-    name: true,
-    code: true,
-    districts: true
-  }
-}>
+export type Province = Prisma.ProvinceGetPayload<{}>
     

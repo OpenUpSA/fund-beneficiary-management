@@ -21,23 +21,23 @@ export function OrganisationDetails({ organisationDetail }: Props) {
       </div>
       <div className="flex justify-between">
         <span className="font-medium">Street address:</span>
-        {organisationDetail && <span>{organisationDetail.addressStreet}</span>}
+        {organisationDetail && <span>{organisationDetail.physicalStreet}</span>}
       </div>
       <div className="flex justify-between">
         <span className="font-medium">Complex number:</span>
-        {organisationDetail && <span>{organisationDetail.addressComplex}</span>}
+        {organisationDetail && <span>{organisationDetail.physicalComplexName}</span>}
       </div>
       <div className="flex justify-between">
         <span className="font-medium">City:</span>
-        {organisationDetail && <span>{organisationDetail.addressCity}</span>}
+        {organisationDetail && <span>{organisationDetail.physicalCity}</span>}
       </div>
       <div className="flex justify-between">
         <span className="font-medium">Province:</span>
-        {organisationDetail && <span>{organisationDetail.addressProvince}</span>}
+        {organisationDetail && <span>{organisationDetail.physicalProvince}</span>}
       </div>
       <div className="flex justify-between">
         <span className="font-medium">GPS co-ordinates:</span>
-        {organisationDetail && <span>{organisationDetail.coordinates}</span>}
+        {organisationDetail && <span>{organisationDetail.latitude}, {organisationDetail.longitude}</span>}
       </div>
     </>
   )

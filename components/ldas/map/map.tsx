@@ -11,7 +11,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomContr
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import { UseFormReturn } from "react-hook-form";
-import { FormValues } from "../form-schema";
+import { FormValues } from "../manage-lda/form-schema";
 
 // South Africa coordinates
 const southAfricaCenter: [number, number] = [-30.5595, 22.9375];
@@ -91,20 +91,21 @@ export default function Map({ form }: MapProps) {
 
   const coordinates = useMemo(() => {
     if (form.getValues('latitude') && form.getValues('longitude')) {
-      return [form.getValues('latitude'), form.getValues('longitude')];
+      return [Number(form.getValues('latitude')), Number(form.getValues('longitude'))] as [number, number];
     }
     return null;
   }, [form]);
 
   const mapAddress = useMemo(() => {
-    if (form.getValues('mapAddress')) {
-      return form.getValues('mapAddress');
+    const address = form.getValues('mapAddress');
+    if (address) {
+      return address as string;
     }
-    return "";
+    return null;
   }, [form]);
 
   const [position, setPosition] = useState<[number, number] | null>(coordinates);
-  const [markerText, setMarkerText] = useState<string>(mapAddress);
+  const [markerText, setMarkerText] = useState<string|null>(mapAddress);
   const [search, setSearch] = useState<string>("");
   
   // Handle location selection and notify parent component if callback provided
@@ -217,7 +218,7 @@ export default function Map({ form }: MapProps) {
           attribution={"&copy; <a href='https://www.openstreetmap.org/'>OpenStreetMap</a> contributors"}
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {position && <CurrentLocationMarker position={position} text={markerText} />}
+        {position && <CurrentLocationMarker position={position} text={markerText || ""} />}
         <ClickHandler handleLocationSelect={handleLocationSelect}/>
         <ZoomControl position="bottomright" />
         <FullscreenControl />
