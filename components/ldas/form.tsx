@@ -2,29 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
-import { toast } from "@/hooks/use-toast"
+// Import the form schema
+import { FormSchema, FormValues } from "./manage-lda/form-schema"
+
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Form } from "@/components/ui/form"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { FundingStatus, Location, FocusArea, Fund, DevelopmentStage, User } from '@prisma/client'
-import { LocalDevelopmentAgencyFull } from '@/types/models'
+import { FocusArea, DevelopmentStage, User } from '@prisma/client'
+import { LocalDevelopmentAgencyFull, Province } from '@/types/models'
 
 import {
   Dialog,
@@ -34,407 +22,317 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { CalendarIcon, PencilIcon, PlusIcon } from "lucide-react"
-import { useState } from "react"
-import { InputMultiSelect, InputMultiSelectTrigger } from "../ui/multiselect";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { format } from "date-fns"
-import { Calendar } from "../ui/calendar";
-import { FundFull } from "@/types/models";
+import { PlusIcon, SettingsIcon } from "lucide-react"
+import { useState, useCallback } from "react"
+
+
+// Import tab components
+import { AdminTab } from "./manage-lda/admin"
+import { DetailsTab } from "./manage-lda/details"
+import { OperationsTab } from "./manage-lda/operations"
+import { StaffTab } from "./manage-lda/staff"
+import { AccessTab } from "./manage-lda/access"
 
 interface FormDialogProps {
   lda?: LocalDevelopmentAgencyFull
-  funds: FundFull[]
-  fundingStatuses: FundingStatus[]
-  locations: Location[]
   developmentStages: DevelopmentStage[]
   focusAreas: FocusArea[]
+  provinces: Province[]
   programmeOfficers: User[]
   callback: (tag: string) => void
 }
 
-const FormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  about: z.string().min(2, { message: "About must be at least 2 characters." }),
-  fundingStatusId: z.coerce.number({ required_error: "Please select a funding status." }),
-  locationId: z.coerce.number({ required_error: "Please select a location." }),
-  programmeOfficerId: z.coerce.number({ required_error: "Please select a programme officer." }),
-  developmentStageId: z.coerce.number({ required_error: "Please select a development stage." }),
-  amount: z.coerce.number({ required_error: "Please enter an amount." }),
-  totalFundingRounds: z.coerce.number({ required_error: "Please enter total funding rounds." }),
-  focusAreas: z.array(z.number()).min(1, { message: "Please select at least one focus area." }),
-  funds: z.array(z.number()).min(1, { message: "Please select at least one fund." }),
-  fundingStart: z.date({ required_error: "Please select a funding start." }).refine(date => date !== undefined, {
-    message: "Funding start is required."
-  }),
-  fundingEnd: z.date({ required_error: "Please select a funding end." }).refine(date => date !== undefined, {
-    message: "Funding end is required."
-  }),
-})
+// FormSchema is now imported from form-schema.ts
 
-export function FormDialog({ lda, funds, fundingStatuses, locations, focusAreas, developmentStages, programmeOfficers, callback }: FormDialogProps) {
-  const [open, setOpen] = useState(false)
+export function FormDialog({ lda, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
+  const [open, setOpen] = useState(false);
 
-  const form = useForm<z.infer<typeof FormSchema>>({
+  const [operationsData, setOperationsData] = useState(
+    {
+      vision: { 
+        value: lda?.operations?.vision ?? '',
+        originalValue: lda?.operations?.vision ?? '',
+        edited: false
+      },
+      mission: { 
+        value: lda?.operations?.mission ?? '',
+        originalValue: lda?.operations?.mission ?? '',
+        edited: false
+      },
+      objectives: { 
+        value: lda?.operations?.objectives ?? '',
+        originalValue: lda?.operations?.objectives ?? '',
+        edited: false
+      },
+      programmaticAreas: { 
+        value: lda?.operations?.programmaticAreas ?? '',
+        originalValue: lda?.operations?.programmaticAreas ?? '',
+        edited: false
+      },
+      climateFocus: { 
+        value: lda?.operations?.climateFocus ?? '',
+        originalValue: lda?.operations?.climateFocus ?? '',
+        edited: false
+      },
+      youthFocus: { 
+        value: lda?.operations?.youthFocus ?? '',
+        originalValue: lda?.operations?.youthFocus ?? '',
+        edited: false
+      },
+      genderFocus: { 
+        value: lda?.operations?.genderFocus ?? '',
+        originalValue: lda?.operations?.genderFocus ?? '',
+        edited: false
+      },
+      fundraisingStrategies: { 
+        value: lda?.operations?.fundraisingStrategies ?? '',
+        originalValue: lda?.operations?.fundraisingStrategies ?? '',
+        edited: false
+      },
+      partnershipsWithinOutside: { 
+        value: lda?.operations?.partnershipsWithinOutside ?? '',
+        originalValue: lda?.operations?.partnershipsWithinOutside ?? '',
+        edited: false
+      },
+      ensureOrgNotReliantOnScatOnly: { 
+        value: lda?.operations?.ensureOrgNotReliantOnScatOnly ?? '',
+        originalValue: lda?.operations?.ensureOrgNotReliantOnScatOnly ?? '',
+        edited: false
+      },
+      nationalAdvocacyStrategies: { 
+        value: lda?.operations?.nationalAdvocacyStrategies ?? '',
+        originalValue: lda?.operations?.nationalAdvocacyStrategies ?? '',
+        edited: false
+      },
+      monitoringAndLearning: { 
+        value: lda?.operations?.monitoringAndLearning ?? '',
+        originalValue: lda?.operations?.monitoringAndLearning ?? '',
+        edited: false
+      },
+    }
+  );
+
+  async function handleOperationSave(field: string, value: string) {
+    if (!lda) return;
+
+    const currentOperations = operationsData;
+    const updatedOperations = { ...operationsData, [field]: { 
+      value,
+      originalValue: value,
+      edited: false 
+    } };
+    setOperationsData(updatedOperations);
+
+    const toastId = toast.loading(`Saving organisation operations info...`);
+    try {
+      const response = await fetch(`/api/lda/${lda.id}/operations`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to save ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+      }
+
+      toast.dismiss(toastId);
+      toast.success(`Organisation operations info saved successfully`);
+    } catch (error) {
+      console.error(`Error saving ${field}:`, error);
+      toast.dismiss(toastId);
+      toast.error(error instanceof Error ? error.message : `Failed to save ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
+      setOperationsData(currentOperations);
+    }
+  }
+
+  const handleOperationChange = useCallback((fieldName: string, value: string, isEdited: boolean) => {
+    setOperationsData(prevData => ({
+      ...prevData,
+      [fieldName]: {
+        ...(prevData[fieldName as keyof typeof prevData] || {}),
+        value,
+        edited: isEdited,
+      },
+    }));
+  }, [setOperationsData]);
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: lda ? lda.name : "",
-      about: lda ? lda.about : "",
-      amount: lda ? Number(lda.amount) : 0,
-      totalFundingRounds: lda ? lda.totalFundingRounds : 0,
-      fundingStatusId: lda ? lda.fundingStatusId : fundingStatuses[0].id,
-      locationId: lda ? lda.locationId : locations[0].id,
-      programmeOfficerId: lda?.programmeOfficerId ?? programmeOfficers[0].id,
-      developmentStageId: lda ? lda.developmentStageId : developmentStages[0].id,
-      focusAreas: lda ? lda.focusAreas.map((focusArea: FocusArea) => focusArea.id) : [],
-      funds: lda ? lda.funds.map((fund: Fund) => fund.id) : [],
-      fundingStart: lda ? new Date(lda.fundingStart) : new Date(),
-      fundingEnd: lda ? new Date(lda.fundingEnd) : new Date()
+      name: lda ? lda.name : '',
+      about: lda ? lda.about : '',
+      registrationStatus: lda?.registrationStatus ?? 'not_registered', 
+      registrationCode: lda?.registrationCode ?? '',
+      registrationDate: lda?.registrationDate ?? undefined,
+      focusAreas: lda ? lda.focusAreas.map(fa => fa.id) : [],
+      developmentStageId: lda?.developmentStageId?.toString() ?? undefined,
+      programmeOfficerId: lda?.programmeOfficerId?.toString() ?? undefined,
+      organisationStatus: lda?.organisationStatus ?? 'active',
+      contactNumber: lda?.organisationDetail?.contactNumber ?? '',
+      email: lda?.organisationDetail?.email ?? '',
+      website: lda?.organisationDetail?.website ?? '',
+      physicalStreet: lda?.organisationDetail?.physicalStreet ?? '',
+      physicalComplexName: lda?.organisationDetail?.physicalComplexName ?? '',
+      physicalComplexNumber: lda?.organisationDetail?.physicalComplexNumber ?? '',
+      physicalCity: lda?.organisationDetail?.physicalCity ?? '',
+      physicalPostalCode: lda?.organisationDetail?.physicalPostalCode ?? '',
+      physicalProvince: lda?.organisationDetail?.physicalProvince ?? '',
+      physicalDistrict: lda?.organisationDetail?.physicalDistrict ?? '',
+      useDifferentPostalAddress: lda?.organisationDetail?.useDifferentPostalAddress ?? false,
+      postalStreet: lda?.organisationDetail?.postalStreet ?? '',
+      postalComplexName: lda?.organisationDetail?.postalComplexName ?? '',
+      postalComplexNumber: lda?.organisationDetail?.postalComplexNumber ?? '',
+      postalCity: lda?.organisationDetail?.postalCity ?? '',
+      postalCode: lda?.organisationDetail?.postalCode ?? '',
+      postalProvince: lda?.organisationDetail?.postalProvince ?? '',
+      postalDistrict: lda?.organisationDetail?.postalDistrict ?? '',
+      latitude: lda?.organisationDetail?.latitude ?? 0,
+      longitude: lda?.organisationDetail?.longitude ?? 0,
+      mapAddress: lda?.organisationDetail?.mapAddress ?? '',
     },
   })
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: FormValues) {
     setOpen(false)
+    let toastId;
 
-    if (lda) {
-      toast({
-        title: 'Updating LDA...',
-        variant: 'processing'
-      })
-      await fetch(`/api/lda/${lda.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      toast({
-        title: 'LDA updated',
-        variant: 'success'
-      })
-    } else {
-      toast({
-        title: 'Creating LDA...',
-        variant: 'processing'
-      })
-      await fetch(`/api/lda`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      toast({
-        title: 'LDA created',
-        variant: 'success'
-      })
+    try {
+      if (lda) {
+        toastId = toast.loading('Updating LDA...')
+        const response = await fetch(`/api/lda/${lda.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to update LDA')
+        }
+        
+        toast.dismiss(toastId)
+        toast.success('LDA updated successfully')
+      } else {
+        toastId = toast.loading('Creating new LDA...')
+        const response = await fetch(`/api/lda`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to create LDA')
+        }
+        
+        toast.dismiss(toastId)
+        toast.success('LDA created successfully')
+      }
+      callback('ldas')
+    } catch (error) {
+      console.error('Error:', error)
+      toast.dismiss(toastId)
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
+      setOpen(true) // Reopen the dialog to allow corrections
     }
-
     callback('ldas')
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button variant="secondary" className="gap-2 items-center" size="default">
           {lda ? <>
-            <span className="hidden md:inline">Edit details</span>
-            <PencilIcon />
-          </>
+              <SettingsIcon className="h-4 w-4" />
+              <span>Manage LDA</span>
+            </>
             : <>
-              <span className="hidden md:inline">Add LDA</span>
-              <PlusIcon />
+              <PlusIcon className="h-4 w-4" />
+              <span>Add LDA</span>
             </>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-w-[40vw]">
-        <DialogHeader>
-          <DialogTitle>{lda ? "Edit" : "Add"} LDA</DialogTitle>
+      <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
+        <DialogHeader className="p-5 border-b">
+          <DialogTitle>{lda ? "Manage LDA" : "Create LDA"}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="about"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>About</FormLabel>
-                  <FormControl>
-                    <Textarea rows={5} className="resize-none" {...field} />
-                  </FormControl>
-
-                </FormItem>
-              )}
-            />
-
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem className="w-full flex-1">
-                    <FormLabel>Amount</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="totalFundingRounds"
-                render={({ field }) => (
-                  <FormItem className="w-full flex-1">
-                    <FormLabel>Total Funding Rounds</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="fundingStatusId"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Funding Status</FormLabel>
-                    <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {fundingStatuses.map((fundingStatus) => (
-                          <SelectItem
-                            key={fundingStatus.id}
-                            value={fundingStatus.id.toString()}
-                          >
-                            {fundingStatus.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )} />
-
-              <FormField
-                control={form.control}
-                name="locationId"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Location</FormLabel>
-                    <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {locations.map((location) => (
-                          <SelectItem
-                            key={location.id}
-                            value={location.id.toString()}
-                          >
-                            {location.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                  </FormItem>
-                )} />
-            </div>
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="fundingStart"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Funding Start</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                // Show validation errors in toast
+                const errorFields = Object.keys(errors);
+                if (errorFields.length > 0) {
+                  const errorMessages = errorFields.map(field => {
+                    const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+                    return `${fieldName}: ${errors[field as keyof typeof errors]?.message || 'Invalid value'}`;
+                  });
+                  toast.error(
+                    <div>
+                      <p className="font-semibold mb-1">Please fix the following errors:</p>
+                      <ul className="list-disc pl-4">
+                        {errorMessages.map((msg, i) => <li key={i}>{msg}</li>)}
+                      </ul>
+                    </div>
+                  );
+                }
+              })} className="flex-grow contents">
+            <div className="flex-grow overflow-y-auto">
+              <Tabs defaultValue="admin">
+                <div className="bg-gray-100 p-2 px-4 sticky top-0 z-10">
+                  <div className="max-w-[90vw] overflow-x-auto">
+                    <TabsList className="gap-2">
+                      <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Admin</TabsTrigger>
+                      <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Details</TabsTrigger>
+                      {lda && <TabsTrigger value="operations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Operations</TabsTrigger>}
+                      {lda && <TabsTrigger value="staff" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Staff & Board</TabsTrigger>}
+                      {lda && <TabsTrigger value="access" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">User Access</TabsTrigger>}
+                    </TabsList>
+                  </div>
+                </div>
+                
+                {/* Scrollable Content Area */}
+                <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
+                  <TabsContent value="admin">
+                    <AdminTab
+                      form={form}
+                      focusAreas={focusAreas}
+                      developmentStages={developmentStages}
+                      programmeOfficers={programmeOfficers}
+                    />
+                  </TabsContent>
+                  <TabsContent value="details">
+                    <DetailsTab
+                      form={form}
+                      provinces={provinces}
+                    />
+                  </TabsContent>
+                  {lda && (
+                    <>
+                      <TabsContent value="operations">
+                        <OperationsTab
+                          operationsData={operationsData}
+                          onSave={handleOperationSave}
+                          onChange={handleOperationChange}
                         />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="fundingEnd"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Funding End</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
-                )}
-              />
+                      </TabsContent>
+                      <TabsContent value="staff">
+                        <StaffTab staffMembers={lda.staffMembers ?? []} ldaId={lda.id} />
+                      </TabsContent>
+                      <TabsContent value="access">
+                        <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} />
+                      </TabsContent>
+                    </>
+                  )}
+                </div>
+              </Tabs>
             </div>
-
-
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="programmeOfficerId"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Programme Officer</FormLabel>
-                    <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {programmeOfficers.map((programmeOfficer) => (
-                          <SelectItem
-                            key={programmeOfficer.id}
-                            value={programmeOfficer.id.toString()}
-                          >
-                            {programmeOfficer.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                  </FormItem>
-                )} />
-
-              <FormField
-                control={form.control}
-                name="developmentStageId"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Development Stage</FormLabel>
-                    <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {developmentStages.map((developmentStage) => (
-                          <SelectItem
-                            key={developmentStage.id}
-                            value={developmentStage.id.toString()}
-                          >
-                            {developmentStage.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                  </FormItem>
-                )} />
-            </div>
-
-            <div className="flex gap-4">
-
-              <FormField
-                control={form.control}
-                name="focusAreas"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Focus Areas</FormLabel>
-                    <InputMultiSelect
-                      options={focusAreas.map((focusArea) => ({
-                        value: focusArea.id.toString(),
-                        label: focusArea.label,
-                      }))}
-                      value={field.value.map(String)}
-                      onValueChange={(values: string[]) => field.onChange(values.map(Number))}
-                      placeholder="Select focus areas"
-                    >
-                      {(provided) => <InputMultiSelectTrigger {...provided} />}
-                    </InputMultiSelect>
-
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="funds"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Funds</FormLabel>
-                    <InputMultiSelect
-                      options={funds.map((fund) => ({
-                        value: fund.id.toString(),
-                        label: fund.name,
-                      }))}
-                      value={field.value.map(String)}
-                      onValueChange={(values: string[]) => field.onChange(values.map(Number))}
-                      placeholder="Select funds"
-                    >
-                      {(provided) => <InputMultiSelectTrigger {...provided} />}
-                    </InputMultiSelect>
-
-                  </FormItem>
-                )}
-              />
-            </div>
-
+            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
+              <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+              <Button type="submit" className="sm:order-2 order-1">{lda ? "Save and close" : "Create LDA"}</Button>
+            </DialogFooter>
           </form>
         </Form>
-        <DialogFooter>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>{lda ? "Save changes" : "Create LDA"}</Button>
-        </DialogFooter>
       </DialogContent>
-    </Dialog >
+    </Dialog>
   )
 }

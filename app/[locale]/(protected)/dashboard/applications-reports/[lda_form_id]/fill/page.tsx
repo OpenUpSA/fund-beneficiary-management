@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchLDAForm } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
@@ -31,22 +30,14 @@ export default async function Page({ params }: FormTemplatePageProps) {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbLink href="/dashboard/applications-reports">Applications &amp; Reports</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={`/dashboard/applications-reports/${ldaForm.id}/`}>{ldaForm.title}</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Fill</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Applications & Reports", href: "/dashboard/applications-reports" },
+          { label: ldaForm.title, href: `/dashboard/applications-reports/${ldaForm.id}/` },
+          { label: "Fill", isCurrent: true }
+        ]}
+      />
       <Filler
         ldaForm={ldaForm}
         callback={dataChanged} />

@@ -21,8 +21,7 @@ export type FundFull = Prisma.FundGetPayload<{
     fundingStatus: true,
     locations: true,
     focusAreas: true,
-    funderId: true,
-    funder: true,
+    funders: true,
     localDevelopmentAgencies: true,
     organisationDetail: true
     contacts: true
@@ -33,7 +32,7 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
   include: {
     funds: {
       include: {
-        funder: true
+        funders: true
       }
     },
     fundingStatus: true,
@@ -64,6 +63,9 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
         }
       }
     }
+    operations: true,
+    userAccess: true,
+    staffMembers: true,
   }
 }>
 
@@ -117,3 +119,6 @@ export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGe
     formTemplate: true
   }
 }>
+
+export type Province = Prisma.ProvinceGetPayload<{}>
+    

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useForm, FieldError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FormField } from "@/components/form-templates/form-field"
@@ -106,22 +106,22 @@ export default function DynamicForm({
     defaultValues,
   })
 
-  useEffect(() => {
-    const handler = () => {
-      handleSubmit(onSubmit)()
-    }
-    window.addEventListener("submit-dynamic-form", handler)
-    return () => window.removeEventListener("submit-dynamic-form", handler)
-  }, [handleSubmit])
-
-  const onSubmit = (data: Record<string, string>) => {
+  const onSubmit = useCallback((data: Record<string, string>) => {
     if (setData) {
       setData(data)
     }
     if (saveData) {
       saveData(data)
     }
-  }
+  }, [setData, saveData])
+
+  useEffect(() => {
+    const handler = () => {
+      handleSubmit(onSubmit)()
+    }
+    window.addEventListener("submit-dynamic-form", handler)
+    return () => window.removeEventListener("submit-dynamic-form", handler)
+  }, [handleSubmit, onSubmit])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

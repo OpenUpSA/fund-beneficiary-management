@@ -1,4 +1,4 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull } from "@/types/models"
+import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull, Province } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, User, FormStatus } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
@@ -25,6 +25,11 @@ export async function fetchFunderFund(funder_id: string, fund_id: string): Promi
 
 export async function fetchFunds(): Promise<FundFull[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund`, { next: { tags: ['funds'] } })
+  return res.json()
+}
+
+export async function fetchFund(fund_id: string): Promise<FundFull> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund/${fund_id}`, { next: { tags: ['funds'] } })
   return res.json()
 }
 
@@ -65,6 +70,7 @@ export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentA
 
 export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, { next: { tags: ['ldas'] } })
+  console.log(res)
   return res.json()
 }
 
@@ -125,5 +131,18 @@ export async function fetchFormStatuses(): Promise<FormStatus[]> {
 
 export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmentAgencyFormFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/${lda_form_id}`, { next: { tags: ['ldas'] } })
+  return res.json()
+}
+
+export async function fetchProvinces(): Promise<Province[]> {
+  console.log("Fetching provinces...")
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces`)
+  const data = await res.json();
+  console.log('Province data:', data);
+  return data;
+}
+
+export async function fetchProvince(province_code: string): Promise<Province> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces/${province_code}`, { next: { tags: ['provinces'] } })
   return res.json()
 }

@@ -80,7 +80,7 @@ export function FormDialog({ funders, fund, fundingStatuses, locations, focusAre
       focusAreas: fund ? fund.focusAreas.map((focusArea: FocusArea) => focusArea.id) : [],
       fundingStart: fund ? new Date(fund.fundingStart) : new Date(),
       fundingEnd: fund ? new Date(fund.fundingEnd) : new Date(),
-      funderId: fund ? fund.funderId : funders[0].id
+      funderId: fund ? fund.funders.map((funder: Funder) => funder.id)[0] : funders[0].id
     },
   })
 

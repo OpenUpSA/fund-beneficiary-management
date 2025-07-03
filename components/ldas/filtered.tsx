@@ -18,9 +18,10 @@ const getInitials = (name: string) =>
 
 interface FilteredLDAsProps {
   ldas: LocalDevelopmentAgencyFull[]
+  navigatedFrom?: string
 }
 
-export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
+export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom }) => {
 
   const [selectedDevelopmentStages, setSelectedDevelopmentStages] = useState<string[]>([])
   const [selectedReportingStatuses, setSelectedReportingStatuses] = useState<string[]>([])
@@ -30,26 +31,33 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
   const [selectedFunders, setSelectedFunders] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
 
+  // Extract all unique funders from the funds' funders arrays
   const funders = [...new Map(
-    ldas.flatMap(lda => lda.funds.map(fund => [fund.funder.id, { id: fund.funder.id, label: fund.funder.name }]))
+    ldas.flatMap(lda =>
+      lda.funds.flatMap(fund =>
+        fund.funders.map((funder: { id: number; name: string }) =>
+          [funder.id, { id: funder.id, label: funder.name }]
+        )
+      )
+    )
   ).values()]
 
   const fundingStatuses: FundingStatus[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.fundingStatus).map((item) => [item.id, item])).values()
+    new Map(ldas.flatMap((lda) => lda.fundingStatus || []).map((item) => [item.id, item])).values()
   )
 
   const focusAreas: FocusArea[] = [
     ...new Map(
-      ldas.flatMap((lda) => lda.focusAreas).map((item) => [item.id, item])
+      ldas.flatMap((lda) => lda.focusAreas || []).map((item) => [item.id, item])
     ).values(),
   ]
 
   const locations: Location[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.location).map((item) => [item.id, item])).values()
+    new Map(ldas.flatMap((lda) => lda.location || []).map((item) => [item.id, item])).values()
   )
 
   const developmentStages: DevelopmentStage[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.developmentStage).map((item) => [item.id, item])).values()
+    new Map(ldas.flatMap((lda) => lda.developmentStage || []).map((item) => [item.id, item])).values()
   )
 
   const years = new Set<number>()
@@ -61,11 +69,19 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
 
   const [filteredLDAs, setFilteredLDAs] = useState<LocalDevelopmentAgencyFull[]>(ldas)
 
+  const getLDAlink = (ldaid: number): string => {
+    return navigatedFrom
+      ? `/dashboard/ldas/${ldaid}?from=${navigatedFrom}`
+      : `/dashboard/ldas/${ldaid}`;
+  }
+
   useEffect(() => {
     const filtered = ldas.filter((lda) => {
       const funderMatch =
         selectedFunders.length === 0 ||
-        lda.funds.some((fund) => selectedFunders.includes(String(fund.funder.id)))
+        lda.funds.some((fund) =>
+          fund.funders.some((funder: { id: number }) => selectedFunders.includes(String(funder.id)))
+        )
 
       const focusAreaMatch =
         selectedFocusAreas.length === 0 ||
@@ -192,14 +208,14 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
               {filteredLDAs.map((lda) => (
                 <TableRow key={lda.id}>
                   <TableCell>
-                    <Link href={`/dashboard/ldas/${lda.id}`}>
+                    <Link href={getLDAlink(lda.id)}>
                       {lda.name}
                     </Link>
                   </TableCell>
-                  <TableCell><Badge variant="outline">{lda.fundingStatus.label}</Badge></TableCell>
-                  <TableCell className="text-nowrap">R{Number(lda.amount)}</TableCell>
-                  <TableCell><Badge variant="outline">{lda.developmentStage.label}</Badge></TableCell>
-                  <TableCell className="text-nowrap"><Badge variant="outline">{lda.location.label}</Badge></TableCell>
+                  <TableCell>{lda.fundingStatus && <Badge variant="outline">{lda.fundingStatus.label}</Badge>}</TableCell>
+                  <TableCell className="text-nowrap">{lda.amount && `R${Number(lda.amount)}`}</TableCell>
+                  <TableCell>{lda.developmentStage && <Badge variant="outline">{lda.developmentStage.label}</Badge>}</TableCell>
+                  <TableCell className="text-nowrap">{lda.location && <Badge variant="outline">{lda.location.label}</Badge>}</TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {lda.focusAreas.map((focusArea) => <DynamicIcon key={`lda-${lda.id}-focusArea-${focusArea.id}`} name={focusArea.icon} size={10} />)}
@@ -209,7 +225,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas }) => {
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       {
-                        [...new Set(lda.funds.map((fund) => fund.funder.id))].length
+                        [...new Set(lda.funds.flatMap((fund) => fund.funders.map(funder => funder.id)))].length
                       }
                     </div>
                   </TableCell>

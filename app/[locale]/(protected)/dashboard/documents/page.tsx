@@ -1,8 +1,7 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { FilteredDocuments } from "@/components/documents/filtered"
-import { SidebarTrigger } from "@/components/ui/sidebar"
 import { fetchAllDocuments, fetchLocalDevelopmentAgencies } from "@/lib/data"
 import { FormDialog } from "@/components/documents/form"
 import { revalidateTag } from "next/cache"
@@ -31,14 +30,12 @@ export default async function Page() {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbPage>Documents</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "Documents", isCurrent: true }
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Documents</h1>
         <div className="space-x-2">

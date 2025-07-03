@@ -9,19 +9,22 @@ import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import { FocusArea, Fund } from '@prisma/client'
 
+
+
 interface Props {
   lda: LocalDevelopmentAgencyFull
 }
 
 export const Overview: React.FC<Props> = ({ lda }: Props) => {
+
   return (
     <div className="space-y-4">
       <div className="sm:flex gap-4 ">
-        <Card className="w-full sm:w-[0.5]">
+        <Card className="w-full sm:w-1/2">
           <CardContent className="pt-2 space-y-2 text-sm py-4">
             <div className="flex justify-between">
               <span className="font-medium">Funding status:</span>
-              <span>{lda.fundingStatus.label}</span>
+              <span>{lda.fundingStatus && lda.fundingStatus.label}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Current funding period:</span>
@@ -33,11 +36,11 @@ export const Overview: React.FC<Props> = ({ lda }: Props) => {
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Development stage:</span>
-              <span><Badge variant="outline">{lda.developmentStage.label}</Badge></span>
+              <span><Badge variant="outline">{lda.developmentStage && lda.developmentStage.label}</Badge></span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Location:</span>
-              <span><Badge variant="outline">{lda.location.label}</Badge></span>
+              <span><Badge variant="outline">{lda.location && lda.location.label}</Badge></span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Current focus areas:</span>
@@ -53,7 +56,11 @@ export const Overview: React.FC<Props> = ({ lda }: Props) => {
             <div className="flex justify-between">
               <span className="font-medium">Funders:</span>
               <span className="flex space-x-2">
-                {lda.funds.map((fund) => <Badge key={`fund-${fund.id}`} variant="outline">{fund.funder.name}</Badge>)}
+                {lda.funds.flatMap((fund) =>
+                  fund.funders.map((funder) =>
+                    <Badge key={`funder-${fund.id}-${funder.id}`} variant="outline">{funder.name}</Badge>
+                  )
+                )}
               </span>
             </div>
             <div className="flex justify-between">

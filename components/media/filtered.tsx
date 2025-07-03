@@ -20,9 +20,10 @@ interface Props {
   media: MediaFull[],
   lda?: LocalDevelopmentAgency,
   dataChanged: () => void
+  navigatedFrom?: string
 }
 
-export function FilteredMedia({ media, dataChanged, lda }: Props) {
+export function FilteredMedia({ media, dataChanged, lda, navigatedFrom }: Props) {
   const tC = useTranslations('common')
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
@@ -37,6 +38,12 @@ export function FilteredMedia({ media, dataChanged, lda }: Props) {
     id: type,
     label: tC(`mediaTypesPlural.${type}`),
   }))
+
+  const getMediaLink = (mediaId: number): string => {
+    return navigatedFrom
+      ? `/dashboard/media/${mediaId}?from=${navigatedFrom}`
+      : `/dashboard/media/${mediaId}`;
+  }
 
   let availableLDAs: { id: string; label: string }[] = []
   let focusAreas: FocusArea[] = []
@@ -191,7 +198,7 @@ export function FilteredMedia({ media, dataChanged, lda }: Props) {
         <CardContent className="grid gap-2 p-5 grid-cols-2 md:gap-5 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
           <ImageKitProvider urlEndpoint={imagekitUrlEndpoint}>
             {filteredMedia.map((item) => (
-              <Link className="block w-full" key={item.id} href={`/dashboard/media/${item.id}`} title={item.title}>
+              <Link className="block w-full" key={item.id} href={getMediaLink(item.id)} title={item.title}>
                 <ImageWithFallback
                   src={item.filePath}
                   transformation={[{ width: 140, height: 101, quality: 75, format: 'webp' }]}

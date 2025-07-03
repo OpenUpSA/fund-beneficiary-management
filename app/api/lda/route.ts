@@ -14,7 +14,7 @@ export async function GET() {
       developmentStage: true,
       funds: {
         include: {
-          funder: true
+          funders: true
         }
       }
     },
@@ -24,41 +24,61 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  console.log("IN HERE");
   try {
     const data = await req.json()
+    console.log(data)
     const query = {
       data: {
         name: data.name,
         about: data.about,
-        amount: data.amount,
-        fundingStatus: {
-          connect: { id: data.fundingStatusId },
-        },
-        fundingStart: data.fundingStart,
-        fundingEnd: data.fundingEnd,
-        location: {
-          connect: { id: data.locationId },
-        },
         programmeOfficer: {
-          connect: { id: data.programmeOfficerId }
+          connect: { id: parseInt(data.programmeOfficerId) }
         },
         developmentStage: {
-          connect: { id: data.developmentStageId }
+          connect: { id: parseInt(data.developmentStageId) }
         },
         totalFundingRounds: data.totalFundingRounds,
         focusAreas: {
           connect: data.focusAreas.map((focusAreaId: number) => ({ id: focusAreaId })),
         },
-        funds: {
-          connect: data.funds.map((fundId: number) => ({ id: fundId })),
+        registrationStatus: data.registrationStatus,
+        registrationCode: data.registrationCode,
+        registrationDate: data.registrationDate,
+        organisationStatus: data.organisationStatus,
+        organisationDetail: { 
+          create: {
+            contactNumber: data.contactNumber || '',
+            email: data.email || '',
+            website: data.website || '',
+            physicalStreet: data.physicalStreet || '',
+            physicalComplexName: data.physicalComplexName || '',
+            physicalComplexNumber: data.physicalComplexNumber || '',
+            physicalCity: data.physicalCity || '',
+            physicalPostalCode: data.physicalPostalCode || '',
+            physicalProvince: data.physicalProvince || '',
+            physicalDistrict: data.physicalDistrict || '',
+            useDifferentPostalAddress: data.useDifferentPostalAddress || false,
+            postalStreet: data.useDifferentPostalAddress ? data.postalStreet : data.physicalStreet || '',
+            postalComplexName: data.useDifferentPostalAddress ? data.postalComplexName : data.physicalComplexName || '',
+            postalComplexNumber: data.useDifferentPostalAddress ? data.postalComplexNumber : data.physicalComplexNumber || '',
+            postalCity: data.useDifferentPostalAddress ? data.postalCity : data.physicalCity || '',
+            postalProvince: data.useDifferentPostalAddress ? data.postalProvince : data.physicalProvince || '',
+            postalDistrict: data.useDifferentPostalAddress ? data.postalDistrict : data.physicalDistrict || '',
+            postalCode: data.useDifferentPostalAddress ? data.postalCode : data.physicalPostalCode || '',
+            latitude: data.latitude || null,
+            longitude: data.longitude || null,
+            mapAddress: data.mapAddress || '',
+          }
         },
-        organisationDetail: { create: {} }
+        operations: { create: {} },
       },
     }
     const record = await prisma.localDevelopmentAgency.create(query)
 
     return NextResponse.json(record)
-  } catch {
-    return NextResponse.json({ error: "Failed to create" }, { status: 500 })
+  } catch (error) {
+    console.error("Failed to create LDA:", error);
+    return NextResponse.json({ error: "Failed to create", detail: (error as Error).message }, { status: 500 });
   }
 }

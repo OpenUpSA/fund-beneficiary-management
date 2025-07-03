@@ -18,13 +18,21 @@ interface Props {
   lda?: LocalDevelopmentAgencyFull,
   formTemplates: FormTemplateWithRelations[],
   formStatuses: FormStatus[],
-  dataChanged: () => void
+  dataChanged: () => void,
+  navigatedFrom?: string
 }
 
-export const FilteredLDAForms: React.FC<Props> = ({ ldaForms, lda, formTemplates, formStatuses, dataChanged }) => {
+export const FilteredLDAForms: React.FC<Props> = ({ ldaForms, lda, formTemplates, formStatuses, dataChanged, navigatedFrom }) => {
   const [selectedFundingPeriods, setSelectedFundingPeriods] = useState<string[]>([])
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
   const [selectedApplicationsAndReportsTypes, setSelectedApplicationsAndReportsTypes] = useState<string[]>([])
+
+  const getLdaFormLink = (ldaFormId: number): string => {
+    return navigatedFrom
+      ? `/dashboard/applications-reports/${ldaFormId}?from=${navigatedFrom}`
+      : `/dashboard/applications-reports/${ldaFormId}`;
+  };
+
 
   return (
     <div className="sm:flex sm:space-x-4 mt-4">
@@ -101,7 +109,7 @@ export const FilteredLDAForms: React.FC<Props> = ({ ldaForms, lda, formTemplates
                 <>
                   <TableRow key={`application-${ldaForm.id}`}>
                     <TableCell className="text-nowrap">
-                      <Link href={`/dashboard/applications-reports/${ldaForm.id}`} className="flex items-center space-x-1">
+                      <Link href={getLdaFormLink(ldaForm.id)} className="flex items-center space-x-1">
                         {ldaForm.title}
                       </Link>
                     </TableCell>

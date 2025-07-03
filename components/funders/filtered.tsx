@@ -16,9 +16,10 @@ import { FundingStatus, FocusArea } from '@prisma/client'
 
 interface FilteredFundersProps {
   funders: FunderFull[]
+  navigatedFrom?: string
 }
 
-export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders }) => {
+export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders, navigatedFrom }) => {
   const [selectedFundingStatuses, setSelectedFundingStatuses] = useState<string[]>([])
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -35,6 +36,12 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders }) => 
   ]
 
   const years = new Set<number>()
+
+  const getFunderLink = (funderId: number): string => {
+    return navigatedFrom
+      ? `/dashboard/funders/${funderId}?from=${navigatedFrom}`
+      : `/dashboard/funders/${funderId}`;
+  }
 
   funders.forEach((funder) => {
     if (funder.fundingStart) years.add(new Date(funder.fundingStart).getFullYear())
@@ -144,7 +151,7 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders }) => 
               {FilteredFunders.map((funder) => (
                 <TableRow key={funder.id}>
                   <TableCell>
-                    <Link href={`/dashboard/funders/${funder.id}`} className="flex items-center space-x-1">
+                    <Link href={getFunderLink(funder.id)} className="flex items-center space-x-1">
                       <BuildingIcon size={10} />
                       <span>{funder.name}</span>
                     </Link>

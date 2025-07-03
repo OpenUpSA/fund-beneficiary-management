@@ -415,16 +415,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       },
     })
@@ -432,7 +423,7 @@ async function main() {
   const fundCommunityGardeningFund = await prisma.fund.create(
     {
       data: {
-        funder: { connect: { id: funderWoolworths.id } },
+        funders: { connect: [{ id: funderWoolworths.id }] },
         name: 'Community Gardening fund',
         about: 'How can learners stay safe when many schools throughout South Africa don’t have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.',
         amount: 9999999,
@@ -447,16 +438,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       },
     })
@@ -475,16 +457,7 @@ async function main() {
           connect: [{ id: focusAreaTransport.id }]
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -492,7 +465,7 @@ async function main() {
   const fundCricket = await prisma.fund.create(
     {
       data: {
-        funder: { connect: { id: funderCSA.id } },
+        funders: { connect: [{ id: funderCSA.id }] },
         name: 'Strikers Cricket Fund ',
         about: 'A fund for cricket lovers in parternship with Strikers',
         amount: 500,
@@ -504,16 +477,7 @@ async function main() {
           connect: [{ id: focusAreaTransport.id }]
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -536,16 +500,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -553,7 +508,7 @@ async function main() {
   const fundYouthDevelopmentFund = await prisma.fund.create(
     {
       data: {
-        funder: { connect: { id: funderShoprite.id } },
+        funders: { connect: [{ id: funderShoprite.id }] },
         name: 'Youth Development Fund',
         about: 'How can learners stay safe when many schools throughout South Africa don’t have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.',
         amount: 891289,
@@ -568,16 +523,7 @@ async function main() {
           ],
         },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       },
     })
@@ -596,16 +542,7 @@ async function main() {
         funds: { connect: { id: fundCricket.id } },
         programmeOfficer: { connect: { id: userNala.id } },
         organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
+          create: {},
         },
       }
     })
@@ -627,20 +564,10 @@ async function main() {
           connect: { id: fundCommunityGardeningFund.id }
         },
         programmeOfficer: { connect: { id: userNala.id } },
-        organisationDetail: {
-          create: {
-            contactNumber: "",
-            email: "",
-            website: "",
-            addressStreet: "",
-            addressComplex: "",
-            addressCity: "",
-            addressProvince: "",
-            coordinates: ""
-          },
-        },
-      }
-    })
+        organisationDetail: {},
+      },
+    },
+  )
 
   const organisationDetailLdaZanoncedoEmpowermentCentre = await prisma.organisationDetail.create(
     {
@@ -648,11 +575,18 @@ async function main() {
         contactNumber: '+27613280567',
         email: 'contact@test.test',
         website: 'https://www.test.test',
-        addressStreet: '12 Smith Street',
-        addressComplex: 'Unit 2, James Park',
-        addressCity: 'Jameserton',
-        addressProvince: 'Free State',
-        coordinates: '52.681950; -2.590400'
+        physicalStreet: '12 Smith Street',
+        physicalComplexName: 'Unit 2, James Park',
+        physicalCity: 'Jameserton',
+        physicalProvince: 'Free State',
+        useDifferentPostalAddress: false,
+        postalStreet: '12 Smith Street',
+        postalComplexName: 'Unit 2, James Park',
+        postalCity: 'Jameserton',
+        postalProvince: 'Free State',
+        latitude: 52.681950,
+        longitude: -2.590400,
+        mapAddress: '12 Smith Street, Unit 2, James Park, Jameserton, Free State',
       }
     })
 

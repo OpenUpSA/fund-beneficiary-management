@@ -1,9 +1,8 @@
 import { getTranslations } from "next-intl/server"
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb"
+import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { FilteredLDAs } from "@/components/ldas/filtered"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { fetchDevelopmentStages, fetchFocusAreas, fetchFundingStatuses, fetchFunds, fetchLocalDevelopmentAgencies, fetchLocations, fetchUsers } from "@/lib/data"
+import { fetchDevelopmentStages, fetchFocusAreas, fetchLocalDevelopmentAgencies, fetchUsers, fetchProvinces } from "@/lib/data"
 import { FormDialog } from "@/components/ldas/form"
 import { revalidateTag } from "next/cache"
 
@@ -21,13 +20,11 @@ export async function generateMetadata({ params: { locale }
 }
 
 export default async function Page() {
-  const funds = await fetchFunds()
-  const fundingStatuses = await fetchFundingStatuses()
-  const locations = await fetchLocations()
   const focusAreas = await fetchFocusAreas()
   const ldas = await fetchLocalDevelopmentAgencies()
   const developmentStages = await fetchDevelopmentStages()
   const programmeOfficers = await fetchUsers()
+  const provinces = await fetchProvinces()
 
   const dataChanged = async (tag: string) => {
     "use server"
@@ -36,24 +33,20 @@ export default async function Page() {
 
   return (
     <div>
-      <Breadcrumb className="mb-4">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <SidebarTrigger />
-            <BreadcrumbPage>LDAs</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbNav
+        className="mb-4"
+        links={[
+          { label: "LDAs", isCurrent: true }
+        ]}
+      />
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Local Development Agencies</h1>
         <div className="space-x-2">
           <FormDialog
-            funds={funds}
-            fundingStatuses={fundingStatuses}
-            locations={locations}
             focusAreas={focusAreas}
             developmentStages={developmentStages}
             programmeOfficers={programmeOfficers}
+            provinces={provinces}
             callback={dataChanged} />
         </div>
       </div>
