@@ -19,9 +19,10 @@ interface FormFieldProps {
   }
   register: UseFormRegister<FormValues>
   errors: Record<string, FieldError | undefined>
+  isEditing?: boolean
 }
 
-export function FormField({ field, register, errors }: FormFieldProps) {
+export function FormField({ field, register, errors, isEditing = false }: FormFieldProps) {
   return (
     <div key={field.name}>
       <label className="block text-sm font-medium">
@@ -38,6 +39,7 @@ export function FormField({ field, register, errors }: FormFieldProps) {
                 {...register(field.name)}
                 className={errorClass}
                 rows={8}
+                disabled={!isEditing}
               />
             )
           case "radio":
@@ -45,6 +47,7 @@ export function FormField({ field, register, errors }: FormFieldProps) {
               <RadioGroup
                 {...register(field.name)}
                 className="flex flex-col space-y-1"
+                disabled={!isEditing}
               >
                 {field.options?.map((option) => (
                   <div key={option.value} className="flex items-center space-x-2">
@@ -60,6 +63,7 @@ export function FormField({ field, register, errors }: FormFieldProps) {
                 type={field.type}
                 {...register(field.name)}
                 className={errorClass}
+                disabled={!isEditing}
               />
             )
         }

@@ -131,14 +131,15 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, ca
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
+        <Button>
           {ldaForm ? <>
             <span className="hidden md:inline">Edit details</span>
             <PencilIcon />
           </>
             : <>
-              <span className="hidden md:inline">Add form</span>
               <PlusIcon />
+              <span className="hidden md:inline">New Application</span>
+              
             </>}
         </Button>
       </DialogTrigger>
