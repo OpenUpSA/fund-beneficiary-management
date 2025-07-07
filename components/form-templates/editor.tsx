@@ -8,12 +8,12 @@ import { EyeIcon, SaveIcon } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
-import { Form } from "@/types/forms"
+import { Form, FormData } from "@/types/forms"
 
 export default function Editor({ formTemplate, dataChanged }: { formTemplate: FormTemplate, dataChanged: () => void }) {
   const [form, setForm] = useState<Form>()
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(formTemplate.form, null, 2))
-  const [data, setData] = useState<Record<string, string>>({})
+  const [data, setData] = useState<FormData>({})
   const [jsonError, setJsonError] = useState<string | null>(null)
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

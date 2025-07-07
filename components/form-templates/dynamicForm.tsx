@@ -151,11 +151,11 @@ export function DynamicForm({
   }, [setData, saveData])
   
   // Function to validate form
-  const validateForm = useCallback(() => {
-    if (!validationSchema) return false;
-    const result = validationSchema.safeParse(getValues());
-    return result.success;
-  }, [validationSchema, getValues])
+  // const validateForm = useCallback(() => {
+  //   if (!validationSchema) return false;
+  //   const result = validationSchema.safeParse(getValues());
+  //   return result.success;
+  // }, [validationSchema, getValues])
   
   // Function to save progress without validation
   const saveProgress = useCallback(() => {

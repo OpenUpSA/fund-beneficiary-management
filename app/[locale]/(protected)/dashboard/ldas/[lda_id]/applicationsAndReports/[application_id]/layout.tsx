@@ -2,7 +2,7 @@ import { fetchFormTemplates, fetchLocalDevelopmentAgency, fetchLDAForm } from "@
 import { FormTemplateWithRelations } from "@/types/models"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import LDAFormDetailView from "@/components/lda-forms/form-detail-view"
 
