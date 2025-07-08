@@ -16,8 +16,7 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "postinstall": "prisma generate",
-    "next-build": "npx prisma generate && next build",
-    "data-migration:add-operations-to-lda": "tsx ./prisma/scripts/add-operations-to-lda.ts"
+    "next-build": "npx prisma generate && next build"
   },
   "prisma": {
     "seed": "tsx ./prisma/seed.ts"
