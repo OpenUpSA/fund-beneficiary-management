@@ -48,9 +48,6 @@ export async function POST(
 ) {
   try {
     const ldaId = parseInt(params.lda_id);
-    console.log(params);
-    console.log(ldaId);
-    
     const validation = validateLdaId(ldaId);
     if (!validation.valid) {
       return validation.response;
@@ -87,18 +84,10 @@ export async function POST(
       );
     }
     
-    console.log(1);
-    console.log(body);
-    console.log(2);
-
     // Check if LDA exists
     const lda = await prisma.localDevelopmentAgency.findUnique({
       where: { id: ldaId },
     });
-
-    console.log(3);
-    console.log(lda);
-    console.log(4);
 
     if (!lda) {
       return NextResponse.json(
@@ -106,10 +95,8 @@ export async function POST(
         { status: 404 }
       );
     }
-    console.log(5);
-
+    
     // Create new staff member
-    console.log(body);
     const staffMember = await prisma.staffMember.create({
       data: {
         firstName: body.firstName,
@@ -120,10 +107,6 @@ export async function POST(
         localDevelopmentAgency: { connect: { id: ldaId } },
       },
     });
-
-    console.log(6);
-    console.log(staffMember);
-    console.log(7);
 
     return NextResponse.json(staffMember, { status: 201 });
   } catch (error) {

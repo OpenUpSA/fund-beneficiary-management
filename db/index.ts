@@ -7,7 +7,7 @@ export const prisma =
   new PrismaClient({
     datasources: {
       db: {
-        url: process.env.POSTGRES_PRISMA_URL, // Pooled URL for serverless
+        url: process.env.POSTGRES_URL_NON_POOLING, // Pooled URL for serverless
       },
     },
   })

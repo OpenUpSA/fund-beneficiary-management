@@ -70,7 +70,6 @@ export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentA
 
 export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, { next: { tags: ['ldas'] } })
-  console.log(res)
   return res.json()
 }
 
@@ -135,10 +134,8 @@ export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmen
 }
 
 export async function fetchProvinces(): Promise<Province[]> {
-  console.log("Fetching provinces...")
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces`)
   const data = await res.json();
-  console.log('Province data:', data);
   return data;
 }
 

@@ -26,7 +26,6 @@ interface OperationsTabProps {
 }
 
 export function OperationsTab({ operationsData, onSave, onChange }: OperationsTabProps) {
-  console.log(operationsData);
   return (
     <div className="space-y-8 mt-4">
 

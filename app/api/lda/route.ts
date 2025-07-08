@@ -24,10 +24,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  console.log("IN HERE");
   try {
     const data = await req.json()
-    console.log(data)
     const query = {
       data: {
         name: data.name,
@@ -46,7 +44,7 @@ export async function POST(req: NextRequest) {
         registrationCode: data.registrationCode,
         registrationDate: data.registrationDate,
         organisationStatus: data.organisationStatus,
-        organisationDetail: { 
+        organisationDetail: {
           create: {
             contactNumber: data.contactNumber || '',
             email: data.email || '',

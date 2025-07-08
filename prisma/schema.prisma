@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
+  url       = env("POSTGRES_URL_NON_POOLING")
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
@@ -127,13 +127,13 @@ model LocalDevelopmentAgency {
   funds                      Fund[]                       @relation("FundToLocalDevelopmentAgency")
   focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")
   contacts                   Contact[]                    @relation("ContactToLocalDevelopmentAgency")
-  media                      Media[] 
+  media                      Media[]
   documents                  Document[]
   registrationStatus         RegistrationStatus           @default(not_registered)
   registrationCode           String                       @default("")
   registrationDate           DateTime?
   organisationStatus         OrganisationStatus           @default(active)
-  operations                 OrganisationOperations?            
+  operations                 OrganisationOperations?
   staffMembers               StaffMember[]
   userAccess                 UserAccess[]
 }
@@ -196,8 +196,8 @@ model OrganisationDetail {
   postalDistrict            String                   @default("")
   postalCode                String                   @default("")
   useDifferentPostalAddress Boolean                  @default(false)
-  latitude                  Float?                   
-  longitude                 Float?                   
+  latitude                  Float?
+  longitude                 Float?
   mapAddress                String                   @default("")
   LocalDevelopmentAgencies  LocalDevelopmentAgency[]
   Funds                     Fund[]
@@ -205,45 +205,45 @@ model OrganisationDetail {
 }
 
 model OrganisationOperations {
-  id                            Int               @id @default(autoincrement())
-  localDevelopmentAgencyId      Int               @unique
-  vision                        String            @default("")
-  mission                       String            @default("")
-  objectives                    String            @default("")
-  programmaticAreas             String            @default("")
-  climateFocus                  String            @default("")
-  youthFocus                    String            @default("")
-  genderFocus                   String            @default("")
-  fundraisingStrategies         String            @default("")
-  ensureOrgNotReliantOnScatOnly String            @default("")
-  partnershipsWithinOutside     String            @default("")
-  nationalAdvocacyStrategies    String            @default("")
-  monitoringAndLearning         String            @default("")
-  createdAt                     DateTime          @default(now())
-  updatedAt                     DateTime          @updatedAt
+  id                            Int                    @id @default(autoincrement())
+  localDevelopmentAgencyId      Int                    @unique
+  vision                        String                 @default("")
+  mission                       String                 @default("")
+  objectives                    String                 @default("")
+  programmaticAreas             String                 @default("")
+  climateFocus                  String                 @default("")
+  youthFocus                    String                 @default("")
+  genderFocus                   String                 @default("")
+  fundraisingStrategies         String                 @default("")
+  ensureOrgNotReliantOnScatOnly String                 @default("")
+  partnershipsWithinOutside     String                 @default("")
+  nationalAdvocacyStrategies    String                 @default("")
+  monitoringAndLearning         String                 @default("")
+  createdAt                     DateTime               @default(now())
+  updatedAt                     DateTime               @updatedAt
   localDevelopmentAgency        LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 }
 
 model StaffMember {
-  id                        Int                      @id @default(autoincrement())
-  firstName                 String
-  lastName                  String
-  gender                    Gender
-  position                  String?                  
-  isCommittee               Boolean                  @default(false)
+  id          Int     @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  gender      Gender
+  position    String?
+  isCommittee Boolean @default(false)
 
-  localDevelopmentAgencyId  Int
-  localDevelopmentAgency    LocalDevelopmentAgency   @relation(fields: [localDevelopmentAgencyId], references: [id])
+  localDevelopmentAgencyId Int
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 }
 
 model UserAccess {
-  id                        Int                      @id @default(autoincrement())
-  fullName                  String
-  email                     String
-  accessLevel               AccessLevel              @default(ReadOnly)
+  id          Int         @id @default(autoincrement())
+  fullName    String
+  email       String
+  accessLevel AccessLevel @default(ReadOnly)
 
-  localDevelopmentAgencyId  Int
-  localDevelopmentAgency    LocalDevelopmentAgency   @relation(fields: [localDevelopmentAgencyId], references: [id])
+  localDevelopmentAgencyId Int
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 }
 
 model Contact {
@@ -261,25 +261,25 @@ model Contact {
 }
 
 model Media {
-  id                       Int                      @id @default(autoincrement())
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  id                       Int                    @id @default(autoincrement())
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
   title                    String
   description              String
   filePath                 String
-  mediaType                MediaType                @default(PHOTOGRAPH)
+  mediaType                MediaType              @default(PHOTOGRAPH)
   localDevelopmentAgencyId Int
-  localDevelopmentAgency   LocalDevelopmentAgency   @relation(fields: [localDevelopmentAgencyId], references: [id])
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 }
 
 model Document {
-  id                       Int                      @id @default(autoincrement())
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  id                       Int                    @id @default(autoincrement())
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
   title                    String
   description              String
   filePath                 String
-  documentType             DocumentType             @default(DOC)
+  documentType             DocumentType           @default(DOC)
   validFromDate            DateTime
   validUntilDate           DateTime
   localDevelopmentAgencyId Int
@@ -287,12 +287,12 @@ model Document {
 }
 
 model Province {
-  id                       Int                      @id @default(autoincrement())
-  name                     String                   @unique
-  code                     String                   @unique
-  districts                Json                     // Stored as JSON array of district objects
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  code      String   @unique
+  districts Json // Stored as JSON array of district objects
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
@@ -312,13 +312,13 @@ enum DocumentType {
 }
 
 enum RegistrationStatus {
-  not_registered   @map("Not registered")
-  registered_npo   @map("Registered NPO")
-  registered_bpo   @map("Registered BPO")
+  not_registered @map("Not registered")
+  registered_npo @map("Registered NPO")
+  registered_bpo @map("Registered BPO")
 }
 
 enum OrganisationStatus {
-  active @map("Active")
+  active   @map("Active")
   inactive @map("Inactive")
   archived @map("Archived")
 }
