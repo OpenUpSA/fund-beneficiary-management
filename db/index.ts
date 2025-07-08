@@ -1,22 +1,17 @@
 import { PrismaClient } from '@prisma/client'
 
-// Define a function that creates the PrismaClient instance
-const prismaClientSingleton = () => {
-  return new PrismaClient()
-}
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
-// Extend globalThis to include a global prisma instance
-declare global {
-  var prisma: PrismaClient | undefined
-}
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.POSTGRES_PRISMA_URL, // Pooled URL for serverless
+      },
+    },
+  })
 
-// If the prisma instance is not already set on globalThis, instantiate it
-const prisma = globalThis.prisma ?? prismaClientSingleton()
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
-// Export the prisma client
 export default prisma
-
-// Set prisma on globalThis to ensure it's reused across hot reloads in development
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma
-}
