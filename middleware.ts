@@ -17,7 +17,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     // Exclude NextAuth routes while keeping other API routes accessible
-    '/((?!api|_next|_vercel|.*\\..*).*)',
+    '/((?!api|_next|.*\\..*).*)',
 
     // Enable locale redirection at the root
     '/',

@@ -3,6 +3,7 @@ import { createHash } from '@/lib/hash'
 import imagekit from "@/lib/imagekit"
 import fs from 'fs'
 import path from 'path'
+import { ZA_PROVINCES } from '@/constants/province'
 
 
 // Uploads to ImageKit storage and returns the URL
@@ -11,7 +12,7 @@ import path from 'path'
 const uploadFile = async (filename: string) => {
   const filePath = path.join(process.cwd(), filename)
   const fileBuffer = fs.readFileSync(filePath)
-  const fileBase64 = fileBuffer.toString("base64");
+  const fileBase64 = fileBuffer.toString("base64")
   const fileName = filename.split('/').pop()
 
   if (!fileName) throw new Error('Invalid filename')
@@ -39,6 +40,7 @@ async function main() {
   await prisma.formStatus.deleteMany()
   await prisma.formTemplate.deleteMany()
   await prisma.user.deleteMany()
+  await prisma.province.deleteMany()
 
   const userNala = await prisma.user.create(
     {
@@ -668,6 +670,36 @@ async function main() {
         validUntilDate: new Date(new Date().setMonth(new Date().getMonth() + 3))
       }
     })
+
+  // Find all LDAs where operations is null
+  const ldasWithoutOps = await prisma.localDevelopmentAgency.findMany({
+    where: { operations: null },
+    select: { id: true },
+  })
+
+  for (const lda of ldasWithoutOps) {
+    await prisma.organisationOperations.create({
+      data: {
+        localDevelopmentAgencyId: lda.id,
+      },
+    })
+  }
+
+  for (const provinceData of ZA_PROVINCES) {
+    // Create the province with districts as JSON
+    await prisma.province.upsert({
+      where: { code: provinceData.code },
+      update: {
+        name: provinceData.name,
+        districts: provinceData.districts ? JSON.parse(JSON.stringify(provinceData.districts)) : [], // Store districts as JSON
+      },
+      create: {
+        name: provinceData.name,
+        code: provinceData.code,
+        districts: provinceData.districts ? JSON.parse(JSON.stringify(provinceData.districts)) : [], // Store districts as JSON
+      },
+    })
+  }
 }
 
 main()
