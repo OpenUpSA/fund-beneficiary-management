@@ -62,17 +62,7 @@ const FormSchema = z.object({
   approved: z.date({ required_error: "Please select an approved date." }).refine(date => date !== undefined, {
     message: "Approved date is required."
   }),
-  formData: z.string().nonempty("Form input is required")
-    .refine((val) => {
-      try {
-        JSON.parse(val);
-        return true;
-      } catch {
-        return false;
-      }
-    }, {
-      message: "Must be valid data",
-    }),
+  formData: z.object({})
 })
 
 export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, callback }: FormDialogProps) {
@@ -88,7 +78,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, ca
       dueDate: ldaForm ? new Date(ldaForm.dueDate) : new Date(),
       submitted: ldaForm ? new Date(ldaForm.submitted) : new Date(),
       approved: ldaForm ? new Date(ldaForm.approved) : new Date(),
-      formData: ldaForm ? JSON.stringify(ldaForm.formData, null, 2) : "{}",
+      formData: ldaForm?.formData ? ldaForm.formData : {},
     },
   })
 

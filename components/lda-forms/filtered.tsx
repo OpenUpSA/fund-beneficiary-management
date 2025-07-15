@@ -67,7 +67,6 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
 
   const handleFilterChange = useCallback(
     (filterType: string, selectedOptions: FilterOption[]) =>{
-      console.log("Filter change:", filterType, selectedOptions);
       setActiveFilters( {
         ...activeFilters,
         [filterType]: selectedOptions

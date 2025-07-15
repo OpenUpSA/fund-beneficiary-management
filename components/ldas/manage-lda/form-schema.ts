@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { RegistrationStatus, OrganisationStatus } from "@/constants/lda";
 
+// Define the schema with proper types for React Hook Form compatibility
 export const FormSchema = z.object({
   // Admin tab fields
   name: z.string().min(1, 'Name is required'),

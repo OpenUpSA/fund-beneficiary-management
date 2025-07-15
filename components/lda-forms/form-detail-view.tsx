@@ -10,6 +10,7 @@ import {PenLine, Send} from "lucide-react"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "@/hooks/use-toast"
 import { JsonValue } from "@prisma/client/runtime/library"
+import { useSession } from "next-auth/react"
 
 interface LDAFormDetailViewProps {
   ldaForm: {
@@ -30,7 +31,8 @@ interface LDAFormDetailViewProps {
 export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
 
   const [isEditing, setIsEditing] = useState(false)
-  const [isFormValid, setIsFormValid] = useState(true)
+  const isFormValid = true
+  const { data: session } = useSession()
   // Get status badge color
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -46,23 +48,6 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
   const formatDate = (date: Date | null | undefined) => {
     return date ? format(new Date(date), 'dd MMM yyyy') : 'Not set';
   };
-
-  const saveData = async (data: FormData) => {
-    toast({
-      title: 'Saving form...',
-      variant: 'processing'
-    })
-    const updatedFormData: { formData: JsonValue } = { formData: data as unknown as JsonValue }
-    await fetch(`/api/lda-form/${ldaForm.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedFormData),
-    })
-    toast({
-      title: 'Form saved',
-      variant: 'success'
-    })
-  }
   
   const submitForm = async () => {
     // Double-check form validity before submission
@@ -130,14 +115,14 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
         </CardHeader>
         <CardContent className="p-0">
           {ldaForm.formTemplate.form ? (
-            <DynamicForm
-              form={ldaForm.formTemplate.form}
+              <DynamicForm
+                form={ldaForm.formTemplate.form}
               defaultValues={ldaForm.formData as Record<string, string>}
-              saveData={saveData}
-              isEditing={isEditing}
-              setParentEditing={setIsEditing}
-              onValidationChange={setIsFormValid}
-            />
+                isEditing={isEditing}
+                setParentEditing={setIsEditing}
+                formId={ldaForm.id}
+                userRole={session?.user?.role}
+              />
           ) : (
             <p className="text-muted-foreground">Form template not available</p>
           )}

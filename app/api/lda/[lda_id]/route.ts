@@ -67,7 +67,16 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
     }
     if (data.registrationStatus !== undefined) ldaData.registrationStatus = data.registrationStatus;
     if (data.registrationCode !== undefined) ldaData.registrationCode = data.registrationCode;
-    if (data.registrationDate !== undefined) ldaData.registrationDate = data.registrationDate;
+    if (data.registrationDate !== undefined) {
+      // Validate that we have a valid date string before converting
+      const dateValue = new Date(data.registrationDate);
+      if (!isNaN(dateValue.getTime())) {
+        ldaData.registrationDate = dateValue;
+      } else {
+        // If invalid date, set to null (since the field is optional in the schema)
+        ldaData.registrationDate = null;
+      }
+    }
     if (data.organisationStatus !== undefined) ldaData.organisationStatus = data.organisationStatus;
 
     // --- OrganisationDetail Fields ---

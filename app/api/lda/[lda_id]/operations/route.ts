@@ -17,10 +17,30 @@ export async function PATCH(
     const body = await req.json();
     const validatedBody = patchSchema.parse(body);
 
-    const updatedOperation = await prisma.organisationOperations.update({
+    // Check if OrganisationOperations exists for this LDA
+    const existingOperation = await prisma.organisationOperations.findUnique({
       where: { localDevelopmentAgencyId: ldaId },
-      data: validatedBody,
     });
+    
+    let updatedOperation;
+    
+    if (existingOperation) {
+      // Update existing record
+      updatedOperation = await prisma.organisationOperations.update({
+        where: { localDevelopmentAgencyId: ldaId },
+        data: validatedBody,
+      });
+    } else {
+      // Create new record
+      updatedOperation = await prisma.organisationOperations.create({
+        data: {
+          ...validatedBody,
+          localDevelopmentAgency: {
+            connect: { id: ldaId }
+          }
+        },
+      });
+    }
 
     return NextResponse.json(updatedOperation, { status: 200 });
   } catch (error) {
