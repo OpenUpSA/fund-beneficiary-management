@@ -17,7 +17,7 @@ export async function GET(
 ) {
   try {
     const ldaId = parseInt(params.lda_id);
-    
+
     if (isNaN(ldaId)) {
       return NextResponse.json(
         { error: "Invalid LDA ID" },
@@ -83,7 +83,7 @@ export async function POST(
         { status: 400 }
       );
     }
-    
+
     // Check if LDA exists
     const lda = await prisma.localDevelopmentAgency.findUnique({
       where: { id: ldaId },
@@ -95,7 +95,6 @@ export async function POST(
         { status: 404 }
       );
     }
-    
     // Create new staff member
     const staffMember = await prisma.staffMember.create({
       data: {

@@ -1,45 +1,25 @@
 "use client"
 
 import DynamicForm from "@/components/form-templates/dynamicForm"
-import { Form, FormData } from "@/types/forms"
+import { Form } from "@/types/forms"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { SaveIcon, XIcon } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { JsonValue } from "@prisma/client/runtime/library"
-import { useRouter } from "next/navigation"
 
 type Props = {
   ldaForm: LocalDevelopmentAgencyFormFull,
-  callback: () => void
+  callback?: () => Promise<void>
 }
 
 export default function Filler({ ldaForm, callback }: Props) {
-  const router = useRouter()
 
-  const submitForm = () => {
+  const submitForm = async () => {
     window.dispatchEvent(new Event("submit-dynamic-form"))
-  }
-
-  const saveData = async (data: FormData) => {
-    toast({
-      title: 'Saving form...',
-      variant: 'processing'
-    })
-    const updatedFormData: { formData: JsonValue } = { formData: data as unknown as JsonValue }
-    await fetch(`/api/lda-form/${ldaForm.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedFormData),
-    })
-    toast({
-      title: 'Form saved',
-      variant: 'success'
-    })
-    callback()
-    router.push(`/dashboard/applications-reports/${ldaForm.id}/`)
+    if (callback) {
+      await callback()
+    }
   }
 
   return (
@@ -62,7 +42,6 @@ export default function Filler({ ldaForm, callback }: Props) {
               {ldaForm.formTemplate.form && <DynamicForm
                 form={ldaForm.formTemplate.form as unknown as Form}
                 defaultValues={ldaForm.formData as Record<string, string>}
-                saveData={saveData}
               />}
             </CardContent>
           </Card>
