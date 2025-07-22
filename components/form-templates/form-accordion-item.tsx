@@ -36,7 +36,13 @@ export default function FormAccordionItem({
       
       // Check if default value exists for this field
       if (defaultValues && field.name in defaultValues) {
-        const value = String(defaultValues[field.name]);
+        let value;
+        if (typeof defaultValues[field.name] === "object") {
+          value = JSON.stringify(defaultValues[field.name]);
+        } else {
+          value = String(defaultValues[field.name]);
+        }
+
         // A field is valid if it has a value (for required fields) or is optional
         const isValid = field.required ? Boolean(value && value.trim() !== "") : true;
         fieldObj = { ...fieldObj, value, isValid };

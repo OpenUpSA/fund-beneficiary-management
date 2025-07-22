@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
-import { Prisma } from "@prisma/client"
+import { Prisma, Gender } from "@prisma/client"
 import { Form } from "@/types/forms"
 import { Section } from "@/types/forms"
 import { Field } from "@/types/forms"
@@ -9,18 +9,31 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 
+// Define a type for the staff member structure
+type StaffMember = {
+  firstName: string;
+  lastName: string;
+  gender: Gender; // Use the Gender enum from Prisma
+  position?: string | null; // Allow null values for position
+  isCommittee: boolean;
+  // Add other potential properties from the database
+  id?: number;
+  localDevelopmentAgencyId?: number;
+};
+
 // Define a type for the organisation object with index signature to allow dynamic property access
 type OrganisationWithDetails = {
-  [key: string]: unknown;
   organisationDetail?: { [key: string]: unknown } | null;
   operations?: { [key: string]: unknown } | null;
+  staffMembers: StaffMember[];
 };
 
 const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source: string; path: string}) => {
+  console.log('prefill', prefill)
   switch (prefill.source) {
     case 'organisation':
       // Direct properties of the organisation
-      if (['name', 'about', 'registrationCode', 'registrationDate', 'registrationStatus', 'organisationStatus', 'totalFundingRounds', 'amount', 'fundingStart', 'fundingEnd', 'developmentStageId', 'fundingStatusId', 'locationId', 'programmeOfficerId', 'organisationDetailId', 'developmentStage', 'fundingStatus', 'location', 'programmeOfficer', 'LocalDevelopmentAgencyForm', 'funds', 'focusAreas', 'contacts', 'media', 'documents', 'registrationStatus', 'operations', 'staffMembers', 'userAccess'].includes(prefill.path)) {
+      if (organisation && prefill.path) {
         const value = organisation[prefill.path as keyof typeof organisation]
         if (value !== undefined && value !== null) {
           return String(value)
@@ -47,6 +60,24 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
         }
       }
       break;
+
+    case 'organisation_staff':
+      // Properties from the related staff
+      if (prefill.path) {
+        if (prefill.path === 'organisation_staff_members') {
+          return organisation.staffMembers.filter((staffMember) => staffMember.isCommittee === false).map((staffMember) => ({
+            name: staffMember.firstName + ' ' + staffMember.lastName,
+            gender: staffMember.gender,
+            position: staffMember.position
+          }))
+        } else if (prefill.path === 'organisation_board_members') {
+          return organisation.staffMembers.filter((staffMember) => staffMember.isCommittee === true).map((staffMember) => ({
+            name: staffMember.firstName + ' ' + staffMember.lastName,
+            gender: staffMember.gender
+          }))
+        }
+      }
+      break;
   }
   
 }
@@ -61,6 +92,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
         include: {
           organisationDetail: true,
           operations: true,
+          staffMembers: true,
         },
       },
       formTemplate: true,
