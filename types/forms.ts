@@ -21,6 +21,7 @@ export interface Field {
   prefill?: { source: string; path: string };
   options?: { value: string; label: string }[];
   placeholder?: string;
+  config?: Record<string, string | number | boolean | string[] | Record<string, unknown>[] | Record<string, unknown>>; // For custom component configurations
 }
 
 export interface Section {

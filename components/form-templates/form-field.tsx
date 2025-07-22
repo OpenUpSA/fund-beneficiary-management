@@ -83,25 +83,33 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange }: { in
   )  
 }
 
+// Import the OrganisationManagementLayout component
+import { DataTableLayout } from "./custom-layouts/data-table"
+
 function FormLayout({ inputField, isEditing = false, onValueChange }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void }) {
   switch (inputField.layout) {
+    case "data-table":
+      return <DataTableLayout inputField={inputField}  />
     default:
       return (
       <>
-        {inputField.type !== "group" && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />}
-        {inputField.fields && inputField.fields.length > 0 && (
-          <div className="flex flex-wrap -mr-2">
-            {inputField.fields.map((subfield) => (
-              <FieldRender
-                key={subfield.name}
-                inputField={subfield}
-                isEditing={isEditing}
-                parentField={inputField}
-                onValueChange={onValueChange}
-              />
-            ))}
-          </div>
-        )}
+        <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />
+        <div className="text-sm mt-1 p-2 text-slate-700">
+          {inputField.type !== "group" && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />}
+          {inputField.fields && inputField.fields.length > 0 && (
+            <div className="flex flex-wrap -mr-2">
+              {inputField.fields.map((subfield) => (
+                <FieldRender
+                  key={subfield.name}
+                  inputField={subfield}
+                  isEditing={isEditing}
+                  parentField={inputField}
+                  onValueChange={onValueChange}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </>
     )
   }
@@ -110,10 +118,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange }: { inputFie
 export function FormField({ field, isEditing = false, onValueChange }: FormFieldProps) {
   return (
     <div key={field.name}>
-      <FieldHeader label={field.label} required={field.required} isValid={field.isValid} />
-      <div className="text-sm mt-1 p-2 text-slate-700">
-        <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} />
-      </div>
+      <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} />
     </div>
   )
 }
