@@ -6,7 +6,7 @@ import { useState, useCallback, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, FormTemplateWithRelations } from "@/types/models"
 import { format } from "date-fns"
-import { AlertTriangleIcon, Clock3Icon, MoreHorizontal } from "lucide-react"
+import { AlertTriangleIcon, Clock3Icon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -121,7 +121,6 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           // open form dialog 
           <FormDialog
             formTemplates={formTemplates}
-            formStatuses={formStatuses}
             lda={lda}
             callback={() => dataChanged && dataChanged()}
           />
@@ -132,13 +131,13 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
         <Table className="w-full">
           <TableHeader>
             <TableRow>
+              <TableHead className="font-medium">Form</TableHead>
               <TableHead className="font-medium">Name</TableHead>
               <TableHead className="font-medium text-right">Amount</TableHead>
               <TableHead className="font-medium">Status</TableHead>
               <TableHead className="font-medium">Submitted</TableHead>
               <TableHead className="font-medium">Approved</TableHead>
               <TableHead className="font-medium">Reporting status</TableHead>
-              <TableHead className="font-medium">Form</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -187,6 +186,19 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
               return (
                 <TableRow key={`application-${ldaForm.id}`} className={cn(isLocked ? "text-gray-500" : "")}>
                   <TableCell>
+                    <div className="flex items-center justify-between">
+                      <Link href={`/dashboard/ldas/${lda?.id}/applicationsAndReports/${ldaForm.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          View Form
+                        </Button>
+                      </Link>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     {isLocked ? (
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400">🔒</span>
@@ -213,26 +225,9 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   <TableCell>
                     {getReportingStatus()}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-between">
-                      <Link href={`/dashboard/ldas/${lda?.id}/applicationsAndReports/${ldaForm.id}`}>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-gray-500 hover:text-gray-700"
-                        >
-                          View
-                        </Button>
-                      </Link>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
                 </TableRow>
               );
             })}
-
             {filteredForms.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center text-gray-500 text-lg">

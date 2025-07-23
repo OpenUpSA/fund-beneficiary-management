@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { toast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import {
   Form,
   FormControl,
@@ -30,6 +31,7 @@ import { FormTemplate } from "@prisma/client"
 
 const FormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  active: z.boolean(),
   description: z.string().min(2, { message: "Description must be at least 2 characters." })
 })
 
@@ -45,6 +47,7 @@ export function FormDialog({ formTemplate, callback }: FormDialogProps) {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: formTemplate ? formTemplate.name : "",
+      active: formTemplate ? formTemplate.active : true,
       description: formTemplate ? formTemplate?.description : ""
     },
   })
@@ -118,7 +121,6 @@ export function FormDialog({ formTemplate, callback }: FormDialogProps) {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="description"
@@ -132,6 +134,18 @@ export function FormDialog({ formTemplate, callback }: FormDialogProps) {
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="active"
+              render={({ field }) => (
+              <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange}/>
+                </FormControl>
+                <FormLabel className="font-normal">Active</FormLabel>
+              </FormItem>
+            )} />
 
           </form>
         </Form>

@@ -2,15 +2,22 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Form, FormData } from "@/types/forms"
-import {PenLine, Send} from "lucide-react"
+import {PenLine, Send, CalendarIcon} from "lucide-react"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "@/hooks/use-toast"
 import { JsonValue } from "@prisma/client/runtime/library"
 import { useSession } from "next-auth/react"
+import { Input } from "@/components/ui/input"
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue 
+} from "@/components/ui/select"
 
 interface LDAFormDetailViewProps {
   ldaForm: {
@@ -33,16 +40,6 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false)
   const isFormValid = true
   const { data: session } = useSession()
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'draft': return 'bg-gray-200 text-gray-800';
-      case 'submitted': return 'bg-blue-100 text-blue-800';
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-200 text-gray-800';
-    }
-  };
 
   // Format date or show placeholder
   const formatDate = (date: Date | null | undefined) => {
@@ -134,68 +131,83 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
         <CardHeader className="pb-2 border-b grid items-center p-4 py-6">
           <h2 className="text-lg font-bold text-slate-900">Application Admin</h2>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <Badge className={getStatusColor(ldaForm.formStatus?.label || 'Draft')}>
-                {ldaForm.formStatus?.label || 'Draft'}
-              </Badge>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Required fields completed:</p>
+              <p className="font-medium">12/24</p>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Created by</p>
-                <p>{'James Smith'}</p>
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Created by:</p>
+              <p className="font-medium">James Smith</p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Date created:</p>
+              <p className="font-medium">{formatDate(ldaForm.createdAt)}</p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Last updated:</p>
+              <p className="font-medium">{formatDate(ldaForm.updatedAt)}</p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Date due:</p>
+              <p className="font-medium">{ldaForm.dueDate ? `${formatDate(ldaForm.dueDate)} (10 days away)` : '15 July, 2025 (10 days away)'}</p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Date submitted</p>
+              <p className="font-medium">{ldaForm.submitted ? 
+                  (typeof ldaForm.submitted === 'boolean' ? 'Yes' : formatDate(ldaForm.submitted as Date)) : 
+                  '-'}</p>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-muted-foreground">Date approved:</p>
+              <p className="font-medium">{ldaForm.approved ? 
+                  (typeof ldaForm.approved === 'boolean' ? 'Yes' : formatDate(ldaForm.approved as Date)) : 
+                  '-'}</p>
+            </div>
+          </div>
+          
+          <div className="border-t pt-6 space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Application status:</p>
+              <Select defaultValue={ldaForm.formStatus?.label || "draft"}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="submitted">Submitted</SelectItem>
+                  <SelectItem value="under_review">Under Review</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Approved amount:</p>
+              <Input placeholder="R 0.00" defaultValue={`R ${ldaForm.amount || '120,000'}`} />
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Funding start date:</p>
+              <div className="relative">
+                <Input placeholder="Select date" defaultValue="1 Jan, 2026" />
+                <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Date created</p>
-                <p>{formatDate(ldaForm.createdAt)}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Last updated</p>
-                <p>{formatDate(ldaForm.updatedAt)}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Date due</p>
-                <p>{formatDate(ldaForm.dueDate)}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Date submitted</p>
-                <p>{ldaForm.submitted ? 
-                    (typeof ldaForm.submitted === 'boolean' ? 'Yes' : formatDate(ldaForm.submitted as Date)) : 
-                    '-'}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Date approved</p>
-                <p>{ldaForm.approved ? 
-                    (typeof ldaForm.approved === 'boolean' ? 'Yes' : formatDate(ldaForm.approved as Date)) : 
-                    '-'}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Application status</p>
-                <p>Draft</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Approved amount</p>
-                <p>R {ldaForm.amount || '120,000'}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Funding start date</p>
-                <p>1 Jan, 2026</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Funding end date</p>
-                <p>31 Dec, 2026</p>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Funding end date:</p>
+              <div className="relative">
+                <Input placeholder="Select date" defaultValue="31 Dec, 2026" />
+                <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </div>
