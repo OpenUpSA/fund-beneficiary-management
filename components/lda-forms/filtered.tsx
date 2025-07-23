@@ -131,8 +131,8 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
         <Table className="w-full">
           <TableHeader>
             <TableRow>
-              <TableHead className="font-medium">Form</TableHead>
               <TableHead className="font-medium">Name</TableHead>
+              <TableHead className="font-medium">View</TableHead>
               <TableHead className="font-medium text-right">Amount</TableHead>
               <TableHead className="font-medium">Status</TableHead>
               <TableHead className="font-medium">Submitted</TableHead>
@@ -185,6 +185,19 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
               
               return (
                 <TableRow key={`application-${ldaForm.id}`} className={cn(isLocked ? "text-gray-500" : "")}>
+                  
+                  <TableCell>
+                    {isLocked ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400">🔒</span>
+                        {ldaForm.title}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {ldaForm.title}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-between">
                       <Link href={`/dashboard/ldas/${lda?.id}/applicationsAndReports/${ldaForm.id}`}>
@@ -197,18 +210,6 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                         </Button>
                       </Link>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {isLocked ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">🔒</span>
-                        {ldaForm.title}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        {ldaForm.title}
-                      </div>
-                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     {index === 0 ? "Unavailable" : `R${Math.floor(Math.random() * 50000)}`}
