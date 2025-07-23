@@ -46,7 +46,6 @@ export default async function Page() {
         <div className="space-x-2">
           <FormDialog
             formTemplates={formTemplates}
-            formStatuses={formStatuses}
             ldas={ldas}
             callback={dataChanged} />
         </div>

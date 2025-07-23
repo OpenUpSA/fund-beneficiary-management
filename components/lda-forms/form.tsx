@@ -13,7 +13,6 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -22,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { FormStatus, LocalDevelopmentAgencyForm } from '@prisma/client'
+import { LocalDevelopmentAgencyForm } from '@prisma/client'
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFull } from '@/types/models'
 
 import {
@@ -41,7 +40,6 @@ import { Calendar } from "../ui/calendar";
 
 interface FormDialogProps {
   formTemplates: FormTemplateWithRelations[]
-  formStatuses: FormStatus[],
   ldaForm?: LocalDevelopmentAgencyForm,
   lda?: LocalDevelopmentAgencyFull,
   ldas?: LocalDevelopmentAgencyFull[],
@@ -49,35 +47,33 @@ interface FormDialogProps {
 }
 
 const FormSchema = z.object({
-  title: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  // title: z.string().optional(),
   localDevelopmentAgencyId: z.coerce.number({ required_error: "Please select a local development agency." }),
-  formStatusId: z.coerce.number({ required_error: "Please select a form status." }),
   formTemplateId: z.coerce.number({ required_error: "Please select a form templte." }),
   dueDate: z.date({ required_error: "Please select a due date." }).refine(date => date !== undefined, {
     message: "Due date is required."
   }),
-  submitted: z.date({ required_error: "Please select a submitted date." }).refine(date => date !== undefined, {
-    message: "Submitted date is required."
+  fundingStart: z.date({ required_error: "Please select a funding start." }).refine(date => date !== undefined, {
+    message: "Funding start is required."
   }),
-  approved: z.date({ required_error: "Please select an approved date." }).refine(date => date !== undefined, {
-    message: "Approved date is required."
+  fundingEnd: z.date({ required_error: "Please select a funding end." }).refine(date => date !== undefined, {
+    message: "Funding end is required."
   }),
   formData: z.object({})
 })
 
-export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, callback }: FormDialogProps) {
+export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      title: ldaForm ? ldaForm.title : "",
+      // title: ldaForm ? ldaForm.title : "",
       localDevelopmentAgencyId: ldaForm ? ldaForm.localDevelopmentAgencyId : lda ? lda.id : 0,
-      formStatusId: ldaForm ? ldaForm.formStatusId : formStatuses[0].id,
       formTemplateId: ldaForm ? ldaForm.formTemplateId : 0,
       dueDate: ldaForm ? new Date(ldaForm.dueDate) : new Date(),
-      submitted: ldaForm ? new Date(ldaForm.submitted) : new Date(),
-      approved: ldaForm ? new Date(ldaForm.approved) : new Date(),
+      fundingStart: ldaForm ? new Date(ldaForm.fundingStart) : new Date(),
+      fundingEnd: ldaForm ? new Date(ldaForm.fundingEnd) : new Date(),
       formData: ldaForm?.formData ? ldaForm.formData : {},
     },
   })
@@ -139,21 +135,6 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, ca
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-
-                </FormItem>
-              )}
-            />
-
             {ldas &&
               <FormField
                 control={form.control}
@@ -195,12 +176,14 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, ca
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {formTemplates.map((lda) => (
+                      {formTemplates
+                        .filter(template => template.active === true)
+                        .map((template) => (
                         <SelectItem
-                          key={lda.id}
-                          value={lda.id.toString()}
+                          key={template.id}
+                          value={template.id.toString()}
                         >
-                          {lda.name}
+                          {template.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -212,10 +195,42 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, ca
             <div className="flex gap-4">
               <FormField
                 control={form.control}
-                name="submitted"
+                name="fundingStart"
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full">
-                    <FormLabel>Submitted</FormLabel>
+                    <FormLabel>Funding Start</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className="w-full pl-3 text-left font-normal"
+                          >
+                            {field.value ? format(field.value, "PPP") : "Pick a date"}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="fundingEnd"
+                render={({ field }) => (
+                  <FormItem className="flex-1 w-full">
+                    <FormLabel>Funding End</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -273,66 +288,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, formStatuses, ca
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="submitted"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Approved</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
-                )}
-              />
             </div>
-
-            <FormField
-              control={form.control}
-              name="formStatusId"
-              render={({ field }) => (
-                <FormItem className="flex-1 w-full">
-                  <FormLabel>Funding Status</FormLabel>
-                  <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {formStatuses.map((formStatus) => (
-                        <SelectItem
-                          key={formStatus.id}
-                          value={formStatus.id.toString()}
-                        >
-                          {formStatus.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                </FormItem>
-              )} />
 
           </form>
         </Form>

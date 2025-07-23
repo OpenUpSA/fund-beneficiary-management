@@ -1,11 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
-import { fetchFormStatuses, fetchFormTemplates, fetchLDAForm } from "@/lib/data"
+import { fetchFormTemplates, fetchLDAForm } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { FormDialog } from "@/components/lda-forms/form"
 import { DeleteDialog } from "@/components/lda-forms/delete"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/types/models"
-import { FormStatus } from "@prisma/client"
 import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import LDAFormDataView from "@/components/lda-forms/data-view"
@@ -45,7 +44,6 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
   const { from } = searchParams
   const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
-  const formStatuses: FormStatus[] = await fetchFormStatuses()
 
   let breadcrumbLinks: BreadcrumbLink[] = [
     { label: "Applications & Reports", href: "/dashboard/applications-reports" },
@@ -81,7 +79,6 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
             </Button>
             <FormDialog
               formTemplates={formTemplates}
-              formStatuses={formStatuses}
               ldaForm={ldaForm}
               callback={dataChanged} />
             <DeleteDialog
