@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "FormTemplate" ADD COLUMN     "active" BOOLEAN NOT NULL DEFAULT true;
+
+-- AlterTable
+ALTER TABLE "LocalDevelopmentAgencyForm" ADD COLUMN     "fundingEnd" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "fundingStart" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
