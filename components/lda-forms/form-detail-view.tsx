@@ -38,14 +38,18 @@ interface LDAFormDetailViewProps {
 export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
 
   const [isEditing, setIsEditing] = useState(false)
-  const isFormValid = true
+  const [isFormValid, setIsFormValid] = useState(false)
+  const [completionStatus, setCompletionStatus] = useState({
+    completed: 0,
+    required: 0
+  })
   const { data: session } = useSession()
 
   // Format date or show placeholder
   const formatDate = (date: Date | null | undefined) => {
     return date ? format(new Date(date), 'dd MMM yyyy') : 'Not set';
   };
-  
+
   const submitForm = async () => {
     // Double-check form validity before submission
     if (!isFormValid) {
@@ -61,7 +65,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
       title: 'Submitting form...',
       variant: 'processing'
     })
-    
+
     try {
       const updatedFormData: { formData: JsonValue; submitted: boolean } = { 
         formData: ldaForm.formData as unknown as JsonValue,
@@ -76,7 +80,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
         title: 'Form submitted successfully',
         variant: 'success'
       })
-      
+
       // Refresh the form data after successful submission
       window.location.reload();
     } catch {  // Removed unused variable
@@ -96,16 +100,19 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
           <h2 className="text-lg font-bold text-slate-900">Application Form</h2>
           <div className="flex gap-2 justify-end">
             {!isEditing && <Button onClick={() => setIsEditing(true)}>
-              <PenLine className="mr-2 h-4 w-4" />
+              <PenLine className="h-4 w-4" />
               <span>Edit form</span>
             </Button>}
             {!isEditing && <Button 
               onClick={submitForm} 
               disabled={!isFormValid} 
               variant="secondary" 
-              className={isFormValid ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-400"}
+              className={isFormValid ?
+                "bg-green-600 text-white hover:bg-green-700"
+                : "bg-slate-100 text-slate-400"
+              }
             >
-              <Send className="mr-2 h-4 w-4" />
+              <Send className="h-4 w-4" />
               <span>Submit form</span>
             </Button>}
           </div>
@@ -114,11 +121,13 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
           {ldaForm.formTemplate.form ? (
               <DynamicForm
                 form={ldaForm.formTemplate.form}
-              defaultValues={ldaForm.formData as Record<string, string>}
+                defaultValues={ldaForm.formData as Record<string, string>}
                 isEditing={isEditing}
                 setParentEditing={setIsEditing}
                 formId={ldaForm.id}
                 userRole={session?.user?.role}
+                setIsFormValid={setIsFormValid}
+                setCompletionStatus={setCompletionStatus}
               />
           ) : (
             <p className="text-muted-foreground">Form template not available</p>
@@ -135,7 +144,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">Required fields completed:</p>
-              <p className="font-medium">12/24</p>
+              <p className="font-medium">{completionStatus.completed}/{completionStatus.required}</p>
             </div>
             
             <div className="flex justify-between items-center">

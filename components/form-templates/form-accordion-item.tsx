@@ -14,6 +14,7 @@ interface FormAccordionItemProps {
   defaultValues?: FormData
   formId?: number | string
   userRole?: string
+  onSectionStatusChange?: (status: { isValid: boolean; completed: number; required: number }) => void
 }
 
 
@@ -24,6 +25,7 @@ export default function FormAccordionItem({
   defaultValues,
   formId,
   userRole,
+  onSectionStatusChange,
 }: FormAccordionItemProps) {
   // Prepare fields with default values
   const fieldsWithDefaults = useMemo(() => {
@@ -140,6 +142,41 @@ export default function FormAccordionItem({
       completed: status.completed
     };
   });
+
+  // Use ref to track previous state to prevent unnecessary updates
+  const prevSectionRef = useRef<{
+    isValid: boolean;
+    completed: number;
+    required: number;
+  } | null>(null);
+
+  // Notify parent component when section status changes
+  useEffect(() => {
+    if (!onSectionStatusChange || !section) return;
+
+    // Only update if values have changed
+    const prevSection = prevSectionRef.current;
+    if (
+      !prevSection ||
+      prevSection.isValid !== section.isValid ||
+      prevSection.completed !== section.completed ||
+      prevSection.required !== section.required
+    ) {
+      // Update the ref with current values
+      prevSectionRef.current = {
+        isValid: section.isValid,
+        completed: section.completed,
+        required: section.required
+      };
+      
+      // Notify parent
+      onSectionStatusChange({
+        isValid: section.isValid,
+        completed: section.completed,
+        required: section.required
+      });
+    }
+  }, [section?.isValid, section?.completed, section?.required]);
 
   // Create a ref to store the debounced function to prevent recreation on every render
   type SaveFieldFunction = (fieldName: string, fieldValue: string) => Promise<void>;
