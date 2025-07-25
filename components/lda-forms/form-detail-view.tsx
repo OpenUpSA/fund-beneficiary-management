@@ -1,4 +1,9 @@
 "use client"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
+import { Calendar } from "../ui/calendar";
 
 import { useState } from "react"
 import { format } from "date-fns"
@@ -31,10 +36,23 @@ interface LDAFormDetailViewProps {
     submitted?: boolean | Date
     approved?: boolean | Date
     dueDate?: Date | null
-    amount?: number | string,
+    amount?: number
+    fundingStart?: Date | null
+    fundingEnd?: Date | null
     createdBy?: { name: string }
   }
 }
+
+const FormSchema = z.object({
+  formStatusLabel: z.string(),
+  amount: z.string().regex(/^R\s?[0-9,]*(\.[0-9]{1,2})?$/, {
+    message: "Amount must be in format R 0.00",
+  }),
+  fundingStart: z.date().optional(),
+  fundingEnd: z.date().optional(),
+})
+
+type FormValues = z.infer<typeof FormSchema>
 
 export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
 
@@ -50,6 +68,61 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
   const formatDate = (date: Date | null | undefined) => {
     return date ? format(new Date(date), 'dd MMM yyyy') : 'Not set';
   };
+
+  const { control, formState: { errors } } = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      formStatusLabel: ldaForm.formStatus?.label || '',
+      amount: `R ${ldaForm.amount || 0}`,
+      fundingStart: ldaForm.fundingStart ? new Date(ldaForm.fundingStart) : undefined,
+      fundingEnd: ldaForm.fundingEnd ? new Date(ldaForm.fundingEnd) : undefined
+    }
+  })
+
+  const canEditAmountAndStatus = session?.user?.role === 'ADMIN' || session?.user?.role === 'PROGRAMME_OFFICER'
+
+  const updateField = async (field: string, value: string | Date | number | undefined) => {
+    if (value === undefined) return; // Don't update if value is undefined
+    try {
+      // Prepare data based on field type
+      const data: Record<string, string | Date | number> = {}
+      
+      if (field === 'formStatusId') {
+        // Find the status label from the formStatuses array
+        const statusLabel = ldaForm.formStatus?.label || ''
+        data.formStatus = statusLabel
+      } else {
+        data[field] = value
+      }
+      
+      const response = await fetch(`/api/lda-form/${ldaForm.id}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      
+      if (response.ok) {
+        toast({
+          title: 'Updated',
+          description: `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`,
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to update field',
+          variant: 'destructive',
+        })
+      }
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const submitForm = async () => {
     // Double-check form validity before submission
@@ -84,7 +157,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
 
       // Refresh the form data after successful submission
       window.location.reload();
-    } catch {  // Removed unused variable
+    } catch {  
       toast({
         title: 'Error submitting form',
         description: 'Please try again later',
@@ -201,39 +274,138 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
           <div className="border-t pt-6 space-y-4">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Application status:</p>
-              <Select defaultValue={ldaForm.formStatus?.label || "draft"}>
-                <SelectTrigger name="formStatus" className="w-full">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Under Review">Under Review</SelectItem>
-                  <SelectItem value="Approved">Approved</SelectItem>
-                  <SelectItem value="Paused">Paused</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
+              <Controller
+                name="formStatusId"
+                control={control}
+                render={({ field }) => (
+                  <Select 
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      if (canEditAmountAndStatus) {
+                        updateField('formStatusLabel', value)
+                      }
+                    }}
+                    disabled={!canEditAmountAndStatus}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ldaForm.formStatus?.label && (
+                        <SelectItem key={ldaForm.formStatus.label} value={ldaForm.formStatus.label}>
+                          {ldaForm.formStatus.label}
+                        </SelectItem>
+                      )}
+                      <SelectItem key="draft" value="Draft">Draft</SelectItem>
+                      <SelectItem key="under_review" value="UnderReview">Under Review</SelectItem>
+                      <SelectItem key="paused" value="Paused">Paused</SelectItem>
+                      <SelectItem key="approved" value="Approved">Approved</SelectItem>
+                      <SelectItem key="rejected" value="Rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {!canEditAmountAndStatus && 
+                <p className="text-xs text-amber-500">Only Programme Officers and Admins can change status</p>
+              }
             </div>
             
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Approved amount:</p>
-              <Input placeholder="R 0.00" name="amount" defaultValue={`R ${ldaForm.amount || '0'}`} />
+              <Controller
+                name="amount"
+                control={control}
+                render={({ field }) => (
+                  <>
+                    <Input 
+                      {...field} 
+                      placeholder="R 0.00" 
+                      disabled={!canEditAmountAndStatus}
+                      className={errors.amount ? "border-red-500" : ""}
+                      onBlur={() => {
+                        if (canEditAmountAndStatus) {
+                          updateField('amount', field.value)
+                        }
+                      }}
+                    />
+                    {errors.amount && (
+                      <p className="text-xs text-red-500">{errors.amount.message}</p>
+                    )}
+                  </>
+                )}
+              />
+              {!canEditAmountAndStatus && 
+                <p className="text-xs text-amber-500">Only Programme Officers and Admins can change amount</p>
+              }
             </div>
             
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Funding start date:</p>
-              <div className="relative">
-                <Input placeholder="Select date" name="fundingStart" defaultValue={ldaForm.fundingStart ? format(ldaForm.fundingStart, 'dd MMM, yyyy') : ''} />
-                <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              </div>
+              <Controller
+                name="fundingStart"
+                control={control}
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? format(field.value, "PPP") : <span>Select date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(date: Date | undefined) => {
+                          field.onChange(date)
+                          if (date) {
+                            updateField('fundingStart', date)
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              />
             </div>
             
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Funding end date:</p>
-              <div className="relative">
-                <Input placeholder="Select date" name="fundingEnd" defaultValue={ldaForm.fundingEnd ? format(ldaForm.fundingEnd, 'dd MMM, yyyy') : ''} />
-                <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              </div>
+              <Controller
+                name="fundingEnd"
+                control={control}
+                render={({ field }) => (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? format(field.value, "PPP") : <span>Select date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={(date: Date | undefined) => {
+                          field.onChange(date)
+                          if (date) {
+                            updateField('fundingEnd', date)
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              />
             </div>
           </div>
         </CardContent>

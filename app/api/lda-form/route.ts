@@ -53,7 +53,6 @@ export async function POST(req: NextRequest) {
         createdById: session.user.id,
       },
     }
-    console.log(query)
     const record = await prisma.localDevelopmentAgencyForm.create(query)
 
     return NextResponse.json(record)
