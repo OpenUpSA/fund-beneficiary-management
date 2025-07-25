@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     // Find the "pending" form status
     const pendingStatus = await prisma.formStatus.findFirst({
-      where: { label: "Pending" },
+      where: { label: "Draft" },
     })
 
     if (!pendingStatus) {

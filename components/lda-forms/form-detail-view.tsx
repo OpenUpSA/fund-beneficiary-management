@@ -275,7 +275,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Application status:</p>
               <Controller
-                name="formStatusId"
+                name="formStatusLabel"
                 control={control}
                 render={({ field }) => (
                   <Select 
@@ -292,11 +292,6 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      {ldaForm.formStatus?.label && (
-                        <SelectItem key={ldaForm.formStatus.label} value={ldaForm.formStatus.label}>
-                          {ldaForm.formStatus.label}
-                        </SelectItem>
-                      )}
                       <SelectItem key="draft" value="Draft">Draft</SelectItem>
                       <SelectItem key="under_review" value="UnderReview">Under Review</SelectItem>
                       <SelectItem key="paused" value="Paused">Paused</SelectItem>
@@ -306,9 +301,6 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
                   </Select>
                 )}
               />
-              {!canEditAmountAndStatus && 
-                <p className="text-xs text-amber-500">Only Programme Officers and Admins can change status</p>
-              }
             </div>
             
             <div className="space-y-2">
@@ -335,9 +327,6 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
                   </>
                 )}
               />
-              {!canEditAmountAndStatus && 
-                <p className="text-xs text-amber-500">Only Programme Officers and Admins can change amount</p>
-              }
             </div>
             
             <div className="space-y-2">

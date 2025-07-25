@@ -214,6 +214,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       amount?: number;
       fundingStart?: Date;
       fundingEnd?: Date;
+      approved?: Date;
+      submitted?: Date;
     } = {};
     
     // Process form status (needs to map from label to ID)
@@ -225,6 +227,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       
       if (formStatus) {
         updateData.formStatusId = formStatus.id;
+      }
+
+      if (data.formStatusLabel === "Approved") {
+        updateData.approved = new Date();
+      } else {
+        updateData.approved = undefined;
+      }
+
+      if (data.formStatusLabel === "Draft") {
+        updateData.submitted = undefined;
       }
     }
     
