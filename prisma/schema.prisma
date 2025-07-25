@@ -20,6 +20,7 @@ model User {
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   localDevelopmentAgencies LocalDevelopmentAgency[]
+  localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
 }
 
 model FundingStatus {
@@ -165,16 +166,19 @@ model LocalDevelopmentAgencyForm {
   formTemplateId           Int
   formData                 Json
   title                    String
+  createdById              Int?
+  amount                   Decimal                @default(0) @db.Money
   dueDate                  DateTime               @default(now())
   fundingStart             DateTime               @default(now())
   fundingEnd               DateTime               @default(now())
-  submitted                DateTime               @default(now())
-  approved                 DateTime               @default(now())
+  submitted                DateTime?               
+  approved                 DateTime?               
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
   formStatus               FormStatus             @relation(fields: [formStatusId], references: [id])
   formTemplate             FormTemplate           @relation(fields: [formTemplateId], references: [id])
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+  createdBy                User?                  @relation(fields: [createdById], references: [id])
 }
 
 model OrganisationDetail {

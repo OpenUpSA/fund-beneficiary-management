@@ -5,6 +5,10 @@ import { Form } from "@/types/forms"
 import { Section } from "@/types/forms"
 import { Field } from "@/types/forms"
 
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+
+
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
@@ -96,7 +100,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
         },
       },
       formTemplate: true,
-      formStatus: true
+      formStatus: true,
+      createdBy: true
     },
   })
 
@@ -184,5 +189,99 @@ export async function DELETE(req: NextRequest, { params }: { params: { lda_form_
     return NextResponse.json(deletedLDAForm)
   } catch {
     return NextResponse.json({ error: "Failed to delete form" }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
+  try {
+    // Check authentication and authorization
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Only PROGRAMME_OFFICER and ADMIN can update amount and status
+    const canUpdateAmountAndStatus = 
+      session.user.role === "PROGRAMME_OFFICER" || 
+      session.user.role === "ADMIN";
+
+    const ldaFormId = parseInt(params.lda_form_id, 10);
+    const data = await req.json();
+    
+    // Prepare update data
+    const updateData: {
+      formStatusId?: number;
+      amount?: number;
+      fundingStart?: Date;
+      fundingEnd?: Date;
+      approved?: Date;
+      submitted?: Date;
+    } = {};
+    
+    // Process form status (needs to map from label to ID)
+    if (data.formStatusLabel && canUpdateAmountAndStatus) {
+      // Find the form status ID by label
+      const formStatus = await prisma.formStatus.findFirst({
+        where: { label: data.formStatusLabel }
+      });
+      
+      if (formStatus) {
+        updateData.formStatusId = formStatus.id;
+      }
+
+      if (data.formStatusLabel === "Approved") {
+        updateData.approved = new Date();
+      } else {
+        updateData.approved = undefined;
+      }
+
+      if (data.formStatusLabel === "Draft") {
+        updateData.submitted = undefined;
+      }
+    }
+    
+    // Process other fields
+    if (data.amount !== undefined && canUpdateAmountAndStatus) {
+      // Clean amount string and convert to number
+      const amountStr = data.amount.toString().replace(/[^0-9.]/g, '');
+      updateData.amount = parseFloat(amountStr);
+    }
+    
+    if (data.fundingStart) {
+      updateData.fundingStart = new Date(data.fundingStart);
+    }
+    
+    if (data.fundingEnd) {
+      updateData.fundingEnd = new Date(data.fundingEnd);
+    }
+    
+    // Only proceed if there's data to update
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ message: "No valid fields to update" }, { status: 400 });
+    }
+    
+    // Update the record
+    const updatedRecord = await prisma.localDevelopmentAgencyForm.update({
+      where: { id: ldaFormId },
+      data: updateData,
+      select: {
+        id: true,
+        formStatusId: true,
+        amount: true,
+        fundingStart: true,
+        fundingEnd: true,
+        formStatus: {
+          select: {
+            id: true,
+            label: true
+          }
+        }
+      }
+    });
+    
+    return NextResponse.json(updatedRecord);
+  } catch (error) {
+    console.error("Error updating LDA form field:", error);
+    return NextResponse.json({ error: "Failed to update field" }, { status: 500 });
   }
 }

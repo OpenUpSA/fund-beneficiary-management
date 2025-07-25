@@ -22,6 +22,8 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
     redirect(`/dashboard/ldas/${lda_id}/applicationsAndReports`)
   }
 
+  const amount = ldaForm.amount ? Number(ldaForm.amount) : 0
+
   // Find the form template for this application
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   const formTemplate = formTemplates.find(t => t.id === ldaForm.formTemplateId)
@@ -53,16 +55,19 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
             </Link>
           </Button> */}
         </div>
-
+        
+        
         {/* Use the LDAFormDetailView component */}
         <LDAFormDetailView 
           ldaForm={{
             ...ldaForm,
+            amount: amount,
             formTemplate: {
               ...formTemplate,
               // Cast the JSON form data to our Form type
               form: formTemplate.form as unknown as import("@/types/forms").Form
             },
+
             formData: ldaForm.formData as Record<string, string | number | boolean | null | undefined>
           }} 
         />

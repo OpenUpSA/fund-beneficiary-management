@@ -105,15 +105,15 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Submitted:</span>
-                <span>{format(ldaForm.submitted, 'PPpp')}</span>
+                <span>{ldaForm.submitted ? format(ldaForm.submitted, 'PPpp') : '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Due:</span>
-                <span>{format(ldaForm.dueDate, 'PPpp')}</span>
+                <span>{ldaForm.dueDate ? format(ldaForm.dueDate, 'PPpp') : '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Approved:</span>
-                <span>{format(ldaForm.approved, 'PPpp')}</span>
+                <span>{ldaForm.approved ? format(ldaForm.approved, 'PPpp') : '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Created At:</span>
