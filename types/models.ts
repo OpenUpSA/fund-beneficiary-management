@@ -121,4 +121,3 @@ export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGe
 }>
 
 export type Province = Prisma.ProvinceGetPayload<{}>
-    

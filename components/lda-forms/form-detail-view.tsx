@@ -13,7 +13,6 @@ import { Form, FormData } from "@/types/forms"
 import {PenLine, Send, CalendarIcon} from "lucide-react"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "@/hooks/use-toast"
-import { JsonValue } from "@prisma/client/runtime/library"
 import { useSession } from "next-auth/react"
 import { Input } from "@/components/ui/input"
 import { 
@@ -33,8 +32,8 @@ interface LDAFormDetailViewProps {
     formStatus?: { id: number; label: string; icon: string; createdAt: Date; updatedAt: Date }
     createdAt: Date
     updatedAt: Date
-    submitted?: boolean | Date
-    approved?: boolean | Date
+    submitted?: boolean | Date | null
+    approved?: boolean | Date | null
     dueDate?: Date | null
     amount?: number
     fundingStart?: Date | null
@@ -141,8 +140,8 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
     })
 
     try {
-      const updatedFormData: { formData: JsonValue; submitted: boolean } = { 
-        formData: ldaForm.formData as unknown as JsonValue,
+      // Then submit the form
+      const updatedFormData: { submitted: boolean } = { 
         submitted: true
       }
       await fetch(`/api/lda-form/${ldaForm.id}/submit`, {
@@ -187,7 +186,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
       <Card className="col-span-7 h-fit">
         <CardHeader className="border-b pb-2 grid grid-cols-2 items-center p-4">
           <h2 className="text-lg font-bold text-slate-900">Application Form</h2>
-          <div className="flex gap-2 justify-end">
+          {ldaForm.formStatus?.label === "Draft" && <div className="flex gap-2 justify-end">
             {!isEditing && <Button onClick={() => setIsEditing(true)}>
               <PenLine className="h-4 w-4" />
               <span>Edit form</span>
@@ -204,7 +203,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
               <Send className="h-4 w-4" />
               <span>Submit form</span>
             </Button>}
-          </div>
+          </div>}
         </CardHeader>
         <CardContent className="p-0">
           {ldaForm.formTemplate.form ? (
@@ -259,14 +258,14 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">Date submitted</p>
               <p className="font-medium">{ldaForm.submitted ? 
-                  (typeof ldaForm.submitted === 'boolean' ? 'Yes' : formatDate(ldaForm.submitted as Date)) : 
+                  (typeof ldaForm.submitted === 'boolean' ? 'Yes' : formatDate(ldaForm.submitted)) : 
                   '-'}</p>
             </div>
             
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">Date approved:</p>
               <p className="font-medium">{ldaForm.approved ? 
-                  (typeof ldaForm.approved === 'boolean' ? 'Yes' : formatDate(ldaForm.approved as Date)) : 
+                  (typeof ldaForm.approved === 'boolean' ? 'Yes' : formatDate(ldaForm.approved)) : 
                   '-'}</p>
             </div>
           </div>

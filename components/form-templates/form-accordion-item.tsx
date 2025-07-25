@@ -176,7 +176,7 @@ export default function FormAccordionItem({
         required: section.required
       });
     }
-  }, [section?.isValid, section?.completed, section?.required]);
+  }, [section?.isValid, section?.completed, section?.required, onSectionStatusChange, section]);
 
   // Create a ref to store the debounced function to prevent recreation on every render
   type SaveFieldFunction = (fieldName: string, fieldValue: string) => Promise<void>;
