@@ -31,7 +31,8 @@ interface LDAFormDetailViewProps {
     submitted?: boolean | Date
     approved?: boolean | Date
     dueDate?: Date | null
-    amount?: number | string
+    amount?: number | string,
+    createdBy?: { name: string }
   }
 }
 
@@ -92,6 +93,21 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
     }
   }
 
+  const getDaysBetweenDates = (date: Date) => {
+    const today = new Date()
+    const diffTime = Math.abs(new Date(date).getTime() - today.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    if (diffDays > 1) {
+      return `${diffDays} days away`
+    } else if (diffDays === 1) {
+      return 'Tomorrow'
+    } else if (diffDays === 0) {
+      return 'Today'
+    } else {
+      return `${Math.abs(diffDays)} days overdue`
+    }
+  }
+
   return (
     <div className="grid grid-cols-10 gap-4">
       {/* Application Form Card */}
@@ -149,7 +165,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
             
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">Created by:</p>
-              <p className="font-medium">James Smith</p>
+              <p className="font-medium">{ldaForm.createdBy?.name || '-'}</p>
             </div>
             
             <div className="flex justify-between items-center">
@@ -164,7 +180,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
             
             <div className="flex justify-between items-center">
               <p className="text-sm text-muted-foreground">Date due:</p>
-              <p className="font-medium">{ldaForm.dueDate ? `${formatDate(ldaForm.dueDate)} (10 days away)` : '15 July, 2025 (10 days away)'}</p>
+              <p className="font-medium">{ldaForm.dueDate ? `${formatDate(ldaForm.dueDate)} (${getDaysBetweenDates(ldaForm.dueDate)})` : '-'}</p>
             </div>
             
             <div className="flex justify-between items-center">
@@ -186,28 +202,28 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Application status:</p>
               <Select defaultValue={ldaForm.formStatus?.label || "draft"}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger name="formStatus" className="w-full">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="submitted">Submitted</SelectItem>
-                  <SelectItem value="under_review">Under Review</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="Draft">Draft</SelectItem>
+                  <SelectItem value="Under Review">Under Review</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                  <SelectItem value="Paused">Paused</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Approved amount:</p>
-              <Input placeholder="R 0.00" defaultValue={`R ${ldaForm.amount || '120,000'}`} />
+              <Input placeholder="R 0.00" name="amount" defaultValue={`R ${ldaForm.amount || '0'}`} />
             </div>
             
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Funding start date:</p>
               <div className="relative">
-                <Input placeholder="Select date" defaultValue="1 Jan, 2026" />
+                <Input placeholder="Select date" name="fundingStart" defaultValue={ldaForm.fundingStart ? format(ldaForm.fundingStart, 'dd MMM, yyyy') : ''} />
                 <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
@@ -215,7 +231,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Funding end date:</p>
               <div className="relative">
-                <Input placeholder="Select date" defaultValue="31 Dec, 2026" />
+                <Input placeholder="Select date" name="fundingEnd" defaultValue={ldaForm.fundingEnd ? format(ldaForm.fundingEnd, 'dd MMM, yyyy') : ''} />
                 <CalendarIcon className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               </div>
             </div>

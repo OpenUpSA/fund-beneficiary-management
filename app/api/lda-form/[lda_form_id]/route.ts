@@ -96,7 +96,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
         },
       },
       formTemplate: true,
-      formStatus: true
+      formStatus: true,
+      createdBy: true
     },
   })
 
