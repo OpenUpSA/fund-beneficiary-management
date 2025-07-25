@@ -58,8 +58,6 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
-      setOpen(false)
-
       // Only include ldaId if role is USER and ldaId is selected
       const shouldIncludeLda = data.role === 'USER' && data.ldaId
 
@@ -92,6 +90,9 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
           title: 'User updated',
           variant: 'success'
         })
+        
+        // Close dialog after successful update
+        setOpen(false)
       } else {
         toast({
           title: 'Creating user...',
@@ -124,6 +125,19 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
         })
       }
 
+      // Reset form after successful submission
+      form.reset({
+        name: '',
+        email: '',
+        approved: false,
+        role: undefined,
+        ldaId: '',
+        password: '',
+        passwordConfirm: '',
+      })
+      
+      // Close dialog and call callback to refresh the user list
+      setOpen(false)
       callback()
     } catch (error) {
       console.error('Form submission error:', error)
