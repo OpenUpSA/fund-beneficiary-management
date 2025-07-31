@@ -56,6 +56,7 @@ export default function FormAccordionItem({
           const subfieldName = field.name + '_' + subfield.name;
           let subFieldObj = { 
             ...subfield, 
+            name: subfieldName,
             isValid: subfield.required ? false : true 
           };
           
@@ -236,6 +237,18 @@ export default function FormAccordionItem({
           const isFieldValid = f.required ? Boolean(value.trim().length > 0) : true;
           return { ...f, value, isValid: isFieldValid };
         }
+
+        if (f.fields) {
+          f.fields = f.fields.map((subfield: Field) => {
+            if (subfield.name === field.name) {
+              // A field is valid if it has a value (for required fields) or is optional
+              const isFieldValid = subfield.required ? Boolean(value.trim().length > 0) : true;
+              return { ...subfield, value, isValid: isFieldValid };
+            }
+            return subfield;
+          }) as Field[];
+        }
+
         return f;
       }) as Field[];
       
