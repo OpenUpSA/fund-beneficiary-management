@@ -1,0 +1,42 @@
+{
+    "title": "Narrative Report",
+    "sections": [
+      {
+        "title": "Challenges & Successes",
+        "fields": [
+          {
+            "name": "faced_challenges",
+            "type": "radio",
+            "label": "Did you face new or unique challenges during this reporting period?",
+            "options": [
+              {"label": "No", "value": "no"},
+              {"label": "Yes", "value": "yes"}
+            ],
+            "required": true
+          },
+          {
+            "type": "group",
+            "label": "Contact Details",
+            "fields": [
+              {
+                "name": "contactNumber",
+                "type": "text",
+                "label": "Phone Number",
+                "required": true,
+                "core_type": "phone_number",
+                "placeholder": "Office contant number"
+              },
+              {
+                "name": "email",
+                "type": "email",
+                "label": "Contact email",
+                "required": true,
+                "placeholder": "Office contant email"
+              }
+            ],
+            "required": true
+          }
+        ]
+      }
+    ]
+  }

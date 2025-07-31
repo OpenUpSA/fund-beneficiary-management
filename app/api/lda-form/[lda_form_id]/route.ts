@@ -127,7 +127,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
               const prefill = field?.prefill as { source: string; path: string }
               // Handle prefill based on the source
               const value = getPrefillData(organisation, prefill)
-              if (value) {
+              if (value && !(field.name in formData)) {
                 formData[field.name] = value
               }
             }
@@ -136,7 +136,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
                 if (subfield?.prefill) {
                   const subprefill = subfield?.prefill as { source: string; path: string }
                   const subvalue = getPrefillData(organisation, subprefill);
-                  if (subvalue) {
+                  if (subvalue && !(field.name + '_' + subfield.name in formData)) {
                     formData[field.name + '_' + subfield.name] = subvalue
                   }
                 }
