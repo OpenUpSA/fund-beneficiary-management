@@ -43,6 +43,18 @@ function FieldHeader({label, required = false, isValid}: {label: string, require
   )
 }
 
+function FieldDescription({description}: {description: string}) {
+
+  return (
+    <div className="flex items-center justify-between w-full px-4 mt-2 pt-1">
+      <label className="block text-sm font-medium text-slate-500">
+        {description}
+      </label>
+    </div>
+  )
+}
+
+
 function FieldRender({ inputField, isEditing, parentField, onValueChange }: { inputField: Field; isEditing: boolean; parentField?: Field; onValueChange?: (field: Field, value: string) => void }) {
   // Create the input element based on field type
   const renderInput = () => {
@@ -77,7 +89,7 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange }: { in
   
   // Return the input wrapped in a div with appropriate width class
   return (
-    <div className={`${inputField.width === "half" ? "w-1/2 inline-block" : "w-full"} px-2 pt-1.5`}>
+    <div className={`${inputField.width === "half" ? "w-1/2 inline-block" : "w-full"} px-2`}>
       {renderInput()}
     </div>
   )  
@@ -85,18 +97,23 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange }: { in
 
 // Import the OrganisationManagementLayout component
 import { DataTableLayout } from "./custom-layouts/data-table"
+import { RepeatableLayout } from "./custom-layouts/repeatable"
 
 function FormLayout({ inputField, isEditing = false, onValueChange }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void }) {
   switch (inputField.layout) {
     case "data-table":
       return <DataTableLayout inputField={inputField}  />
+    case "repeatable":
+      return <RepeatableLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
       return (
       <>
+        {inputField.show && <>
         <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />
+        {inputField.description && <FieldDescription description={inputField.description} />}
         <div className="text-sm mt-1 p-2 text-slate-700">
-          {inputField.type !== "group" && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />}
-          {inputField.fields && inputField.fields.length > 0 && (
+          {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />}
+          {inputField.fields && inputField.fields.length > 0 && inputField.show && (
             <div className="flex flex-wrap -mr-2">
               {inputField.fields.map((subfield) => (
                 <FieldRender
@@ -110,6 +127,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange }: { inputFie
             </div>
           )}
         </div>
+        </>}
       </>
     )
   }

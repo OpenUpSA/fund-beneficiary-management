@@ -1,4 +1,4 @@
-export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency";
+export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable";
 
 export interface Form {
   title: string;
@@ -8,19 +8,26 @@ export interface Form {
 export interface Field {
   name: string;
   type: FieldType;
+  notice?: string;
   label: string;
   required?: boolean;
+  description?: string;
   isValid?: boolean;
   min?: number;
   max?: number;
   show_if?: { field: string; value: string };
   value?: string;
   fields?: Field[];
+  template?: Field[];
+  cardLabel?: string;
   layout?: string;
   width?: "half" | "full"; // Add width property to control column width
   prefill?: { source: string; path: string };
   options?: { value: string; label: string }[];
   placeholder?: string;
+  show?: boolean;
+  groupIndex?: number;
+  isLast?: boolean;
   config?: Record<string, string | number | boolean | string[] | Record<string, unknown>[] | Record<string, unknown>>; // For custom component configurations
 }
 

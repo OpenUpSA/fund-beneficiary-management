@@ -14,7 +14,7 @@ export function RadioField({ field, isEditing, onValueChange }: RadioFieldProps)
   return (
     <RadioGroup
       name={field.name}
-      className="flex flex-col space-y-1"
+      className="flex flex-row flex-wrap gap-4"
       disabled={!isEditing}
       value={field.value}
       onValueChange={(value) => onValueChange && onValueChange(field, value)}
