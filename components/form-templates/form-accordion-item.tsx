@@ -27,15 +27,49 @@ export default function FormAccordionItem({
   userRole,
   onSectionStatusChange,
 }: FormAccordionItemProps) {
+
+  const createFieldFromTemplate = (field: Field, index: number) => {
+    const fields = [...(field?.template || [])];
+    return fields.map((templateField: Field) => {
+      let show_if;
+      if (templateField.show_if){
+        show_if = {...templateField.show_if};
+        show_if.field = `${field.name}_${templateField.show_if.field}_${index+1}`;
+      }
+
+      return {
+        ...templateField,
+        name: `${templateField.name}_${index+1}`,
+        groupIndex: index + 1,
+        show_if
+      };
+    });
+  };
+
   // Prepare fields with default values
   const fieldsWithDefaults = useMemo(() => {
-    return sectionData.fields.map(field => {
+    return sectionData.fields.map((field, fieldIndex) => {
+      // Check if field should be shown based on show_if condition
+      let show = true;
+      if (field.show_if) {
+        const { field: conditionField, value: conditionValue } = field.show_if;
+        // Skip this field if the condition is not met
+        if (!defaultValues ||
+            !(conditionField in defaultValues) ||
+            String(defaultValues[conditionField]) !== conditionValue) {
+          show = false;
+        }
+      }
+
       // Create a base field object with default validity
-      let fieldObj = { 
-        ...field, 
-        isValid: field.required ? false : true 
+      // Add isLast property to the field object to check if it is the last field
+      let fieldObj = {
+        ...field,
+        show,
+        isValid: field.required ? false : true,
+        isLast: fieldIndex === sectionData.fields.length - 1
       };
-      
+
       // Check if default value exists for this field
       if (defaultValues && field.name in defaultValues) {
         let value;
@@ -50,15 +84,39 @@ export default function FormAccordionItem({
         fieldObj = { ...fieldObj, value, isValid };
       }
 
+      if (field.layout === "repeatable") {
+        const repeatableCounter = fieldObj.value ? JSON.parse(fieldObj.value) : 1;
+        // loop over counter to copy over template list to field.fields
+        const repeatableFields: Field[] = [];
+        for (let i = 0; i < repeatableCounter; i++) {
+          repeatableFields.push(...createFieldFromTemplate(field, i));
+        }
+        field.fields = repeatableFields.flat();
+        fieldObj = { ...fieldObj, value: JSON.stringify(repeatableCounter) };
+      }
+
       // Process subfields if they exist
       if (field.fields) {
         const subFields = field.fields.map((subfield) => {
           const subfieldName = field.name + '_' + subfield.name;
-          let subFieldObj = { 
-            ...subfield, 
-            isValid: subfield.required ? false : true 
+
+          let show_subfield = true;
+          if (subfield.show_if) {
+            const { field: conditionField, value: conditionValue } = subfield.show_if;
+            // Skip this field if the condition is not met
+            if (!defaultValues ||
+                !(conditionField in defaultValues) ||
+                String(defaultValues[conditionField]) !== conditionValue) {
+              show_subfield = false;
+            }
+          }
+          let subFieldObj = {
+            ...subfield,
+            name: subfieldName,
+            show: show_subfield,
+            isValid: subfield.required ? false : true
           };
-          
+
           if (defaultValues && subfieldName in defaultValues) {
             const value = String(defaultValues[subfieldName]);
             // A field is valid if it has a value (for required fields) or is optional
@@ -85,12 +143,22 @@ export default function FormAccordionItem({
     }) as Field[];
   }, [sectionData.fields, defaultValues]);
 
+  const flattenVisibleRepeatableFields = (fields: Field[]): Field[] =>
+    fields.flatMap(field =>
+      field.type === "repeatable" && field.show
+        ? [
+            field,
+            ...(field.fields?.filter(f => f.show) ?? [])
+          ]
+      : field.show ? field: []
+  )
+
   // Calculate initial completion status
   const calculateCompletionStatus = useCallback((fields: Field[]) => {
     let completed = 0;
-    
     // Count completed required fields
-    fields.forEach((field: Field) => {
+    const visibleFields = flattenVisibleRepeatableFields(fields);
+    visibleFields.forEach((field: Field) => {
       // A field is completed if it has a value and is valid
       if (field.required && field.isValid) {
         completed++;
@@ -108,11 +176,11 @@ export default function FormAccordionItem({
     });
     
     // Count required fields
-    const requiredCount = fields.filter(field => field.required).length;
+    const requiredCount = visibleFields.filter(field => field.required && field.show).length;
     
     // Section is valid if all required fields are completed
     const isValid = requiredCount > 0 ? completed === requiredCount : true;
-    
+
     return { completed, required: requiredCount, isValid };
   }, []);
 
@@ -152,6 +220,7 @@ export default function FormAccordionItem({
 
   // Notify parent component when section status changes
   useEffect(() => {
+
     if (!onSectionStatusChange || !section) return;
 
     // Only update if values have changed
@@ -231,17 +300,82 @@ export default function FormAccordionItem({
       
       // Update the field with new value and validate it
       updatedSection.fields = updatedSection.fields.map((f: Field) => {
+
+        // if field type repeatable, add or remove fields based on the value index
+        if (f.type === "repeatable" && f.name === field.name) {
+          const newCounter = JSON.parse(value);
+          const oldCounter = JSON.parse(f?.value || "1");
+
+          if (newCounter > oldCounter) {
+            const to_add = newCounter - oldCounter;
+            const newFields = [] as Field[];
+            for (let i = 0; i < to_add; i++) {
+              newFields.push(...createFieldFromTemplate(f, oldCounter + i));
+            }
+            const subFields = newFields.flat().map((subfield) => {
+              const subfieldName = f.name + '_' + subfield.name;
+    
+              const subFieldObj = {
+                ...subfield,
+                name: subfieldName,
+                show: subfield.show_if ? false : true,
+                isValid: subfield.required ? false : true
+              };
+              return subFieldObj;
+            });
+            f.fields = [...(f.fields || []), ...subFields];
+          } else {
+            const removedFields = (f?.fields || []).filter((field) => field?.groupIndex && field?.groupIndex > newCounter);
+            // loop over fields that are removed and update their value to ""
+            removedFields.forEach((field) => {
+              field.value = "";
+              if (debouncedSaveRef.current) {
+                debouncedSaveRef.current(field.name, "");
+              }
+            });
+            f.fields = (f?.fields || []).filter((field) => field?.groupIndex && field?.groupIndex <= newCounter);
+          }
+        }
+
+        // Update the field with new value and validate it
         if (f.name === field.name) {
           // A field is valid if it has a value (for required fields) or is optional
           const isFieldValid = f.required ? Boolean(value.trim().length > 0) : true;
           return { ...f, value, isValid: isFieldValid };
         }
+
+        // If the field is a show_if field, update its visibility according to current field response
+        if (f?.show_if) {
+          if (f.show_if.field === field.name) {
+            return { ...f, show: value === f?.show_if?.value };
+          }
+        }
+
+        if (f.fields) {
+          f.fields = f.fields.map((subfield: Field) => {
+            if (subfield.name === field.name) {
+              // A field is valid if it has a value (for required fields) or is optional
+              const isFieldValid = subfield.required ? Boolean(value.trim().length > 0) : true;
+              return { ...subfield, value, isValid: isFieldValid };
+            }
+
+            // If the subfield is a show_if field, update its visibility according to current field response
+            if (subfield?.show_if) {
+              if (subfield.show_if.field === field.name) {
+                return { ...subfield, show: value === subfield?.show_if?.value };
+              }
+            }
+            return subfield;
+          }) as Field[];
+        }
+
         return f;
       }) as Field[];
       
       // Recalculate completion status
       const status = calculateCompletionStatus(updatedSection.fields);
       updatedSection.completed = status.completed;
+      updatedSection.required = status.required;
       updatedSection.isValid = status.isValid;
       
       return updatedSection;

@@ -1,204 +1,565 @@
 {
-  "title": "Grant Funding Application | SCAT Data Process",
+  "title": "Grant Funding Application",
   "sections": [
     {
-      "title": "SECTION 1: ORGANISATIONAL DETAILS",
+      "title": "Results Achieved (2024)",
+      "fields": [
+        {
+          "name": "progress_9_months",
+          "type": "textarea",
+          "label": "Progress made on your plans for the nine (9) month period",
+          "required": true,
+          "placeholder": "Share the key accomplishments and milestones achieved during this period."
+        },
+        {
+          "name": "challenges_and_lessons",
+          "type": "textarea",
+          "label": "Challenges faced in the community and lessons learned",
+          "required": true,
+          "placeholder": "Describe the challenges encountered and the insights gained from them."
+        }
+      ],
+      "notice": "This section captures progress and lessons learned during the past 9 months of your programme implementation."
+    },
+    {
+      "title": "Budget & Expenditure",
+      "fields": [
+        {
+          "name": "budget_total_income_2025",
+          "type": "currency",
+          "label": "What is the organisation’s total income budget for 2025?",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "budget_total_expenditure_2025",
+          "type": "currency",
+          "label": "What is the organisation’s total expenditure budget for 2025?",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "income_9_months_2025",
+          "type": "currency",
+          "label": "What is the organisation’s income for the last nine (9) months? (Jan to Sep 2025)",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "expenditure_9_months_2025",
+          "type": "currency",
+          "label": "What is the organisation’s expenditure for the last nine (9) months? (Jan to Sep 2025)",
+          "required": true,
+          "placeholder": "R 0.00"
+        }
+      ]
+    },
+    {
+      "title": "Partnerships & Networks",
+      "fields": [
+        {
+          "name": "partnerships_within_outside",
+          "type": "textarea",
+          "label": "Who do you work with within and outside your community? (E.g. CBO partners, key stakeholders, traditional leadership, etc.)",
+          "prefill": {
+            "path": "partnershipsWithinOutside",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe partnerships or networks within and outside your community"
+        },
+        {
+          "name": "national_advocacy_strategies",
+          "type": "textarea",
+          "label": "Are you connected to any national advocacy strategies or campaigns? If yes, please provide details",
+          "prefill": {
+            "path": "nationalAdvocacyStrategies",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe national advocacy strategies or networks"
+        }
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
+    },
+    {
+      "title": "Organisation Details",
       "fields": [
         {
           "name": "name",
           "type": "text",
           "label": "Name of the organisation (LDA)",
+          "prefill": {
+            "path": "name",
+            "source": "organisation"
+          },
+          "required": true,
+          "placeholder": "Organisation name"
+        },
+        {
+          "name": "contact_details",
+          "type": "group",
+          "label": "Contact Details",
+          "fields": [
+            {
+              "name": "contactNumber",
+              "type": "text",
+              "label": "Phone Number",
+              "prefill": {
+                "path": "contactNumber",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "core_type": "phone_number",
+              "placeholder": "Office contant number"
+            },
+            {
+              "name": "email",
+              "type": "email",
+              "label": "Contact email",
+              "prefill": {
+                "path": "email",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "placeholder": "Office contant email"
+            }
+          ],
           "required": true
         },
         {
-          "name": "address",
-          "type": "textarea",
-          "label": "Physical address of the organisation (Name of street, section and place)",
+          "name": "website_and_social_media",
+          "type": "group",
+          "label": "Website and Social Media",
+          "fields": [
+            {
+              "name": "website",
+              "type": "text",
+              "label": "Website",
+              "prefill": {
+                "path": "website",
+                "source": "organisation_detail"
+              },
+              "required": false,
+              "core_type": "url",
+              "placeholder": "Website url"
+            },
+            {
+              "name": "facebookUrl",
+              "type": "text",
+              "label": "Facebook url",
+              "required": false,
+              "core_type": "facebook_url",
+              "placeholder": "Facebook url"
+            },
+            {
+              "name": "linkedinUrl",
+              "type": "text",
+              "label": "Linkedin url",
+              "required": false,
+              "core_type": "linkedin_url",
+              "placeholder": "Linkedin url"
+            }
+          ],
+          "required": false
+        },
+        {
+          "name": "physical_address",
+          "type": "group",
+          "label": "Physical Address",
+          "fields": [
+            {
+              "name": "physicalStreet",
+              "type": "text",
+              "label": "Street",
+              "prefill": {
+                "path": "physicalStreet",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "placeholder": "Street"
+            },
+            {
+              "name": "physicalComplexName",
+              "type": "text",
+              "label": "Complex name",
+              "width": "half",
+              "prefill": {
+                "path": "physicalComplexName",
+                "source": "organisation_detail"
+              },
+              "required": false,
+              "placeholder": "Complex name"
+            },
+            {
+              "name": "physicalComplexNumber",
+              "type": "text",
+              "label": "Complex number",
+              "width": "half",
+              "prefill": {
+                "path": "physicalComplexNumber",
+                "source": "organisation_detail"
+              },
+              "required": false,
+              "placeholder": "Complex number"
+            },
+            {
+              "name": "city",
+              "type": "text",
+              "label": "City",
+              "prefill": {
+                "path": "physicalCity",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "placeholder": "City"
+            },
+            {
+              "name": "district",
+              "type": "text",
+              "label": "District",
+              "prefill": {
+                "path": "physicalDistrict",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "core_type": "district",
+              "placeholder": "District"
+            },
+            {
+              "name": "province",
+              "type": "text",
+              "label": "Province",
+              "prefill": {
+                "path": "physicalProvince",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "core_type": "province",
+              "placeholder": "Province"
+            }
+          ],
           "required": true
         },
         {
-          "name": "status",
-          "type": "textarea",
-          "label": "Registration status (NPO or PBO number and date of registration)",
+          "name": "postal_address",
+          "type": "group",
+          "label": "Postal Address",
+          "fields": [
+            {
+              "name": "postalStreet",
+              "type": "text",
+              "label": "Street",
+              "prefill": {
+                "path": "postalStreet",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "placeholder": "Street"
+            },
+            {
+              "name": "postalComplexName",
+              "type": "text",
+              "label": "Complex name",
+              "width": "half",
+              "prefill": {
+                "path": "postalComplexName",
+                "source": "organisation_detail"
+              },
+              "required": false,
+              "placeholder": "Complex name"
+            },
+            {
+              "name": "postalComplexNumber",
+              "type": "text",
+              "label": "Complex number",
+              "width": "half",
+              "prefill": {
+                "path": "postalComplexNumber",
+                "source": "organisation_detail"
+              },
+              "required": false,
+              "placeholder": "Complex number"
+            },
+            {
+              "name": "city",
+              "type": "text",
+              "label": "City",
+              "prefill": {
+                "path": "postalCity",
+                "source": "organisation_detail"
+              },
+              "required": true,
+              "placeholder": "City"
+            }
+          ],
           "required": true
+        },
+        {
+          "name": "npo_status",
+          "type": "select",
+          "label": "NPO/BPO Registration Status",
+          "fields": [
+            {
+              "name": "registration_number",
+              "type": "text",
+              "label": "Registration Number",
+              "width": "half",
+              "prefill": {
+                "path": "registrationCode",
+                "source": "organisation"
+              },
+              "show_if": {
+                "field": "npo_status",
+                "value": "registered_npo"
+              },
+              "required": true,
+              "placeholder": "Registration Number"
+            },
+            {
+              "name": "registration_date",
+              "type": "date",
+              "label": "Date of Registration",
+              "width": "half",
+              "prefill": {
+                "path": "registrationDate",
+                "source": "organisation"
+              },
+              "show_if": {
+                "field": "npo_status",
+                "value": "registered_npo"
+              },
+              "required": true,
+              "placeholder": "Date of Registration"
+            }
+          ],
+          "options": [
+            {
+              "label": "Registered NPO",
+              "value": "registered_npo"
+            },
+            {
+              "label": "Registered BPO",
+              "value": "registered_bpo"
+            },
+            {
+              "label": "Not Registered",
+              "value": "not_registered"
+            }
+          ],
+          "prefill": {
+            "path": "registrationStatus",
+            "source": "organisation"
+          },
+          "required": true
+        },
+        {
+          "name": "organisationSummary",
+          "type": "textarea",
+          "label": "Organisation summary",
+          "prefill": {
+            "path": "about",
+            "source": "organisation"
+          },
+          "required": true,
+          "placeholder": "Organisation summary"
         }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     },
     {
-      "title": "SECTION 2: GOVERNANCE AND MANAGEMENT",
+      "title": "Governance & Management",
       "fields": [
         {
-          "name": "list",
-          "type": "textarea",
-          "label": "List the names, surnames, and positions of the LDA Management Committee members (Board members)",
-          "required": true
+          "name": "organisation_staff_members",
+          "type": "data-table",
+          "label": "Staff Members",
+          "config": {
+            "columns": [
+              {
+                "label": "Name",
+                "value": "name"
+              },
+              {
+                "label": "Gender",
+                "value": "gender"
+              },
+              {
+                "label": "Position(s)",
+                "value": "position"
+              }
+            ]
+          },
+          "layout": "data-table",
+          "prefill": {
+            "path": "organisation_staff_members",
+            "source": "organisation_staff"
+          }
         },
         {
-          "name": "list2",
-          "type": "textarea",
-          "label": "List the names and surnames of LDA staff (EG, coordinator, administrator, field worker, etc)  "
+          "name": "organisation_board_members",
+          "type": "custom",
+          "label": "Board Members",
+          "config": {
+            "columns": [
+              {
+                "label": "Name",
+                "value": "name"
+              },
+              {
+                "label": "Gender",
+                "value": "gender"
+              }
+            ]
+          },
+          "layout": "data-table",
+          "prefill": {
+            "path": "organisation_board_members",
+            "source": "organisation_staff"
+          }
         }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     },
     {
-      "title": "SECTION 3: VISION & MISSION",
+      "title": "Vision & Mission",
       "fields": [
         {
           "name": "vision",
           "type": "textarea",
-          "label": "Vision",
-          "required": true
+          "label": "Vision of organisation",
+          "prefill": {
+            "path": "vision",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Vision of organisation"
         },
         {
           "name": "mission",
           "type": "textarea",
-          "label": "Mission",
-          "required": true
+          "label": "Mission of organisation",
+          "prefill": {
+            "path": "mission",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Mission of organisation"
         }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     },
     {
-      "title": "SECTION 4: OBJECTIVES And ACTIVITIES",
+      "title": "Objectives & Activities",
       "fields": [
         {
-          "name": "objectives",
+          "name": "main_objectives",
           "type": "textarea",
           "label": "Main objectives (What the organisation is aiming to achieve through its programmes and activities)",
-          "required": true
+          "prefill": {
+            "path": "objectives",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe the main goals of your organisation"
         },
         {
-          "name": "programatic",
+          "name": "main_programmatic_areas",
           "type": "textarea",
           "label": "Main programmatic areas (The organisation’s programs and projects carried out to achieve its objective)",
-          "required": true
+          "prefill": {
+            "path": "programmaticAreas",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "List or describe the key program areas and activities"
         }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     },
     {
-      "title": "SECTION 5: STRATEGIC FOCUS AREAS",
+      "title": "Strategic Focus Areas",
       "fields": [
         {
-          "name": "access_to_justice",
+          "name": "contribution_youth",
           "type": "textarea",
-          "label": "Access to Justice",
-          "required": true
+          "label": "How does the organisation contribute to youth",
+          "prefill": {
+            "path": "youthFocus",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe your organisation’s youth-related work"
         },
         {
-          "name": "gender_equity",
+          "name": "contribution_gender",
           "type": "textarea",
-          "label": "Gender equity (including women empowerment)",
-          "required": true
+          "label": "How does the organisation contribute to gender",
+          "prefill": {
+            "path": "genderFocus",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe your organisation’s gender-related work"
         },
         {
-          "name": "youth_empowerement",
+          "name": "contribution_climate",
           "type": "textarea",
-          "label": "Youth empowerment",
-          "required": true
-        },
-        {
-          "name": "food_security",
-          "type": "textarea",
-          "label": "Food security, nutrition, and Local Economic Development",
-          "required": true
-        },
-        {
-          "name": "climate_change",
-          "type": "textarea",
-          "label": "Climate Change",
-          "required": true
+          "label": "How does the organisation contribute to climate",
+          "prefill": {
+            "path": "climateFocus",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe your organisation’s climate-related work"
         }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     },
     {
-      "title": "SECTION 6: PARTNERSHIPS AND NETWORKS",
-      "fields": [
-        {
-          "name": "work_with",
-          "type": "textarea",
-          "label": "Who do you work with within and outside your community? (E.g. CBO partners, key stakeholders, traditional leadership, etc.).",
-          "required": true
-        },
-        {
-          "name": "connected_national_advocacy",
-          "type": "textarea",
-          "label": "Are you connected to any national advocacy strategies or campaigns? If yes, please provide details",
-          "required": true
-        }
-      ]
-    },
-    {
-      "title": "SECTION 7: SUSTAINABILITY",
+      "title": "Sustainability",
       "fields": [
         {
           "name": "fundraising_strategies",
           "type": "textarea",
           "label": "What are the local and other fundraising strategies the LDA is implementing to raise funding?",
-          "required": true
+          "prefill": {
+            "path": "fundraisingStrategies",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe how the LDA is fundraising locally or from other sources"
         },
         {
-          "name": "ensure_org_not_reliant",
+          "name": "non_scat_funding_strategy",
           "type": "textarea",
           "label": "What are you doing to ensure that your organisation is not reliant on SCAT only for funding?",
-          "required": true
+          "prefill": {
+            "path": "ensureOrgNotReliantOnScatOnly",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe your efforts to diversify funding sources beyond SCAT"
         }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     },
     {
-      "title": "SECTION 8: MONITORING AND LEARNING",
+      "title": "Monitoring & Learning",
       "fields": [
         {
-          "name": "process_monitor_progress",
+          "name": "monitoring_processes",
           "type": "textarea",
           "label": "What processes do you use in your organisation to monitor your progress and learn from your experiences? (EG, planning, reviewing of organisational plans, etc.)",
-          "required": true
+          "prefill": {
+            "path": "monitoringAndLearning",
+            "source": "organisation_operations"
+          },
+          "required": true,
+          "placeholder": "Describe how your organisation evaluates progress and learns from past experiences"
         }
-      ]
-    },
-    {
-      "title": "SECTION 9: RESULTS ACHIEVED 2024",
-      "fields": [
-        {
-          "name": "progress_9_month",
-          "type": "textarea",
-          "label": "Progress made on your plans for the nine (9) month period.",
-          "required": true
-        },
-        {
-          "name": "challenges_faced",
-          "type": "textarea",
-          "label": "Challenges faced in the community and lessons learned.",
-          "required": true
-        }
-      ]
-    },
-    {
-      "title": "SECTION 10: BUDGET AND EXPENDITURE",
-      "fields": [
-        {
-          "name": "total_income",
-          "type": "textarea",
-          "label": "What is the organisation’s total income budget for 2025?",
-          "required": true
-        },
-        {
-          "name": "total_expenditure",
-          "type": "textarea",
-          "label": "What is the organisation’s total expenditure budget for 2025?",
-          "required": true
-        },
-        {
-          "name": "income_9_months",
-          "type": "textarea",
-          "label": "What is the organisation’s income for the last nine (9) months? (January to September 2025)",
-          "required": true
-        },
-        {
-          "name": "expenditure_9_months",
-          "type": "textarea",
-          "label": "What is the organisation’s expenditure for the last nine (9) months? (January to September 2025)",
-          "required": true
-        }
-      ]
+      ],
+      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
     }
   ]
 }

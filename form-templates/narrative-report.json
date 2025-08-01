@@ -1,0 +1,1943 @@
+{
+    "title": "Narrative Report",
+    "sections": [
+      {
+        "title": "Activities, Programmes & Projects",
+        "fields": [
+          {
+            "name": "access_to_justice",
+            "type": "textarea",
+            "label": "Access to Justice",
+            "placeholder": "Enter details here",
+            "description": "Describe your case work, access to human rights work, workshops, campaigns etc.",
+            "required": true
+          },
+          {
+            "name": "gender",
+            "type": "textarea",
+            "label": "Gender",
+            "placeholder": "Enter details here",
+            "description": "Describe your GBV awareness campaigns and workshops, safe house, LGBTQIA, cases related to gender violation, etc.",
+            "required": true
+          },
+          {
+            "name": "youth_empowerment",
+            "type": "textarea",
+            "label": "Youth Empowerment",
+            "placeholder": "Enter details here",
+            "description": "Describe your work with youth employment, youth and access to education, youth led initiatives, workshops, campaign directed and youth development, etc.",
+            "required": true
+          },
+          {
+            "name": "food_security",
+            "type": "textarea",
+            "label": "Food Security",
+            "placeholder": "Enter details here",
+            "description": "Describe your work with food gardens, community kitchens, food parcels, seed distribution, etc.",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Partnerships & Collaborations",
+        "fields": [
+          {
+            "name": "partnerships",
+            "type": "textarea",
+            "label": "What partnerships were you able to create/develop during this reporting period?",
+            "placeholder": "Enter details here",
+            "description": "Other organisations, government departments, universities etc.",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Challenges & Successes",
+        "fields": [
+          {
+            "name": "faced_challenges",
+            "type": "radio",
+            "label": "Did you face new or unique challenges during this reporting period?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "challenge",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of challenges",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "faced_challenges",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Challenge",
+            "config": {
+              "add_button_label": "Add a challenge",
+              "cardLabel": "Challenge",
+              "removeLable": "Remove challenge"
+            },
+            "template": [
+              {
+                "name": "description",
+                "type": "textarea",
+                "label": "Briefly describe the challenge",
+                "required": true,
+                "placeholder": "Enter details here"
+              },
+              {
+                "name": "resolved",
+                "type": "radio",
+                "label": "Were you able to overcome or find a solution to this challenge?",
+                "required": true,
+                "options": [
+                  {
+                    "label": "No",
+                    "value": "no"
+                  },
+                  {
+                    "label": "Yes",
+                    "value": "yes"
+                  }
+                ]
+              },
+              {
+                "name": "resolution_details",
+                "type": "textarea",
+                "label": "Briefly describe how you manage to overcome this challenge",
+                "required": true,
+                "show_if": {
+                  "field": "resolved",
+                  "value": "yes"
+                },
+                "placeholder": "Enter details here"
+              }
+            ]
+          },
+          {
+            "name": "faced_successes",
+            "type": "radio",
+            "label": "Did you achieve any major successes during this reporting period?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "success",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of successes",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "faced_successes",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Success",
+            "config": {
+              "add_button_label": "Add a success",
+              "cardLabel": "Success",
+              "removeLable": "Remove success"
+            },
+            "template": [
+              {
+                "name": "description",
+                "type": "textarea",
+                "label": "Briefly describe the success",
+                "required": true,
+                "placeholder": "Enter details here"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Staff Development & Training",
+        "fields": [
+          {
+            "name": "held_staff_training",
+            "type": "radio",
+            "label": "Did you hold any workshops or training events for staff?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "staff_development_events",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of staff development events",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "held_staff_training",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Staff Development Event",
+            "config": {
+              "add_button_label": "Add staff event",
+              "cardLabel": "Staff Development Event",
+              "removeLable": "Remove event"
+            },
+            "template": [
+              {
+                "name": "workshop_name",
+                "type": "text",
+                "label": "What was the name of the workshop/training?",
+                "required": true,
+                "placeholder": "Enter details here"
+              },
+              {
+                "name": "attendees_count",
+                "type": "number",
+                "label": "How many staff/committee members attended the workshop?",
+                "required": true,
+                "min": 0
+              },
+              {
+                "name": "provider_name",
+                "type": "text",
+                "label": "What was the name of the workshop/training service provider?",
+                "required": true,
+                "placeholder": "Enter details here"
+              },
+              {
+                "name": "additional_details",
+                "type": "textarea",
+                "label": "Are there any other details about the workshop/training you would like to share?",
+                "required": false,
+                "placeholder": "Enter details here"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "FRIS Events",
+        "fields": [
+          {
+            "name": "held_fris_event",
+            "type": "radio",
+            "label": "Did you hold fundraising events that required FRIS during this period?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "fris_events",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of FRIS events",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "held_fris_event",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "FRIS Event",
+            "config": {
+              "add_button_label": "Add FRIS event",
+              "cardLabel": "FRIS Event",
+              "removeLable": "Remove event"
+            },
+            "template": [
+              {
+                "name": "description",
+                "type": "textarea",
+                "label": "Describe this event",
+                "placeholder": "Enter details here",
+                "required": false
+              },
+              {
+                "name": "amount_raised",
+                "type": "currency",
+                "label": "How much were you able to raise?",
+                "currency": "ZAR",
+                "required": true
+              },
+              {
+                "name": "fund_usage",
+                "type": "textarea",
+                "label": "What were the funds used for?",
+                "placeholder": "Enter details here",
+                "required": true
+              }
+            ]
+          },
+          {
+            "name": "received_outside_funding",
+            "type": "radio",
+            "label": "Did your organisation receive any funding during this reporting period, other than the funds from SCAT?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "outside_funding",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of outside funding",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "received_outside_funding",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Outside Funding",
+            "config": {
+              "add_button_label": "Add outside funder",
+              "cardLabel": "Outside Funding",
+              "removeLable": "Remove funder"
+            },
+            "template": [
+              {
+                "name": "funder_name",
+                "type": "text",
+                "label": "Who was the funding from?",
+                "required": true,
+                "placeholder": "Enter details here"
+              },
+              {
+                "name": "amount_received",
+                "type": "currency",
+                "label": "How much funding was received?",
+                "currency": "ZAR",
+                "required": true
+              },
+              {
+                "name": "funding_use",
+                "type": "textarea",
+                "label": "What was the extra funding used for?",
+                "required": true,
+                "placeholder": "Enter details here"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "DFT Training",
+        "fields": [
+          {
+            "name": "claimed_dft",
+            "type": "radio",
+            "label": "Have you claimed any DFT claim during this reporting period?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "dft_claims",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of DFT claims",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "claimed_dft",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "DFT Claim",
+            "config": {
+              "add_button_label": "Add DFT claim",
+              "cardLabel": "DFT Claim",
+              "removeLable": "Remove claim"
+            },
+            "template": [
+              {
+                "name": "amount_claimed",
+                "type": "currency",
+                "label": "How much did you claim?",
+                "currency": "ZAR",
+                "required": true
+              },
+              {
+                "name": "training_description",
+                "type": "textarea",
+                "label": "What was the DFT training?",
+                "placeholder": "Enter details here",
+                "required": true
+              },
+              {
+                "name": "attendee_count",
+                "type": "number",
+                "label": "How many people attended this training?",
+                "required": true,
+                "min": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Impact of Work",
+        "fields": [
+          {
+            "name": "noticed_impact",
+            "type": "radio",
+            "label": "Did you notice any changes or improvements in the community or to individuals as a result of your work?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "impact_stories",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of impact stories",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "noticed_impact",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Impact Story",
+            "config": {
+              "add_button_label": "Add impact story",
+              "cardLabel": "Impact Story",
+              "removeLable": "Remove impact story"
+            },
+            "template": [
+              {
+                "name": "funder",
+                "type": "text",
+                "label": "Who was the funding from?",
+                "placeholder": "Enter details here",
+                "required": true
+              },
+              {
+                "name": "improvement_description",
+                "type": "textarea",
+                "label": "Describe the improvement you saw",
+                "placeholder": "Enter details here",
+                "required": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Learnings, Lessons & Experiences",
+        "fields": [
+          {
+            "name": "organisational_learnings",
+            "type": "textarea",
+            "label": "What you have learned or noticed as an organisation as a result of the work that you did in your community during this period?",
+            "description": "Did you learn anything new or have a particular experience you can share as a result of your work during this reporting period? Please write a detailed response.",
+            "placeholder": "Enter details here",
+            "required": true
+          },
+          {
+            "name": "has_case_study",
+            "type": "radio",
+            "label": "Do you have a compelling case study to share from this reporting period?",
+            "required": false,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "case_studies",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of case studies",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "has_case_study",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Case Study",
+            "config": {
+              "add_button_label": "Add case study",
+              "cardLabel": "Case Study",
+              "removeLable": "Remove case study"
+            },
+            "template": [
+              {
+                "name": "case_description",
+                "type": "textarea",
+                "label": "Briefly describe the case and what made it challenging or interesting",
+                "placeholder": "Enter details here",
+                "required": true
+              },
+              {
+                "name": "case_outcome",
+                "type": "textarea",
+                "label": "What was the outcome of the case? Why was it difficult or successful?",
+                "placeholder": "Enter details here",
+                "required": true
+              },
+              {
+                "name": "case_lessons",
+                "type": "textarea",
+                "label": "What were the lessons learned from this case?",
+                "placeholder": "Enter details here",
+                "required": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Future Activities",
+        "fields": [
+          {
+            "name": "planning_fris",
+            "type": "radio",
+            "label": "Are you planning a fundraising event that requires FRIS?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "upcoming_fris_events",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of upcoming FRIS events",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "planning_fris",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "FRIS event",
+            "config": {
+              "add_button_label": "Add FRIS event",
+              "cardLabel": "FRIS event",
+              "removeLable": "Remove event"
+            },
+            "template": [
+              {
+                "name": "description",
+                "type": "textarea",
+                "label": "Briefly describe this event",
+                "placeholder": "Enter details here",
+                "required": true
+              }
+            ]
+          },
+          {
+            "name": "planning_dft",
+            "type": "radio",
+            "label": "Are you planning on hosting a training that will require DFT?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "upcoming_dft_events",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of upcoming DFT events",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "planning_dft",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "DFT event",
+            "config": {
+              "add_button_label": "Add DFT event",
+              "cardLabel": "DFT event",
+              "removeLable": "Remove event"
+            },
+            "template": [
+              {
+                "name": "description",
+                "type": "textarea",
+                "label": "Briefly describe this event",
+                "placeholder": "Enter details here",
+                "required": true
+              }
+            ]
+          },
+          {
+            "name": "planning_activities",
+            "type": "radio",
+            "label": "Are you planning any activities, programs, or services for the next reporting period?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "planned_undertakings",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "List of planned undertakings",
+            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
+            "show_if": {
+              "field": "planning_activities",
+              "value": "yes"
+            },
+            "default": 0,
+            "item_label": "Planned undertaking",
+            "config": {
+              "add_button_label": "Add undertaking",
+              "cardLabel": "Planned undertaking",
+              "removeLable": "Remove undertaking"
+            },
+            "template": [
+              {
+                "name": "undertaking_type",
+                "type": "select",
+                "label": "What type of undertaking is being planned",
+                "placeholder": "Choose an undertaking type",
+                "required": true,
+                "options": [
+                  {
+                    "label": "Activity",
+                    "value": "Activity"
+                  },
+                  {
+                    "label": "Programme",
+                    "value": "Programme"
+                  },
+                  {
+                    "label": "Service",
+                    "value": "Service"
+                  }
+                ]
+              },
+              {
+                "name": "undertaking_description",
+                "type": "textarea",
+                "label": "Briefly describe this planned undertaking",
+                "placeholder": "Enter details here",
+                "required": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Organisational & Governance Matters",
+        "fields": [
+          {
+            "name": "staff_changes",
+            "type": "radio",
+            "label": "Has there been any staff development or changes?",
+            "description": "New staff employed, resigned, disciplinary action etc.",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "staff_changes_description",
+            "type": "textarea",
+            "label": "What were the changes relating to staff development?",
+            "placeholder": "Enter details here",
+            "required": true,
+            "show_if": {
+              "field": "staff_changes",
+              "value": "yes"
+            }
+          },
+          {
+            "name": "committee_changes",
+            "type": "radio",
+            "label": "Has there been any changes or developments with the management committee?",
+            "description": "AGMs, New committee members, resignation etc.",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "committee_changes_description",
+            "type": "textarea",
+            "label": "What were the changes relating to the management committee?",
+            "placeholder": "Enter details here",
+            "required": true,
+            "show_if": {
+              "field": "committee_changes",
+              "value": "yes"
+            }
+          }
+        ]
+      },
+      {
+        "title": "Advocacy Work",
+        "fields": [
+          {
+            "name": "did_advocacy_work",
+            "type": "radio",
+            "label": "Has the organisation/advice office done any advocacy work during this reporting period?",
+            "description": "e.g., Holding government accountable, commented or interrogated local, provincial or national policy, educate the community about legislative processes and policies, engaged government on community related issues, etc.",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "advocacy_description",
+            "type": "textarea",
+            "label": "Describe the work advocacy work done",
+            "placeholder": "Enter details here",
+            "required": true,
+            "show_if": {
+              "field": "did_advocacy_work",
+              "value": "yes"
+            }
+          }
+        ]
+      },
+      {
+        "title": "Additional Information",
+        "fields": [
+          {
+            "name": "has_additional_info",
+            "type": "radio",
+            "label": "Do you have any additional information or comments you would like to add, or any other work that your organisation did that is not reported in the questions already asked?",
+            "required": true,
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ]
+          },
+          {
+            "name": "additional_info",
+            "type": "textarea",
+            "label": "Please provide this information or commentary",
+            "placeholder": "Enter details here",
+            "required": true,
+            "show_if": {
+              "field": "has_additional_info",
+              "value": "yes"
+            }
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Direct Beneficiaries)",
+        "notice": "Note: The questions below are for INDIRECT BENEFICIARIES only.",
+        "fields": [
+          {
+            "name": "direct_total",
+            "type": "number",
+            "label": "How many direct beneficiaries were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_female",
+            "type": "number",
+            "label": "How many direct beneficiaries were female?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_male",
+            "type": "number",
+            "label": "How many direct beneficiaries were male?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_other_gender",
+            "type": "number",
+            "label": "How many direct beneficiaries were other?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_youth",
+            "type": "number",
+            "label": "How many direct beneficiaries were youth?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_adults",
+            "type": "number",
+            "label": "How many direct beneficiaries were adults?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_african",
+            "type": "number",
+            "label": "How many direct beneficiaries were african?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_asian",
+            "type": "number",
+            "label": "How many direct beneficiaries were asian?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_coloured",
+            "type": "number",
+            "label": "How many direct beneficiaries were coloured?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_white",
+            "type": "number",
+            "label": "How many direct beneficiaries were white?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_disabled",
+            "type": "number",
+            "label": "How many direct beneficiaries were disabled?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Direct Beneficiaries)",
+        "notice": "Note: The questions below are for INDIRECT BENEFICIARIES only.",
+        "fields": [
+          {
+            "name": "direct_total",
+            "type": "number",
+            "label": "How many direct beneficiaries were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_female",
+            "type": "number",
+            "label": "How many direct beneficiaries were female?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_male",
+            "type": "number",
+            "label": "How many direct beneficiaries were male?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_other_gender",
+            "type": "number",
+            "label": "How many direct beneficiaries were other?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_youth",
+            "type": "number",
+            "label": "How many direct beneficiaries were youth?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_adults",
+            "type": "number",
+            "label": "How many direct beneficiaries were adults?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_african",
+            "type": "number",
+            "label": "How many direct beneficiaries were african?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_asian",
+            "type": "number",
+            "label": "How many direct beneficiaries were asian?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_coloured",
+            "type": "number",
+            "label": "How many direct beneficiaries were coloured?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_white",
+            "type": "number",
+            "label": "How many direct beneficiaries were white?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "direct_disabled",
+            "type": "number",
+            "label": "How many direct beneficiaries were disabled?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Consumer Cases)",
+        "notice": "Note: The questions below are for CONSUMER CASES only.",
+        "fields": [
+          {
+            "name": "consumer_total",
+            "type": "number",
+            "label": "How many consumer cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_female",
+            "type": "number",
+            "label": "How many consumer cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_male",
+            "type": "number",
+            "label": "How many consumer cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_new",
+            "type": "number",
+            "label": "How many consumer cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_old",
+            "type": "number",
+            "label": "How many consumer cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_closed",
+            "type": "number",
+            "label": "How many consumer cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_referred",
+            "type": "number",
+            "label": "How many consumer cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_pending",
+            "type": "number",
+            "label": "How many consumer cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_advice",
+            "type": "number",
+            "label": "How many consumer cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_other_status",
+            "type": "number",
+            "label": "How many consumer cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "consumer_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from consumer cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Domestic Violence)",
+        "notice": "Note: The questions below are for DOMESTIC VIOLENCE CASES only.",
+        "fields": [
+          {
+            "name": "dv_total",
+            "type": "number",
+            "label": "How many domestic violence cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_female",
+            "type": "number",
+            "label": "How many domestic violence cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_male",
+            "type": "number",
+            "label": "How many domestic violence cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_new",
+            "type": "number",
+            "label": "How many domestic violence cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_old",
+            "type": "number",
+            "label": "How many domestic violence cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_closed",
+            "type": "number",
+            "label": "How many domestic violence cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_referred",
+            "type": "number",
+            "label": "How many domestic violence cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_pending",
+            "type": "number",
+            "label": "How many domestic violence cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_advice",
+            "type": "number",
+            "label": "How many domestic violence cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_other_status",
+            "type": "number",
+            "label": "How many domestic violence cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "dv_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from domestic violence cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Farm Worker)",
+        "notice": "Note: The questions below are for FARM WORKER CASES only.",
+        "fields": [
+          {
+            "name": "fw_total",
+            "type": "number",
+            "label": "How many farm worker cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_female",
+            "type": "number",
+            "label": "How many farm worker cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_male",
+            "type": "number",
+            "label": "How many farm worker cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_new",
+            "type": "number",
+            "label": "How many farm worker cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_old",
+            "type": "number",
+            "label": "How many farm worker cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_closed",
+            "type": "number",
+            "label": "How many farm worker cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_referred",
+            "type": "number",
+            "label": "How many farm worker cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_pending",
+            "type": "number",
+            "label": "How many farm worker cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_advice",
+            "type": "number",
+            "label": "How many farm worker cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_other_status",
+            "type": "number",
+            "label": "How many farm worker cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "fw_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from farm worker cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Gender-Based Violence)",
+        "notice": "Note: The questions below are for GENDER-BASED VIOLENCE CASES only.",
+        "fields": [
+          {
+            "name": "gbv_total",
+            "type": "number",
+            "label": "How many gender-based violence cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_female",
+            "type": "number",
+            "label": "How many gender-based violence cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_male",
+            "type": "number",
+            "label": "How many gender-based violence cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_new",
+            "type": "number",
+            "label": "How many gender-based violence cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_old",
+            "type": "number",
+            "label": "How many gender-based violence cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_closed",
+            "type": "number",
+            "label": "How many gender-based violence cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_referred",
+            "type": "number",
+            "label": "How many gender-based violence cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_pending",
+            "type": "number",
+            "label": "How many gender-based violence cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_advice",
+            "type": "number",
+            "label": "How many gender-based violence cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_other_status",
+            "type": "number",
+            "label": "How many gender-based violence cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "gbv_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from gender-based violence cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Home Affairs)",
+        "notice": "Note: The questions below are for HOME AFFAIRS CASES only.",
+        "fields": [
+          {
+            "name": "home_total",
+            "type": "number",
+            "label": "How many home affairs cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_female",
+            "type": "number",
+            "label": "How many home affairs cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_male",
+            "type": "number",
+            "label": "How many home affairs cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_new",
+            "type": "number",
+            "label": "How many home affairs cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_old",
+            "type": "number",
+            "label": "How many home affairs cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_closed",
+            "type": "number",
+            "label": "How many home affairs cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_referred",
+            "type": "number",
+            "label": "How many home affairs cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_pending",
+            "type": "number",
+            "label": "How many home affairs cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_advice",
+            "type": "number",
+            "label": "How many home affairs cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_other_status",
+            "type": "number",
+            "label": "How many home affairs cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "home_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from home affairs cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Labour)",
+        "notice": "Note: The questions below are for LABOUR CASES only.",
+        "fields": [
+          {
+            "name": "labour_total",
+            "type": "number",
+            "label": "How many labour cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_female",
+            "type": "number",
+            "label": "How many labour cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_male",
+            "type": "number",
+            "label": "How many labour cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_new",
+            "type": "number",
+            "label": "How many labour cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_old",
+            "type": "number",
+            "label": "How many labour cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_closed",
+            "type": "number",
+            "label": "How many labour cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_referred",
+            "type": "number",
+            "label": "How many labour cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_pending",
+            "type": "number",
+            "label": "How many labour cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_advice",
+            "type": "number",
+            "label": "How many labour cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_other_status",
+            "type": "number",
+            "label": "How many labour cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "labour_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from labour cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Case Statistics (Social Welfare)",
+        "notice": "Note: The questions below are for SOCIAL WELFARE only.",
+        "fields": [
+          {
+            "name": "social_welfare_total",
+            "type": "number",
+            "label": "How many social welfare cases were there in total?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_female",
+            "type": "number",
+            "label": "How many social welfare cases involved female persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_male",
+            "type": "number",
+            "label": "How many social welfare cases involved male persons?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_new",
+            "type": "number",
+            "label": "How many social welfare cases were new cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_old",
+            "type": "number",
+            "label": "How many social welfare cases were old cases?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_closed",
+            "type": "number",
+            "label": "How many social welfare cases were closed?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_referred",
+            "type": "number",
+            "label": "How many social welfare cases were referred?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_pending",
+            "type": "number",
+            "label": "How many social welfare cases are pending?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_advice",
+            "type": "number",
+            "label": "How many social welfare cases provided advice?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_other_status",
+            "type": "number",
+            "label": "How many social welfare cases have an other status?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "social_welfare_savings",
+            "type": "currency",
+            "label": "How much money was saved for clients from social welfare cases?",
+            "currency": "ZAR",
+            "required": true
+          }
+        ]
+      },
+      {
+        "title": "Other Case Types",
+        "fields": [
+          {
+            "name": "has_other_case_types",
+            "type": "radio",
+            "label": "Do you deal with case types that were not mentioned above?",
+            "options": [
+              {
+                "label": "No",
+                "value": "no"
+              },
+              {
+                "label": "Yes",
+                "value": "yes"
+              }
+            ],
+            "required": false
+          },
+          {
+            "name": "other_case_types",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "Case type",
+            "default": 0,
+            "show_if": {
+              "field": "has_other_case_types",
+              "value": "yes"
+            },
+            "config": {
+              "add_button_label": "Add case type",
+              "removeLabel": "Remove case type",
+              "cardLabel": "Type"
+            },
+            "template": [
+              {
+                "name": "case_type_description",
+                "type": "text",
+                "label": "Describe this case type",
+                "placeholder": "Enter details here",
+                "required": true
+              },
+              {
+                "name": "total",
+                "type": "number",
+                "label": "How many of this case type were there in total?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "female",
+                "type": "number",
+                "label": "How many of this case type involved female persons?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "male",
+                "type": "number",
+                "label": "How many of this case type involved male persons?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "new",
+                "type": "number",
+                "label": "How many of this case type were new cases?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "old",
+                "type": "number",
+                "label": "How many of this case type were old cases?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "closed",
+                "type": "number",
+                "label": "How many of this case type were closed?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "referred",
+                "type": "number",
+                "label": "How many of this case type were referred?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "pending",
+                "type": "number",
+                "label": "How many of this case type are pending?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "advice",
+                "type": "number",
+                "label": "How many of this case type provided advice?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "other_status",
+                "type": "number",
+                "label": "How many of this case type have an other status?",
+                "required": true,
+                "placeholder": 0,
+                "min": 0
+              },
+              {
+                "name": "savings",
+                "type": "currency",
+                "label": "How much money was saved for clients from this case type?",
+                "currency": "ZAR",
+                "required": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Food Security Statistics",
+        "fields": [
+          {
+            "name": "gardens_owned",
+            "type": "number",
+            "label": "Number of food gardens owned by LDA",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "communal_garden_size",
+            "type": "unit_input",
+            "label": "Total size of communal food garden(s) belonging to the LDA?",
+            "required": true,
+            "unit_options": [
+              "m²",
+              "km²",
+              "hectares"
+            ],
+            "default_unit": "km²"
+          },
+          {
+            "name": "staff_in_communal_garden",
+            "type": "number",
+            "label": "Number of LDA staff working in the LDA communal food garden?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "community_gardens_supported",
+            "type": "number",
+            "label": "Number of community food gardens supported by the organisation?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "volunteers_employed",
+            "type": "number",
+            "label": "Number of people employed (volunteering) in the LDA-supported food garden projects?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "members_trained",
+            "type": "number",
+            "label": "Number of community members trained in food gardening?",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "harvested_items",
+            "type": "repeatable",
+            "layout": "repeatable",
+            "label": "How much was harvested from the communal food garden?",
+            "default": 0,
+            "config": {
+              "add_button_label": "Add harvested item",
+              "removeLable": "Remove harvested item",
+              "cardLabel": "Harvested Item"
+            },
+            "fields": [],
+            "template": [
+              {
+                "name": "item_name",
+                "type": "text",
+                "label": "Harvested item name",
+                "placeholder": "eg. tomato, strawberry, lettuce",
+                "required": true
+              },
+              {
+                "name": "unit",
+                "type": "text",
+                "label": "Unit for measuring quantities of this item",
+                "placeholder": "eg. boxes, punnets, bunches",
+                "required": true
+              },
+              {
+                "name": "quantity",
+                "type": "number",
+                "label": "Number of these units harvested",
+                "required": true,
+                "min": 0
+              }
+            ]
+          },
+          {
+            "name": "percentage_shared",
+            "type": "unit_input",
+            "label": "How much of the harvested crop was sold or shared in the community?",
+            "placeholder": "Please provide this as a percentage (%) of the crops harvested",
+            "unit_options": [
+              "%"
+            ],
+            "default_unit": "%",
+            "required": true
+          },
+          {
+            "name": "orgs_supported",
+            "type": "number",
+            "label": "Number of organisations supported by the harvested crops",
+            "placeholder": "e.g., clinics, community kitchens, schools, etc.",
+            "required": true,
+            "min": 0
+          },
+          {
+            "name": "stipend_paid",
+            "type": "currency",
+            "label": "Amount of stipend paid to gardeners",
+            "currency": "ZAR",
+            "required": true
+          },
+          {
+            "name": "community_kitchens",
+            "type": "number",
+            "label": "Number of community kitchens",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "beneficiaries_served",
+            "type": "number",
+            "label": "Number of beneficiaries served through the community kitchen",
+            "required": true,
+            "placeholder": 0,
+            "min": 0
+          },
+          {
+            "name": "other_support",
+            "type": "textarea",
+            "label": "What other support do you receive for your food garden or community kitchen?",
+            "placeholder": "Enter details here",
+            "required": true
+          }
+        ]
+      }
+    ]
+  }
