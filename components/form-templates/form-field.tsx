@@ -63,7 +63,7 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
   const renderInput = () => {
     switch (inputField.type) {
     case "textarea":
-      return <TextareaField field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} />
+      return <TextareaField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "radio":
       return <RadioField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "select":
@@ -77,7 +77,7 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
     case "group":
       return <GroupField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "fileUpload":
-      return <FileUpload field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} />
+      return <FileUpload field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>
     case "text":
       return <TextField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:

@@ -3,20 +3,13 @@ import { UploadCloud, X, FileIcon, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { Field } from '@/types/forms'
 
 interface FileUploadProps {
-  field: {
-    name: string;
-    type: string;
-    label: string;
-    value?: string;
-    placeholder?: string;
-    required?: boolean;
-    config?: Record<string, unknown>;
-  }
+  field: Field
   isEditing?: boolean
   lda_id?: number
-  onValueChange?: (field: { name: string; type: string; label: string; value?: string; }, value: string) => void
+  onValueChange?: (field: Field, value: string) => void
 }
 
 interface UploadedFile {
