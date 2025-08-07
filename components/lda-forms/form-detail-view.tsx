@@ -213,6 +213,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
                 isEditing={isEditing}
                 setParentEditing={setIsEditing}
                 formId={ldaForm.id}
+                lda_id={ldaForm.localDevelopmentAgencyId}
                 userRole={session?.user?.role}
                 setIsFormValid={setIsFormValid}
                 setCompletionStatus={setCompletionStatus}

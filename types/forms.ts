@@ -1,4 +1,4 @@
-export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable";
+export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable" | "multiselect" | "fileUpload";
 
 export interface Form {
   title: string;
