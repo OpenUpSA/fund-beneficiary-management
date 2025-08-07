@@ -17,6 +17,8 @@ export async function GET(
 ) {
   try {
     const ldaId = parseInt(params.lda_id);
+    const searchParams = request.nextUrl.searchParams;
+    const isCommitteeParam = searchParams.get('is_committee');
 
     if (isNaN(ldaId)) {
       return NextResponse.json(
@@ -25,10 +27,23 @@ export async function GET(
       );
     }
 
+    // Build the where clause based on query parameters
+    const whereClause: {
+      localDevelopmentAgencyId: number;
+      isCommittee?: boolean;
+    } = {
+      localDevelopmentAgencyId: ldaId,
+    };
+
+    // Add isCommittee filter if provided
+    if (isCommitteeParam !== null) {
+      // Convert string 'true'/'false' to boolean
+      const isCommittee = isCommitteeParam.toLowerCase() === 'true';
+      whereClause.isCommittee = isCommittee;
+    }
+
     const staffMembers = await prisma.staffMember.findMany({
-      where: {
-        localDevelopmentAgencyId: ldaId,
-      },
+      where: whereClause,
     });
 
     return NextResponse.json(staffMembers);

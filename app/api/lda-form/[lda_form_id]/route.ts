@@ -33,7 +33,6 @@ type OrganisationWithDetails = {
 };
 
 const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source: string; path: string}) => {
-  console.log('prefill', prefill)
   switch (prefill.source) {
     case 'organisation':
       // Direct properties of the organisation

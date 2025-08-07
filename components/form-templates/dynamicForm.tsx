@@ -21,6 +21,7 @@ export function DynamicForm({
   defaultValues = {},
   setParentEditing,
   formId,
+  lda_id,
   userRole,
   setIsFormValid,
   setCompletionStatus,
@@ -31,6 +32,7 @@ export function DynamicForm({
   isEditing?: boolean
   setParentEditing?: (isEditing: boolean) => void
   formId?: number | string
+  lda_id?: number
   userRole?: string
   setIsFormValid?: (isValid: boolean) => void
   setCompletionStatus?: (status: { completed: number; required: number }) => void
@@ -124,6 +126,7 @@ export function DynamicForm({
               defaultValues={formData}
               formId={formId}
               userRole={userRole}
+              lda_id={lda_id}
               onSectionStatusChange={(status: { isValid: boolean; completed: number; required: number }) => handleSectionStatusChange(index, status)}
             />
           ))}

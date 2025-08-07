@@ -827,14 +827,14 @@
       },
       {
         "title": "Case Statistics (Direct Beneficiaries)",
-        "notice": "Note: The questions below are for INDIRECT BENEFICIARIES only.",
+        "notice": "Note: The questions below are for DIRECT BENEFICIARIES only.",
         "fields": [
           {
             "name": "direct_total",
             "type": "number",
             "label": "How many direct beneficiaries were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -842,7 +842,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were female?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -850,7 +850,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were male?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -858,7 +858,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were other?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -866,7 +866,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were youth?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -874,7 +874,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were adults?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -882,7 +882,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were african?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -890,7 +890,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were asian?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -898,7 +898,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were coloured?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -906,7 +906,7 @@
             "type": "number",
             "label": "How many direct beneficiaries were white?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -914,102 +914,102 @@
             "type": "number",
             "label": "How many direct beneficiaries were disabled?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           }
         ]
       },
       {
-        "title": "Case Statistics (Direct Beneficiaries)",
+        "title": "Case Statistics (Indirect Beneficiaries)",
         "notice": "Note: The questions below are for INDIRECT BENEFICIARIES only.",
         "fields": [
           {
-            "name": "direct_total",
+            "name": "total",
             "type": "number",
-            "label": "How many direct beneficiaries were there in total?",
+            "label": "How many indirect beneficiaries were there in total?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_female",
+            "name": "female",
             "type": "number",
-            "label": "How many direct beneficiaries were female?",
+            "label": "How many indirect beneficiaries were female?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_male",
+            "name": "male",
             "type": "number",
-            "label": "How many direct beneficiaries were male?",
+            "label": "How many indirect beneficiaries were male?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_other_gender",
+            "name": "other_gender",
             "type": "number",
-            "label": "How many direct beneficiaries were other?",
+            "label": "How many indirect beneficiaries were other?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_youth",
+            "name": "youth",
             "type": "number",
-            "label": "How many direct beneficiaries were youth?",
+            "label": "How many indirect beneficiaries were youth?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_adults",
+            "name": "adults",
             "type": "number",
-            "label": "How many direct beneficiaries were adults?",
+            "label": "How many indirect beneficiaries were adults?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_african",
+            "name": "african",
             "type": "number",
-            "label": "How many direct beneficiaries were african?",
+            "label": "How many indirect beneficiaries were african?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_asian",
+            "name": "asian",
             "type": "number",
-            "label": "How many direct beneficiaries were asian?",
+            "label": "How many indirect beneficiaries were asian?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_coloured",
+            "name": "coloured",
             "type": "number",
-            "label": "How many direct beneficiaries were coloured?",
+            "label": "How many indirect beneficiaries were coloured?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_white",
+            "name": "white",
             "type": "number",
-            "label": "How many direct beneficiaries were white?",
+            "label": "How many indirect beneficiaries were white?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           },
           {
-            "name": "direct_disabled",
+            "name": "disabled",
             "type": "number",
-            "label": "How many direct beneficiaries were disabled?",
+            "label": "How many indirect beneficiaries were disabled?",
             "required": true,
-            "placeholder": 0,
-            "min": 0
+            "min": 0,
+            "placeholder": "-"
           }
         ]
       },
@@ -1022,7 +1022,7 @@
             "type": "number",
             "label": "How many consumer cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1030,7 +1030,7 @@
             "type": "number",
             "label": "How many consumer cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1038,7 +1038,7 @@
             "type": "number",
             "label": "How many consumer cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1046,7 +1046,7 @@
             "type": "number",
             "label": "How many consumer cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1054,7 +1054,7 @@
             "type": "number",
             "label": "How many consumer cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1062,7 +1062,7 @@
             "type": "number",
             "label": "How many consumer cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1070,7 +1070,7 @@
             "type": "number",
             "label": "How many consumer cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1078,7 +1078,7 @@
             "type": "number",
             "label": "How many consumer cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1086,7 +1086,7 @@
             "type": "number",
             "label": "How many consumer cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1094,7 +1094,7 @@
             "type": "number",
             "label": "How many consumer cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1115,7 +1115,7 @@
             "type": "number",
             "label": "How many domestic violence cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1123,7 +1123,7 @@
             "type": "number",
             "label": "How many domestic violence cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1131,7 +1131,7 @@
             "type": "number",
             "label": "How many domestic violence cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1139,7 +1139,7 @@
             "type": "number",
             "label": "How many domestic violence cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1147,7 +1147,7 @@
             "type": "number",
             "label": "How many domestic violence cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1155,7 +1155,7 @@
             "type": "number",
             "label": "How many domestic violence cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1163,7 +1163,7 @@
             "type": "number",
             "label": "How many domestic violence cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1171,7 +1171,7 @@
             "type": "number",
             "label": "How many domestic violence cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1179,7 +1179,7 @@
             "type": "number",
             "label": "How many domestic violence cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1187,7 +1187,7 @@
             "type": "number",
             "label": "How many domestic violence cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1208,7 +1208,7 @@
             "type": "number",
             "label": "How many farm worker cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1216,7 +1216,7 @@
             "type": "number",
             "label": "How many farm worker cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1224,7 +1224,7 @@
             "type": "number",
             "label": "How many farm worker cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1232,7 +1232,7 @@
             "type": "number",
             "label": "How many farm worker cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1240,7 +1240,7 @@
             "type": "number",
             "label": "How many farm worker cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1248,7 +1248,7 @@
             "type": "number",
             "label": "How many farm worker cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1256,7 +1256,7 @@
             "type": "number",
             "label": "How many farm worker cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1264,7 +1264,7 @@
             "type": "number",
             "label": "How many farm worker cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1272,7 +1272,7 @@
             "type": "number",
             "label": "How many farm worker cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1280,7 +1280,7 @@
             "type": "number",
             "label": "How many farm worker cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1301,7 +1301,7 @@
             "type": "number",
             "label": "How many gender-based violence cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1309,7 +1309,7 @@
             "type": "number",
             "label": "How many gender-based violence cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1317,7 +1317,7 @@
             "type": "number",
             "label": "How many gender-based violence cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1325,7 +1325,7 @@
             "type": "number",
             "label": "How many gender-based violence cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1333,7 +1333,7 @@
             "type": "number",
             "label": "How many gender-based violence cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1341,7 +1341,7 @@
             "type": "number",
             "label": "How many gender-based violence cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1349,7 +1349,7 @@
             "type": "number",
             "label": "How many gender-based violence cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1357,7 +1357,7 @@
             "type": "number",
             "label": "How many gender-based violence cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1365,7 +1365,7 @@
             "type": "number",
             "label": "How many gender-based violence cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1373,7 +1373,7 @@
             "type": "number",
             "label": "How many gender-based violence cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1394,7 +1394,7 @@
             "type": "number",
             "label": "How many home affairs cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1402,7 +1402,7 @@
             "type": "number",
             "label": "How many home affairs cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1410,7 +1410,7 @@
             "type": "number",
             "label": "How many home affairs cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1418,7 +1418,7 @@
             "type": "number",
             "label": "How many home affairs cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1426,7 +1426,7 @@
             "type": "number",
             "label": "How many home affairs cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1434,7 +1434,7 @@
             "type": "number",
             "label": "How many home affairs cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1442,7 +1442,7 @@
             "type": "number",
             "label": "How many home affairs cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1450,7 +1450,7 @@
             "type": "number",
             "label": "How many home affairs cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1458,7 +1458,7 @@
             "type": "number",
             "label": "How many home affairs cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1466,7 +1466,7 @@
             "type": "number",
             "label": "How many home affairs cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1487,7 +1487,7 @@
             "type": "number",
             "label": "How many labour cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1495,7 +1495,7 @@
             "type": "number",
             "label": "How many labour cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1503,7 +1503,7 @@
             "type": "number",
             "label": "How many labour cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1511,7 +1511,7 @@
             "type": "number",
             "label": "How many labour cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1519,7 +1519,7 @@
             "type": "number",
             "label": "How many labour cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1527,7 +1527,7 @@
             "type": "number",
             "label": "How many labour cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1535,7 +1535,7 @@
             "type": "number",
             "label": "How many labour cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1543,7 +1543,7 @@
             "type": "number",
             "label": "How many labour cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1551,7 +1551,7 @@
             "type": "number",
             "label": "How many labour cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1559,7 +1559,7 @@
             "type": "number",
             "label": "How many labour cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1580,7 +1580,7 @@
             "type": "number",
             "label": "How many social welfare cases were there in total?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1588,7 +1588,7 @@
             "type": "number",
             "label": "How many social welfare cases involved female persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1596,7 +1596,7 @@
             "type": "number",
             "label": "How many social welfare cases involved male persons?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1604,7 +1604,7 @@
             "type": "number",
             "label": "How many social welfare cases were new cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1612,7 +1612,7 @@
             "type": "number",
             "label": "How many social welfare cases were old cases?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1620,7 +1620,7 @@
             "type": "number",
             "label": "How many social welfare cases were closed?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1628,7 +1628,7 @@
             "type": "number",
             "label": "How many social welfare cases were referred?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1636,7 +1636,7 @@
             "type": "number",
             "label": "How many social welfare cases are pending?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1644,7 +1644,7 @@
             "type": "number",
             "label": "How many social welfare cases provided advice?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1652,7 +1652,7 @@
             "type": "number",
             "label": "How many social welfare cases have an other status?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1711,7 +1711,7 @@
                 "type": "number",
                 "label": "How many of this case type were there in total?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1719,7 +1719,7 @@
                 "type": "number",
                 "label": "How many of this case type involved female persons?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1727,7 +1727,7 @@
                 "type": "number",
                 "label": "How many of this case type involved male persons?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1735,7 +1735,7 @@
                 "type": "number",
                 "label": "How many of this case type were new cases?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1743,7 +1743,7 @@
                 "type": "number",
                 "label": "How many of this case type were old cases?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1751,7 +1751,7 @@
                 "type": "number",
                 "label": "How many of this case type were closed?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1759,7 +1759,7 @@
                 "type": "number",
                 "label": "How many of this case type were referred?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1767,7 +1767,7 @@
                 "type": "number",
                 "label": "How many of this case type are pending?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1775,7 +1775,7 @@
                 "type": "number",
                 "label": "How many of this case type provided advice?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1783,7 +1783,7 @@
                 "type": "number",
                 "label": "How many of this case type have an other status?",
                 "required": true,
-                "placeholder": 0,
+                "placeholder": "-",
                 "min": 0
               },
               {
@@ -1805,7 +1805,7 @@
             "type": "number",
             "label": "Number of food gardens owned by LDA",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1825,7 +1825,7 @@
             "type": "number",
             "label": "Number of LDA staff working in the LDA communal food garden?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1833,7 +1833,7 @@
             "type": "number",
             "label": "Number of community food gardens supported by the organisation?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1841,7 +1841,7 @@
             "type": "number",
             "label": "Number of people employed (volunteering) in the LDA-supported food garden projects?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1849,7 +1849,7 @@
             "type": "number",
             "label": "Number of community members trained in food gardening?",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1919,7 +1919,7 @@
             "type": "number",
             "label": "Number of community kitchens",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {
@@ -1927,7 +1927,7 @@
             "type": "number",
             "label": "Number of beneficiaries served through the community kitchen",
             "required": true,
-            "placeholder": 0,
+            "placeholder": "-",
             "min": 0
           },
           {

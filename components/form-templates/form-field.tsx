@@ -11,13 +11,16 @@ import {
   TextField,
   GroupField,
   DefaultField,
-  CurrencyField
+  CurrencyField,
+  MultiSelect,
+  FileUpload
 } from "@/components/form-templates/custom-components"
 
 interface FormFieldProps {
   field: Field
   errors?: Record<string, FieldError | undefined>
   isEditing?: boolean,
+  lda_id?: number,
   onValueChange?: (field: Field, value: string) => void
 }
 
@@ -55,7 +58,7 @@ function FieldDescription({description}: {description: string}) {
 }
 
 
-function FieldRender({ inputField, isEditing, parentField, onValueChange }: { inputField: Field; isEditing: boolean; parentField?: Field; onValueChange?: (field: Field, value: string) => void }) {
+function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id }: { inputField: Field; isEditing: boolean; parentField?: Field; onValueChange?: (field: Field, value: string) => void; lda_id?: number }) {
   // Create the input element based on field type
   const renderInput = () => {
     switch (inputField.type) {
@@ -65,12 +68,16 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange }: { in
       return <RadioField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "select":
       return <SelectField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "multiselect":
+      return <MultiSelect field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>
     case "date":
       return <DateField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "currency":
       return <CurrencyField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "group":
       return <GroupField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "fileUpload":
+      return <FileUpload field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>
     case "text":
       return <TextField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
@@ -99,10 +106,10 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange }: { in
 import { DataTableLayout } from "./custom-layouts/data-table"
 import { RepeatableLayout } from "./custom-layouts/repeatable"
 
-function FormLayout({ inputField, isEditing = false, onValueChange }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void }) {
+function FormLayout({ inputField, isEditing = false, onValueChange, lda_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number }) {
   switch (inputField.layout) {
     case "data-table":
-      return <DataTableLayout inputField={inputField}  />
+      return <DataTableLayout inputField={inputField} />
     case "repeatable":
       return <RepeatableLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
@@ -112,7 +119,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange }: { inputFie
         <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />
         {inputField.description && <FieldDescription description={inputField.description} />}
         <div className="text-sm mt-1 p-2 text-slate-700">
-          {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />}
+          {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>}
           {inputField.fields && inputField.fields.length > 0 && inputField.show && (
             <div className="flex flex-wrap -mr-2">
               {inputField.fields.map((subfield) => (
@@ -122,6 +129,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange }: { inputFie
                   isEditing={isEditing}
                   parentField={inputField}
                   onValueChange={onValueChange}
+                  lda_id={lda_id}
                 />
               ))}
             </div>
@@ -133,10 +141,10 @@ function FormLayout({ inputField, isEditing = false, onValueChange }: { inputFie
   }
 }
 
-export function FormField({ field, isEditing = false, onValueChange }: FormFieldProps) {
+export function FormField({ field, isEditing = false, onValueChange, lda_id }: FormFieldProps) {
   return (
     <div key={field.name}>
-      <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} />
+      <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>
     </div>
   )
 }

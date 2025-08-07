@@ -13,6 +13,7 @@ interface FormAccordionItemProps {
   isEditing: boolean
   defaultValues?: FormData
   formId?: number | string
+  lda_id?: number
   userRole?: string
   onSectionStatusChange?: (status: { isValid: boolean; completed: number; required: number }) => void
 }
@@ -24,9 +25,17 @@ export default function FormAccordionItem({
   isEditing,
   defaultValues,
   formId,
+  lda_id,
   userRole,
   onSectionStatusChange,
 }: FormAccordionItemProps) {
+
+  const isValueValid = (value: string, field: Field) => {
+    if (field.type === "fileUpload") {
+      return JSON.parse(value).length > 0;
+    }
+    return value.trim() !== "";
+  }
 
   const createFieldFromTemplate = (field: Field, index: number) => {
     const fields = [...(field?.template || [])];
@@ -80,7 +89,7 @@ export default function FormAccordionItem({
         }
 
         // A field is valid if it has a value (for required fields) or is optional
-        const isValid = field.required ? Boolean(value && value.trim() !== "") : true;
+        const isValid = field.required ? isValueValid(value, field) : true;
         fieldObj = { ...fieldObj, value, isValid };
       }
 
@@ -120,7 +129,7 @@ export default function FormAccordionItem({
           if (defaultValues && subfieldName in defaultValues) {
             const value = String(defaultValues[subfieldName]);
             // A field is valid if it has a value (for required fields) or is optional
-            const isValid = subfield.required ? Boolean(value && value.trim() !== "") : true;
+            const isValid = subfield.required ? isValueValid(value, subfield) : true;
             subFieldObj = { ...subFieldObj, value, isValid };
           }
           return subFieldObj;
@@ -439,6 +448,7 @@ export default function FormAccordionItem({
               <FormField
                   field={field}
                   key={field.name}
+                  lda_id={lda_id}
                   isEditing={isEditing && isSectionEditable}
                   onValueChange={onChange}
               />
