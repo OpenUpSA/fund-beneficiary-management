@@ -270,7 +270,6 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
               )}
             />
 
-            {!user && (
               <FormField
                 control={form.control}
                 name="password"
@@ -284,9 +283,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
                   </FormItem>
                 )}
               />
-            )}
 
-            {!user && (
               <FormField
                 control={form.control}
                 name="passwordConfirm"
@@ -300,7 +297,6 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
                   </FormItem>
                 )}
               />
-            )}
 
           </form>
         </Form>

@@ -8,39 +8,51 @@ export const runtime = "nodejs"
 export async function GET(req: NextRequest, { params }: { params: { lda_id: string } }) {
   const ldaId = parseInt(params.lda_id, 10)
 
-  const record = await prisma.localDevelopmentAgency.findUnique({
-    where: { id: ldaId },
-    include: {
-      fundingStatus: true,
-      focusAreas: true,
-      location: true,
-      programmeOfficer: true,
-      developmentStage: true,
-      funds: {
-        include: {
-          funders: true
-        }
-      },
-      organisationDetail: true,
-      contacts: true,
-      media: true,
-      documents: true,
-      operations: true,
-      userAccess: true,
-      staffMembers: true,
-    },
-  })
-
-  if (!record) {
-    return NextResponse.json({ error: "Record not found" }, { status: 404 })
+  if (Number.isNaN(ldaId)) {
+    return NextResponse.json({ error: "Invalid LDA id" }, { status: 400 })
   }
 
-  return NextResponse.json(record)
+  try {
+    const record = await prisma.localDevelopmentAgency.findUnique({
+      where: { id: ldaId },
+      include: {
+        fundingStatus: true,
+        focusAreas: true,
+        location: true,
+        programmeOfficer: true,
+        developmentStage: true,
+        funds: {
+          include: {
+            funders: true
+          }
+        },
+        organisationDetail: true,
+        contacts: true,
+        media: true,
+        documents: true,
+        operations: true,
+        userAccess: true,
+        staffMembers: true,
+      },
+    })
+
+    if (!record) {
+      return NextResponse.json({ error: "Record not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(record)
+  } catch (err) {
+    console.error("Failed to fetch LDA:", err)
+    return NextResponse.json({ error: "Failed to fetch LDA", detail: (err as Error).message }, { status: 500 })
+  }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { lda_id: string } }) {
   try {
-    const ldaId = parseInt(params.lda_id);
+    const ldaId = parseInt(params.lda_id, 10);
+    if (Number.isNaN(ldaId)) {
+      return NextResponse.json({ error: "Invalid LDA id" }, { status: 400 });
+    }
     const data = await req.json();
 
     const ldaData: Prisma.LocalDevelopmentAgencyUpdateArgs["data"] = {};

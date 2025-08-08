@@ -8,7 +8,7 @@
           "name": "Funder",
           "type": "multiselect",
           "label": "Funder",
-          "configs": {
+          "config": {
             "dynamicOptionTable": "funders"
           },
           "required": true,
@@ -32,21 +32,21 @@
           "name": "staff_representatives_met",
           "type": "multiselect",
           "label": "Staff representatives met",
-          "required": true,
-          "placeholder": "Select staff representatives met",
-          "configs": {
+          "config": {
             "dynamicOptionTable": "staff_members"
-          }
+          },
+          "required": true,
+          "placeholder": "Select staff representatives met"
         },
         {
           "name": "committee_representatives_met",
           "type": "multiselect",
           "label": "Committee representatives met",
-          "required": true,
-          "placeholder": "Select committee representatives met",
-          "configs": {
+          "config": {
             "dynamicOptionTable": "committee_members"
-          }
+          },
+          "required": true,
+          "placeholder": "Select committee representatives met"
         }
       ]
     },
@@ -57,7 +57,6 @@
           "name": "org_profile_changed",
           "type": "radio",
           "label": "Has the organisational profile changed recently?",
-          "required": true,
           "options": [
             {
               "label": "No",
@@ -67,35 +66,40 @@
               "label": "Yes",
               "value": "yes"
             }
-          ]
+          ],
+          "required": true
         },
         {
           "name": "updated_org_profile",
           "type": "textarea",
           "label": "Updated organisational profile",
+          "required": true,
           "placeholder": "Enter details here",
-          "required": true
+          "show_if": {
+            "field": "org_profile_changed",
+            "value": "yes"
+          }
         },
         {
           "name": "visit_objectives",
           "type": "textarea",
           "label": "Objectives of the visit",
-          "placeholder": "Enter details here",
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         },
         {
           "name": "programme_activities",
           "type": "textarea",
           "label": "Programme activities and highlights",
-          "placeholder": "Enter details here",
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         },
         {
           "name": "community_profile",
           "type": "textarea",
           "label": "Community profile",
-          "placeholder": "Enter details here",
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         }
       ]
     },
@@ -106,15 +110,15 @@
           "name": "systems_controls",
           "type": "textarea",
           "label": "Systems and controls",
-          "placeholder": "Enter details here",
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         },
         {
           "name": "current_funders",
           "type": "textarea",
           "label": "Current funders",
-          "placeholder": "Enter details here",
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         }
       ]
     },
@@ -125,8 +129,8 @@
           "name": "way_forward",
           "type": "textarea",
           "label": "Way forward",
-          "placeholder": "Enter details here",
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         },
         {
           "name": "next_visit_date",
@@ -143,8 +147,8 @@
           "name": "attendance_register",
           "type": "fileUpload",
           "label": "Upload attendance register",
-          "required": false,
           "multiple": true,
+          "required": false,
           "accepted_file_types": [
             "image/*",
             "application/pdf"
@@ -154,8 +158,8 @@
           "name": "visit_photos",
           "type": "fileUpload",
           "label": "Upload photos from visit",
-          "required": true,
           "multiple": true,
+          "required": true,
           "accepted_file_types": [
             "image/*"
           ]
