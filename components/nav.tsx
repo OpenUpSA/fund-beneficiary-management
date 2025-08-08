@@ -75,12 +75,12 @@ export function Nav() {
         icon: BanknoteIcon,
         requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
       },
-      {
-        url: '/dashboard/applications-reports',
-        title: 'Applications And Reports',
-        icon: ClipboardPlus,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
-      },
+      // {
+      //   url: '/dashboard/applications-reports',
+      //   title: 'Applications And Reports',
+      //   icon: ClipboardPlus,
+      //   requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      // },
       {
         url: '/dashboard/media',
         title: 'Media',
