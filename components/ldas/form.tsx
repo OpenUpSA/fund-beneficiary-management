@@ -164,7 +164,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
       about: lda ? lda.about : '',
       registrationStatus: lda?.registrationStatus ?? 'not_registered', 
       registrationCode: lda?.registrationCode ?? '',
-      registrationDate: lda?.registrationDate ? lda.registrationDate : undefined,
+      registrationDate: lda?.registrationDate ? new Date(lda.registrationDate) : undefined,
       focusAreas: lda ? lda.focusAreas.map(fa => fa.id) : [],
       developmentStageId: lda?.developmentStageId?.toString() ?? undefined,
       programmeOfficerId: lda?.programmeOfficerId?.toString() ?? undefined,
