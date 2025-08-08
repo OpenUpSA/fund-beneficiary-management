@@ -180,13 +180,21 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
       return `${Math.abs(diffDays)} days overdue`
     }
   }
+  
+  const getFormTypeName = () => {
+    if (ldaForm?.title.toLowerCase().includes("application")) {
+      return 'Application Form'
+    } else {
+      return 'Form'
+    }
+  }
 
   return (
     <div className="grid grid-cols-10 gap-4">
       {/* Application Form Card */}
       <Card className="col-span-7 h-fit">
         <CardHeader className="border-b pb-2 grid grid-cols-2 items-center p-4">
-          <h2 className="text-lg font-bold text-slate-900">Application Form</h2>
+          <h2 className="text-lg font-bold text-slate-900">{getFormTypeName()}</h2>
           {ldaForm.formStatus?.label === "Draft" && <div className="flex gap-2 justify-end">
             {!isEditing && <Button onClick={() => setIsEditing(true)}>
               <PenLine className="h-4 w-4" />
