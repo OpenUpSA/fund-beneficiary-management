@@ -6,6 +6,22 @@ export type UserFull = Prisma.UserGetPayload<{
   }
 }>
 
+// Lightweight user type for lists: matches /api/user GET select
+export type UserWithLDAsBasic = Prisma.UserGetPayload<{
+  select: {
+    id: true
+    name: true
+    email: true
+    role: true
+    approved: true
+    createdAt: true
+    updatedAt: true
+    localDevelopmentAgencies: {
+      select: { id: true, name: true }
+    }
+  }
+}>
+
 export type FunderFull = Prisma.FunderGetPayload<{
   include: {
     fundingStatus: true,
@@ -120,4 +136,5 @@ export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGe
   }
 }>
 
-export type Province = Prisma.ProvinceGetPayload<{}>
+// Use object instead of {} to satisfy lint rule
+export type Province = Prisma.ProvinceGetPayload<object>

@@ -3,11 +3,11 @@
 import { format } from "date-fns"
 import { Badge } from "../ui/badge"
 import { Card, CardContent } from "../ui/card"
-import { User } from "@prisma/client"
+import { UserFull } from "@/types/models"
 import { useTranslations } from "next-intl"
 
 interface Props {
-  user: User
+  user: UserFull
 }
 
 export const Overview: React.FC<Props> = ({ user }: Props) => {
@@ -33,6 +33,10 @@ export const Overview: React.FC<Props> = ({ user }: Props) => {
             <div className="flex justify-between">
               <span className="font-medium">Role:</span>
               <Badge variant="outline">{tC(`roles.${user.role}`)}</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">LDA:</span>
+              <Badge variant="outline">{user.localDevelopmentAgencies?.map((lda) => lda.name).join(', ')}</Badge>
             </div>
           </CardContent>
         </Card>

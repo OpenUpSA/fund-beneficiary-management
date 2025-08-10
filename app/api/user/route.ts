@@ -15,7 +15,13 @@ export async function GET() {
         role: true,
         approved: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        localDevelopmentAgencies: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       }
     }
   )

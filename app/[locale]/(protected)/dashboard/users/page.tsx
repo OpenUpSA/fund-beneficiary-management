@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Link } from "@/i18n/routing"
 
 import { Badge } from "@/components/ui/badge"
-import { User } from "@prisma/client"
+import { UserWithLDAsBasic } from "@/types/models"
 import { FormDialog } from "@/components/users/form"
 import { revalidateTag } from "next/cache"
 import { format } from "date-fns"
@@ -29,7 +29,7 @@ export async function generateMetadata({ params: { locale }
 
 export default function Page() {
   const tC = useTranslations('common')
-  const users: User[] = use(fetchUsers())
+  const users: UserWithLDAsBasic[] = use(fetchUsers())
   const ldas = use(fetchLocalDevelopmentAgencies())
 
   const dataChanged = async () => {
@@ -60,6 +60,7 @@ export default function Page() {
                   <TableHead className="w-full">Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Email</TableHead>
+                  <TableHead>LDA</TableHead>
                   <TableHead>Approved</TableHead>
                   <TableHead className="text-nowrap">Created At</TableHead>
                 </TableRow>
@@ -77,6 +78,9 @@ export default function Page() {
                     </TableCell>
                     <TableCell className="text-nowrap">
                       {user.email}
+                    </TableCell>
+                    <TableCell className="text-nowrap">
+                      {user.localDevelopmentAgencies?.map((lda) => lda.name).join(', ')}
                     </TableCell>
                     <TableCell>
                       <Badge className="w-full justify-center" variant={user.approved ? 'default' : 'destructive'}>{user.approved ? 'Yes' : 'No'}</Badge>
