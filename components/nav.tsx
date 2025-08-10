@@ -3,7 +3,6 @@
 import { useMemo } from "react"
 import {
   BanknoteIcon,
-  ClipboardPlus,
   HandCoins,
   Images,
   LayoutDashboard,
