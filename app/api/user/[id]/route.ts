@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { createHash } from '@/lib/hash'
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -7,7 +8,7 @@ export const runtime = "nodejs"
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const userId = Number(params.id)
 
-  if (!userId) {
+  if (Number.isNaN(userId)) {
     return NextResponse.json({ error: "User ID is required" }, { status: 400 })
   }
 
@@ -30,6 +31,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const body = await req.json()
     const userId = Number(params.id)
 
+    if (Number.isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
+    }
+
     // First check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -40,7 +45,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: `User not found` }, { status: 404 })
     }
 
-    const { ldaId, ...rest } = body
+    // Extract password fields separately so we don't spread them into the update
+    const { ldaId, password, passwordConfirm, ...rest } = body as {
+      ldaId?: number | string
+      password?: string
+      passwordConfirm?: string
+      [key: string]: unknown
+    }
 
     // If switching to USER role, require an LDA
     if (rest.role === 'USER' && !ldaId) {
@@ -49,16 +60,32 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }, { status: 400 })
     }
 
+    // Build update payload
+    const updateData: Record<string, unknown> = { ...rest }
+
+    // Password handling (optional update)
+    if (typeof password === 'string' && password.length > 0) {
+      if (password !== passwordConfirm) {
+        return NextResponse.json({ error: 'Passwords do not match' }, { status: 400 })
+      }
+      if (password.length < 8) {
+        return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+      }
+      const hashedPassword = await createHash(password)
+      updateData.passwordHash = hashedPassword
+    }
+
     // Handle role changes and LDA connections
+    const ldaIdNum = ldaId !== undefined ? Number(ldaId) : undefined
+    const ldaRelation = rest.role === 'USER'
+      ? { set: ldaIdNum ? [{ id: ldaIdNum }] : [] }
+      : { set: [] }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...rest,
-        localDevelopmentAgencies: {
-          set: rest.role === 'USER' 
-            ? [{ id: parseInt(ldaId) }]  // For USER role, set to selected LDA
-            : []  // For non-USER roles, clear all LDAs
-        }
+        ...updateData,
+        localDevelopmentAgencies: ldaRelation
       },
       include: {
         localDevelopmentAgencies: true
@@ -75,6 +102,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const userId = Number(params.id)
+    if (Number.isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
+    }
     const deletedUser = await prisma.user.delete({
       where: { id: userId }
     })
