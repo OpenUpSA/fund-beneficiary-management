@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { FocusArea, DevelopmentStage, User } from '@prisma/client'
+import { FocusArea, DevelopmentStage } from '@prisma/client'
+import { UserWithLDAsBasic } from '@/types/models'
 import { LocalDevelopmentAgencyFull, Province } from '@/types/models'
 
 import {
@@ -38,7 +39,7 @@ interface FormDialogProps {
   developmentStages: DevelopmentStage[]
   focusAreas: FocusArea[]
   provinces: Province[]
-  programmeOfficers: User[]
+  programmeOfficers: UserWithLDAsBasic[]
   callback: (tag: string) => void
 }
 

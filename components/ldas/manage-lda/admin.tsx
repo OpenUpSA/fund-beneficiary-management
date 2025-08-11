@@ -21,7 +21,8 @@ import {
   SelectValue 
 } from "@/components/ui/select"
 import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
-import { FocusArea, DevelopmentStage, User } from '@prisma/client'
+import { FocusArea, DevelopmentStage } from '@prisma/client'
+import { UserWithLDAsBasic } from '@/types/models'
 import { UseFormReturn } from "react-hook-form"
 
 import { FormValues } from "./form-schema"
@@ -31,7 +32,7 @@ interface AdminTabProps {
   form: UseFormReturn<FormValues>
   focusAreas: FocusArea[]
   developmentStages: DevelopmentStage[]
-  programmeOfficers: User[]
+  programmeOfficers: UserWithLDAsBasic[]
 }
 
 export function AdminTab({ 
