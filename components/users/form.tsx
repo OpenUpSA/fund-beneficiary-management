@@ -72,7 +72,11 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
           email: data.email,
           approved: data.approved,
           role: data.role,
-          ...(shouldIncludeLda ? { ldaId: data.ldaId } : {})
+          ...(shouldIncludeLda ? { ldaId: data.ldaId } : {}),
+          ...(data.password ? { 
+            password: data.password,
+            passwordConfirm: data.passwordConfirm
+          } : {})
         }
 
         const response = await fetch(`/api/user/${user?.id}`, {

@@ -1,5 +1,5 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull, Province } from "@/types/models"
-import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, User, FormStatus } from "@prisma/client"
+import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
+import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 
@@ -73,7 +73,7 @@ export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<Local
   return res.json()
 }
 
-export async function fetchUsers(): Promise<User[]> {
+export async function fetchUsers(): Promise<UserWithLDAsBasic[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user`)
   return res.json()
 }
