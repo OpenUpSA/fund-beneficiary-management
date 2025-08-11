@@ -16,6 +16,19 @@ export async function GET() {
         include: {
           funders: true
         }
+      },
+      organisationDetail: {
+        select: {
+          physicalProvince: true,
+          latitude: true,
+          longitude: true,
+          physicalStreet: true,
+          physicalComplexName: true,
+          physicalComplexNumber: true,
+          physicalCity: true,
+          physicalPostalCode: true,
+          physicalDistrict: true,
+        },
       }
     },
   });

@@ -14,7 +14,8 @@ export interface FilterOption {
 }
 
 interface FilterButtonProps {
-  label: string
+  label?: string
+  name?: string
   options: FilterOption[]
   selectedOptions: FilterOption[]
   onFilterChange?: (selectedOptions: FilterOption[]) => void
