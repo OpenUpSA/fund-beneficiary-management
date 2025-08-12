@@ -57,10 +57,10 @@ export default function Page() {
             <Table className="text-xs w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-full">Name</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>LDA</TableHead>
+                  <TableHead className="w-[400px]">LDA</TableHead>
                   <TableHead>Approved</TableHead>
                   <TableHead className="text-nowrap">Created At</TableHead>
                 </TableRow>
@@ -79,8 +79,26 @@ export default function Page() {
                     <TableCell className="text-nowrap">
                       {user.email}
                     </TableCell>
-                    <TableCell className="text-nowrap">
-                      {user.localDevelopmentAgencies?.map((lda) => lda.name).join(', ')}
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {user.localDevelopmentAgencies.slice(0, 2)?.map((lda) => (
+                          <Badge 
+                            key={lda.id} 
+                            variant="outline" 
+                            className="px-2 py-1 text-xs text-gray-700 rounded-sm"
+                          >
+                            <span className="max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap" title={lda.name}>{lda.name}</span>
+                          </Badge>
+                        ))}
+                        {user.localDevelopmentAgencies?.length > 2 && (
+                          <Badge 
+                            variant="outline" 
+                            className="px-2 py-1 text-xs rounded-sm"
+                          >
+                            <span title={`${user.localDevelopmentAgencies.slice(2).map(lda => lda.name).join(', ')}`}>{user.localDevelopmentAgencies.length - 2} more...</span>
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge className="w-full justify-center" variant={user.approved ? 'default' : 'destructive'}>{user.approved ? 'Yes' : 'No'}</Badge>
