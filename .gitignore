@@ -38,3 +38,5 @@ supabase/
 .vscode/
 
 prisma/scripts/*
+# Sentry Config File
+.env.sentry-build-plugin
