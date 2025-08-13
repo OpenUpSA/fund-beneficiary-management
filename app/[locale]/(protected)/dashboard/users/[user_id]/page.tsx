@@ -12,11 +12,10 @@ import { DeleteDialog } from "@/components/users/delete"
 import { use } from "react"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale, user_id }
-}: Readonly<{
-  params: { locale: string, user_id: string }
-}>) {
+export async function generateMetadata({ params: { locale, user_id } }: Readonly<{ params: { locale: string, user_id: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'UserPage' })
 
@@ -24,7 +23,10 @@ export async function generateMetadata({ params: { locale, user_id }
 
   return {
     title: `${user.name} - ${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 

@@ -10,11 +10,10 @@ import { FilteredMedia } from "@/components/media/filtered";
 import { fetchFund, fetchLocalDevelopmentAgencies } from "@/lib/data";
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form";
 import { revalidateTag } from "next/cache";
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale, fund_id }
-}: Readonly<{
-  params: { locale: string, fund_id: string }
-}>) {
+export async function generateMetadata({ params: { locale, fund_id } }: Readonly<{ params: { locale: string, fund_id: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FundPage' })
 
@@ -22,7 +21,10 @@ export async function generateMetadata({ params: { locale, fund_id }
 
   return {
     title: `${fund.name} - ${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 
@@ -32,13 +34,13 @@ interface FundTabPageProps {
 
 export default async function Page({ params }: FundTabPageProps) {
   const { fund_id, tab } = params;
-  
+
   // Validate tab parameter
   const validTabs = ["overview", "ldas", "forms", "contacts", "documents", "media"]
   if (!validTabs.includes(tab)) {
     redirect(`/dashboard/funds/${fund_id}/overview`)
   }
-  
+
   const fund = await fetchFund(fund_id);
   const ldas = await fetchLocalDevelopmentAgencies();
 
@@ -63,13 +65,13 @@ export default async function Page({ params }: FundTabPageProps) {
           switch (tab) {
             case "overview":
               return <Overview fund={fund} />;
-              
+
             case "ldas":
               return <FilteredLDAs ldas={ldas} />;
-              
+
             case "forms":
               return <FilteredForms />;
-              
+
             case "contacts":
               return (
                 <Card className="w-full">
@@ -88,21 +90,21 @@ export default async function Page({ params }: FundTabPageProps) {
                   </CardContent>
                 </Card>
               );
-              
+
             case "documents":
               return (
                 <FilteredDocuments
                   dataChanged={dataChanged}
                   documents={[]} />
               );
-              
+
             case "media":
               return (
                 <FilteredMedia
                   dataChanged={dataChanged}
                   media={[]} />
               );
-              
+
             default:
               return null;
           }

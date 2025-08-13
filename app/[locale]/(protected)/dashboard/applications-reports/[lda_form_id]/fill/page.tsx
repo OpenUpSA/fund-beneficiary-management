@@ -4,18 +4,23 @@ import { fetchLDAForm } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
 import Filler from "@/components/lda-forms/data-filler"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
 interface FormTemplatePageProps {
   params: { lda_form_id: string }
 }
 
-export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>) {
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FormTemplatePage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 

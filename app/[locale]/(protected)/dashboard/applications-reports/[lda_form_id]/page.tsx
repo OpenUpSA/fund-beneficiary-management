@@ -12,6 +12,8 @@ import { Form } from "@/types/forms"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/i18n/routing"
 import { NotebookPenIcon } from "lucide-react"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
 interface FormTemplatePageProps {
   params: { lda_form_id: string, locale: string }
@@ -24,13 +26,16 @@ interface BreadcrumbLink {
   isCurrent?: boolean;
 }
 
-export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>) {
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FormTemplatePage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 
@@ -51,7 +56,7 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
   ]
 
   if (from && typeof from === 'string') {
-    if(from==="lda") {
+    if (from === "lda") {
       if (ldaForm?.localDevelopmentAgency?.id) {
         breadcrumbLinks = [{
           label: ldaForm?.localDevelopmentAgency.name,
@@ -63,7 +68,7 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
 
   return (
     <div>
-      <BreadcrumbNav 
+      <BreadcrumbNav
         className="mb-4"
         links={breadcrumbLinks}
       />

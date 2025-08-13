@@ -5,17 +5,19 @@ import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { FilteredFunds } from "@/components/funds/filtered"
 import { fetchFocusAreas, fetchFunders, fetchFundingStatuses, fetchFunds, fetchLocations } from "@/lib/data"
 import { FormDialog } from '@/components/funds/form'
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale }
-}: Readonly<{
-  params: { locale: string }
-}>) {
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FundsPage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 

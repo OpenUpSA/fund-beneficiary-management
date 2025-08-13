@@ -9,17 +9,19 @@ import {
 import { revalidateTag } from "next/cache"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/types/models"
 import { FormStatus } from "@prisma/client"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale }
-}: Readonly<{
-  params: { locale: string }
-}>) {
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'LDAsPage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 

@@ -2,19 +2,21 @@ import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { DownloadIcon, Share2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
 import { FilteredReport } from "@/components/dashboard/filtered"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale }
-}: Readonly<{
-  params: { locale: string }
-}>) {
+
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'DashboardPage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 
