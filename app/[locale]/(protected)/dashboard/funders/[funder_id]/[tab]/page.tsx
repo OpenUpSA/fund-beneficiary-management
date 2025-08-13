@@ -7,20 +7,19 @@ import { FilteredDocuments } from "@/components/documents/filtered"
 import { Overview } from "@/components/funders/overview"
 import { FilteredFunds } from "@/components/funds/filtered"
 import { FilteredLDAs } from "@/components/ldas/filtered"
-import { 
-  fetchFunder, 
-  fetchFunderFunds, 
+import {
+  fetchFunder,
+  fetchFunderFunds,
   fetchLocalDevelopmentAgencies
 } from "@/lib/data"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
 import { FormDialog as OrganisationDetailFormDialog } from "@/components/organisations/form"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale, funder_id }
-}: Readonly<{
-  params: { locale: string, funder_id: string }
-}>) {
+export async function generateMetadata({ params: { locale, funder_id } }: Readonly<{ params: { locale: string, funder_id: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FunderPage' })
 
@@ -28,7 +27,10 @@ export async function generateMetadata({ params: { locale, funder_id }
 
   return {
     title: `${funder.name} - ${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 
@@ -38,13 +40,13 @@ interface FunderTabPageProps {
 
 export default async function Page({ params }: FunderTabPageProps) {
   const { funder_id, tab } = params
-  
+
   // Validate tab parameter
   const validTabs = ["overview", "funds", "funded", "contact", "documents", "media"]
   if (!validTabs.includes(tab)) {
     redirect(`/dashboard/funders/${funder_id}/overview`)
   }
-  
+
   const funder = await fetchFunder(funder_id)
   const funds = await fetchFunderFunds(funder_id)
   const ldas = await fetchLocalDevelopmentAgencies()
@@ -70,13 +72,13 @@ export default async function Page({ params }: FunderTabPageProps) {
           switch (tab) {
             case "overview":
               return <Overview funder={funder} />;
-              
+
             case "funds":
               return <FilteredFunds funds={funds} />;
-              
+
             case "funded":
               return <FilteredLDAs ldas={ldas} />;
-              
+
             case "contact":
               return (
                 <div className="sm:flex gap-4 mt-4">
@@ -113,21 +115,21 @@ export default async function Page({ params }: FunderTabPageProps) {
                   </Card>
                 </div>
               );
-              
+
             case "documents":
               return (
                 <FilteredDocuments
                   dataChanged={dataChanged}
                   documents={[]} />
               );
-              
+
             case "media":
               return (
                 <FilteredMedia
                   dataChanged={dataChanged}
                   media={[]} />
               );
-              
+
             default:
               return null;
           }

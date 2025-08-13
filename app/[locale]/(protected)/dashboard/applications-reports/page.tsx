@@ -8,17 +8,19 @@ import { revalidateTag } from "next/cache"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull } from "@/types/models"
 import { fetchAllLocalDevelopmentAgencyForms, fetchFormStatuses, fetchFormTemplates, fetchLocalDevelopmentAgencies } from "@/lib/data"
 import { FormStatus } from "@prisma/client"
+import * as Sentry from '@sentry/nextjs'
+import type { Metadata } from 'next'
 
-export async function generateMetadata({ params: { locale }
-}: Readonly<{
-  params: { locale: string }
-}>) {
+export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'ApplicationsAndReportsPage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,
-    description: tM('description')
+    description: tM('description'),
+    other: {
+      ...Sentry.getTraceData(),
+    }
   }
 }
 
