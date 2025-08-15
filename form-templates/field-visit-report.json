@@ -30,23 +30,63 @@
         },
         {
           "name": "staff_representatives_met",
+          "type": "radio",
+          "label": "Did you meet with any staff representatives?",
+          "options": [
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
+          ],
+          "required": true
+        },
+        {
+          "name": "staff_representatives_met_list",
           "type": "multiselect",
           "label": "Staff representatives met",
           "config": {
             "dynamicOptionTable": "staff_members"
           },
           "required": true,
-          "placeholder": "Select staff representatives met"
+          "placeholder": "Select staff representatives met",
+          "show_if": {
+            "field": "staff_representatives_met",
+            "value": "yes"
+          }
         },
         {
           "name": "committee_representatives_met",
+          "type": "radio",
+          "label": "Did you meet with any committee representatives?",
+          "options": [
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
+          ],
+          "required": true
+        },
+        {
+          "name": "committee_representatives_met_list",
           "type": "multiselect",
           "label": "Committee representatives met",
           "config": {
             "dynamicOptionTable": "committee_members"
           },
           "required": true,
-          "placeholder": "Select committee representatives met"
+          "placeholder": "Select committee representatives met",
+          "show_if": {
+            "field": "committee_representatives_met",
+            "value": "yes"
+          }
         }
       ]
     },
@@ -73,12 +113,12 @@
           "name": "updated_org_profile",
           "type": "textarea",
           "label": "Updated organisational profile",
-          "required": true,
-          "placeholder": "Enter details here",
           "show_if": {
             "field": "org_profile_changed",
             "value": "yes"
-          }
+          },
+          "required": true,
+          "placeholder": "Enter details here"
         },
         {
           "name": "visit_objectives",
