@@ -7,7 +7,7 @@ import { Contacts } from "@/components/contacts/list";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { FilteredDocuments } from "@/components/documents/filtered";
 import { FilteredMedia } from "@/components/media/filtered";
-import { fetchFund, fetchLocalDevelopmentAgencies } from "@/lib/data";
+import { fetchFund, fetchLocalDevelopmentAgencies, fetchFocusAreas, fetchDevelopmentStages, fetchUsers, fetchProvinces, fetchFundingStatuses } from "@/lib/data";
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form";
 import { revalidateTag } from "next/cache";
 import * as Sentry from '@sentry/nextjs'
@@ -43,6 +43,11 @@ export default async function Page({ params }: FundTabPageProps) {
 
   const fund = await fetchFund(fund_id);
   const ldas = await fetchLocalDevelopmentAgencies();
+  const focusAreas = await fetchFocusAreas()
+  const developmentStages = await fetchDevelopmentStages()
+  const programmeOfficers = await fetchUsers()
+  const provinces = await fetchProvinces()
+  const fundingStatus = await fetchFundingStatuses()
 
   const dataChanged = async () => {
     "use server"
@@ -67,7 +72,14 @@ export default async function Page({ params }: FundTabPageProps) {
               return <Overview fund={fund} />;
 
             case "ldas":
-              return <FilteredLDAs ldas={ldas} />;
+              return <FilteredLDAs 
+                ldas={ldas} 
+                focusAreas={focusAreas} 
+                developmentStages={developmentStages} 
+                programmeOfficers={programmeOfficers} 
+                provinces={provinces} 
+                fundingStatus={fundingStatus} 
+              />;
 
             case "forms":
               return <FilteredForms />;
