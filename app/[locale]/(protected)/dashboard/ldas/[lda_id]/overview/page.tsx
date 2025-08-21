@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { Overview } from "@/components/ldas/overview"
-import { fetchLocalDevelopmentAgency } from "@/lib/data"
+import { fetchLocalDevelopmentAgency, fetchFunds } from "@/lib/data"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -26,10 +26,11 @@ export default async function Page({ params }: LDAOverviewPageProps) {
   
   // Fetch LDA data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  const funds =  fetchFunds(lda_id)
 
   return (
     <div>
-      <Overview lda={lda} />
+      <Overview lda={lda} funds={funds}/>
     </div>
   )
 }

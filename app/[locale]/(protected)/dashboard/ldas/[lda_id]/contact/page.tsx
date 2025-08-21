@@ -34,7 +34,7 @@ export default async function Page({ params }: LDAContactPageProps) {
 
   const dataChanged = async () => {
     "use server"
-    revalidateTag('ldas')
+    revalidateTag(`lda-${lda_id}`)
   }
 
   const contactConnectCommand = {

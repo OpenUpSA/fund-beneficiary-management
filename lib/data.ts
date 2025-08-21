@@ -23,8 +23,14 @@ export async function fetchFunderFund(funder_id: string, fund_id: string): Promi
   return res.json()
 }
 
-export async function fetchFunds(): Promise<FundFull[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund`, { next: { tags: ['funds'] } })
+export async function fetchFunds(lda_id?: string): Promise<FundFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund`)
+  
+  if (lda_id) {
+    url.searchParams.append('ldaId', lda_id)
+  }
+  
+  const res = await fetch(url.toString(), { next: { tags: ['funds'] } })
   return res.json()
 }
 
@@ -69,7 +75,9 @@ export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentA
 }
 
 export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, { next: { tags: ['ldas'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, { 
+    next: { tags: ['ldas', `lda-${lda_id}`] } 
+  })
   return res.json()
 }
 

@@ -103,8 +103,6 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     })
   }, [])
 
-  console.log(sortColumn, sortDirection)
-
   const handleSearch = useCallback((term: string) => setSearchTerm(term), [])
 
   const handleFilterChange = useCallback((filterType: string, selected: FilterOption[]) => {
@@ -132,7 +130,6 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     return ldas.map(lda => ({ ...lda, _lcName: lda.name.toLowerCase() }))
   }, [ldas])
 
-  // 🔥 Single-pass derive filtered + sorted list, no setState, no extra render
   const filteredLDAs = useMemo(() => {
     const sel = (k: string) => (activeFilters[k] || []).map(o => o.id)
     const focusSel = sel('focus')

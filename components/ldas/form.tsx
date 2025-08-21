@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, UseFormReturn } from "react-hook-form"
 
 // Import the form schema
 import { FormSchema, FormValues } from "./manage-lda/form-schema"
@@ -23,8 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { PlusIcon, SettingsIcon } from "lucide-react"
-import { useState, useCallback } from "react"
+import { PlusIcon, SettingsIcon, Loader2 } from "lucide-react"
+import { useState, useCallback, Suspense, use } from "react"
 
 
 // Import tab components
@@ -34,12 +34,59 @@ import { OperationsTab } from "./manage-lda/operations"
 import { StaffTab } from "./manage-lda/staff"
 import { AccessTab } from "./manage-lda/access"
 
+// Loading component
+function FormTabLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 space-y-4">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Loading form data...</p>
+    </div>
+  )
+}
+
+// Data-fetching tab components using hooks instead of async functions
+function AdminTabWithData({ form, focusAreas, developmentStages, programmeOfficers }: { 
+  form: UseFormReturn<FormValues>,
+  focusAreas: Promise<FocusArea[]>,
+  developmentStages: Promise<DevelopmentStage[]>,
+  programmeOfficers: Promise<UserWithLDAsBasic[]>
+}) {
+  // Use the 'use' hook to unwrap promises in a way compatible with Suspense
+  const resolvedFocusAreas = use(focusAreas);
+  const resolvedDevelopmentStages = use(developmentStages);
+  const resolvedProgrammeOfficers = use(programmeOfficers);
+  
+  return (
+    <AdminTab
+      form={form}
+      focusAreas={resolvedFocusAreas}
+      developmentStages={resolvedDevelopmentStages}
+      programmeOfficers={resolvedProgrammeOfficers}
+    />
+  )
+}
+
+function DetailsTabWithData({ form, provinces }: { 
+  form: UseFormReturn<FormValues>,
+  provinces: Promise<Province[]>
+}) {
+  // Use the 'use' hook to unwrap promises in a way compatible with Suspense
+  const resolvedProvinces = use(provinces);
+  
+  return (
+    <DetailsTab
+      form={form}
+      provinces={resolvedProvinces}
+    />
+  )
+}
+
 interface FormDialogProps {
   lda?: LocalDevelopmentAgencyFull
-  developmentStages: DevelopmentStage[]
-  focusAreas: FocusArea[]
-  provinces: Province[]
-  programmeOfficers: UserWithLDAsBasic[]
+  focusAreas?: Promise<FocusArea[]>
+  developmentStages?: Promise<DevelopmentStage[]>
+  programmeOfficers?: Promise<UserWithLDAsBasic[]>
+  provinces?: Promise<Province[]>
   callback: (tag: string) => void
 }
 
@@ -47,7 +94,7 @@ interface FormDialogProps {
 
 export function FormDialog({ lda, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false);
-
+  
   const [operationsData, setOperationsData] = useState(
     {
       vision: { 
@@ -139,6 +186,9 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
 
       toast.dismiss(toastId);
       toast.success(`Organisation operations info saved successfully`);
+      
+      // Call callback with the specific LDA tag to revalidate data
+      callback(`lda-${lda.id}`);
     } catch (error) {
       console.error(`Error saving ${field}:`, error);
       toast.dismiss(toastId);
@@ -230,14 +280,18 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         toast.dismiss(toastId)
         toast.success('LDA created successfully')
       }
-      callback('ldas')
+      // Call callback with both general and specific LDA tags
+      if (lda) {
+        callback(`lda-${lda.id}`)
+      } else {
+        callback('ldas')
+      }
     } catch (error) {
       console.error('Error:', error)
       toast.dismiss(toastId)
       toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
       setOpen(true) // Reopen the dialog to allow corrections
     }
-    callback('ldas')
   }
 
   return (
@@ -294,18 +348,26 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                 {/* Scrollable Content Area */}
                 <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
                   <TabsContent value="admin">
-                    <AdminTab
-                      form={form}
-                      focusAreas={focusAreas}
-                      developmentStages={developmentStages}
-                      programmeOfficers={programmeOfficers}
-                    />
+                    {focusAreas && developmentStages && programmeOfficers ? (
+                      <Suspense fallback={<FormTabLoading />}>
+                        <AdminTabWithData 
+                          form={form} 
+                          focusAreas={focusAreas} 
+                          developmentStages={developmentStages} 
+                          programmeOfficers={programmeOfficers} 
+                        />
+                      </Suspense>
+                    ) : <FormTabLoading />}
                   </TabsContent>
                   <TabsContent value="details">
-                    <DetailsTab
-                      form={form}
-                      provinces={provinces}
-                    />
+                    {provinces ? (
+                      <Suspense fallback={<FormTabLoading />}>
+                        <DetailsTabWithData 
+                          form={form} 
+                          provinces={provinces} 
+                        />
+                      </Suspense>
+                    ) : <FormTabLoading />}
                   </TabsContent>
                   {lda && (
                     <>
@@ -317,10 +379,10 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                         />
                       </TabsContent>
                       <TabsContent value="staff">
-                        <StaffTab staffMembers={lda.staffMembers ?? []} ldaId={lda.id} />
+                        <StaffTab staffMembers={lda.staffMembers ?? []} ldaId={lda.id} callback={callback}/>
                       </TabsContent>
                       <TabsContent value="access">
-                        <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} />
+                        <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} callback={callback}/>
                       </TabsContent>
                     </>
                   )}

@@ -30,7 +30,7 @@ export default async function Page({ params }: LDADocumentsPageProps) {
 
   const dataChanged = async () => {
     "use server"
-    revalidateTag('ldas')
+    revalidateTag(`lda-${lda_id}`)
   }
 
   return (
