@@ -243,7 +243,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary" className="gap-2 items-center" size="default">
+        <Button className="gap-2 items-center" size="default">
           {lda ? <>
               <SettingsIcon className="h-4 w-4" />
               <span>Manage LDA</span>

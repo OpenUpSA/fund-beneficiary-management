@@ -10,7 +10,12 @@ import { FilteredLDAs } from "@/components/ldas/filtered"
 import {
   fetchFunder,
   fetchFunderFunds,
-  fetchLocalDevelopmentAgencies
+  fetchLocalDevelopmentAgencies,
+  fetchFocusAreas,
+  fetchDevelopmentStages,
+  fetchUsers,
+  fetchProvinces,
+  fetchFundingStatuses
 } from "@/lib/data"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
 import { FormDialog as OrganisationDetailFormDialog } from "@/components/organisations/form"
@@ -50,6 +55,11 @@ export default async function Page({ params }: FunderTabPageProps) {
   const funder = await fetchFunder(funder_id)
   const funds = await fetchFunderFunds(funder_id)
   const ldas = await fetchLocalDevelopmentAgencies()
+  const focusAreas = await fetchFocusAreas()
+  const developmentStages = await fetchDevelopmentStages()
+  const programmeOfficers = await fetchUsers()
+  const provinces = await fetchProvinces()
+  const fundingStatus = await fetchFundingStatuses()
 
   const dataChanged = async () => {
     "use server"
@@ -77,7 +87,14 @@ export default async function Page({ params }: FunderTabPageProps) {
               return <FilteredFunds funds={funds} />;
 
             case "funded":
-              return <FilteredLDAs ldas={ldas} />;
+              return <FilteredLDAs 
+                ldas={ldas} 
+                focusAreas={focusAreas} 
+                developmentStages={developmentStages} 
+                programmeOfficers={programmeOfficers} 
+                provinces={provinces} 
+                fundingStatus={fundingStatus} 
+              />;
 
             case "contact":
               return (

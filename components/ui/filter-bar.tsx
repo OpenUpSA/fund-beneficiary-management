@@ -14,6 +14,7 @@ interface FilterBarProps {
     options: FilterOption[]
   }[]
   activeFilters?: Record<string, FilterOption[]>
+  className?: string
 }
 
 export function FilterBar({
@@ -21,6 +22,7 @@ export function FilterBar({
   onResetFilters,
   filterConfigs,
   activeFilters,
+  className,
 }: FilterBarProps) {
 
   const handleFilterChange = (filterType: string, selectedOptions: FilterOption[]) => {
@@ -38,7 +40,7 @@ export function FilterBar({
   const hasActiveFilters = Object.values(activeFilters || {}).some(filters => filters.length > 0)
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${className}`}>
       {filterConfigs.map((config) => (
         <FilterButton
           key={config.type}

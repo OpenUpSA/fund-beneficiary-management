@@ -1,257 +1,317 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
 import { Card, CardContent } from "@/components/ui/card"
-import { useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
-import { AlertTriangleIcon, Clock3Icon } from "lucide-react"
+import { ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react"
 import { Badge } from "../ui/badge"
 import Link from "next/link"
 import { availableReportingStatuses } from "@/app/data"
-import { LocalDevelopmentAgencyFull } from "@/types/models"
-import { FocusArea, FundingStatus, Location, DevelopmentStage } from "@prisma/client"
+import { LocalDevelopmentAgencyFull, UserWithLDAsBasic } from "@/types/models"
+import { FocusArea, FundingStatus, Province, DevelopmentStage } from "@prisma/client"
 import { DynamicIcon } from "../dynamicIcon"
+import { FilterBar } from "@/components/ui/filter-bar"
+import { FilterOption } from "@/components/ui/filter-button"
+import { FormDialog } from "@/components/ldas/form"
+import React, { useCallback, useMemo, useState, useDeferredValue, startTransition } from "react"
 
-const getInitials = (name: string) =>
-  name.split(" ").map(word => word[0]).join("")
+const getInitials = (name: string) => name.split(" ").map(w => w[0]).join("")
+const getShortName = (name: string) => name.split(" ").map(w => w[0]).join("")
+
+type SortDirection = 'asc' | 'desc' | null
+type SortableColumn = 'name' | 'status' | null
 
 interface FilteredLDAsProps {
   ldas: LocalDevelopmentAgencyFull[]
   navigatedFrom?: string
+  focusAreas: FocusArea[]
+  developmentStages: DevelopmentStage[]
+  programmeOfficers: UserWithLDAsBasic[]
+  provinces: Province[]
+  fundingStatus: FundingStatus[]
+  callback?: (tag: string) => void
 }
 
-export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({ ldas, navigatedFrom }) => {
-
-  const [selectedDevelopmentStages, setSelectedDevelopmentStages] = useState<string[]>([])
-  const [selectedReportingStatuses, setSelectedReportingStatuses] = useState<string[]>([])
-  const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
-  const [selectedFundingStatuses, setSelectedFundingStatuses] = useState<string[]>([])
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([])
-  const [selectedFunders, setSelectedFunders] = useState<string[]>([])
+export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
+  ldas,
+  navigatedFrom,
+  focusAreas,
+  developmentStages,
+  programmeOfficers,
+  provinces,
+  fundingStatus,
+  callback
+}) => {
+  const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
 
-  // Extract all unique funders from the funds' funders arrays
-  const funders = [...new Map(
-    ldas.flatMap(lda =>
-      lda.funds.flatMap(fund =>
-        fund.funders.map((funder: { id: number; name: string }) =>
-          [funder.id, { id: funder.id, label: funder.name }]
-        )
-      )
-    )
-  ).values()]
+  // Defer filtering while user types -> smoother input
+  const deferredSearch = useDeferredValue(searchTerm)
 
-  const fundingStatuses: FundingStatus[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.fundingStatus || []).map((item) => [item.id, item])).values()
+  // Build once
+  const provinceMap = useMemo(() => {
+    const m = new Map<string, { label: string; shortName: string }>()
+    for (const { name, code } of provinces) m.set(code, { label: name, shortName: getShortName(name) })
+    return m
+  }, [provinces])
+
+  const statusOptions = useMemo<FilterOption[]>(
+    () => fundingStatus.map(({ id, label }) => ({ id: String(id), label })),
+    [fundingStatus]
+  )
+  const locationOptions = useMemo<FilterOption[]>(
+    () => provinces.map(({ id, name }) => ({ id: String(id), label: name })),
+    [provinces]
+  )
+  const stageOptions = useMemo<FilterOption[]>(
+    () => developmentStages.map(({ id, label }) => ({ id: String(id), label })),
+    [developmentStages]
+  )
+  const focusOptions = useMemo<FilterOption[]>(
+    () => focusAreas.map(({ id, label }) => ({ id: String(id), label })),
+    [focusAreas]
+  )
+  const reportingOptions = useMemo<FilterOption[]>(
+    () => availableReportingStatuses.map(({ value, label }) => ({ id: String(value), label })),
+    []
+  )
+  const poOptions = useMemo<FilterOption[]>(
+    () => programmeOfficers.map(({ id, name }) => ({ id: String(id), label: name })),
+    [programmeOfficers]
   )
 
-  const focusAreas: FocusArea[] = [
-    ...new Map(
-      ldas.flatMap((lda) => lda.focusAreas || []).map((item) => [item.id, item])
-    ).values(),
-  ]
+  const filterConfigs = useMemo(() => ([
+    { type: 'status', label: 'Status', options: statusOptions },
+    { type: 'stage', label: 'Stage', options: stageOptions },
+    { type: 'location', label: 'Province', options: locationOptions },
+    { type: 'focus', label: 'Focus area', options: focusOptions },
+    { type: 'reporting', label: 'Reporting', options: reportingOptions },
+    { type: 'po', label: 'PO', options: poOptions },
+  ]), [statusOptions, stageOptions, locationOptions, focusOptions, reportingOptions, poOptions])
 
-  const locations: Location[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.location || []).map((item) => [item.id, item])).values()
-  )
+  const handleSort = useCallback((column: SortableColumn) => {
+    setSortColumn(prev => {
+      console.log(prev, column)
+      if (prev === column) {
+        setSortDirection(dir => (dir === 'asc' ? 'desc' : dir === 'desc' ? null : 'asc'))
+        return column
+      }
+      setSortDirection('asc')
+      return column
+    })
+  }, [])
 
-  const developmentStages: DevelopmentStage[] = Array.from(
-    new Map(ldas.flatMap((lda) => lda.developmentStage || []).map((item) => [item.id, item])).values()
-  )
+  console.log(sortColumn, sortDirection)
 
-  const years = new Set<number>()
+  const handleSearch = useCallback((term: string) => setSearchTerm(term), [])
 
-  ldas.forEach((lda) => {
-    if (lda.fundingStart) years.add(new Date(lda.fundingStart).getFullYear())
-    if (lda.fundingEnd) years.add(new Date(lda.fundingEnd).getFullYear())
-  })
+  const handleFilterChange = useCallback((filterType: string, selected: FilterOption[]) => {
+    // Avoid blocking input while we compute
+    startTransition(() => {
+      setActiveFilters(prev => ({ ...prev, [filterType]: selected }))
+    })
+  }, [])
 
-  const [filteredLDAs, setFilteredLDAs] = useState<LocalDevelopmentAgencyFull[]>(ldas)
+  const handleResetFilters = useCallback(() => {
+    startTransition(() => {
+      setActiveFilters({})
+      setSearchTerm("")
+    })
+  }, [])
 
-  const getLDAlink = (ldaid: number): string => {
+  const getLDAlink = useCallback((ldaid: number) => {
     return navigatedFrom
       ? `/dashboard/ldas/${ldaid}?from=${navigatedFrom}`
-      : `/dashboard/ldas/${ldaid}`;
-  }
+      : `/dashboard/ldas/${ldaid}`
+  }, [navigatedFrom])
 
-  useEffect(() => {
-    const filtered = ldas.filter((lda) => {
-      const funderMatch =
-        selectedFunders.length === 0 ||
-        lda.funds.some((fund) =>
-          fund.funders.some((funder: { id: number }) => selectedFunders.includes(String(funder.id)))
-        )
+  // Precompute lowercase names for search once per LDA array
+  const ldasIndexed = useMemo(() => {
+    return ldas.map(lda => ({ ...lda, _lcName: lda.name.toLowerCase() }))
+  }, [ldas])
 
-      const focusAreaMatch =
-        selectedFocusAreas.length === 0 ||
-        lda.focusAreas.some((focusArea) =>
-          selectedFocusAreas.includes(String(focusArea.id))
-        )
+  // 🔥 Single-pass derive filtered + sorted list, no setState, no extra render
+  const filteredLDAs = useMemo(() => {
+    const sel = (k: string) => (activeFilters[k] || []).map(o => o.id)
+    const focusSel = sel('focus')
+    const locSel = sel('location')
+    const stageSel = sel('stage')
+    const statusSel = sel('status')
+    const reportingSel = sel('reporting') // unused for now
+    const poSel = sel('po')
 
-      const locationMatch =
-        selectedLocations.length === 0 ||
-        selectedLocations.includes(String(lda.locationId))
+    let result = ldasIndexed.filter(lda => {
+      if (deferredSearch && !lda._lcName.includes(deferredSearch.toLowerCase())) return false
 
-      const developmentStageMatch =
-        selectedDevelopmentStages.length === 0 ||
-        selectedDevelopmentStages.includes(String(lda.developmentStageId))
+      const focusMatch = !focusSel.length || lda.focusAreas.some(f => focusSel.includes(String(f.id)))
+      const locMatch = !locSel.length || locSel.includes(String(lda.locationId))
+      const stageMatch = !stageSel.length || stageSel.includes(String(lda.developmentStageId))
+      const statusMatch = !statusSel.length || statusSel.includes(String(lda.fundingStatusId))
+      const poMatch = !poSel.length || (lda.programmeOfficerId && poSel.includes(String(lda.programmeOfficerId)))
+      const reportingMatch = !reportingSel.length // TODO when model supports it
 
-      const fundingStatusMatch =
-        selectedFundingStatuses.length === 0 ||
-        selectedFundingStatuses.includes(String(lda.fundingStatusId))
-
-      const searchMatch =
-        searchTerm.trim() === "" ||
-        lda.name.toLowerCase().includes(searchTerm.toLowerCase())
-
-      return focusAreaMatch && fundingStatusMatch && searchMatch && locationMatch && funderMatch && developmentStageMatch
+      return focusMatch && locMatch && stageMatch && statusMatch && poMatch && reportingMatch
     })
 
-    setFilteredLDAs(filtered)
-  }, [selectedFocusAreas, selectedFundingStatuses, searchTerm, selectedLocations, selectedFunders, selectedDevelopmentStages, ldas])
+    if (sortColumn && sortDirection) {
+      const dir = sortDirection === 'asc' ? 1 : -1
+      result = [...result].sort((a, b) => {
+        if (sortColumn === 'name') {
+          return dir * a.name.localeCompare(b.name)
+        }
+        if (sortColumn === 'status') {
+          const sa = a.fundingStatus?.label || ''
+          const sb = b.fundingStatus?.label || ''
+          return dir * sa.localeCompare(sb)
+        }
+        return 0
+      })
+    }
+    return result
+  }, [ldasIndexed, deferredSearch, activeFilters, sortColumn, sortDirection])
+
+  // Province badge renderer (stable)
+  const ProvinceBadge = useCallback(({ code }: { code?: string }) => {
+    if (!code) return null
+    const info = provinceMap.get(code)
+    if (!info) return null
+    return <Badge variant="outline" title={info.label}>{info.shortName}</Badge>
+  }, [provinceMap])
+
+  const LdaRow = useMemo(() => React.memo(function LdaRow({ lda }: { lda: LocalDevelopmentAgencyFull }) {
+    return (
+      <TableRow key={lda.id}>
+        <TableCell className="p-2">
+          <Link href={getLDAlink(lda.id)}>{lda.name}</Link>
+        </TableCell>
+        <TableCell className="p-2">
+          {lda.fundingStatus && <Badge variant="outline">{lda.fundingStatus.label}</Badge>}
+        </TableCell>
+        <TableCell className="p-2">
+          {lda.developmentStage && <Badge variant="outline">{lda.developmentStage.label}</Badge>}
+        </TableCell>
+        <TableCell className="text-nowrap p-2">
+          {lda.organisationDetail?.physicalProvince && <ProvinceBadge code={lda.organisationDetail.physicalProvince} />}
+        </TableCell>
+        <TableCell className="p-2">
+          <div className="flex items-center space-x-2">
+            {lda.focusAreas.map(fa => (
+              <Badge
+                key={`lda-${lda.id}-focusArea-${fa.id}`}
+                variant="outline"
+                title={fa.label}
+                className="p-1"
+              >
+                <DynamicIcon name={fa.icon} size={14} className="m-0" />
+              </Badge>
+            ))}
+          </div>
+        </TableCell>
+        <TableCell className="p-2">
+          <Badge
+            variant="outline"
+            className="text-slate-700 border-slate-200 border rounded-full w-6 h-6 text-xs flex items-center justify-center p-0"
+            title={lda.programmeOfficer?.name ?? "No Programme Officer assigned"}
+          >
+            {getInitials(lda.programmeOfficer?.name ?? "")}
+          </Badge>
+        </TableCell>
+      </TableRow>
+    )
+  }), [ProvinceBadge, getLDAlink])
+  // ^ React.memo prevents re-render of rows when unrelated state changes
 
   return (
-    <div className="sm:flex sm:space-x-4 mt-4">
-      <div className="sm:w-80">
-        <h2 className="font-semibold text-sm mb-1">Filters</h2>
-        <div className="space-y-2">
-          <div>
-            <Input
-              type="search"
-              id="search"
-              placeholder="Search..."
-              className="bg-white dark:bg-black"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+    <>
+      <div className="space-y-4 mt-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Input
+                type="search"
+                id="search"
+                placeholder="Filter LDAs..."
+                className="pr-8 h-9"
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+            <FilterBar
+              onFilterChange={handleFilterChange}
+              onResetFilters={handleResetFilters}
+              filterConfigs={filterConfigs}
+              activeFilters={activeFilters}
+              className="hidden md:flex"
             />
           </div>
-          <div>
-            <InputMultiSelect
-              options={fundingStatuses.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedFundingStatuses}
-              onValueChange={(values: string[]) => setSelectedFundingStatuses(values)}
-              placeholder="All funding statuses"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
-          <div>
-            <InputMultiSelect
-              options={locations.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedLocations}
-              onValueChange={(values: string[]) => setSelectedLocations(values)}
-              placeholder="All locations"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
-          <div>
-            <InputMultiSelect
-              options={developmentStages.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedDevelopmentStages}
-              onValueChange={(values: string[]) => setSelectedDevelopmentStages(values)}
-              placeholder="All development stages"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
-          <div>
-            <InputMultiSelect
-              options={focusAreas.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedFocusAreas}
-              onValueChange={(values: string[]) => setSelectedFocusAreas(values)}
-              placeholder="All focus areas"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
-          <div>
-            <InputMultiSelect
-              options={funders.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedFunders}
-              onValueChange={(values: string[]) => setSelectedFunders(values)}
-              placeholder="All funders"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
-          <div>
-            <InputMultiSelect
-              options={availableReportingStatuses}
-              value={selectedReportingStatuses}
-              onValueChange={(values: string[]) => setSelectedReportingStatuses(values)}
-              placeholder="Any reporting status"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
+          {callback && (
+            <FormDialog
+              focusAreas={focusAreas}
+              developmentStages={developmentStages}
+              programmeOfficers={programmeOfficers}
+              provinces={provinces}
+              callback={callback}
+            />
+          )}
         </div>
+
+        <Card className="w-full">
+          <CardContent className="p-0">
+            <div className="h-[calc(100vh-650px)] min-h-[300px] overflow-y-auto">
+              <Table className="text-xs w-full relative">
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead className="h-10 cursor-pointer select-none" onClick={() => handleSort('name')}>
+                      <div className="flex items-center justify-start">
+                        <span>Name</span>
+                        <span className="ml-1">
+                          {sortColumn === 'name' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-10 cursor-pointer select-none" onClick={() => handleSort('status')}>
+                      <div className="flex items-center justify-start">
+                        <span>Status</span>
+                        <span className="ml-1">
+                          {sortColumn === 'status' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-10">Stage</TableHead>
+                    <TableHead className="h-10">Province</TableHead>
+                    <TableHead className="h-10 text-nowrap">Focus area(s)</TableHead>
+                    <TableHead className="h-10"><abbr title="Programme Officer">PO</abbr></TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {filteredLDAs.length > 0 ? (
+                    filteredLDAs.map(lda => <LdaRow key={lda.id} lda={lda} />)
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                        No LDAs found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      <Card className="w-full">
-        <CardContent>
-          <Table className="text-xs w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-full">Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Province</TableHead>
-                <TableHead className="text-nowrap">Focus Areas</TableHead>
-                <TableHead>Funders</TableHead>
-                <TableHead>Reporting</TableHead>
-                <TableHead><abbr title="Programme Officer">PO</abbr></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLDAs.map((lda) => (
-                <TableRow key={lda.id}>
-                  <TableCell>
-                    <Link href={getLDAlink(lda.id)}>
-                      {lda.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{lda.fundingStatus && <Badge variant="outline">{lda.fundingStatus.label}</Badge>}</TableCell>
-                  <TableCell className="text-nowrap">{lda.amount && `R${Number(lda.amount)}`}</TableCell>
-                  <TableCell>{lda.developmentStage && <Badge variant="outline">{lda.developmentStage.label}</Badge>}</TableCell>
-                  <TableCell className="text-nowrap">{lda.location && <Badge variant="outline">{lda.location.label}</Badge>}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {lda.focusAreas.map((focusArea) => <DynamicIcon key={`lda-${lda.id}-focusArea-${focusArea.id}`} name={focusArea.icon} size={10} />)}
-                    </div>
-                    <DynamicIcon name="Thermometer" size={10} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {
-                        [...new Set(lda.funds.flatMap((fund) => fund.funders.map(funder => funder.id)))].length
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="flex items-center space-x-1">
-                        <AlertTriangleIcon size={10} />
-                        <div>{1}</div>
-                      </Badge>
-                      <Badge variant="outline" className="flex items-center space-x-1">
-                        <Clock3Icon size={10} />
-                        <div>{2}</div>
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="bg-slate-400 text-white dark:text-black rounded-full w-5 h-5 text-[0.5rem] flex items-center justify-center" title={lda.programmeOfficer?.name ?? ""}>
-                      {getInitials(lda.programmeOfficer?.name ?? "")}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+
+      {ldas.length > 0 && (
+        <p className="text-sm text-gray-500 pt-4">Showing {filteredLDAs.length} of {ldas.length} LDAs</p>
+      )}
+    </>
   )
 }
