@@ -19,10 +19,10 @@ interface LDALayoutProps {
 export default async function Layout({ children, params }: LDALayoutProps) {
   const { lda_id } = params
   const lda = await fetchLocalDevelopmentAgency(lda_id)
-  const focusAreas = fetchFocusAreas()
-  const developmentStages = fetchDevelopmentStages()
-  const programmeOfficers = fetchUsers()
-  const provinces = fetchProvinces()
+  const focusAreas = await fetchFocusAreas()
+  const developmentStages = await fetchDevelopmentStages()
+  const programmeOfficers = await fetchUsers()
+  const provinces = await fetchProvinces()
 
   const dataChanged = async () => {
     "use server"

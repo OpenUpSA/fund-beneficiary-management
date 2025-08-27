@@ -42,7 +42,6 @@ export function AdminTab({
   programmeOfficers 
 }: AdminTabProps) {
 
-  console.log("NSIDE ADMIN TAB")
   return (
     <div className="space-y-4 mt-4">
       <FormField

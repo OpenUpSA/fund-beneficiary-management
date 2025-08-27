@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, UseFormReturn } from "react-hook-form"
+import { useForm } from "react-hook-form"
 
 // Import the form schema
 import { FormSchema, FormValues } from "./manage-lda/form-schema"
@@ -23,8 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { PlusIcon, SettingsIcon, Loader2 } from "lucide-react"
-import { useState, useCallback, Suspense, use } from "react"
+import { PlusIcon, SettingsIcon } from "lucide-react"
+import { useState, useCallback } from "react"
 
 
 // Import tab components
@@ -34,59 +34,13 @@ import { OperationsTab } from "./manage-lda/operations"
 import { StaffTab } from "./manage-lda/staff"
 import { AccessTab } from "./manage-lda/access"
 
-// Loading component
-function FormTabLoading() {
-  return (
-    <div className="flex flex-col items-center justify-center py-8 space-y-4">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">Loading form data...</p>
-    </div>
-  )
-}
-
-// Data-fetching tab components using hooks instead of async functions
-function AdminTabWithData({ form, focusAreas, developmentStages, programmeOfficers }: { 
-  form: UseFormReturn<FormValues>,
-  focusAreas: Promise<FocusArea[]>,
-  developmentStages: Promise<DevelopmentStage[]>,
-  programmeOfficers: Promise<UserWithLDAsBasic[]>
-}) {
-  // Use the 'use' hook to unwrap promises in a way compatible with Suspense
-  const resolvedFocusAreas = use(focusAreas);
-  const resolvedDevelopmentStages = use(developmentStages);
-  const resolvedProgrammeOfficers = use(programmeOfficers);
-  
-  return (
-    <AdminTab
-      form={form}
-      focusAreas={resolvedFocusAreas}
-      developmentStages={resolvedDevelopmentStages}
-      programmeOfficers={resolvedProgrammeOfficers}
-    />
-  )
-}
-
-function DetailsTabWithData({ form, provinces }: { 
-  form: UseFormReturn<FormValues>,
-  provinces: Promise<Province[]>
-}) {
-  // Use the 'use' hook to unwrap promises in a way compatible with Suspense
-  const resolvedProvinces = use(provinces);
-  
-  return (
-    <DetailsTab
-      form={form}
-      provinces={resolvedProvinces}
-    />
-  )
-}
 
 interface FormDialogProps {
   lda?: LocalDevelopmentAgencyFull
-  focusAreas?: Promise<FocusArea[]>
-  developmentStages?: Promise<DevelopmentStage[]>
-  programmeOfficers?: Promise<UserWithLDAsBasic[]>
-  provinces?: Promise<Province[]>
+  focusAreas: FocusArea[]
+  developmentStages: DevelopmentStage[]
+  programmeOfficers: UserWithLDAsBasic[]
+  provinces: Province[]
   callback: (tag: string) => void
 }
 
@@ -348,26 +302,18 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                 {/* Scrollable Content Area */}
                 <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
                   <TabsContent value="admin">
-                    {focusAreas && developmentStages && programmeOfficers ? (
-                      <Suspense fallback={<FormTabLoading />}>
-                        <AdminTabWithData 
-                          form={form} 
-                          focusAreas={focusAreas} 
-                          developmentStages={developmentStages} 
-                          programmeOfficers={programmeOfficers} 
-                        />
-                      </Suspense>
-                    ) : <FormTabLoading />}
+                    <AdminTab 
+                      form={form}
+                      focusAreas={focusAreas}
+                      developmentStages={developmentStages}
+                      programmeOfficers={programmeOfficers}
+                    />
                   </TabsContent>
                   <TabsContent value="details">
-                    {provinces ? (
-                      <Suspense fallback={<FormTabLoading />}>
-                        <DetailsTabWithData 
-                          form={form} 
-                          provinces={provinces} 
-                        />
-                      </Suspense>
-                    ) : <FormTabLoading />}
+                    <DetailsTab 
+                      form={form} 
+                      provinces={provinces} 
+                    />
                   </TabsContent>
                   {lda && (
                     <>

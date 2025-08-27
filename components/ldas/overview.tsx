@@ -206,18 +206,18 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R{(lda.totalFunding || 0).toLocaleString('en-ZA')}</h3>
+                <h3 className="text-2xl font-bold">R 0</h3>
                 <p className="text-sm text-gray-500">{lda.totalFundingRounds || 0} Funding rounds</p>
               </div>
             </CardContent>
           </Card>
           
           {/* Current Year Funding */}
-          <Card>
+          <Card>  
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Current year funding</p>
-                <h3 className="text-2xl font-bold">R{((lda.currentYearFunding || lda.totalFunding / 2) || 0).toLocaleString('en-ZA')}</h3>
+                <h3 className="text-2xl font-bold">R 0</h3>
                 <p className="text-sm text-gray-500">Financial year {new Date().getFullYear()}</p>
               </div>
             </CardContent>
@@ -229,7 +229,7 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-1">
                   <p className="text-sm text-gray-500">{fund.name || 'Fund'} allocation</p>
-                  <h3 className="text-2xl font-bold">R{((lda.totalFunding || 0) / (lda.funds?.length || 1)).toLocaleString('en-ZA')}</h3>
+                  <h3 className="text-2xl font-bold">R 0</h3>
                   <p className="text-sm text-gray-500">Estimated allocation</p>
                 </div>
               </CardContent>
@@ -254,8 +254,8 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R{(lda.totalFunding || 0).toLocaleString('en-ZA')}</h3>
-                <p className="text-sm text-gray-500">{lda.totalFundingRounds || 0} Funding rounds</p>
+                <h3 className="text-2xl font-bold">R 0</h3>
+                <p className="text-sm text-gray-500">0 Funding rounds</p>
               </div>
             </CardContent>
           </Card>
@@ -263,8 +263,8 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R{(lda.totalFunding || 0).toLocaleString('en-ZA')}</h3>
-                <p className="text-sm text-gray-500">{lda.totalFundingRounds || 0} Funding rounds</p>
+                <h3 className="text-2xl font-bold">R 0</h3>
+                <p className="text-sm text-gray-500">0 Funding rounds</p>
               </div>
             </CardContent>
           </Card>
@@ -272,8 +272,8 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R{(lda.totalFunding || 0).toLocaleString('en-ZA')}</h3>
-                <p className="text-sm text-gray-500">{lda.totalFundingRounds || 0} Funding rounds</p>
+                <h3 className="text-2xl font-bold">R 0</h3>
+                <p className="text-sm text-gray-500">0 Funding rounds</p>
               </div>
             </CardContent>
           </Card>
@@ -281,8 +281,8 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R{(lda.totalFunding || 0).toLocaleString('en-ZA')}</h3>
-                <p className="text-sm text-gray-500">{lda.totalFundingRounds || 0} Funding rounds</p>
+                <h3 className="text-2xl font-bold">R 0</h3>
+                <p className="text-sm text-gray-500">0 Funding rounds</p>
               </div>
             </CardContent>
           </Card>

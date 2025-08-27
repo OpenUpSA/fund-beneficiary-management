@@ -198,6 +198,7 @@ export function AccessTab({ userAccess = [], ldaId, callback }: AccessTabProps) 
       }
 
       setUsers(users.filter(user => user.id !== userToDelete));
+      callback(`lda-${ldaId}`)
       toast.success("User access deleted successfully");
     } catch (error) {
       console.error("Error deleting user access:", error);

@@ -173,6 +173,7 @@ export function StaffTab({ staffMembers, ldaId, callback }: StaffTabProps) {
       
       // Remove the deleted staff from the list
       setStaff(staff.filter(s => s.id !== staffToDelete));
+      callback(`lda-${ldaId}`);
       toast.success("Staff member deleted successfully");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'An unknown error occurred');
