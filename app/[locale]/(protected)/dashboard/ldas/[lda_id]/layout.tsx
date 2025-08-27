@@ -26,7 +26,7 @@ export default async function Layout({ children, params }: LDALayoutProps) {
 
   const dataChanged = async () => {
     "use server"
-    revalidateTag('ldas')
+    revalidateTag(`lda-${lda_id}`)
   }
 
   return (

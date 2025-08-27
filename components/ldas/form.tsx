@@ -34,12 +34,13 @@ import { OperationsTab } from "./manage-lda/operations"
 import { StaffTab } from "./manage-lda/staff"
 import { AccessTab } from "./manage-lda/access"
 
+
 interface FormDialogProps {
   lda?: LocalDevelopmentAgencyFull
-  developmentStages: DevelopmentStage[]
   focusAreas: FocusArea[]
-  provinces: Province[]
+  developmentStages: DevelopmentStage[]
   programmeOfficers: UserWithLDAsBasic[]
+  provinces: Province[]
   callback: (tag: string) => void
 }
 
@@ -47,7 +48,7 @@ interface FormDialogProps {
 
 export function FormDialog({ lda, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false);
-
+  
   const [operationsData, setOperationsData] = useState(
     {
       vision: { 
@@ -139,6 +140,9 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
 
       toast.dismiss(toastId);
       toast.success(`Organisation operations info saved successfully`);
+      
+      // Call callback with the specific LDA tag to revalidate data
+      callback(`lda-${lda.id}`);
     } catch (error) {
       console.error(`Error saving ${field}:`, error);
       toast.dismiss(toastId);
@@ -230,14 +234,18 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         toast.dismiss(toastId)
         toast.success('LDA created successfully')
       }
-      callback('ldas')
+      // Call callback with both general and specific LDA tags
+      if (lda) {
+        callback(`lda-${lda.id}`)
+      } else {
+        callback('ldas')
+      }
     } catch (error) {
       console.error('Error:', error)
       toast.dismiss(toastId)
       toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
       setOpen(true) // Reopen the dialog to allow corrections
     }
-    callback('ldas')
   }
 
   return (
@@ -294,7 +302,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                 {/* Scrollable Content Area */}
                 <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
                   <TabsContent value="admin">
-                    <AdminTab
+                    <AdminTab 
                       form={form}
                       focusAreas={focusAreas}
                       developmentStages={developmentStages}
@@ -302,9 +310,9 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                     />
                   </TabsContent>
                   <TabsContent value="details">
-                    <DetailsTab
-                      form={form}
-                      provinces={provinces}
+                    <DetailsTab 
+                      form={form} 
+                      provinces={provinces} 
                     />
                   </TabsContent>
                   {lda && (
@@ -317,10 +325,10 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                         />
                       </TabsContent>
                       <TabsContent value="staff">
-                        <StaffTab staffMembers={lda.staffMembers ?? []} ldaId={lda.id} />
+                        <StaffTab staffMembers={lda.staffMembers ?? []} ldaId={lda.id} callback={callback}/>
                       </TabsContent>
                       <TabsContent value="access">
-                        <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} />
+                        <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} callback={callback}/>
                       </TabsContent>
                     </>
                   )}

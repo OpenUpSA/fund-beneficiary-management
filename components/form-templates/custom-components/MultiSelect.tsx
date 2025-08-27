@@ -51,7 +51,6 @@ export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSe
           setIsLoading(false)
           return
       }
-      console.log("apiUrl", apiUrl);
       // Fetch options from the API
       fetch(apiUrl)
         .then(response => {

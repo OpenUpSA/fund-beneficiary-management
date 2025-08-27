@@ -21,15 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
         location: true,
         programmeOfficer: true,
         developmentStage: true,
-        funds: {
-          include: {
-            funders: true
-          }
-        },
         organisationDetail: true,
-        contacts: true,
-        media: true,
-        documents: true,
         operations: true,
         userAccess: true,
         staffMembers: true,
