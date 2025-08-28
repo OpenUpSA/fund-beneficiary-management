@@ -25,7 +25,7 @@ interface Props {
 }
 
 type SortDirection = 'asc' | 'desc' | null
-type SortableColumn = 'name' | 'amount' | 'status' | 'submitted' | null
+type SortableColumn = 'name' | 'amount' | 'status' | 'submitted' | 'approved' | null
 
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
   const [searchTerm, setSearchTerm] = useState("")
@@ -136,6 +136,11 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           const tb = b.submitted ? new Date(b.submitted as unknown as Date).getTime() : Number.POSITIVE_INFINITY
           return dir * (ta - tb)
         }
+        if (sortColumn === 'approved') {
+          const ta = a.approved ? new Date(a.approved as unknown as Date).getTime() : Number.POSITIVE_INFINITY
+          const tb = b.approved ? new Date(b.approved as unknown as Date).getTime() : Number.POSITIVE_INFINITY
+          return dir * (ta - tb)
+        }
         return 0
       })
     }
@@ -231,7 +236,17 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   </span>
                 </div>
               </TableHead>
-              <TableHead className="font-medium">Approved</TableHead>
+              <TableHead className="font-medium cursor-pointer select-none" onClick={() => handleSort('approved')}>
+                <div className="flex items-center justify-start">
+                  <span>Approved</span>
+                  <span className="ml-1">
+                    {sortColumn === 'approved' && sortDirection !== null
+                      ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                      : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                    }
+                  </span>
+                </div>
+              </TableHead>
               <TableHead className="font-medium">Reporting status</TableHead>
             </TableRow>
           </TableHeader>
