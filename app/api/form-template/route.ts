@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       data: data
     }
     const record = await prisma.formTemplate.create(query)
-    revalidateTag('ldas')
+    revalidateTag('templates')
     return NextResponse.json(record)
   } catch {
     return NextResponse.json({ error: "Failed to create" }, { status: 500 })

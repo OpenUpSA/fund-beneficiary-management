@@ -111,7 +111,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
       })
     }
 
-    callback('ldas')
+    callback('templates')
   }
 
   return (
