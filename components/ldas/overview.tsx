@@ -95,9 +95,8 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
               <div className="flex gap-2">
                 {lda.focusAreas?.length > 0 ? 
                   lda.focusAreas.map(area => (
-                    <Badge key={area.id} variant="outline" className="flex items-center gap-1">
+                    <Badge key={area.id} variant="outline" className="flex items-center gap-1" title={area.label}>
                       <DynamicIcon name={area.icon} size={16} />
-                      <span>{area.label}</span>
                     </Badge>
                   )) : 
                   "None specified"}
