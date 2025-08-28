@@ -10,8 +10,6 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
   const records = await prisma.localDevelopmentAgencyForm.findMany({
     where: { localDevelopmentAgencyId: ldaId },
     include: {
-      localDevelopmentAgency: true,
-      formTemplate: true,
       formStatus: true
     },
   });
