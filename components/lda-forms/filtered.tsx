@@ -106,8 +106,8 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
         searchTerm === "" ||
         ldaForm.title.toLowerCase().includes(searchTerm.toLowerCase())
 
-      const typeMatch = !typeSel.length || typeSel.includes(String((ldaForm as any).formTemplateId))
-      const statusMatch = !statusSel.length || statusSel.includes(String((ldaForm as any).formStatusId))
+      const typeMatch = !typeSel.length || typeSel.includes(String(ldaForm.formTemplateId))
+      const statusMatch = !statusSel.length || statusSel.includes(String(ldaForm.formStatusId))
       const dateForYear = (ldaForm.submitted ?? ldaForm.createdAt) as unknown as Date
       const yr = dateForYear ? new Date(dateForYear).getFullYear() : undefined
       const yearMatch = !yearSel.length || (yr ? yearSel.includes(String(yr)) : false)
@@ -122,8 +122,8 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           return dir * a.title.localeCompare(b.title)
         }
         if (sortColumn === 'amount') {
-          const av = Number((a as any).amount ?? 0)
-          const bv = Number((b as any).amount ?? 0)
+          const av = Number(a.formData && typeof a.formData === 'object' && 'amount' in a.formData ? a.formData.amount : 0)
+          const bv = Number(b.formData && typeof b.formData === 'object' && 'amount' in b.formData ? b.formData.amount : 0)
           return dir * (av - bv)
         }
         if (sortColumn === 'status') {
@@ -322,7 +322,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(Number((ldaForm as any).amount ?? 0))}
+                    {formatCurrency(Number(ldaForm.amount ?? 0))}
                   </TableCell>
                   <TableCell>
                     {getStatusBadge()}
