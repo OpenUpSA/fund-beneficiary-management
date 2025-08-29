@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -80,38 +80,46 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setOpen(false)
+    let toastId: string | number | undefined
+    
+    try {
+      if (ldaForm) {
+        // Show updating toast
+        toastId = toast.loading('Updating form...')
+        const response = await fetch(`/api/lda-form/${ldaForm.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to update form')
+        }
+        
+        toast.dismiss(toastId)
+        toast.success('Form updated successfully')
+      } else {
+        // Show saving toast for new form
+        toastId = toast.loading('Adding form...')
+        const response = await fetch(`/api/lda-form`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to add form')
+        }
+        
+        toast.dismiss(toastId)
+        toast.success('Form added successfully')
+      }
 
-    if (ldaForm) {
-      toast({
-        title: 'Updating form...',
-        variant: 'processing'
-      })
-      await fetch(`/api/lda-form/${ldaForm.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      toast({
-        title: 'Form updated',
-        variant: 'success'
-      })
-    } else {
-      toast({
-        title: 'Adding form...',
-        variant: 'processing'
-      })
-      await fetch(`/api/lda-form`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
-      toast({
-        title: 'Form added',
-        variant: 'success'
-      })
+      callback('templates')
+    } catch (error) {
+      if (toastId) toast.dismiss(toastId)
+      toast.error(error instanceof Error ? error.message : 'An error occurred')
     }
-
-    callback('ldas')
   }
 
   return (

@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, FormTemplateWithRelations } from "@/types/models"
 import { format } from "date-fns"
-import { AlertTriangleIcon, Clock3Icon } from "lucide-react"
+import { AlertTriangleIcon, Clock3Icon, ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -24,10 +24,14 @@ interface Props {
   navigatedFrom?: string
 }
 
+type SortDirection = 'asc' | 'desc' | null
+type SortableColumn = 'name' | 'amount' | 'status' | 'submitted' | 'approved' | null
+
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredForms, setFilteredForms] = useState(ldaForms);
-  const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({});
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
+  const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null)
 
   // Filter configurations
   const typeOptions: FilterOption[] = formTemplates.map(template => ({
@@ -75,22 +79,78 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
   );
 
   const handleResetFilters = () => {
-    setSearchTerm("");
-    setActiveFilters({});
-    setFilteredForms(ldaForms);
+    setSearchTerm("")
+    setActiveFilters({})
   };
 
-  useEffect(() => {
-    const filtered = ldaForms.filter((ldaForm) => {
+  const handleSort = useCallback((column: SortableColumn) => {
+    setSortColumn(prev => {
+      if (prev === column) {
+        setSortDirection(dir => (dir === 'asc' ? 'desc' : dir === 'desc' ? null : 'asc'))
+        return column
+      }
+      setSortDirection('asc')
+      return column
+    })
+  }, [])
+
+  const filteredForms = useMemo(() => {
+    const sel = (k: string) => (activeFilters[k] || []).map(o => String(o.id))
+    const typeSel = sel('type')
+    const statusSel = sel('status')
+    const yearSel = sel('year')
+    // reporting currently not computed in data model
+
+    let result = ldaForms.filter((ldaForm) => {
       const searchMatch =
         searchTerm === "" ||
         ldaForm.title.toLowerCase().includes(searchTerm.toLowerCase())
 
-      // TODO: Implement filter logic
-      return searchMatch
+      const typeMatch = !typeSel.length || typeSel.includes(String(ldaForm.formTemplateId))
+      const statusMatch = !statusSel.length || statusSel.includes(String(ldaForm.formStatusId))
+      const dateForYear = (ldaForm.submitted ?? ldaForm.createdAt) as unknown as Date
+      const yr = dateForYear ? new Date(dateForYear).getFullYear() : undefined
+      const yearMatch = !yearSel.length || (yr ? yearSel.includes(String(yr)) : false)
+
+      return searchMatch && typeMatch && statusMatch && yearMatch
     })
-    setFilteredForms(filtered)
-  }, [searchTerm, ldaForms, activeFilters])
+
+    if (sortColumn && sortDirection) {
+      const dir = sortDirection === 'asc' ? 1 : -1
+      result = [...result].sort((a, b) => {
+        if (sortColumn === 'name') {
+          return dir * a.title.localeCompare(b.title)
+        }
+        if (sortColumn === 'amount') {
+          const av = Number(a.formData && typeof a.formData === 'object' && 'amount' in a.formData ? a.formData.amount : 0)
+          const bv = Number(b.formData && typeof b.formData === 'object' && 'amount' in b.formData ? b.formData.amount : 0)
+          return dir * (av - bv)
+        }
+        if (sortColumn === 'status') {
+          const sa = a.formStatus?.label || ''
+          const sb = b.formStatus?.label || ''
+          return dir * sa.localeCompare(sb)
+        }
+        if (sortColumn === 'submitted') {
+          const ta = a.submitted ? new Date(a.submitted as unknown as Date).getTime() : Number.POSITIVE_INFINITY
+          const tb = b.submitted ? new Date(b.submitted as unknown as Date).getTime() : Number.POSITIVE_INFINITY
+          return dir * (ta - tb)
+        }
+        if (sortColumn === 'approved') {
+          const ta = a.approved ? new Date(a.approved as unknown as Date).getTime() : Number.POSITIVE_INFINITY
+          const tb = b.approved ? new Date(b.approved as unknown as Date).getTime() : Number.POSITIVE_INFINITY
+          return dir * (ta - tb)
+        }
+        return 0
+      })
+    }
+    return result
+  }, [ldaForms, searchTerm, activeFilters, sortColumn, sortDirection])
+
+  const formatCurrency = (value: number) => {
+    if (isNaN(value)) return "-"
+    return 'R' + value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
 
   return (
     <div className="space-y-4">
@@ -131,12 +191,62 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
         <Table className="w-full">
           <TableHeader>
             <TableRow>
-              <TableHead className="font-medium">Name</TableHead>
+              <TableHead className="font-medium cursor-pointer select-none" onClick={() => handleSort('name')}>
+                <div className="flex items-center justify-start">
+                  <span>Name</span>
+                  <span className="ml-1">
+                    {sortColumn === 'name' && sortDirection !== null
+                      ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                      : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                    }
+                  </span>
+                </div>
+              </TableHead>
               <TableHead className="font-medium">View</TableHead>
-              <TableHead className="font-medium text-right">Amount</TableHead>
-              <TableHead className="font-medium">Status</TableHead>
-              <TableHead className="font-medium">Submitted</TableHead>
-              <TableHead className="font-medium">Approved</TableHead>
+              <TableHead className="font-medium text-right cursor-pointer select-none" onClick={() => handleSort('amount')}>
+                <div className="flex items-center justify-end">
+                  <span>Amount</span>
+                  <span className="ml-1">
+                    {sortColumn === 'amount' && sortDirection !== null
+                      ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                      : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                    }
+                  </span>
+                </div>
+              </TableHead>
+              <TableHead className="font-medium cursor-pointer select-none" onClick={() => handleSort('status')}>
+                <div className="flex items-center justify-start">
+                  <span>Status</span>
+                  <span className="ml-1">
+                    {sortColumn === 'status' && sortDirection !== null
+                      ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                      : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                    }
+                  </span>
+                </div>
+              </TableHead>
+              <TableHead className="font-medium cursor-pointer select-none" onClick={() => handleSort('submitted')}>
+                <div className="flex items-center justify-start">
+                  <span>Submitted</span>
+                  <span className="ml-1">
+                    {sortColumn === 'submitted' && sortDirection !== null
+                      ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                      : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                    }
+                  </span>
+                </div>
+              </TableHead>
+              <TableHead className="font-medium cursor-pointer select-none" onClick={() => handleSort('approved')}>
+                <div className="flex items-center justify-start">
+                  <span>Approved</span>
+                  <span className="ml-1">
+                    {sortColumn === 'approved' && sortDirection !== null
+                      ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                      : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                    }
+                  </span>
+                </div>
+              </TableHead>
               <TableHead className="font-medium">Reporting status</TableHead>
             </TableRow>
           </TableHeader>
@@ -212,7 +322,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    {index === 0 ? "Unavailable" : `R${Math.floor(Math.random() * 50000)}`}
+                    {formatCurrency(Number(ldaForm.amount ?? 0))}
                   </TableCell>
                   <TableCell>
                     {getStatusBadge()}
