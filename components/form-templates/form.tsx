@@ -37,10 +37,9 @@ const FormSchema = z.object({
 
 interface FormDialogProps {
   formTemplate?: FormTemplate
-  callback: () => void
 }
 
-export function FormDialog({ formTemplate, callback }: FormDialogProps) {
+export function FormDialog({ formTemplate }: FormDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -84,8 +83,6 @@ export function FormDialog({ formTemplate, callback }: FormDialogProps) {
         variant: 'success'
       })
     }
-
-    callback()
   }
 
   return (

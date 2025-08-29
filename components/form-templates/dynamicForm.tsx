@@ -25,6 +25,7 @@ export function DynamicForm({
   userRole,
   setIsFormValid,
   setCompletionStatus,
+  dataChanged,
 }: {
   form: FormTemplate["form"]
   setData?: React.Dispatch<React.SetStateAction<FormData>>
@@ -36,6 +37,11 @@ export function DynamicForm({
   userRole?: string
   setIsFormValid?: (isValid: boolean) => void
   setCompletionStatus?: (status: { completed: number; required: number }) => void
+  dataChanged?: (
+    ldaId?: number,
+    applicationId?: string | number,
+    form_template_id?: number | string
+  ) => Promise<void>
 }) {
   // Force re-render when isEditing changes
   const [editingState, setEditingState] = useState(true);
@@ -127,6 +133,7 @@ export function DynamicForm({
               formId={formId}
               userRole={userRole}
               lda_id={lda_id}
+              dataChanged={dataChanged}
               onSectionStatusChange={(status: { isValid: boolean; completed: number; required: number }) => handleSectionStatusChange(index, status)}
             />
           ))}

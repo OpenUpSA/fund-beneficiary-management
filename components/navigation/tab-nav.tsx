@@ -21,7 +21,7 @@ export function TabNav({ tabs, className, baseUrl = "" }: TabNavProps) {
   const pathname = usePathname()
   
   // Extract the current tab from the URL path
-  // For nested routes like /dashboard/ldas/1/applicationsAndReports/2 or /applicationsAndReports/2/fill
+  // For nested routes like /dashboard/ldas/1/funding-reports/2 or /funding-reports/2/fill
   // we need to find which tab value matches the path
   const findActiveTab = () => {
     // Check if any tab value is present in the pathname

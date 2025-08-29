@@ -10,10 +10,9 @@ import { FormTemplate } from '@prisma/client'
 
 interface Props {
   formTemplate: FormTemplate
-  callback: () => void
 }
 
-export function DeleteDialog({ formTemplate, callback }: Props) {
+export function DeleteDialog({ formTemplate }: Props) {
   const router = useRouter()
 
   const deleteFormTemplate = async () => {
@@ -25,7 +24,6 @@ export function DeleteDialog({ formTemplate, callback }: Props) {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
-    callback()
     router.push('/dashboard/form-templates')
     toast({
       title: 'Form template deleted.',

@@ -13,7 +13,7 @@ import type { Metadata } from 'next'
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
-  const t = await getTranslations({ locale, namespace: 'ApplicationsAndReportsPage' })
+  const t = await getTranslations({ locale, namespace: 'FundingReportsPage' })
 
   return {
     title: `${t('page title')} - ${tM('title')}`,

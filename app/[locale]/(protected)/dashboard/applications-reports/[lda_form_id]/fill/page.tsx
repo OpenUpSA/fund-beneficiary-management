@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchLDAForm } from "@/lib/data"
-import { revalidateTag } from "next/cache"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
 import Filler from "@/components/lda-forms/data-filler"
 import * as Sentry from '@sentry/nextjs'
@@ -24,11 +23,6 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
-  "use server"
-  revalidateTag('ldas')
-}
-
 export default async function Page({ params }: FormTemplatePageProps) {
   const { lda_form_id } = params
   const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
@@ -45,7 +39,7 @@ export default async function Page({ params }: FormTemplatePageProps) {
       />
       <Filler
         ldaForm={ldaForm}
-        callback={dataChanged} />
+      />
     </div>
   )
 }

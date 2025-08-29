@@ -15,6 +15,7 @@ interface FormAccordionItemProps {
   formId?: number | string
   lda_id?: number
   userRole?: string
+  dataChanged?: (ldaId?: number, applicationId?: string | number) => Promise<void>
   onSectionStatusChange?: (status: { isValid: boolean; completed: number; required: number }) => void
 }
 
@@ -27,8 +28,12 @@ export default function FormAccordionItem({
   formId,
   lda_id,
   userRole,
+  dataChanged,
   onSectionStatusChange,
 }: FormAccordionItemProps) {
+
+  console.log('sectionData', sectionData)
+  console.log('defaultValues', defaultValues)
 
   const isValueValid = (value: string, field: Field) => {
     if (field.type === "fileUpload") {
@@ -275,6 +280,8 @@ export default function FormAccordionItem({
           if (!response.ok) {
             console.error('Failed to save field:', await response.json());
           }
+          // Use the latest dataChanged and lda_id from the closure
+          dataChanged?.(lda_id, formId);
         } catch (error) {
           console.error('Error saving field:', error);
         }
@@ -295,9 +302,9 @@ export default function FormAccordionItem({
       };
     }
 
-    // Create the debounced version of saveFieldData
-    debouncedSaveRef.current = debounce(saveFieldData, 500); // 500ms debounce delay
-  }, [formId]);
+    // Store the debounced function in the ref
+    debouncedSaveRef.current = debounce(saveFieldData, 500);
+  }, [formId, dataChanged, lda_id]);
 
   const onChange = useCallback((field: Field, value: string) => {
     // If section is not editable by this user, don't allow changes
@@ -446,11 +453,11 @@ export default function FormAccordionItem({
             <div className="space-y-4">
             {section.fields.map((field) => (
               <FormField
-                  field={field}
-                  key={field.name}
-                  lda_id={lda_id}
-                  isEditing={isEditing && isSectionEditable}
-                  onValueChange={onChange}
+                key={field.name}
+                field={field}
+                lda_id={lda_id}
+                isEditing={isEditing && isSectionEditable}
+                onValueChange={onChange}
               />
             ))}
         </div>

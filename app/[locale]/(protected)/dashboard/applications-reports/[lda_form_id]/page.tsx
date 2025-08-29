@@ -39,9 +39,15 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
+const dataChanged = async (ldaId?: number) => {
   "use server"
-  revalidateTag('ldas')
+  if (ldaId) {
+    revalidateTag(`ldas:details:${ldaId}`)
+    revalidateTag(`lda-forms:lda:${ldaId}:list`)
+  } else {
+    revalidateTag('ldas:list')
+    revalidateTag('lda-forms:list')
+  }
 }
 
 export default async function Page({ params, searchParams }: FormTemplatePageProps) {

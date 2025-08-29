@@ -41,6 +41,7 @@ interface LDAFormDetailViewProps {
     localDevelopmentAgencyId?: number
     createdBy?: { name: string }
   }
+  dataChanged: (ldaId?: number, applicationId?: string | number) => Promise<void>
 }
 
 const FormSchema = z.object({
@@ -54,7 +55,7 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>
 
-export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
+export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetailViewProps) {
 
   const [isEditing, setIsEditing] = useState(false)
   const [isFormValid, setIsFormValid] = useState(false)
@@ -108,6 +109,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
           title: 'Updated',
           description: `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`,
         })
+        dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
       } else {
         toast({
           title: 'Error',
@@ -145,18 +147,23 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
       const updatedFormData: { submitted: boolean } = { 
         submitted: true
       }
-      await fetch(`/api/lda-form/${ldaForm.id}/submit`, {
+      const response = await fetch(`/api/lda-form/${ldaForm.id}/submit`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedFormData),
       })
-      toast({
-        title: 'Form submitted successfully',
-        variant: 'success'
-      })
-
-      // Refresh the form data after successful submission
-      window.location.reload();
+      
+      if (response.ok) {
+        toast({
+          title: 'Form submitted successfully',
+          variant: 'success'
+        })
+        
+        // Call dataChanged to revalidate data if provided
+        dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
+        // Refresh the form data after successful submission
+        window.location.reload();
+      }
     } catch {  
       toast({
         title: 'Error submitting form',
@@ -226,6 +233,7 @@ export default function LDAFormDetailView({ ldaForm }: LDAFormDetailViewProps) {
                 userRole={session?.user?.role}
                 setIsFormValid={setIsFormValid}
                 setCompletionStatus={setCompletionStatus}
+                dataChanged={dataChanged}
               />
           ) : (
             <p className="text-muted-foreground">Form template not available</p>

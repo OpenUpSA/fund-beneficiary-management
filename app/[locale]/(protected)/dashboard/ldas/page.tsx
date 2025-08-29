@@ -46,9 +46,15 @@ export default async function Page() {
     fetchFundingStatuses(),
   ])
 
-  const dataChanged = async (tag: string) => {
+  const dataChanged = async (ldaId?: number) => {
     "use server"
-    revalidateTag(tag)
+    if (ldaId) {
+      revalidateTag(`ldas:details:${ldaId}`)
+      revalidateTag(`lda-forms:lda:${ldaId}:list`)
+    } else {
+      revalidateTag('ldas:list')
+      revalidateTag('lda-forms:list')
+    }
   }
 
   return (

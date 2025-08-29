@@ -42,7 +42,7 @@ export type Staff = {
 interface StaffTabProps {
   staffMembers: Staff[],
   ldaId: number,
-  callback: (tag: string) => void
+  callback: (ldaId?: number) => void
 }
 
 export function StaffTab({ staffMembers, ldaId, callback }: StaffTabProps) {
@@ -126,7 +126,7 @@ export function StaffTab({ staffMembers, ldaId, callback }: StaffTabProps) {
         setAdding(false);
         toast.success("Staff member added successfully");
       }
-      callback(`lda-${ldaId}`);
+      callback(ldaId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -173,7 +173,7 @@ export function StaffTab({ staffMembers, ldaId, callback }: StaffTabProps) {
       
       // Remove the deleted staff from the list
       setStaff(staff.filter(s => s.id !== staffToDelete));
-      callback(`lda-${ldaId}`);
+      callback(ldaId);
       toast.success("Staff member deleted successfully");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'An unknown error occurred');

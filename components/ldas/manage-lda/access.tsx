@@ -41,7 +41,7 @@ type User = {
 interface AccessTabProps {
   userAccess: User[];
   ldaId: number;
-  callback: (tag: string) => void
+  callback: (ldaId?: number) => void
 }
 
 export function AccessTab({ userAccess = [], ldaId, callback }: AccessTabProps) {
@@ -114,7 +114,7 @@ export function AccessTab({ userAccess = [], ldaId, callback }: AccessTabProps) 
       setUsers([...users, savedUser]);
       setAdding(false);
       toast.success("User access added successfully");
-      callback(`lda-${ldaId}`);
+      callback(ldaId);
     } catch (error) {
       console.error("Error adding user access:", error);
       toast.error(error instanceof Error ? error.message : "Failed to add user access");
@@ -150,7 +150,7 @@ export function AccessTab({ userAccess = [], ldaId, callback }: AccessTabProps) 
       setEditingId(null);
       setEditedUser(null);
       toast.success("User access updated successfully");
-      callback(`lda-${ldaId}`);
+      callback(ldaId);
     } catch (error) {
       console.error("Error updating user access:", error);
       toast.error(error instanceof Error ? error.message : "Failed to update user access");
@@ -198,7 +198,7 @@ export function AccessTab({ userAccess = [], ldaId, callback }: AccessTabProps) 
       }
 
       setUsers(users.filter(user => user.id !== userToDelete));
-      callback(`lda-${ldaId}`)
+      callback(ldaId);
       toast.success("User access deleted successfully");
     } catch (error) {
       console.error("Error deleting user access:", error);

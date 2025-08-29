@@ -1,4 +1,5 @@
 import { fetchFormTemplates, fetchLocalDevelopmentAgency, fetchLDAForm } from "@/lib/data"
+import { revalidateTag } from "next/cache"
 import { FormTemplateWithRelations } from "@/types/models"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -19,7 +20,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
   const ldaForm = await fetchLDAForm(application_id)
   
   if (!ldaForm) {
-    redirect(`/dashboard/ldas/${lda_id}/applicationsAndReports`)
+    redirect(`/dashboard/ldas/${lda_id}/funding-reports`)
   }
 
   const amount = ldaForm.amount ? Number(ldaForm.amount) : 0
@@ -29,10 +30,19 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
   const formTemplate = formTemplates.find(t => t.id === ldaForm.formTemplateId)
   
   if (!formTemplate || !formTemplate.form) {
-    redirect(`/dashboard/ldas/${lda_id}/applicationsAndReports`)
+    redirect(`/dashboard/ldas/${lda_id}/funding-reports`)
   }
 
-  // No server actions needed in this layout component
+  // Server action for data revalidation
+  const dataChanged = async (ldaId?: number, applicationId?: string | number) => {
+    "use server"
+    if (ldaId) {
+      revalidateTag(`lda-forms:lda:${ldaId}:list`)
+    }
+    if (applicationId) {
+      revalidateTag(`lda-forms:detail:${applicationId}`)
+    }
+  }
 
   return (
     <>
@@ -40,7 +50,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
         <div className="flex justify-between items-center">
           <div className="flex gap-2 items-center">
             <Button variant="ghost" size="icon" asChild>
-              <Link href={`/dashboard/ldas/${lda_id}/applicationsAndReports`}>
+              <Link href={`/dashboard/ldas/${lda_id}/funding-reports`}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
@@ -49,7 +59,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
             </h1>
           </div>
           {/* <Button variant="outline" size="sm" asChild>
-            <Link href={`/dashboard/ldas/${lda_id}/applicationsAndReports/${application_id}/edit`}>
+            <Link href={`/dashboard/ldas/${lda_id}/funding-reports/${application_id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Link>
@@ -69,7 +79,8 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
             },
 
             formData: ldaForm.formData as Record<string, string | number | boolean | null | undefined>
-          }} 
+          }}
+          dataChanged={dataChanged}
         />
       </div>
       {children}

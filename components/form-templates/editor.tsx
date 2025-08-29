@@ -10,7 +10,9 @@ import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
 import { Form, FormData } from "@/types/forms"
 
-export default function Editor({ formTemplate, dataChanged }: { formTemplate: FormTemplate, dataChanged: () => void }) {
+export default function Editor({ formTemplate }: { 
+  formTemplate: FormTemplate
+}) {
   const [form, setForm] = useState<Form>()
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(formTemplate.form, null, 2))
   const [data, setData] = useState<FormData>({})
@@ -66,8 +68,8 @@ export default function Editor({ formTemplate, dataChanged }: { formTemplate: Fo
             <span className="hidden md:inline">Save</span>
             <SaveIcon />
           </Button>
-          <FormDialog formTemplate={formTemplate} callback={dataChanged} />
-          <DeleteDialog formTemplate={formTemplate} callback={dataChanged} />
+          <FormDialog formTemplate={formTemplate} />
+          <DeleteDialog formTemplate={formTemplate} />
         </div>
       </div>
       <div className="flex flex-wrap items-start justify-between space-x-4">

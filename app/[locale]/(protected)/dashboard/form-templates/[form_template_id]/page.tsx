@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchFormTemplate } from "@/lib/data"
 import Editor from "@/components/form-templates/editor"
-import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -23,11 +22,6 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
-  "use server"
-  revalidateTag('ldas')
-}
-
 export default async function Page({ params }: FormTemplatePageProps) {
   const { form_template_id } = params
   const formTemplate = await fetchFormTemplate(form_template_id)
@@ -41,7 +35,7 @@ export default async function Page({ params }: FormTemplatePageProps) {
           { label: formTemplate.name, isCurrent: true }
         ]}
       />
-      <Editor formTemplate={formTemplate} dataChanged={dataChanged} />
+      <Editor formTemplate={formTemplate} />
     </div>
   )
 }

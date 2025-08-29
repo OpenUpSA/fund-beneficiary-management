@@ -9,17 +9,13 @@ import Link from "next/link"
 import { SaveIcon, XIcon } from "lucide-react"
 
 type Props = {
-  ldaForm: LocalDevelopmentAgencyFormFull,
-  callback?: () => Promise<void>
+  ldaForm: LocalDevelopmentAgencyFormFull
 }
 
-export default function Filler({ ldaForm, callback }: Props) {
+export default function Filler({ ldaForm }: Props) {
 
   const submitForm = async () => {
     window.dispatchEvent(new Event("submit-dynamic-form"))
-    if (callback) {
-      await callback()
-    }
   }
 
   return (

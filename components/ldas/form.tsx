@@ -41,7 +41,7 @@ interface FormDialogProps {
   developmentStages: DevelopmentStage[]
   programmeOfficers: UserWithLDAsBasic[]
   provinces: Province[]
-  callback: (tag: string) => void
+  callback: (ldaId?: number) => void
 }
 
 // FormSchema is now imported from form-schema.ts
@@ -137,12 +137,9 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         const errorData = await response.json();
         throw new Error(errorData.error || `Failed to save ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`);
       }
-
+      callback(lda.id);
       toast.dismiss(toastId);
       toast.success(`Organisation operations info saved successfully`);
-      
-      // Call callback with the specific LDA tag to revalidate data
-      callback(`lda-${lda.id}`);
     } catch (error) {
       console.error(`Error saving ${field}:`, error);
       toast.dismiss(toastId);
@@ -218,6 +215,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         
         toast.dismiss(toastId)
         toast.success('LDA updated successfully')
+        callback(lda.id)
       } else {
         toastId = toast.loading('Creating new LDA...')
         const response = await fetch(`/api/lda`, {
@@ -230,18 +228,13 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
           const errorData = await response.json()
           throw new Error(errorData.error || 'Failed to create LDA')
         }
-        
+
         toast.dismiss(toastId)
         toast.success('LDA created successfully')
+        callback()
       }
-      // Call callback with both general and specific LDA tags
-      if (lda) {
-        callback(`lda-${lda.id}`)
-      } else {
-        callback('ldas')
-      }
+      
     } catch (error) {
-      console.error('Error:', error)
       toast.dismiss(toastId)
       toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
       setOpen(true) // Reopen the dialog to allow corrections

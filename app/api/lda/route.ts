@@ -50,9 +50,9 @@ export async function POST(req: NextRequest) {
           connect: { id: parseInt(data.developmentStageId) }
         },
         totalFundingRounds: data.totalFundingRounds,
-        focusAreas: {
+        focusAreas: data.focusAreas && data.focusAreas.length > 0 ? {
           connect: data.focusAreas.map((focusAreaId: number) => ({ id: focusAreaId })),
-        },
+        } : undefined,
         registrationStatus: data.registrationStatus,
         registrationCode: data.registrationCode,
         registrationDate: data.registrationDate,

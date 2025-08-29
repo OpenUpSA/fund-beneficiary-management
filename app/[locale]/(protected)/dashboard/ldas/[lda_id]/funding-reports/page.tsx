@@ -38,9 +38,13 @@ export default async function Page({ params }: LDAApplicationsPageProps) {
   const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchLocalDevelopmentAgencyFormsForLDA(String(lda.id))
   const formStatuses: FormStatus[] = await fetchFormStatuses()
 
-  const dataChanged = async () => {
+  const dataChanged = async (ldaId?: number) => {
     "use server"
-    revalidateTag(`lda-${lda_id}`)
+    if (ldaId) {
+      revalidateTag(`lda-forms:lda:${ldaId}:list`)
+    } else {
+      revalidateTag('lda-forms:list')
+    }
   }
 
   return (

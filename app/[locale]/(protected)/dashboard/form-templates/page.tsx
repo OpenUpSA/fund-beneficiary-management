@@ -8,7 +8,6 @@ import { Link } from "@/i18n/routing"
 
 import { FormTemplateWithRelations } from "@/types/models"
 import { FormDialog } from "@/components/form-templates/form"
-import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -25,10 +24,6 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
-  "use server"
-  revalidateTag('ldas')
-}
 
 export default async function Page() {
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
@@ -44,7 +39,7 @@ export default async function Page() {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Form Templates</h1>
         <div className="space-x-2">
-          <FormDialog callback={dataChanged} />
+          <FormDialog />
         </div>
       </div>
       <div className="sm:flex sm:space-x-4 mt-4">
