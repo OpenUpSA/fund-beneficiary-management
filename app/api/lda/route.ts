@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export async function GET() {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  console.log(session)
   const records = await prisma.localDevelopmentAgency.findMany({
     include: {
       fundingStatus: true,
