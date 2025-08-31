@@ -29,7 +29,7 @@ interface FilteredLDAsProps {
   programmeOfficers: UserWithLDAsBasic[]
   provinces: Province[]
   fundingStatus: FundingStatus[]
-  callback?: (tag: string) => void
+  callback?: (ldaId?: number) => void
 }
 
 export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({

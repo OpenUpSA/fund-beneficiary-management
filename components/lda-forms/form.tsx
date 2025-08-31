@@ -43,7 +43,7 @@ interface FormDialogProps {
   ldaForm?: LocalDevelopmentAgencyForm,
   lda?: LocalDevelopmentAgencyFull,
   ldas?: LocalDevelopmentAgencyFull[],
-  callback: (tag: string) => void
+  callback: (ldaId?: number) => void
 }
 
 const FormSchema = z.object({
@@ -98,6 +98,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
         
         toast.dismiss(toastId)
         toast.success('Form updated successfully')
+        callback(ldaForm.localDevelopmentAgencyId)
       } else {
         // Show saving toast for new form
         toastId = toast.loading('Adding form...')
@@ -110,12 +111,13 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
         if (!response.ok) {
           throw new Error('Failed to add form')
         }
-        
+        console.log("localDevelopmentAgencyId")
+        console.log(data)
+        callback(data.localDevelopmentAgencyId)
         toast.dismiss(toastId)
         toast.success('Form added successfully')
       }
-
-      callback('templates')
+      
     } catch (error) {
       if (toastId) toast.dismiss(toastId)
       toast.error(error instanceof Error ? error.message : 'An error occurred')

@@ -10,7 +10,7 @@ import { LocalDevelopmentAgencyForm } from '@prisma/client'
 
 interface Props {
   ldaForm: LocalDevelopmentAgencyForm
-  callback: () => void
+  callback: (ldaId?: number) => void
 }
 
 export function DeleteDialog({ ldaForm, callback }: Props) {
@@ -25,7 +25,7 @@ export function DeleteDialog({ ldaForm, callback }: Props) {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
-    callback()
+    callback(ldaForm.localDevelopmentAgencyId)
     router.push('/dashboard/applications-reports')
     toast({
       title: 'Form deleted.',

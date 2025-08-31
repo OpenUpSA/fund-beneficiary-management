@@ -20,7 +20,7 @@ interface Props {
   lda?: LocalDevelopmentAgencyFull
   formTemplates: FormTemplateWithRelations[]
   formStatuses: FormStatus[]
-  dataChanged?: () => Promise<void>
+  dataChanged: (ldaId?: number) => Promise<void>
   navigatedFrom?: string
 }
 
@@ -182,7 +182,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           <FormDialog
             formTemplates={formTemplates}
             lda={lda}
-            callback={() => dataChanged && dataChanged()}
+            callback={dataChanged}
           />
         )}
       </div>
@@ -310,7 +310,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-between">
-                      <Link href={`/dashboard/ldas/${lda?.id}/applicationsAndReports/${ldaForm.id}`}>
+                      <Link href={`/dashboard/ldas/${lda?.id}/funding-reports/${ldaForm.id}`}>
                         <Button
                           variant="ghost"
                           size="sm"

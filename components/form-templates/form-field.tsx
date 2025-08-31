@@ -21,6 +21,7 @@ interface FormFieldProps {
   errors?: Record<string, FieldError | undefined>
   isEditing?: boolean,
   lda_id?: number,
+  dataChanged?: () => Promise<void>
   onValueChange?: (field: Field, value: string) => void
 }
 

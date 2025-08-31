@@ -24,9 +24,17 @@ export default async function Layout({ children, params }: LDALayoutProps) {
   const programmeOfficers = await fetchUsers()
   const provinces = await fetchProvinces()
 
-  const dataChanged = async () => {
+  const dataChanged = async (ldaId?: number) => {
     "use server"
-    revalidateTag(`lda-${lda_id}`)
+    
+    if (ldaId) {
+      revalidateTag(`lda:detail:${ldaId}`)
+      revalidateTag('lda-forms:list')
+      revalidateTag(`lda-forms:lda:${ldaId}:list`)
+    } else {
+      revalidateTag('ldas:list')
+      revalidateTag('lda-forms:list')
+    }
   }
 
   return (
