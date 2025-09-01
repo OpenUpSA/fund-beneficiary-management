@@ -12,6 +12,7 @@ interface FilterBarProps {
     type: string
     label: string
     options: FilterOption[]
+    customFilterComponent?: React.ComponentType<{ filterType: string, onFilterChange: (filterType: string, selectedOptions: FilterOption[]) => void, activeFilters: Record<string, FilterOption[]> }>
   }[]
   activeFilters?: Record<string, FilterOption[]>
   className?: string
@@ -41,17 +42,33 @@ export function FilterBar({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {filterConfigs.map((config) => (
-        <FilterButton
-          key={config.type}
-          label={config.label}
-          options={config.options}
-          selectedOptions={activeFilters?.[config.type] || []}
-          onFilterChange={(selectedOptions) => 
-            handleFilterChange(config.type, selectedOptions)
-          }
-        />
-      ))}
+      {filterConfigs.map((config) => {
+        // Use custom filter component if provided
+        if (config.customFilterComponent) {
+          const CustomFilterComponent = config.customFilterComponent;
+          return (
+            <CustomFilterComponent
+              key={config.type}
+              filterType={config.type}
+              onFilterChange={handleFilterChange}
+              activeFilters={activeFilters || {}}
+            />
+          );
+        }
+        
+        // Otherwise use default FilterButton
+        return (
+          <FilterButton
+            key={config.type}
+            label={config.label}
+            options={config.options}
+            selectedOptions={activeFilters?.[config.type] || []}
+            onFilterChange={(selectedOptions) => 
+              handleFilterChange(config.type, selectedOptions)
+            }
+          />
+        );
+      })}
       
       {hasActiveFilters && (
         <Button 

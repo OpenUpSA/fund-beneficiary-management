@@ -30,7 +30,22 @@ export async function PUT(req: NextRequest, { params }: { params: { contact_id: 
 
     return NextResponse.json(updated);
   } catch (err) {
-    console.error("Failed to update LDA:", err);
+    console.error("Failed to update contact:", err);
     return NextResponse.json({ error: "Failed to update", detail: (err as Error).message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { contact_id: string } }) {
+  const contactId = parseInt(params.contact_id, 10);
+
+  try {
+    await prisma.contact.delete({
+      where: { id: contactId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Failed to delete contact:", err);
+    return NextResponse.json({ error: "Failed to delete", detail: (err as Error).message }, { status: 500 });
   }
 }

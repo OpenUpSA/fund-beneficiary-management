@@ -28,9 +28,12 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
+const dataChanged = async (media_id?: string) => {
   "use server"
-  revalidateTag('ldas')
+  revalidateTag('media:list')
+  if (media_id) {
+    revalidateTag(`media:detail:${media_id}`)
+  }
 }
 
 interface Props {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import imagekit from "@/lib/imagekit"
 import { FileObject } from "imagekit/dist/libs/interfaces"
+import { MediaType } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -34,6 +35,8 @@ export async function PUT(req: NextRequest, { params }: { params: { media_id: st
   const title = form.get("title") as string
   const description = form.get("description") as string
   const localDevelopmentAgencyId = parseInt(form.get("localDevelopmentAgencyId") as string)
+  const mediaSourceTypeId = parseInt(form.get("mediaSourceTypeId") as string)
+  const mediaType = form.get("mediaType") as MediaType
 
   const file = form.get("file") as File | null
 
@@ -56,11 +59,15 @@ export async function PUT(req: NextRequest, { params }: { params: { media_id: st
     title: string
     description: string
     localDevelopmentAgency: { connect: { id: number } }
+    mediaSourceType: { connect: { id: number } }
+    mediaType: MediaType
     filePath?: string
   } = {
     title,
     description,
     localDevelopmentAgency: { connect: { id: localDevelopmentAgencyId } },
+    mediaSourceType: { connect: { id: mediaSourceTypeId } },
+    mediaType,
   }
 
   if (filePath) {

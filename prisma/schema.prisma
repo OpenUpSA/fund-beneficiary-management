@@ -11,16 +11,18 @@ datasource db {
 }
 
 model User {
-  id                       Int                      @id @default(autoincrement())
-  name                     String
-  email                    String                   @unique
-  passwordHash             String
-  approved                 Boolean                  @default(false)
-  role                     Role                     @default(USER)
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
-  localDevelopmentAgencies LocalDevelopmentAgency[]
+  id                          Int                          @id @default(autoincrement())
+  name                        String
+  email                       String                       @unique
+  passwordHash                String
+  approved                    Boolean                      @default(false)
+  role                        Role                         @default(USER)
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
+  localDevelopmentAgencies    LocalDevelopmentAgency[]
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
+  documents                   Document[]
+  Media                       Media[]
 }
 
 model FundingStatus {
@@ -171,8 +173,8 @@ model LocalDevelopmentAgencyForm {
   dueDate                  DateTime               @default(now())
   fundingStart             DateTime               @default(now())
   fundingEnd               DateTime               @default(now())
-  submitted                DateTime?               
-  approved                 DateTime?               
+  submitted                DateTime?
+  approved                 DateTime?
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
   formStatus               FormStatus             @relation(fields: [formStatusId], references: [id])
@@ -267,6 +269,14 @@ model Contact {
   funds                    Fund[]                   @relation("ContactToFund")
 }
 
+model MediaSourceType {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String
+  Media     Media[]
+}
+
 model Media {
   id                       Int                    @id @default(autoincrement())
   createdAt                DateTime               @default(now())
@@ -277,6 +287,10 @@ model Media {
   mediaType                MediaType              @default(PHOTOGRAPH)
   localDevelopmentAgencyId Int
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+  mediaSourceTypeId        Int?
+  mediaSourceType          MediaSourceType?       @relation(fields: [mediaSourceTypeId], references: [id])
+  createdById              Int?
+  createdBy                User?                  @relation(fields: [createdById], references: [id])
 }
 
 model Document {
@@ -291,6 +305,9 @@ model Document {
   validUntilDate           DateTime
   localDevelopmentAgencyId Int
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+  uploadedBy               DocumentUploadType     @default(SCAT)
+  createdById              Int?
+  createdBy                User?                  @relation(fields: [createdById], references: [id])
 }
 
 model Province {
@@ -316,6 +333,13 @@ enum MediaType {
 enum DocumentType {
   DOC
   SPREADSHEET
+}
+
+enum DocumentUploadType {
+  Funder
+  Fund
+  SCAT
+  LDA
 }
 
 enum RegistrationStatus {

@@ -129,6 +129,7 @@ export function AdminTab({
                         <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                                 mode="single"
+                                captionLayout="dropdown"
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onDayClick={field.onChange}
                                 disabled={(date) =>

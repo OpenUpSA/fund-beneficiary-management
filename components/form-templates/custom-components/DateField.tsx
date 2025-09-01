@@ -31,6 +31,7 @@ export function DateField({ field, isEditing, onValueChange }: DateFieldProps) {
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
+          captionLayout="dropdown"
           selected={field.value ? new Date(field.value) : undefined}
           onSelect={(date) => {
             if (date && onValueChange) {

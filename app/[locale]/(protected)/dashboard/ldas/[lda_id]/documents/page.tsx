@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { FilteredDocuments } from "@/components/documents/filtered"
-import { fetchLocalDevelopmentAgency } from "@/lib/data"
+import { fetchLocalDevelopmentAgency, fetchLDADocuments } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
@@ -27,16 +27,17 @@ export default async function Page({ params }: LDADocumentsPageProps) {
   
   // Fetch LDA data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  const documents = await fetchLDADocuments(lda_id)
 
   const dataChanged = async () => {
     "use server"
-    revalidateTag(`lda-${lda_id}`)
+    revalidateTag(`documents:lda:${lda_id}`)
   }
 
   return (
     <div>
       <FilteredDocuments
-        documents={lda.documents}
+        documents={documents}
         lda={lda}
         dataChanged={dataChanged}
         navigatedFrom="lda"

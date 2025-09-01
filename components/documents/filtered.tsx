@@ -1,18 +1,28 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { FocusArea, LocalDevelopmentAgency } from "@prisma/client"
 import { FormDialog as DocumentFormDialog } from "@/components/documents/form"
+import { DeleteDialog } from "@/components/documents/delete"
 import { DocumentTypeEnum } from "@/types/formSchemas"
 import { format } from "date-fns"
 
 import { DocumentFull } from "@/types/models"
 import { useTranslations } from "next-intl"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
+import { FilterBar } from "@/components/ui/filter-bar"
+import { FilterOption } from "@/components/ui/filter-button"
+import { Button } from "@/components/ui/button"
+import { MoreHorizontal, FileEdit } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Props {
   documents: DocumentFull[],
@@ -24,11 +34,8 @@ interface Props {
 export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }: Props) {
   const tC = useTranslations('common')
 
-  const [selectedFocusAreas, setSelectedFocusAreas] = useState<string[]>([])
-  const [selectedFundingPeriods, setSelectedFundingPeriods] = useState<number[]>([])
-  const [selectedDocumentTypes, setSelectedDocumentTypes] = useState<string[]>([])
-  const [selectedLDAs, setSelectedLDAs] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
 
   const availableDocumentTypes = DocumentTypeEnum.options.map((type) => ({
     id: type,
@@ -42,7 +49,7 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
   }
   let availableLDAs: { id: string; label: string }[] = []
   let focusAreas: FocusArea[] = []
-  let availableFundingPeriods: { value: string; label: string }[] = [];
+  let availableFundingPeriods: { id: string; label: string }[] = [];
 
   if (!lda) {
     availableLDAs = [
@@ -70,23 +77,53 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
 
     availableFundingPeriods = Array.from(years)
       .sort((a, b) => a - b)
-      .map((year) => ({ value: String(year), label: String(year) }))
+      .map((year) => ({ id: String(year), label: String(year) }))
+  }
+
+  const ldaOptions: FilterOption[] = availableLDAs.map(({ id, label }) => ({ id, label }))
+  const focusAreaOptions: FilterOption[] = focusAreas.map(({ id, label }) => ({ id: String(id), label }))
+  const documentTypeOptions: FilterOption[] = availableDocumentTypes.map(({ id, label }) => ({ id, label }))
+  const periodOptions: FilterOption[] = availableFundingPeriods.map(({ id, label }) => ({ id, label }))
+
+  const filterConfigs = [
+    !lda ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
+    { type: 'type', label: 'Type', options: documentTypeOptions },
+    !lda ? { type: 'focus', label: 'Focus areas', options: focusAreaOptions } : null,
+    !lda ? { type: 'period', label: 'Year', options: periodOptions } : null,
+  ].filter(Boolean) as { type: string, label: string, options: FilterOption[] }[]
+
+  const handleSearch = (term: string) => setSearchTerm(term)
+
+  const handleFilterChange = useCallback((filterType: string, selectedOptions: FilterOption[]) => {
+    setActiveFilters({
+      ...activeFilters,
+      [filterType]: selectedOptions,
+    })
+  }, [activeFilters])
+
+  const handleResetFilters = () => {
+    setSearchTerm("")
+    setActiveFilters({})
+    setFilteredDocuments(documents)
   }
 
   const [filteredDocuments, setFilteredDocuments] = useState<DocumentFull[]>(documents)
 
   useEffect(() => {
     const filtered = documents.filter((item) => {
+      const selectedLdaIds = (activeFilters['lda'] || []).map(o => o.id)
+      const selectedTypes = (activeFilters['type'] || []).map(o => o.id)
+      const selectedFocusIds = (activeFilters['focus'] || []).map(o => o.id)
+      const selectedPeriods = (activeFilters['period'] || []).map(o => o.id)
+
+      const ldaMatch = selectedLdaIds.length === 0 || selectedLdaIds.includes(String(item.localDevelopmentAgencyId))
 
       const focusAreaMatch =
-        selectedFocusAreas.length === 0 ||
-        item.localDevelopmentAgency.focusAreas.some((focusArea) =>
-          selectedFocusAreas.includes(String(focusArea.id))
-        )
+        selectedFocusIds.length === 0 ||
+        item.localDevelopmentAgency.focusAreas.some((fa) => selectedFocusIds.includes(String(fa.id)))
 
       const selectedDocumentTypeMatch =
-        selectedDocumentTypes.length === 0 ||
-        selectedDocumentTypes.includes(item.documentType)
+        selectedTypes.length === 0 || selectedTypes.includes(item.documentType)
 
       const searchMatch =
         searchTerm.trim() === "" ||
@@ -94,130 +131,109 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
 
       let fundingPeriodMatch = true
-
       if (!lda) {
         const agency = item.localDevelopmentAgency
-
-        const fundingStartYear = agency?.fundingStart
-          ? new Date(agency.fundingStart).getFullYear()
-          : null
-
-        const fundingEndYear = agency?.fundingEnd
-          ? new Date(agency.fundingEnd).getFullYear()
-          : null
-
+        const fundingStartYear = agency?.fundingStart ? new Date(agency.fundingStart).getFullYear() : null
+        const fundingEndYear = agency?.fundingEnd ? new Date(agency.fundingEnd).getFullYear() : null
         fundingPeriodMatch =
-          selectedFundingPeriods.length === 0 ||
-          (fundingStartYear !== null && selectedFundingPeriods.includes(fundingStartYear)) ||
-          (fundingEndYear !== null && selectedFundingPeriods.includes(fundingEndYear))
+          selectedPeriods.length === 0 ||
+          (fundingStartYear !== null && selectedPeriods.includes(String(fundingStartYear))) ||
+          (fundingEndYear !== null && selectedPeriods.includes(String(fundingEndYear)))
       }
-
-      const ldaMatch =
-        selectedLDAs.length === 0 ||
-        (selectedLDAs.includes(String(item.localDevelopmentAgencyId)))
 
       return focusAreaMatch && searchMatch && selectedDocumentTypeMatch && fundingPeriodMatch && ldaMatch
     })
 
     setFilteredDocuments(filtered)
-  }, [selectedFocusAreas, searchTerm, selectedDocumentTypes, selectedFundingPeriods, selectedLDAs, documents, lda])
+  }, [activeFilters, searchTerm, documents, lda])
 
   return (
-    <div className="sm:flex sm:space-x-4 mt-4">
-      <div className="sm:w-80">
-        <h2 className="font-semibold text-sm mb-1">Filters</h2>
-        <div className="space-y-2">
-          <div>
+    <div className="space-y-4 mt-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="relative">
             <Input
               type="search"
               id="search"
-              placeholder="Search..."
-              className="bg-white dark:bg-black"
+              placeholder="Filter documents..."
+              className="pr-8 h-9"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
-          {!lda && <div>
-            <InputMultiSelect
-              options={availableLDAs.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedLDAs}
-              onValueChange={(values: string[]) => setSelectedLDAs(values)}
-              placeholder="All LDAs"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>}
-          <div>
-            <InputMultiSelect
-              options={availableDocumentTypes.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedDocumentTypes}
-              onValueChange={(values: string[]) => setSelectedDocumentTypes(values)}
-              placeholder="All document types"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>
-          {!lda && <div>
-            <InputMultiSelect
-              options={focusAreas.map(({ id, label }) => ({ value: String(id), label }))}
-              value={selectedFocusAreas}
-              onValueChange={(values: string[]) => setSelectedFocusAreas(values)}
-              placeholder="All focus areas"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>}
-          {!lda && <div>
-            <InputMultiSelect
-              options={availableFundingPeriods}
-              value={selectedFundingPeriods.map(String)}
-              onValueChange={(values: string[]) => setSelectedFundingPeriods(values.map(Number))}
-              placeholder="All funding periods"
-            >
-              {(provided) => <InputMultiSelectTrigger {...provided} />}
-            </InputMultiSelect>
-          </div>}
+          <FilterBar
+            onFilterChange={handleFilterChange}
+            onResetFilters={handleResetFilters}
+            filterConfigs={filterConfigs}
+            activeFilters={activeFilters}
+          />
         </div>
+        {lda && (
+          <DocumentFormDialog
+            lda={lda}
+            callback={dataChanged}
+          />
+        )}
       </div>
-      <Card className="w-full">
-        <CardHeader className="pb-0">
-          <div className="flex items-center justify-between">
-            <span>All Documents</span>
-            <div>
-              {lda && <DocumentFormDialog
-                lda={lda}
-                callback={dataChanged} />}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table className="text-xs w-full">
+
+      <Card className="w-full text-slate-700">
+        <CardContent className="p-0">
+          <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-full">Name</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Name</TableHead>
                 <TableHead>Added</TableHead>
-                <TableHead className="text-nowrap">Valid from</TableHead>
-                <TableHead className="text-nowrap">Valid until</TableHead>
-                <TableHead></TableHead>
+                <TableHead>Info</TableHead>
+                <TableHead>Uploaded by</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDocuments.map((document) => (
-                <TableRow key={document.id}>
-                  <TableCell>
-                    <Link href={getDocumentLink(document.id)} className="flex items-center space-x-1">
-                      <span>{document.filePath.replace(/^\/+/, '')}</span>
-                    </Link>
+              {filteredDocuments && filteredDocuments.length > 0 ? (
+                filteredDocuments.map((document) => (
+                  <TableRow key={document.id}>
+                    <TableCell className="font-medium">
+                      <Link href={getDocumentLink(document.id)} className="flex items-center space-x-1">
+                        <span>{document.filePath.replace(/^\//g, '')}</span>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-nowrap">{format(document.createdAt, 'MMM d, yyyy')}</TableCell>
+                    <TableCell></TableCell>
+                    <TableCell>{document.createdBy?.name || '-'}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Link href={getDocumentLink(document.id)} className="flex items-center gap-2">
+                              <FileEdit className="h-4 w-4" />
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DeleteDialog document={document} callback={dataChanged} />
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                    No documents found
                   </TableCell>
-                  <TableCell className="text-nowrap">{format(document.createdAt, 'PP')}</TableCell>
-                  <TableCell className="text-nowrap">{format(document.validFromDate, 'PP')}</TableCell>
-                  <TableCell className="text-nowrap">{format(document.validUntilDate, 'PP')}</TableCell>
                 </TableRow>
-              ))}
-            </TableBody >
+              )}
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
-    </div >
+    </div>
   )
 }

@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { FilteredMedia } from "@/components/media/filtered"
-import { fetchAllMedia, fetchLocalDevelopmentAgencies } from "@/lib/data"
+import { fetchAllMedia, fetchLocalDevelopmentAgencies, fetchMediaSourceTypes } from "@/lib/data"
 import { FormDialog } from "@/components/media/form"
 import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
@@ -20,14 +20,18 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
+const dataChanged = async (media_id?: string) => {
   "use server"
-  revalidateTag('ldas')
+  revalidateTag('media:list')
+  if (media_id) {
+    revalidateTag(`media:detail:${media_id}`)
+  }
 }
 
 export default async function Page() {
   const media = await fetchAllMedia()
   const ldas = await fetchLocalDevelopmentAgencies()
+  const mediaSourceTypes = await fetchMediaSourceTypes()
 
   return (
     <div>
@@ -42,12 +46,14 @@ export default async function Page() {
         <div className="space-x-2">
           <FormDialog
             ldas={ldas}
-            callback={dataChanged} />
+            callback={dataChanged}
+            mediaSourceTypes={mediaSourceTypes} />
         </div>
       </div>
       <FilteredMedia
         media={media}
-        dataChanged={dataChanged} />
+        dataChanged={dataChanged}
+        mediaSourceTypes={mediaSourceTypes} />
     </div>
   )
 }
