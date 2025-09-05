@@ -20,7 +20,7 @@ export function LDATabs({ ldaId, className }: LDATabsProps) {
       href: `/dashboard/ldas/${ldaId}/funding-reports`
     },
     {
-      label: "Contact",
+      label: "Contact List",
       value: "contact",
       href: `/dashboard/ldas/${ldaId}/contact`
     },

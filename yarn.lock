@@ -348,10 +348,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@date-fns/tz@npm:1.2.0":
-  version: 1.2.0
-  resolution: "@date-fns/tz@npm:1.2.0"
-  checksum: 10c0/411e9d4303b10951f6fd0189d18fb845f0d934a575df2176bc10daf664282c765fb6b057a977e446bbb1229151d89e7788978600a019f1fc24b5c75276d496bd
+"@date-fns/tz@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "@date-fns/tz@npm:1.4.1"
+  checksum: 10c0/9033fdc4682fe3d4d147625ce04fa88a8792653594e2de8d5a438c8f3bfc0990ee28fe773f91cac6810b06d818b5b281ae0608752ba8337257d0279ded3f019a
   languageName: node
   linkType: hard
 
@@ -5012,14 +5012,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns-jalali@npm:4.1.0-0":
+"date-fns-jalali@npm:^4.1.0-0":
   version: 4.1.0-0
   resolution: "date-fns-jalali@npm:4.1.0-0"
   checksum: 10c0/f9ad98d9f7e8e5abe0d070dc806b0c8baded2b1208626c42e92cbd2605b5171f5714d6b79b20cc2666267d821699244c9d0b5e93274106cf57d6232da77596ed
   languageName: node
   linkType: hard
 
-"date-fns@npm:4.1.0, date-fns@npm:^4.1.0":
+"date-fns@npm:^4.1.0":
   version: 4.1.0
   resolution: "date-fns@npm:4.1.0"
   checksum: 10c0/b79ff32830e6b7faa009590af6ae0fb8c3fd9ffad46d930548fbb5acf473773b4712ae887e156ba91a7b3dc30591ce0f517d69fd83bd9c38650fdc03b4e0bac8
@@ -6077,7 +6077,7 @@ __metadata:
     postcss: "npm:^8"
     prisma: "npm:6.6.0"
     react: "npm:^18"
-    react-day-picker: "npm:^9.7.0"
+    react-day-picker: "npm:^9.9.0"
     react-dom: "npm:^18"
     react-hook-form: "npm:^7.58.0"
     react-leaflet: "npm:^4.2.1"
@@ -9083,16 +9083,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-day-picker@npm:^9.7.0":
-  version: 9.7.0
-  resolution: "react-day-picker@npm:9.7.0"
+"react-day-picker@npm:^9.9.0":
+  version: 9.9.0
+  resolution: "react-day-picker@npm:9.9.0"
   dependencies:
-    "@date-fns/tz": "npm:1.2.0"
-    date-fns: "npm:4.1.0"
-    date-fns-jalali: "npm:4.1.0-0"
+    "@date-fns/tz": "npm:^1.4.1"
+    date-fns: "npm:^4.1.0"
+    date-fns-jalali: "npm:^4.1.0-0"
   peerDependencies:
     react: ">=16.8.0"
-  checksum: 10c0/c08c45a53aebceda1c938d2e4c95eb1702dcf149715e3457739f8930dce19a3be5780e5bad12dcc9d244d50b7e0efb226c336d81c1c062f616cf422e6a3804a6
+  checksum: 10c0/b364df634d87348ccb052d0657cc745e5e84e1982b69f860b9b95886ecd34cb5a2d76abf3ca25cf098df8a35c5bf7d6cc191adaedc1ceceefddd2d9af732ed1a
   languageName: node
   linkType: hard
 

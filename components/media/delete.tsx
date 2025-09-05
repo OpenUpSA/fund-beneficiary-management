@@ -10,7 +10,7 @@ import { Media } from '@prisma/client'
 
 interface Props {
   media: Media
-  callback: () => void
+  callback: (media_id?: string) => void
 }
 
 export function DeleteDialog({ media, callback }: Props) {
@@ -25,7 +25,7 @@ export function DeleteDialog({ media, callback }: Props) {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
-    callback()
+    callback(media.id.toString())
     router.push('/dashboard/media')
     toast({
       title: 'Media deleted.',

@@ -4,10 +4,27 @@ import prisma from "@/db"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET() {
-  const records = await prisma.contact.findMany()
+export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+  const ldaId = searchParams.get('ldaId');
+  
+  let query = {};
+  
+  if (ldaId) {
+    const parsedLdaId = parseInt(ldaId, 10);
+    if (!isNaN(parsedLdaId)) {
+      query = {
+        where: {
+          localDevelopmentAgencies: {
+            some: { id: parsedLdaId }
+          }
+        }
+      };
+    }
+  }
 
-  return NextResponse.json(records)
+  const records = await prisma.contact.findMany(query);
+  return NextResponse.json(records);
 }
 
 export async function POST(req: NextRequest) {

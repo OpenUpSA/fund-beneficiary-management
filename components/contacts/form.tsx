@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -61,24 +61,16 @@ export function FormDialog({ contact, connectOnCreate, callback }: FormDialogPro
     setOpen(false)
 
     if (contact) {
-      toast({
-        title: 'Updating Contact...',
-        variant: 'processing'
-      })
+      const toastId = toast.loading('Updating Contact...')
       await fetch(`/api/contact/${contact.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast({
-        title: 'Contact updated',
-        variant: 'success'
-      })
+      toast.dismiss(toastId)
+      toast.success('Contact updated')
     } else {
-      toast({
-        title: 'Creating contact...',
-        variant: 'processing'
-      })
+      const toastId = toast.loading('Creating contact...')
       const combinedData = {
         ...data,
         ...(connectOnCreate || {}),
@@ -88,10 +80,8 @@ export function FormDialog({ contact, connectOnCreate, callback }: FormDialogPro
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(combinedData),
       })
-      toast({
-        title: 'Contact created',
-        variant: 'success'
-      })
+      toast.dismiss(toastId)
+      toast.success('Contact created')
     }
 
     callback()
@@ -102,9 +92,9 @@ export function FormDialog({ contact, connectOnCreate, callback }: FormDialogPro
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {contact ?
-          <PencilIcon className="hover:cursor-pointer" size={10} />
+          <span className="flex items-center gap-2"><PencilIcon className="hover:cursor-pointer" size={10} /> Edit</span>
           :
-          <Button variant="outline"><span className="hidden md:inline">Add Media</span><PlusIcon /></Button>
+          <Button><PlusIcon/><span className="hidden md:inline">Add contact</span></Button>
         }
       </DialogTrigger>
       <DialogContent className="min-w-[40vw]">

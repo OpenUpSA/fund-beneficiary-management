@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import imagekit from "@/lib/imagekit"
 import { FileObject } from "imagekit/dist/libs/interfaces"
+import { DocumentUploadType } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -36,6 +37,7 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
   const validFromDate = form.get("validFromDate") as string
   const validUntilDate = form.get("validUntilDate") as string
   const localDevelopmentAgencyId = parseInt(form.get("localDevelopmentAgencyId") as string)
+  const uploadedBy = form.get("uploadedBy") as DocumentUploadType
 
   const file = form.get("file") as File | null
 
@@ -60,13 +62,15 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
     validFromDate: string
     validUntilDate: string
     localDevelopmentAgency: { connect: { id: number } }
-    filePath?: string
+    filePath?: string,
+    uploadedBy: DocumentUploadType
   } = {
     title,
     description,
     validFromDate,
     validUntilDate,
     localDevelopmentAgency: { connect: { id: localDevelopmentAgencyId } },
+    uploadedBy,
   }
 
   if (filePath) {

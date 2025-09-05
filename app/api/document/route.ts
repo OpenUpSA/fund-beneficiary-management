@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import imagekit from "@/lib/imagekit"
 import prisma from "@/db"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { DocumentUploadType } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -21,6 +24,13 @@ export async function GET() {
 
 
 export async function POST(req: NextRequest) {
+  // Get the current user from the session
+  const session = await getServerSession(NEXT_AUTH_OPTIONS)
+  
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const form = await req.formData()
   const file = form.get("file") as File
 
@@ -28,6 +38,7 @@ export async function POST(req: NextRequest) {
   const description = form.get("description") as string
   const validFromDate = form.get("validFromDate") as string
   const validUntilDate = form.get("validUntilDate") as string
+  const uploadedBy = form.get("uploadedBy") as DocumentUploadType
   const localDevelopmentAgencyId = parseInt(form.get("localDevelopmentAgencyId") as string)
 
   const fileBuffer = Buffer.from(await file.arrayBuffer())
@@ -45,7 +56,9 @@ export async function POST(req: NextRequest) {
     localDevelopmentAgency: { connect: { id: localDevelopmentAgencyId } },
     filePath: uploadResponse.filePath,
     validFromDate: validFromDate,
-    validUntilDate: validUntilDate
+    validUntilDate: validUntilDate,
+    uploadedBy: uploadedBy,
+    createdBy: { connect: { id: parseInt(session.user.id) } }
   }
 
   const record = await prisma.document.create({

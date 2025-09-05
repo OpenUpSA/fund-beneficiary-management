@@ -1,5 +1,5 @@
 import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
-import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus } from "@prisma/client"
+import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus, Contact, MediaSourceType } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 
@@ -112,6 +112,13 @@ export async function fetchAllMedia(): Promise<MediaFull[]> {
   return res.json()
 }
 
+export async function fetchLDAMedia(lda_id: string): Promise<MediaFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`)
+  url.searchParams.append('ldaId', lda_id)
+  const res = await fetch(url.toString(), { next: { tags: ['media:list', `media:lda:${lda_id}`] } })
+  return res.json()
+}
+
 export async function fetchDocument(document_id: string): Promise<DocumentFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/${document_id}`, { next: { tags: ['documents:list', `document:detail:${document_id}`] } })
   return res.json()
@@ -119,6 +126,13 @@ export async function fetchDocument(document_id: string): Promise<DocumentFull> 
 
 export async function fetchAllDocuments(): Promise<DocumentFull[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`, { next: { tags: ['documents:list'] } })
+  return res.json()
+}
+
+export async function fetchLDADocuments(lda_id: string): Promise<DocumentFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`)
+  url.searchParams.append('ldaId', lda_id)
+  const res = await fetch(url.toString(), { next: { tags: ['documents:list', `documents:lda:${lda_id}`] } })
   return res.json()
 }
 
@@ -155,5 +169,27 @@ export async function fetchProvinces(): Promise<Province[]> {
 
 export async function fetchProvince(province_code: string): Promise<Province> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces/${province_code}`, { next: { tags: ['provinces:list', `provinces:detail:${province_code}`] } })
+  return res.json()
+}
+
+export async function fetchContacts(lda_id?: string): Promise<Contact[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contact`)
+  
+  if (lda_id) {
+    url.searchParams.append('ldaId', lda_id)
+  }
+  
+  const res = await fetch(url.toString(), { 
+    next: { 
+      tags: lda_id ? ['contacts:list', `contacts:lda:${lda_id}`] : ['contacts:list'] 
+    } 
+  })
+  return res.json()
+}
+
+export async function fetchMediaSourceTypes(): Promise<MediaSourceType[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media-source-type`, { 
+    next: { tags: ['media-source-types:list'] } 
+  })
   return res.json()
 }

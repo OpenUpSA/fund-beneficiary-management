@@ -120,6 +120,7 @@ export type DocumentFull = Prisma.DocumentGetPayload<{
         developmentStage: true
       }
     }
+    createdBy: true
   }
 }>
 
