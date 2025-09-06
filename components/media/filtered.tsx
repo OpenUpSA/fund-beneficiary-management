@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { FocusArea, LocalDevelopmentAgency, MediaSourceType } from "@prisma/client"
 import { FormDialog as MediaFormDialog } from "@/components/media/form"
+import { DeleteDialog } from "@/components/media/delete"
 import { MediaTypeEnum } from "@/types/formSchemas"
 
 import { ImageKitProvider } from '@imagekit/next'
@@ -291,10 +292,7 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
                           />
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <div className="flex items-center gap-2 text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </div>
+                          <DeleteDialog media={item} callback={dataChanged} />
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
