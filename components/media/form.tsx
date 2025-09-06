@@ -125,6 +125,15 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
 
     toast({ title: media ? "Media updated" : "Media created", variant: "success" });
     callback(media?.id?.toString());
+    if (!media) {
+      form.reset({
+        title: "",
+        description: "",
+        localDevelopmentAgencyId: lda?.id ?? 0,
+        mediaType: undefined,
+        mediaSourceTypeId: undefined,
+      });
+    }
   }
 
   return (
