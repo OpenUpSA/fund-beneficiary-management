@@ -9,6 +9,10 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
 
   const records = await prisma.media.findMany({
     where: { localDevelopmentAgencyId: ldaId },
+    include: {
+      createdBy: true,
+      mediaSourceType: true,
+    },
   });
 
   return NextResponse.json(records);
