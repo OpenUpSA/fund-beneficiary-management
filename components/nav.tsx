@@ -82,16 +82,16 @@ export function Nav() {
       // },
       {
         url: '/dashboard/media',
-        title: 'Media',
+        title: 'All Media',
         icon: Images,
         requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
       },
-      {
-        url: '/dashboard/documents',
-        title: 'Documents',
-        icon: Files,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
-      }
+      // {
+      //   url: '/dashboard/documents',
+      //   title: 'Documents',
+      //   icon: Files,
+      //   requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+      // }
     ]
   }), [user?.role, user?.ldaIds])
 
