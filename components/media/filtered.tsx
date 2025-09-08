@@ -95,7 +95,6 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
   }
 
   const ldaOptions: FilterOption[] = availableLDAs.map(({ id, label }) => ({ id, label }))
-  const focusAreaOptions: FilterOption[] = focusAreas.map(({ id, label }) => ({ id: String(id), label }))
   const mediaTypeOptions: FilterOption[] = availableMediaTypes.map(({ id, label }) => ({ id, label }))
   const periodOptions: FilterOption[] = availableFundingPeriods.map(({ id, label }) => ({ id, label }))
 
@@ -120,7 +119,6 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     !lda ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
     { type: 'type', label: 'Type', options: mediaTypeOptions },
     { type: 'sourceType', label: 'Source', options: mediaSourceTypes?.map(({ id, title }) => ({ id: String(id), label: title })) },
-    !lda ? { type: 'focus', label: 'Focus areas', options: focusAreaOptions } : null,
     !lda ? { type: 'period', label: 'Funding period', options: periodOptions } : null,
     { 
       type: 'dateCreated', 
@@ -197,17 +195,12 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     const filtered = media.filter((item) => {
       const selectedLdaIds = (activeFilters['lda'] || []).map(o => o.id)
       const selectedTypes = (activeFilters['type'] || []).map(o => o.id)
-      const selectedFocusIds = (activeFilters['focus'] || []).map(o => o.id)
       const selectedPeriods = (activeFilters['period'] || []).map(o => o.id)
       const selectedSourceTypeIds = (activeFilters['sourceType'] || []).map(o => o.id)
       const selectedDateRanges = (activeFilters['dateCreated'] || [])
       const selectedCreatedByIds = (activeFilters['createdBy'] || []).map(o => o.id)
 
       const ldaMatch = selectedLdaIds.length === 0 || selectedLdaIds.includes(String(item.localDevelopmentAgencyId))
-
-      const focusAreaMatch =
-        selectedFocusIds.length === 0 ||
-        item.localDevelopmentAgency.focusAreas.some((fa) => selectedFocusIds.includes(String(fa.id)))
 
       const selectedMediaTypeMatch =
         selectedTypes.length === 0 || selectedTypes.includes(item.mediaType)
@@ -283,7 +276,7 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
       const createdByMatch = selectedCreatedByIds.length === 0 || 
         (item.createdById && selectedCreatedByIds.includes(String(item.createdById)))
 
-      return focusAreaMatch && searchMatch && selectedMediaTypeMatch && fundingPeriodMatch && ldaMatch && sourceMatch && dateCreatedMatch && createdByMatch
+      return searchMatch && selectedMediaTypeMatch && fundingPeriodMatch && ldaMatch && sourceMatch && dateCreatedMatch && createdByMatch
     })
 
     setFilteredMedia(filtered)
