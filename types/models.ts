@@ -109,6 +109,8 @@ export type MediaFull = Prisma.MediaGetPayload<{
         developmentStage: true
       }
     }
+    createdBy: true
+    mediaSourceType: true
   }
 }>
 

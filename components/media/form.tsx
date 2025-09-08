@@ -127,6 +127,7 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
 
       toast.success(media ? "Media updated" : "Media created", { id: toastId });
     } catch (error) {
+      console.error(`Error saving media:`, error);
       toast.error("Failed to save media", { id: toastId });
       return;
     }

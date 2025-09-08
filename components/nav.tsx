@@ -9,7 +9,6 @@ import {
   LayoutTemplate,
   MapPinHouse,
   Users,
-  Files
 } from "lucide-react"
 
 import { NavGroup } from "@/components/nav-group"

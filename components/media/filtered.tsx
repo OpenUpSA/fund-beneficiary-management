@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input"
 import { useEffect, useState, useCallback, useMemo } from "react"
 import Link from "next/link"
-import { FocusArea, LocalDevelopmentAgency, MediaSourceType, User } from "@prisma/client"
+import { FocusArea, LocalDevelopmentAgency, MediaSourceType } from "@prisma/client"
 import { FormDialog as MediaFormDialog } from "@/components/media/form"
 import { DeleteDialog } from "@/components/media/delete"
 import { MediaTypeEnum } from "@/types/formSchemas"
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import ImageWithFallback from '@/components/imageWithFallback'
-import { MediaFull } from "@/types/models"
+import { MediaFull, UserWithLDAsBasic } from "@/types/models"
 import { useTranslations } from "next-intl"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
@@ -32,7 +32,7 @@ interface Props {
   dataChanged: (media_id?: string) => void
   navigatedFrom?: string
   mediaSourceTypes?: MediaSourceType[]
-  users?: User[]
+  users?: UserWithLDAsBasic[]
 }
 
 export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSourceTypes, users }: Props) {
