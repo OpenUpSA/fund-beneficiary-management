@@ -1,9 +1,9 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { useEffect, useState, useCallback, useMemo, startTransition } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import Link from "next/link"
-import { FocusArea, LocalDevelopmentAgency, MediaSourceType } from "@prisma/client"
+import { LocalDevelopmentAgency, MediaSourceType } from "@prisma/client"
 import { FormDialog as MediaFormDialog } from "@/components/media/form"
 import { DeleteDialog } from "@/components/media/delete"
 import { MediaTypeEnum } from "@/types/formSchemas"
@@ -62,7 +62,6 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
   }
 
   let availableLDAs: { id: string; label: string }[] = []
-  let focusAreas: FocusArea[] = []
   let availableFundingPeriods: { id: string; label: string }[] = []
 
   if (!lda) {
@@ -71,14 +70,6 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
         media
           .map((item) => item.localDevelopmentAgency)
           .map((agency) => [agency.id, { id: String(agency.id), label: agency.name }])
-      ).values(),
-    ]
-
-    focusAreas = [
-      ...new Map(
-        media.flatMap(m =>
-          m.localDevelopmentAgency.focusAreas.map(fa => [fa.id, fa] as unknown as [string, FocusArea])
-        )
       ).values(),
     ]
 
