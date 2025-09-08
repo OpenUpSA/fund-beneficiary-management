@@ -1,7 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState, useCallback, useMemo, startTransition } from "react"
 import Link from "next/link"
 import { FocusArea, LocalDevelopmentAgency, MediaSourceType } from "@prisma/client"
 import { FormDialog as MediaFormDialog } from "@/components/media/form"
@@ -9,13 +9,17 @@ import { DeleteDialog } from "@/components/media/delete"
 import { MediaTypeEnum } from "@/types/formSchemas"
 
 import { ImageKitProvider } from '@imagekit/next'
-import { InfoIcon, MoreHorizontal, Settings2 } from "lucide-react"
+import { InfoIcon, MoreHorizontal, Settings2, ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import ImageWithFallback from '@/components/imageWithFallback'
 import { MediaFull, UserWithLDAsBasic } from "@/types/models"
 import { useTranslations } from "next-intl"
+
+type SortDirection = 'asc' | 'desc' | null
+type SortableColumn = 'title' | 'mediaType' | 'createdAt' | 'mediaSourceType' | null
+
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { CustomDateFilter } from "@/components/ui/date-range-picker"
@@ -41,6 +45,8 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
   const [viewMode, setViewMode] = useState<'thumbnail' | 'table'>('thumbnail')
+  const [sortColumn, setSortColumn] = useState<SortableColumn>('createdAt')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
   const imagekitUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
 
@@ -144,7 +150,48 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     setFilteredMedia(media)
   }
 
+  const handleSort = useCallback((column: SortableColumn) => {
+    setSortColumn(prev => {
+      if (prev === column) {
+        setSortDirection(dir => (dir === 'asc' ? 'desc' : dir === 'desc' ? null : 'asc'))
+        return column
+      }
+      setSortDirection('asc')
+      return column
+    })
+  }, [])
+
   const [filteredMedia, setFilteredMedia] = useState<MediaFull[]>(media)
+
+  // Apply sorting to the filtered media
+  const sortedMedia = useMemo(() => {
+    let result = [...filteredMedia];
+    
+    if (sortColumn && sortDirection) {
+      const dir = sortDirection === 'asc' ? 1 : -1;
+      result = result.sort((a, b) => {
+        if (sortColumn === 'title') {
+          return dir * a.title.localeCompare(b.title);
+        }
+        if (sortColumn === 'mediaType') {
+          return dir * a.mediaType.localeCompare(b.mediaType);
+        }
+        if (sortColumn === 'createdAt') {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dir * (dateA - dateB);
+        }
+        if (sortColumn === 'mediaSourceType') {
+          const sourceA = a.mediaSourceType?.title || '';
+          const sourceB = b.mediaSourceType?.title || '';
+          return dir * sourceA.localeCompare(sourceB);
+        }
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [filteredMedia, sortColumn, sortDirection]);
 
   useEffect(() => {
     const filtered = media.filter((item) => {
@@ -353,18 +400,70 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Added</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>info</TableHead>
-                    <TableHead>Uploaded by</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead 
+                      className="h-10 cursor-pointer select-none" 
+                      onClick={() => handleSort('title')}
+                    >
+                      <div className="flex items-center justify-start">
+                        <span>Name</span>
+                        <span className="ml-1">
+                          {sortColumn === 'title' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="h-10 cursor-pointer select-none" 
+                      onClick={() => handleSort('mediaType')}
+                    >
+                      <div className="flex items-center justify-start">
+                        <span>Type</span>
+                        <span className="ml-1">
+                          {sortColumn === 'mediaType' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="h-10 cursor-pointer select-none" 
+                      onClick={() => handleSort('createdAt')}
+                    >
+                      <div className="flex items-center justify-start">
+                        <span>Added</span>
+                        <span className="ml-1">
+                          {sortColumn === 'createdAt' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="h-10 cursor-pointer select-none" 
+                      onClick={() => handleSort('mediaSourceType')}
+                    >
+                      <div className="flex items-center justify-start">
+                        <span>Source</span>
+                        <span className="ml-1">
+                          {sortColumn === 'mediaSourceType' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-10">Info</TableHead>
+                    <TableHead className="h-10">Uploaded by</TableHead>
+                    <TableHead className="h-10 w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMedia.length > 0 ? (
-                    filteredMedia.map((item) => (
+                  {sortedMedia.length > 0 ? (
+                    sortedMedia.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
                           <Link href={getMediaLink(item.id)} className="flex items-center space-x-2">
