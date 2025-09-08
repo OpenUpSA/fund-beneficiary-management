@@ -5,20 +5,25 @@ import { useEffect, useState, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { FocusArea, LocalDevelopmentAgency, MediaSourceType } from "@prisma/client"
 import { FormDialog as MediaFormDialog } from "@/components/media/form"
+import { DeleteDialog } from "@/components/media/delete"
 import { MediaTypeEnum } from "@/types/formSchemas"
 
 import { ImageKitProvider } from '@imagekit/next'
-import { InfoIcon, MoreHorizontal, Trash2 } from "lucide-react"
+import { InfoIcon, MoreHorizontal, Settings2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import ImageWithFallback from '@/components/imageWithFallback'
-import { MediaFull } from "@/types/models"
+import { MediaFull, UserWithLDAsBasic } from "@/types/models"
 import { useTranslations } from "next-intl"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { CustomDateFilter } from "@/components/ui/date-range-picker"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent } from "@/components/ui/card"
+import { format } from "date-fns"
+import { InitialsBadge } from "@/components/ui/initials-badge"
 
 
 interface Props {
@@ -27,13 +32,15 @@ interface Props {
   dataChanged: (media_id?: string) => void
   navigatedFrom?: string
   mediaSourceTypes?: MediaSourceType[]
+  users?: UserWithLDAsBasic[]
 }
 
-export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSourceTypes }: Props) {
+export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSourceTypes, users }: Props) {
   const tC = useTranslations('common')
 
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
+  const [viewMode, setViewMode] = useState<'thumbnail' | 'table'>('thumbnail')
 
   const imagekitUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
 
@@ -97,6 +104,12 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     { id: 'custom', label: 'Custom range' },
   ], [])
 
+  // Create options for createdBy filter from users
+  const createdByOptions: FilterOption[] = users?.map(user => ({ 
+    id: String(user.id), 
+    label: user.name || user.email || 'Unknown user' 
+  })) || []
+
   const filterConfigs = [
     !lda ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
     { type: 'type', label: 'Type', options: mediaTypeOptions },
@@ -109,13 +122,13 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
       options: dateCreatedOptions,
       customFilterComponent: CustomDateFilter
     },
+    { type: 'createdBy', label: 'Uploaded by', options: createdByOptions },
   ].filter(Boolean) as { 
     type: string, 
     label: string, 
     options: FilterOption[],
     customFilterComponent?: React.ComponentType<{ filterType: string, onFilterChange: (filterType: string, selectedOptions: FilterOption[]) => void, activeFilters: Record<string, FilterOption[]> }>
   }[]
-
   const handleSearch = (term: string) => setSearchTerm(term)
 
   const handleFilterChange = useCallback((filterType: string, selectedOptions: FilterOption[]) => {
@@ -141,6 +154,7 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
       const selectedPeriods = (activeFilters['period'] || []).map(o => o.id)
       const selectedSourceTypeIds = (activeFilters['sourceType'] || []).map(o => o.id)
       const selectedDateRanges = (activeFilters['dateCreated'] || [])
+      const selectedCreatedByIds = (activeFilters['createdBy'] || []).map(o => o.id)
 
       const ldaMatch = selectedLdaIds.length === 0 || selectedLdaIds.includes(String(item.localDevelopmentAgencyId))
 
@@ -218,7 +232,11 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
         })
       }
 
-      return focusAreaMatch && searchMatch && selectedMediaTypeMatch && fundingPeriodMatch && ldaMatch && sourceMatch && dateCreatedMatch
+      // Created by filter match
+      const createdByMatch = selectedCreatedByIds.length === 0 || 
+        (item.createdById && selectedCreatedByIds.includes(String(item.createdById)))
+
+      return focusAreaMatch && searchMatch && selectedMediaTypeMatch && fundingPeriodMatch && ldaMatch && sourceMatch && dateCreatedMatch && createdByMatch
     })
 
     setFilteredMedia(filtered)
@@ -245,79 +263,178 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
             activeFilters={activeFilters}
           />
         </div>
-        {lda && (
-          <MediaFormDialog lda={lda} callback={dataChanged} mediaSourceTypes={mediaSourceTypes}/>
-        )}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => setViewMode(viewMode === 'thumbnail' ? 'table' : 'thumbnail')}
+          >
+            <Settings2 className="h-4 w-4 mr-1" />
+            <span>View</span>
+          </Button>
+          {lda && (
+            <MediaFormDialog lda={lda} callback={dataChanged} mediaSourceTypes={mediaSourceTypes}/>
+          )}
+        </div>
       </div>
 
       <div className="w-full">
-        <div className="grid gap-6 py-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          <ImageKitProvider urlEndpoint={imagekitUrlEndpoint}>
-            {filteredMedia.map((item) => (
-              <div key={item.id} className="relative group border rounded-md overflow-hidden flex flex-col">
-                <div className="p-2 flex items-center">
-                  <span className="text-xs text-slate-900 font-medium truncate flex-grow" title={item.filePath.split('/').pop() || item.title}>
-                    {item.filePath.split('/').pop() || `${item.title}.jpg`}
-                  </span>
-                  <div className="flex items-center ml-auto">
-                    {item.description && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                              <InfoIcon className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-[20rem]">
-                            {item.description}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <MediaFormDialog
-                            key={item.id}
-                            media={item}
-                            callback={dataChanged}
-                            mediaSourceTypes={mediaSourceTypes}
-                          />
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <div className="flex items-center gap-2 text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </div>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+        {viewMode === 'thumbnail' ? (
+          <div className="grid gap-6 py-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <ImageKitProvider urlEndpoint={imagekitUrlEndpoint}>
+              {filteredMedia.length > 0 ? filteredMedia.map((item) => (
+                <div key={item.id} className="relative group border rounded-md overflow-hidden flex flex-col">
+                  <div className="p-2 flex items-center">
+                    <span className="text-xs text-slate-900 font-medium truncate flex-grow" title={item.filePath.split('/').pop() || item.title}>
+                      {item.filePath.split('/').pop() || `${item.title}.jpg`}
+                    </span>
+                    <div className="flex items-center ml-auto">
+                      {item.description && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                <InfoIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[20rem]">
+                              {item.description}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <MediaFormDialog
+                              key={item.id}
+                              media={item}
+                              callback={dataChanged}
+                              mediaSourceTypes={mediaSourceTypes}
+                            />
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DeleteDialog media={item} callback={dataChanged} />
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
+                  <Link className="block flex-grow pt-2 p-3" href={getMediaLink(item.id)} title={item.title}>
+                    <div className="relative aspect-[4/3] w-full">
+                      <ImageWithFallback
+                        src={item.filePath}
+                        transformation={[{ width: 300, height: 225, quality: 75, format: 'webp' }]}
+                        responsive={true}
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        alt={item.title}
+                        fallbackSrc="/thumbnail.png"
+                        className="transition-transform group-hover:scale-105 rounded-md"
+                      />
+                    </div>
+                  </Link>
                 </div>
-                <Link className="block flex-grow pt-2 p-3" href={getMediaLink(item.id)} title={item.title}>
-                  <div className="relative aspect-[4/3] w-full">
-                    <ImageWithFallback
-                      src={item.filePath}
-                      transformation={[{ width: 300, height: 225, quality: 75, format: 'webp' }]}
-                      responsive={true}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                      alt={item.title}
-                      fallbackSrc="/thumbnail.png"
-                      className="transition-transform group-hover:scale-105 rounded-md"
-                    />
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </ImageKitProvider>
-        </div>
+              )) : (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  No media found
+                </div>
+              )}
+            </ImageKitProvider>
+          </div>
+        ) : (
+          <Card className="w-full text-slate-700">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Added</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>info</TableHead>
+                    <TableHead>Uploaded by</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredMedia.length > 0 ? (
+                    filteredMedia.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          <Link href={getMediaLink(item.id)} className="flex items-center space-x-2">
+                            <span>{item.title}</span>
+                          </Link>
+                        </TableCell>
+                        <TableCell>{tC(`mediaTypes.${item.mediaType}`)}</TableCell>
+                        <TableCell>{format(new Date(item.createdAt), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>{item.mediaSourceType?.title || '-'}</TableCell>
+                        <TableCell>
+                          {item.description && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                    <InfoIcon className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-[20rem]">
+                                  {item.description}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {item.createdBy?.name ? (
+                            <InitialsBadge 
+                              name={item.createdBy.name} 
+                              title={item.createdBy.name} 
+                            />
+                          ) : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <MediaFormDialog
+                                  key={item.id}
+                                  media={item}
+                                  callback={dataChanged}
+                                  mediaSourceTypes={mediaSourceTypes}
+                                />
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <DeleteDialog media={item} callback={dataChanged} />
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                        No media found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

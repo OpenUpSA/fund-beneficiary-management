@@ -16,7 +16,9 @@ export async function GET() {
           focusAreas: true,
           developmentStage: true
         }
-      }
+      },
+      createdBy: true,
+      mediaSourceType: true,
     }
   })
   return NextResponse.json(records)

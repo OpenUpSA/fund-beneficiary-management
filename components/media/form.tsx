@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -116,21 +116,36 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
     const method = media ? "PUT" : "POST";
     const endpoint = media ? `/api/media/${media.id}` : `/api/media`;
 
-    toast({ title: media ? "Updating media..." : "Creating media...", variant: "processing" });
+    const toastId = media ? "update-media" : "create-media";
+    toast.loading(media ? "Updating media..." : "Creating media...", { id: toastId });
 
-    await fetch(endpoint, {
-      method,
-      body: formData,
-    });
+    try {
+      await fetch(endpoint, {
+        method,
+        body: formData,
+      });
 
-    toast({ title: media ? "Media updated" : "Media created", variant: "success" });
+      toast.success(media ? "Media updated" : "Media created", { id: toastId });
+    } catch (error) {
+      console.error(`Error saving media:`, error);
+      toast.error("Failed to save media", { id: toastId });
+      return;
+    }
     callback(media?.id?.toString());
+    if (!media) {
+      form.reset({
+        title: "",
+        description: "",
+        localDevelopmentAgencyId: lda?.id ?? 0,
+        mediaType: undefined,
+        mediaSourceTypeId: undefined,
+      });
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        
           {media ? 
             <span className="flex items-center gap-2 hover:cursor-pointer w-full"><PencilIcon size={10} /> Edit</span>
             : <Button>
