@@ -19,7 +19,7 @@ const getInitials = (name: string) => name.split(" ").map(w => w[0]).join("")
 const getShortName = (name: string) => name.split(" ").map(w => w[0]).join("")
 
 type SortDirection = 'asc' | 'desc' | null
-type SortableColumn = 'name' | 'status' | null
+type SortableColumn = 'name' | 'status' | 'stage' | 'province' | 'po' | 'focusArea' | null
 
 interface FilteredLDAsProps {
   ldas: LocalDevelopmentAgencyFull[]
@@ -163,6 +163,26 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
           const sb = b.fundingStatus?.label || ''
           return dir * sa.localeCompare(sb)
         }
+        if (sortColumn === 'stage') {
+          const sa = a.developmentStage?.label || ''
+          const sb = b.developmentStage?.label || ''
+          return dir * sa.localeCompare(sb)
+        }
+        if (sortColumn === 'province') {
+          const sa = a.organisationDetail?.physicalProvince || ''
+          const sb = b.organisationDetail?.physicalProvince || ''
+          return dir * sa.localeCompare(sb)
+        }
+        if (sortColumn === 'po') {
+          const sa = a.programmeOfficer?.name || ''
+          const sb = b.programmeOfficer?.name || ''
+          return dir * sa.localeCompare(sb)
+        }
+        if (sortColumn === 'focusArea') {
+          const sa = a.focusAreas.map(fa => fa.label).sort().join(', ')
+          const sb = b.focusAreas.map(fa => fa.label).sort().join(', ')
+          return dir * sa.localeCompare(sb)
+        }
         return 0
       })
     }
@@ -282,10 +302,50 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
                         </span>
                       </div>
                     </TableHead>
-                    <TableHead className="h-10">Stage</TableHead>
-                    <TableHead className="h-10">Province</TableHead>
-                    <TableHead className="h-10 text-nowrap">Focus area(s)</TableHead>
-                    <TableHead className="h-10"><abbr title="Programme Officer">PO</abbr></TableHead>
+                    <TableHead className="h-10 cursor-pointer select-none" onClick={() => handleSort('stage')}>
+                      <div className="flex items-center justify-start">
+                        <span>Stage</span>
+                        <span className="ml-1">
+                          {sortColumn === 'stage' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-10 cursor-pointer select-none" onClick={() => handleSort('province')}>
+                      <div className="flex items-center justify-start">
+                        <span>Province</span>
+                        <span className="ml-1">
+                          {sortColumn === 'province' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-10 text-nowrap cursor-pointer select-none" onClick={() => handleSort('focusArea')}>
+                      <div className="flex items-center justify-start">
+                        <span>Focus area(s)</span>
+                        <span className="ml-1">
+                          {sortColumn === 'focusArea' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-10 cursor-pointer select-none" onClick={() => handleSort('po')}>
+                      <div className="flex items-center justify-start">
+                        <abbr title="Programme Officer">PO</abbr>
+                        <span className="ml-1">
+                          {sortColumn === 'po' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
 
