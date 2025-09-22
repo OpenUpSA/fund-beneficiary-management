@@ -154,13 +154,12 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
               </Button> }
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
-        <DialogHeader className="p-5 border-b">
+        <DialogHeader className="p-6 border-b">
           <DialogTitle>{media ? "Edit" : "Add"} media</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
-            <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 220px)' }}>
-              <div className="space-y-4">
+            <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
                 <FormField
                   control={form.control}
                   name="title"
@@ -292,21 +291,10 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
                     </FormItem>
                   )}
                 />
-              </div>
             </div>
-            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
-              <Button
-                variant="outline"
-                onClick={() => setOpen(false)}
-                className="w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={form.formState.isSubmitting}
-                className="w-full sm:w-auto"
-              >
+            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-6 pb-6 pt-4 border-t mt-auto">
+              <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="sm:order-2 order-1">
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {media ? "Save changes" : "Create media"}
               </Button>
