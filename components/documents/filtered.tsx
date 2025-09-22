@@ -166,6 +166,7 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
             onResetFilters={handleResetFilters}
             filterConfigs={filterConfigs}
             activeFilters={activeFilters}
+            className="hidden md:flex"
           />
         </div>
         {lda && (

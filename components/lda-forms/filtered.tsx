@@ -174,6 +174,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
             onResetFilters={handleResetFilters}
             filterConfigs={filterConfigs}
             activeFilters={activeFilters}
+            className="hidden md:flex"
           />
         </div>
         

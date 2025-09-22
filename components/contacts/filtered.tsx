@@ -167,6 +167,7 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
             onResetFilters={handleResetFilters}
             filterConfigs={filterConfigs}
             activeFilters={activeFilters}
+            className="hidden md:flex"
           />
         </div>
         {lda && (
