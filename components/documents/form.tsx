@@ -142,16 +142,14 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          {document ? <>
-            <span className="hidden md:inline">Edit details</span>
-            <PencilIcon />
-          </>
-            : <>
-              <PlusIcon />
-              <span className="hidden md:inline">Add document</span>
-            </>}
-        </Button>
+        {document ? (
+          <span className="flex items-center gap-2 hover:cursor-pointer w-full"><PencilIcon size={10} /> Edit</span>
+        ) : (
+          <Button>
+            <PlusIcon />
+            <span className="hidden md:inline">Add document</span>
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="min-w-[40vw]">
         <DialogHeader>

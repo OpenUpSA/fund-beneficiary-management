@@ -209,11 +209,12 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Link href={getDocumentLink(document.id)} className="flex items-center gap-2">
-                              <FileEdit className="h-4 w-4" />
-                              View Details
-                            </Link>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DocumentFormDialog
+                              document={document}
+                              lda={lda}
+                              callback={dataChanged}
+                            />
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <DeleteDialog document={document} callback={dataChanged} />
