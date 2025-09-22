@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, FileEdit } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -166,6 +166,7 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
             onResetFilters={handleResetFilters}
             filterConfigs={filterConfigs}
             activeFilters={activeFilters}
+            className="hidden md:flex"
           />
         </div>
         {lda && (
@@ -209,11 +210,12 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Link href={getDocumentLink(document.id)} className="flex items-center gap-2">
-                              <FileEdit className="h-4 w-4" />
-                              View Details
-                            </Link>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <DocumentFormDialog
+                              document={document}
+                              lda={lda}
+                              callback={dataChanged}
+                            />
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <DeleteDialog document={document} callback={dataChanged} />

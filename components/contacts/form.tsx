@@ -91,18 +91,22 @@ export function FormDialog({ contact, connectOnCreate, callback }: FormDialogPro
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {contact ?
-          <span className="flex items-center gap-2"><PencilIcon className="hover:cursor-pointer" size={10} /> Edit</span>
-          :
-          <Button><PlusIcon/><span className="hidden md:inline">Add contact</span></Button>
-        }
+        {contact ? (
+          <span className="flex items-center gap-2 hover:cursor-pointer w-full"><PencilIcon size={10} /> Edit</span>
+        ) : (
+          <Button>
+            <PlusIcon />
+            <span className="hidden md:inline">Add contact</span>
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="min-w-[40vw]">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
+        <DialogHeader className="p-6 border-b">
           <DialogTitle>{contact ? "Edit" : "Add"} Contact</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
+            <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
             <FormField
               control={form.control}
               name="name"
@@ -151,25 +155,25 @@ export function FormDialog({ contact, connectOnCreate, callback }: FormDialogPro
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="info"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Info</FormLabel>
+                  <FormControl>
+                    <Textarea rows={5} className="resize-none" {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            </div>
+            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-6 pb-6 pt-4 border-t mt-auto">
+              <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+              <Button type="submit" className="sm:order-2 order-1">{contact ? "Save changes" : "Create Contact"}</Button>
+            </DialogFooter>
           </form>
-
-          <FormField
-            control={form.control}
-            name="info"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Info</FormLabel>
-                <FormControl>
-                  <Textarea rows={5} className="resize-none" {...field} />
-                </FormControl>
-
-              </FormItem>
-            )}
-          />
         </Form>
-        <DialogFooter>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>{contact ? "Save changes" : "Create Contact"}</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog >
   )

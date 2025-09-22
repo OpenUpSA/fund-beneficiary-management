@@ -142,23 +142,22 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          {document ? <>
-            <span className="hidden md:inline">Edit details</span>
-            <PencilIcon />
-          </>
-            : <>
-              <span className="hidden md:inline">Add document</span>
-              <PlusIcon />
-            </>}
-        </Button>
+        {document ? (
+          <span className="flex items-center gap-2 hover:cursor-pointer w-full"><PencilIcon size={10} /> Edit</span>
+        ) : (
+          <Button>
+            <PlusIcon />
+            <span className="hidden md:inline">Add document</span>
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="min-w-[40vw]">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
+        <DialogHeader className="p-6 border-b">
           <DialogTitle>{document ? "Edit" : "Add"} document</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
+            <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
             <FormField
               control={form.control}
               name="title"
@@ -325,14 +324,18 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
                       ))}
                     </SelectContent>
                   </Select>
+
                 </FormItem>
-              )} />
-          </form>
-        </Form>
-        <DialogFooter>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>{document ? "Save changes" : "Create document"}</Button>
+              )}
+            />
+        </div>
+        <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-6 pb-6 pt-4 border-t mt-auto">
+          <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+          <Button type="submit" className="sm:order-2 order-1">{document ? "Save changes" : "Create document"}</Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog >
-  )
+      </form>
+    </Form>
+  </DialogContent>
+</Dialog >
+)
 }

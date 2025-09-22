@@ -292,6 +292,7 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
             onResetFilters={handleResetFilters}
             filterConfigs={filterConfigs}
             activeFilters={activeFilters}
+            className="hidden md:flex"
           />
         </div>
         <div className="flex items-center gap-4">

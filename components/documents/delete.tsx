@@ -1,8 +1,7 @@
 "use client"
 
 import { toast } from "@/hooks/use-toast"
-import { CircleXIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { AlertCircle, Trash2 } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation"
 
@@ -36,21 +35,21 @@ export function DeleteDialog({ document, callback }: Props) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">
-          <span className="hidden md:inline">Delete</span>
-          <CircleXIcon />
-        </Button>
+        <span className="flex items-center gap-2 hover:cursor-pointer w-full text-destructive"><Trash2 size={10} /> Delete</span>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            Confirm Deletion
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete this document.
+            Are you sure you want to delete the document {document.title}? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={deleteDocument}>Yes, delete document</AlertDialogAction>
+          <AlertDialogAction onClick={deleteDocument} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
