@@ -16,7 +16,11 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
   const { lda_id, application_id } = params
   
   // Fetch the application data
-  await fetchLocalDevelopmentAgency(lda_id) // Fetch LDA to ensure it exists
+  const lda = await fetchLocalDevelopmentAgency(lda_id) // Fetch LDA to ensure it exists
+  if (!lda) {
+    redirect('/dashboard/ldas')
+  }
+  
   const ldaForm = await fetchLDAForm(application_id)
   
   if (!ldaForm) {

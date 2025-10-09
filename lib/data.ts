@@ -2,6 +2,8 @@ import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDev
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus, Contact, MediaSourceType } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { headers } from "next/headers"
+import { permissions } from "./permissions"
 
 export async function fetchFunders() {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder`, { next: { tags: ['funders:list'] } })
@@ -62,23 +64,36 @@ export async function fetchFocusAreas(): Promise<FocusArea[]> {
 
 export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentAgencyFull[]> {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
-  const user = session?.user
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda`, { next: { tags: ['ldas:list'] } })
-  const ldas = await res.json()
+  const user = session?.user || null
 
-  // If no user or role is ADMIN/PROGRAMME_OFFICER, return all LDAs
-  if (!user || user.role === 'ADMIN' || user.role === 'PROGRAMME_OFFICER') {
-    return ldas
+  const canViewAllLDAs = permissions.canViewAllLDAs(user)
+  const tags = ['ldas:list']
+  if (!canViewAllLDAs) {
+    tags.push(`ldas:list:${user?.ldaIds?.join(':')}`)
   }
 
-  // For USER role, filter by their LDA IDs
-  return ldas.filter((lda: LocalDevelopmentAgencyFull) => user.ldaIds?.includes(lda.id))
+  // Forward cookies so the API route can read the session with getServerSession
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda`, {
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags }
+  })
+  return res.json()
 }
 
-export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, { 
+export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<LocalDevelopmentAgencyFull | null> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}`, {
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
     next: { tags: ['ldas:list', `lda:detail:${lda_id}`] } 
   })
+
+  if (res.status === 403) {
+    return null
+  }
+
   return res.json()
 }
 

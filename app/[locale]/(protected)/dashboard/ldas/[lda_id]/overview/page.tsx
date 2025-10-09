@@ -3,6 +3,7 @@ import { Overview } from "@/components/ldas/overview"
 import { fetchLocalDevelopmentAgency, fetchFunds } from "@/lib/data"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { redirect } from "next/navigation"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -20,13 +21,16 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 interface LDAOverviewPageProps {
   params: { lda_id: string }
 }
-
 export default async function Page({ params }: LDAOverviewPageProps) {
   const { lda_id } = params
   
   // Fetch LDA data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
-  const funds =  fetchFunds(lda_id)
+  if (!lda) {
+    return redirect('/dashboard/ldas')
+  }
+
+  const funds = fetchFunds(lda_id)
 
   return (
     <div>

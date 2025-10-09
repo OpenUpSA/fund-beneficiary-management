@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { FilteredMedia } from "@/components/media/filtered"
 import { fetchLocalDevelopmentAgency, fetchLDAMedia, fetchMediaSourceTypes, fetchUsers } from "@/lib/data"
 import { revalidateTag } from "next/cache"
+import { redirect } from "next/navigation"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -27,6 +28,10 @@ export default async function Page({ params }: LDAMediaPageProps) {
   
   // Fetch LDA data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  if (!lda) {
+    return redirect(`/dashboard/ldas`)
+  }
+
   const media = await fetchLDAMedia(lda_id)
   const mediaSourceTypes = await fetchMediaSourceTypes()
   const users = await fetchUsers()

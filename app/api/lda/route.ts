@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { permissions } from "@/lib/permissions"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null
+  const canViewAllLDAs = permissions.canViewAllLDAs(user)
+
+  const where = canViewAllLDAs
+    ? {}
+    : {
+      id: { in: user?.ldaIds ?? [] }, // or use relation-based ACL here instead
+    };
+
   const records = await prisma.localDevelopmentAgency.findMany({
+    where,
     include: {
       fundingStatus: true,
       focusAreas: true,
@@ -38,6 +53,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null
+    const canCreateLDA = permissions.canCreateLDA(user)
+
+    if (!canCreateLDA) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 })
+    }
+    
     const data = await req.json()
     const query = {
       data: {

@@ -37,13 +37,13 @@ export function Nav() {
         title: "Form Templates",
         url: "/dashboard/form-templates",
         icon: LayoutTemplate,
-        requiredRoles: ['ADMIN']
+        requiredRoles: ['ADMIN', 'SUPER_USER']
       },
       {
         title: "Users",
         url: "/dashboard/users",
         icon: Users,
-        requiredRoles: ['ADMIN']
+        requiredRoles: ['ADMIN', 'SUPER_USER']
       }
     ],
     navMain: [
@@ -51,7 +51,7 @@ export function Nav() {
         url: '/dashboard',
         title: 'Dashboard',
         icon: LayoutDashboard,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER']
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']
       },
       {
         url: user?.role === 'USER' && user?.ldaIds?.length === 1
@@ -59,19 +59,19 @@ export function Nav() {
           : '/dashboard/ldas',
         title: 'LDAs',
         icon: MapPinHouse,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER']
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']
       },
       {
         url: '/dashboard/funders',
         title: 'Funders',
         icon: HandCoins,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'SUPER_USER']
       },
       {
         url: '/dashboard/funds',
         title: 'Funds',
         icon: BanknoteIcon,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'SUPER_USER']
       },
       // {
       //   url: '/dashboard/applications-reports',
@@ -83,7 +83,7 @@ export function Nav() {
         url: '/dashboard/media',
         title: 'All Media',
         icon: Images,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER']
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'SUPER_USER']
       },
       // {
       //   url: '/dashboard/documents',
@@ -110,6 +110,7 @@ export function Nav() {
       <SidebarContent>
         {session && <NavGroup session={session} items={data.navMain} />}
         {session && session.user.role === 'ADMIN' && <NavGroup session={session} label="Admin" items={data.navAdmin} className="mt-auto" />}
+        {session && session.user.role === 'SUPER_USER' && <NavGroup session={session} label="Superuser" items={data.navAdmin} className="mt-auto" />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
