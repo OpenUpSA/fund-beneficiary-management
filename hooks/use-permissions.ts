@@ -27,7 +27,9 @@ export function usePermissions() {
 
     // User management permissions
     canCreateUser: (targetRole: Role) => currentUser ? permissions.canCreateUser(currentUser, targetRole) : false,
-    canDeleteUser: (targetRole: Role) => currentUser ? permissions.canDeleteUser(currentUser, targetRole) : false,
+    canDeleteUser: (targetRole: Role) => currentUser ? permissions.canDeleteUser(currentUser) : false,
+    canEditUser: (targetUser: User) => currentUser ? permissions.canEditUser(currentUser, targetUser) : false,
+    canDeleteSpecificUser: (targetUser: User) => currentUser ? permissions.canDeleteSpecificUser(currentUser) : false,
     canCreateAdmin: () => currentUser ? permissions.canCreateAdmin(currentUser) : false,
     canDeleteAdmin: () => currentUser ? permissions.canDeleteAdmin(currentUser) : false,
 
@@ -46,8 +48,5 @@ export function usePermissions() {
     // Form permissions
     canCreateNewApplication: () => currentUser ? permissions.canCreateNewApplication(currentUser) : false,
     canViewDashboardStats: () => currentUser ? permissions.canViewDashboardStats(currentUser) : false,
-
-    // UI permissions
-    showManageLDAButton: (lda?: LDA) => currentUser ? permissions.showManageLDAButton(currentUser, lda) : false,
   }
 }

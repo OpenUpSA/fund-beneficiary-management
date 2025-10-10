@@ -169,3 +169,104 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
     return NextResponse.json({ error: "Failed to update", detail: (err as Error).message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest, { params }: { params: { lda_id: string } }) {
+  const ldaId = parseInt(params.lda_id, 10)
+
+  if (Number.isNaN(ldaId)) {
+    return NextResponse.json({ error: "Invalid LDA id" }, { status: 400 })
+  }
+
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null
+
+  // Only SuperUsers can delete LDAs
+  if (!user || !permissions.canDeleteLDA(user)) {
+    return NextResponse.json({ error: "Permission denied. Only SuperUsers can delete LDAs." }, { status: 403 })
+  }
+
+  try {
+    // Check if LDA exists and get all related data for cleanup
+    const existingLDA = await prisma.localDevelopmentAgency.findUnique({
+      where: { id: ldaId },
+      select: { 
+        id: true, 
+        name: true,
+        media: { select: { id: true, filePath: true } },
+        documents: { select: { id: true, filePath: true } }
+      }
+    })
+
+    if (!existingLDA) {
+      return NextResponse.json({ error: "LDA not found" }, { status: 404 })
+    }
+
+    // Use transaction to ensure all deletions succeed or fail together
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete many-to-many relations first
+      await tx.localDevelopmentAgency.update({
+        where: { id: ldaId },
+        data: {
+          funds: { set: [] },
+          focusAreas: { set: [] },
+          contacts: { set: [] }
+        }
+      })
+
+      // 2. Delete related records with foreign keys
+      await tx.localDevelopmentAgencyForm.deleteMany({
+        where: { localDevelopmentAgencyId: ldaId }
+      })
+
+      await tx.organisationOperations.deleteMany({
+        where: { localDevelopmentAgencyId: ldaId }
+      })
+
+      await tx.staffMember.deleteMany({
+        where: { localDevelopmentAgencyId: ldaId }
+      })
+
+      await tx.userAccess.deleteMany({
+        where: { localDevelopmentAgencyId: ldaId }
+      })
+
+      await tx.media.deleteMany({
+        where: { localDevelopmentAgencyId: ldaId }
+      })
+
+      await tx.document.deleteMany({
+        where: { localDevelopmentAgencyId: ldaId }
+      })
+
+      // 3. Finally delete the LDA itself
+      await tx.localDevelopmentAgency.delete({
+        where: { id: ldaId }
+      })
+    })
+
+    return NextResponse.json({ 
+      message: `LDA "${existingLDA.name}" and all related data have been successfully deleted`,
+      deletedId: ldaId,
+      deletedFiles: {
+        media: existingLDA.media.length,
+        documents: existingLDA.documents.length
+      }
+    });
+  } catch (err) {
+    console.error("Failed to delete LDA:", err);
+    
+    // Handle foreign key constraint errors
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === 'P2003') {
+        return NextResponse.json({ 
+          error: "Cannot delete LDA due to existing references. Please remove all associated data first." 
+        }, { status: 400 });
+      }
+    }
+    
+    return NextResponse.json({ 
+      error: "Failed to delete LDA", 
+      detail: (err as Error).message 
+    }, { status: 500 });
+  }
+}

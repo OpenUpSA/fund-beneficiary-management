@@ -34,6 +34,7 @@ import { DetailsTab } from "./manage-lda/details"
 import { OperationsTab } from "./manage-lda/operations"
 import { StaffTab } from "./manage-lda/staff"
 import { AccessTab } from "./manage-lda/access"
+import { ManageTab } from "./manage-lda/manage"
 
 
 interface FormDialogProps {
@@ -51,7 +52,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
   const [open, setOpen] = useState(false);
 
   console.log("lda", lda)
-  const { canCreateLDA } = usePermissions()
+  const { canCreateLDA, canManageLDA, isSuperUser } = usePermissions()
   
   const [operationsData, setOperationsData] = useState(
     {
@@ -245,8 +246,14 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
     }
   }
 
-  // Only show the Add LDA button (create mode) if the user has permission
+  // Permission checks
   if (!lda && !canCreateLDA()) {
+    // Hide Add LDA button if user can't create LDAs (only SuperUsers can create)
+    return null
+  }
+
+  if (lda && !canManageLDA(lda.id)) {
+    // Hide Manage LDA button if user doesn't have permission to manage this specific LDA
     return null
   }
 
@@ -297,6 +304,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                       {lda && <TabsTrigger value="operations" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Operations</TabsTrigger>}
                       {lda && <TabsTrigger value="staff" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Staff & Board</TabsTrigger>}
                       {lda && <TabsTrigger value="access" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">User Access</TabsTrigger>}
+                      {lda && isSuperUser() && <TabsTrigger value="manage" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Manage</TabsTrigger>}
                     </TabsList>
                   </div>
                 </div>
@@ -332,6 +340,11 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                       <TabsContent value="access">
                         <AccessTab userAccess={lda.userAccess ?? []} ldaId={lda.id} callback={callback}/>
                       </TabsContent>
+                      {isSuperUser() && (
+                        <TabsContent value="manage">
+                          <ManageTab ldaId={lda.id} ldaName={lda.name} callback={callback}/>
+                        </TabsContent>
+                      )}
                     </>
                   )}
                 </div>

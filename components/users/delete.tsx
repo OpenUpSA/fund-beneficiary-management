@@ -5,6 +5,7 @@ import { CircleXIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation"
+import { usePermissions } from "@/hooks/use-permissions"
 
 import { User } from '@prisma/client'
 
@@ -15,6 +16,10 @@ interface Props {
 
 export function DeleteDialog({ user, callback }: Props) {
   const router = useRouter()
+  const { canDeleteSpecificUser } = usePermissions()
+  
+  // Check if current user can delete this user
+  const canDelete = canDeleteSpecificUser(user)
 
   const deleteUser = async () => {
     toast({
@@ -31,6 +36,11 @@ export function DeleteDialog({ user, callback }: Props) {
       title: 'User deleted.',
       variant: 'warning'
     })
+  }
+
+  // Don't render delete button if user doesn't have delete permissions
+  if (!canDelete) {
+    return null
   }
 
   return (
