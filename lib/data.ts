@@ -98,66 +98,124 @@ export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<Local
 }
 
 export async function fetchUsers(): Promise<UserWithLDAsBasic[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user`, { next: { tags: ['users:list'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['users:list'] } 
+  })
   return res.json()
 }
 
 export async function fetchUser(user_id: string): Promise<UserFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${user_id}`, { next: { tags: ['users:list', `user:detail:${user_id}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/${user_id}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['users:list', `user:detail:${user_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchFormTemplate(form_template_id: string): Promise<FormTemplate> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template/${form_template_id}`)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template/${form_template_id}`, {
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    }
+  })
   return res.json()
 }
 
 export async function fetchFormTemplates(): Promise<FormTemplateWithRelations[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template`)
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template`, {
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    }
+  })
   return res.json()
 }
 
 export async function fetchMedia(media_id: string): Promise<MediaFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/${media_id}`, { next: { tags: ['media:list', `media:detail:${media_id}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/${media_id}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['media:list', `media:detail:${media_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchAllMedia(): Promise<MediaFull[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`, { next: { tags: ['media:list'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['media:list'] } 
+  })
   return res.json()
 }
 
 export async function fetchLDAMedia(lda_id: string): Promise<MediaFull[]> {
   const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`)
   url.searchParams.append('ldaId', lda_id)
-  const res = await fetch(url.toString(), { next: { tags: ['media:list', `media:lda:${lda_id}`] } })
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['media:list', `media:lda:${lda_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchDocument(document_id: string): Promise<DocumentFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/${document_id}`, { next: { tags: ['documents:list', `document:detail:${document_id}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/${document_id}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['documents:list', `document:detail:${document_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchAllDocuments(): Promise<DocumentFull[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`, { next: { tags: ['documents:list'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['documents:list'] } 
+  })
   return res.json()
 }
 
 export async function fetchLDADocuments(lda_id: string): Promise<DocumentFull[]> {
   const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`)
   url.searchParams.append('ldaId', lda_id)
-  const res = await fetch(url.toString(), { next: { tags: ['documents:list', `documents:lda:${lda_id}`] } })
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['documents:list', `documents:lda:${lda_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchAllLocalDevelopmentAgencyForms(): Promise<LocalDevelopmentAgencyFormFull[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/`, { next: { tags: ['lda-forms:list'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['lda-forms:list'] } 
+  })
   return res.json()
 }
 
 export async function fetchLocalDevelopmentAgencyFormsForLDA(lda_id: string): Promise<LocalDevelopmentAgencyFormFull[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}/lda-form`, { next: { tags: ['lda-forms:list', `lda-forms:lda:${lda_id}:list`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}/lda-form`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['lda-forms:list', `lda-forms:lda:${lda_id}:list`] } 
+  })
   return res.json()
 }
 
@@ -170,6 +228,9 @@ export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmen
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/${lda_form_id}`, 
     { 
+      headers: {
+        cookie: headers().get('cookie') ?? ''
+      },
       next: { tags: ['lda-forms:list', `lda-forms:detail:${lda_form_id}`] },
     }
   )
@@ -195,10 +256,18 @@ export async function fetchContacts(lda_id?: string): Promise<Contact[]> {
   }
   
   const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
     next: { 
       tags: lda_id ? ['contacts:list', `contacts:lda:${lda_id}`] : ['contacts:list'] 
     } 
   })
+
+  if (res.status !== 200) {
+    return []
+  }
+
   return res.json()
 }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import prisma from "@/db";
+import { permissions } from "@/lib/permissions";
 
 export async function PUT(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
   try {
@@ -13,6 +14,26 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
 
     const ldaFormId = parseInt(params.lda_form_id, 10);
     await req.json(); // Read request body but not using it
+    
+    // First, get the form to check LDA access
+    const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
+      where: { id: ldaFormId },
+      select: { localDevelopmentAgencyId: true }
+    });
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    // Permission check: Only LDA users can submit forms
+    if (!permissions.isLDAUser(session.user)) {
+      return NextResponse.json({ error: "Permission denied - only LDA users can submit forms" }, { status: 403 });
+    }
+
+    // Additional check: LDA user must have access to this specific LDA
+    if (!permissions.canViewLDA(session.user, existingForm.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied - no access to this LDA" }, { status: 403 });
+    }
     
     // Find the form status ID for "UnderReview"
     const underReviewStatus = await prisma.formStatus.findFirst({

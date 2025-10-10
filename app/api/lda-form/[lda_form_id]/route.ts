@@ -7,6 +7,7 @@ import { Field } from "@/types/forms"
 
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import { permissions } from "@/lib/permissions";
 
 
 export const dynamic = "force-dynamic"
@@ -86,6 +87,13 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
 }
 
 export async function GET(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null;
+  
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const ldaFormId = parseInt(params.lda_form_id, 10)
 
   const record = await prisma.localDevelopmentAgencyForm.findUnique({
@@ -106,6 +114,11 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
 
   if (!record) {
     return NextResponse.json({ error: "Record not found" }, { status: 404 })
+  }
+
+  // Permission check: Can view LDA
+  if (!permissions.canViewLDA(user, record.localDevelopmentAgencyId)) {
+    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
   // Check if the form is not submitted and needs prefilling
@@ -152,9 +165,31 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null;
+  
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const ldaFormId = parseInt(params.lda_form_id, 10)
 
   try {
+    // First check if the form exists and get its LDA ID
+    const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
+      where: { id: ldaFormId },
+      select: { localDevelopmentAgencyId: true }
+    });
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    // Permission check: Can view LDA
+    if (!permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
     const data = await req.json()
 
     const updated = await prisma.localDevelopmentAgencyForm.update({
@@ -181,12 +216,36 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
 
 export async function DELETE(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaFormId = Number(params.lda_form_id)
+    
+    // First check if the form exists and get its LDA ID
+    const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
+      where: { id: ldaFormId },
+      select: { localDevelopmentAgencyId: true }
+    });
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    // Permission check: Can view LDA
+    if (!permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
     const deletedLDAForm = await prisma.localDevelopmentAgencyForm.delete({
       where: { id: ldaFormId }
     })
     return NextResponse.json(deletedLDAForm)
-  } catch {
+  } catch (error) {
+    console.error("Failed to delete form:", error);
     return NextResponse.json({ error: "Failed to delete form" }, { status: 500 })
   }
 }

@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { permissions } from "@/lib/permissions"
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { lda_form_id: string } }
 ) {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null;
+  
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const ldaFormId = parseInt(params.lda_form_id, 10)
 
   if (isNaN(ldaFormId)) {
@@ -25,10 +35,13 @@ export async function PATCH(
       )
     }
 
-    // First, get the current form data
+    // First, get the current form data and LDA ID for permission check
     const currentForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
-      select: { formData: true }
+      select: { 
+        formData: true,
+        localDevelopmentAgencyId: true
+      }
     })
 
     if (!currentForm) {
@@ -36,6 +49,11 @@ export async function PATCH(
         { error: "Form not found" },
         { status: 404 }
       )
+    }
+
+    // Permission check: Can view LDA
+    if (!permissions.canViewLDA(user, currentForm.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     // Update only the specific field in the form data

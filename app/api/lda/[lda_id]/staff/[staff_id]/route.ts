@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/db";
 import { Gender } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
+import { permissions } from "@/lib/permissions";
 
 // GET a specific staff member
 export async function GET(
@@ -8,6 +11,13 @@ export async function GET(
   { params }: { params: { lda_id: string; staff_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     const staffId = parseInt(params.staff_id);
     
@@ -16,6 +26,11 @@ export async function GET(
         { error: "Invalid ID parameters" },
         { status: 400 }
       );
+    }
+
+    // Permission check: Can view LDA
+    if (!permissions.canViewLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     const staffMember = await prisma.staffMember.findFirst({
@@ -48,6 +63,13 @@ export async function PUT(
   { params }: { params: { lda_id: string; staff_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     const staffId = parseInt(params.staff_id);
     
@@ -56,6 +78,11 @@ export async function PUT(
         { error: "Invalid ID parameters" },
         { status: 400 }
       );
+    }
+
+    // Permission check: Can manage LDA
+    if (!permissions.canManageLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
     
     // Check if the LDA exists
@@ -145,6 +172,13 @@ export async function DELETE(
   { params }: { params: { lda_id: string; staff_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     const staffId = parseInt(params.staff_id);
     
@@ -153,6 +187,11 @@ export async function DELETE(
         { error: "Invalid ID parameters" },
         { status: 400 }
       );
+    }
+
+    // Permission check: Can manage LDA
+    if (!permissions.canManageLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     // Check if staff member exists and belongs to the specified LDA

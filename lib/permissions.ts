@@ -49,7 +49,6 @@ export const permissions = {
 
   // LDA Management permissions
   canManageLDA: (user: User | null, ldaId: number): boolean => {
-    console.log(user);
     if (!user || !ldaId) return false
     if (permissions.isSuperUser(user)) return true
     if (permissions.isAdmin(user) || permissions.isProgrammeOfficer(user)) {
