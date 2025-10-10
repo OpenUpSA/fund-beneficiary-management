@@ -46,8 +46,5 @@ export function usePermissions() {
     // Form permissions
     canCreateNewApplication: () => currentUser ? permissions.canCreateNewApplication(currentUser) : false,
     canViewDashboardStats: () => currentUser ? permissions.canViewDashboardStats(currentUser) : false,
-
-    // UI permissions
-    showManageLDAButton: (lda?: LDA) => currentUser ? permissions.showManageLDAButton(currentUser, lda) : false,
   }
 }

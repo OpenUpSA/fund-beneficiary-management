@@ -51,7 +51,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
   const [open, setOpen] = useState(false);
 
   console.log("lda", lda)
-  const { canCreateLDA } = usePermissions()
+  const { canCreateLDA, canManageLDA } = usePermissions()
   
   const [operationsData, setOperationsData] = useState(
     {
@@ -245,8 +245,14 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
     }
   }
 
-  // Only show the Add LDA button (create mode) if the user has permission
+  // Permission checks
   if (!lda && !canCreateLDA()) {
+    // Hide Add LDA button if user can't create LDAs (only SuperUsers can create)
+    return null
+  }
+
+  if (lda && !canManageLDA(lda.id)) {
+    // Hide Manage LDA button if user doesn't have permission to manage this specific LDA
     return null
   }
 
