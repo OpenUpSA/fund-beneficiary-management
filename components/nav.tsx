@@ -47,12 +47,12 @@ export function Nav() {
       }
     ],
     navMain: [
-      {
-        url: '/dashboard',
-        title: 'Dashboard',
-        icon: LayoutDashboard,
-        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']
-      },
+      // {
+      //   url: '/dashboard',
+      //   title: 'Dashboard',
+      //   icon: LayoutDashboard,
+      //   requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']
+      // },
       {
         url: user?.role === 'USER' && user?.ldaIds?.length === 1
           ? `/dashboard/ldas/${user.ldaIds[0]}`
