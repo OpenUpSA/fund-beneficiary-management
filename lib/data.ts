@@ -6,22 +6,42 @@ import { headers } from "next/headers"
 import { permissions } from "./permissions"
 
 export async function fetchFunders() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder`, { next: { tags: ['funders:list'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['funders:list'] } 
+  })
   return res.json()
 }
 
 export async function fetchFunder(funder_id: string): Promise<FunderFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}`, { next: { tags: ['funders:list', `funder:detail:${funder_id}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['funders:list', `funder:detail:${funder_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchFunderFunds(funder_id: string): Promise<FundFull[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/fund`, { next: { tags: [`funder:${funder_id}:funds:list`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/fund`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: [`funder:${funder_id}:funds:list`] } 
+  })
   return res.json()
 }
 
 export async function fetchFunderFund(funder_id: string, fund_id: string): Promise<FundFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/fund/${fund_id}`, { next: { tags: [`funder:${funder_id}:funds:list`, `funder:${funder_id}:fund:${fund_id}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/fund/${fund_id}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: [`funder:${funder_id}:funds:list`, `funder:${funder_id}:fund:${fund_id}`] } 
+  })
   return res.json()
 }
 
@@ -33,32 +53,62 @@ export async function fetchFunds(lda_id?: string): Promise<FundFull[]> {
     tags.push(`fund:list:${lda_id}`)
   }
 
-  const res = await fetch(url.toString(), { next: { tags } })
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags } 
+  })
   return res.json()
 }
 
 export async function fetchFund(fund_id: string): Promise<FundFull> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund/${fund_id}`, { next: { tags: ['funds:list', `fund:detail:${fund_id}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund/${fund_id}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['funds:list', `fund:detail:${fund_id}`] } 
+  })
   return res.json()
 }
 
 export async function fetchFundingStatuses(): Promise<FundingStatus[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funding-status`, { next: { tags: ['funding-statuses'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funding-status`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['funding-statuses'] } 
+  })
   return res.json()
 }
 
 export async function fetchDevelopmentStages(): Promise<DevelopmentStage[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/development-stage`, { next: { tags: ['development-stages'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/development-stage`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['development-stages'] } 
+  })
   return res.json()
 }
 
 export async function fetchLocations(): Promise<Location[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/location`, { next: { tags: ['locations'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/location`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['locations'] } 
+  })
   return res.json()
 }
 
 export async function fetchFocusAreas(): Promise<FocusArea[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/focus-area`, { next: { tags: ['focus-areas'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/focus-area`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['focus-areas'] } 
+  })
   return res.json()
 }
 
@@ -220,7 +270,12 @@ export async function fetchLocalDevelopmentAgencyFormsForLDA(lda_id: string): Pr
 }
 
 export async function fetchFormStatuses(): Promise<FormStatus[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-status`, { next: { tags: ['form-statuses'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-status`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['form-statuses'] } 
+  })
   return res.json()
 }
 
@@ -238,13 +293,23 @@ export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmen
 }
 
 export async function fetchProvinces(): Promise<Province[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces`, { next: { tags: ['provinces:list'] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['provinces:list'] } 
+  })
   const data = await res.json();
   return data;
 }
 
 export async function fetchProvince(province_code: string): Promise<Province> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces/${province_code}`, { next: { tags: ['provinces:list', `provinces:detail:${province_code}`] } })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/provinces/${province_code}`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['provinces:list', `provinces:detail:${province_code}`] } 
+  })
   return res.json()
 }
 
@@ -273,6 +338,9 @@ export async function fetchContacts(lda_id?: string): Promise<Contact[]> {
 
 export async function fetchMediaSourceTypes(): Promise<MediaSourceType[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media-source-type`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
     next: { tags: ['media-source-types:list'] } 
   })
   return res.json()
