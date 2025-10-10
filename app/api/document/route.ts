@@ -72,30 +72,34 @@ export async function POST(req: NextRequest) {
   const uploadedBy = form.get("uploadedBy") as DocumentUploadType
   const localDevelopmentAgencyId = parseInt(form.get("localDevelopmentAgencyId") as string)
 
+  // TODO: Implement permission check based on uploadedBy value and user role
   // Permission check based on uploadedBy value and user role
-  if (uploadedBy === 'Funder' || uploadedBy === 'Fund') {
-    // Only superuser can create documents with uploadedBy as Funder or Fund
-    if (!permissions.isSuperUser(user)) {
-      return NextResponse.json({ error: "Only superuser can create Funder/Fund documents" }, { status: 403 });
-    }
-  } else if (uploadedBy === 'SCAT') {
-    // Only superuser, admin, and PO can create SCAT documents
-    if (!permissions.isSuperUser(user) && !permissions.isAdmin(user) && !permissions.isProgrammeOfficer(user)) {
-      return NextResponse.json({ error: "Permission denied to create SCAT documents" }, { status: 403 });
-    }
-  } else if (uploadedBy === 'LDA') {
-    // All authenticated users can create LDA documents, but check LDA access
-    if (!user.ldaIds || user.ldaIds.length === 0) {
-      return NextResponse.json({ error: "No LDA access" }, { status: 403 });
-    }
+  // if (uploadedBy === 'Funder' || uploadedBy === 'Fund') {
+  //   // Only superuser can create documents with uploadedBy as Funder or Fund
+  //   if (!permissions.isSuperUser(user)) {
+  //     return NextResponse.json({ error: "Only superuser can create Funder/Fund documents" }, { status: 403 });
+  //   }
+  // } else if (uploadedBy === 'SCAT') {
+  //   // Only superuser, admin, and PO can create SCAT documents
+  //   if (!permissions.isSuperUser(user) && !permissions.isAdmin(user) && !permissions.isProgrammeOfficer(user)) {
+  //     return NextResponse.json({ error: "Permission denied to create SCAT documents" }, { status: 403 });
+  //   }
+  // } else if (uploadedBy === 'LDA') {
+  //   // All authenticated users can create LDA documents, but check LDA access
+  //   if (!user.ldaIds || user.ldaIds.length === 0) {
+  //     return NextResponse.json({ error: "No LDA access" }, { status: 403 });
+  //   }
     
-    // Check if user has access to the specified LDA
-    if (!permissions.isSuperUser(user) && !user.ldaIds.includes(localDevelopmentAgencyId)) {
-      return NextResponse.json({ error: "Access denied to this LDA" }, { status: 403 });
-    }
-  } else {
-    return NextResponse.json({ error: "Invalid uploadedBy value" }, { status: 400 });
-  }
+  //   // Check if user has access to the specified LDA
+  //   if (!permissions.isSuperUser(user) && !user.ldaIds.includes(localDevelopmentAgencyId)) {
+  //     return NextResponse.json({ error: "Access denied to this LDA" }, { status: 403 });
+  //   }
+  // } else {
+  //   return NextResponse.json({ error: "Invalid uploadedBy value" }, { status: 400 });
+  // }
+
+
+
 
   const fileBuffer = Buffer.from(await file.arrayBuffer())
   const fileBase64 = fileBuffer.toString("base64")
@@ -116,7 +120,9 @@ export async function POST(req: NextRequest) {
     uploadedBy: uploadedBy,
     createdBy: { connect: { id: parseInt(user.id as string) } }
   }
-
+  if (!data.uploadedBy) {
+    data.uploadedBy = permissions.isLDAUser(user) ? 'LDA' : 'SCAT'
+  }
   const record = await prisma.document.create({
     data: data,
   })

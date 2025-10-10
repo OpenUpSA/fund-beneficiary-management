@@ -21,6 +21,9 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
     return NextResponse.json({ error: "Invalid LDA ID" }, { status: 400 });
   }
 
+  console.log(ldaId)
+  console.log(user)
+  console.log(permissions.canViewLDA(user, ldaId));
   // Permission check: Can view LDA
   if (!permissions.canViewLDA(user, ldaId)) {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });

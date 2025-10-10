@@ -10,6 +10,7 @@ import { fetchAllLocalDevelopmentAgencyForms, fetchFormStatuses, fetchFormTempla
 import { FormStatus } from "@prisma/client"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { redirect } from "next/navigation"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -25,39 +26,42 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 }
 
 export default async function Page() {
-  const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
-  const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchAllLocalDevelopmentAgencyForms()
-  const ldas: LocalDevelopmentAgencyFull[] = await fetchLocalDevelopmentAgencies()
-  const formStatuses: FormStatus[] = await fetchFormStatuses()
 
-  const dataChanged = async () => {
-    "use server"
-    revalidateTag('funders')
-  }
+  redirect('/dashboard/ldas')
 
-  return (
-    <div>
-      <BreadcrumbNav
-        className="mb-4"
-        links={[
-          { label: "Applications & Reports", isCurrent: true }
-        ]}
-      />
-      <div className="flex flex-wrap items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">Applications &amp; Reports</h1>
-        <div className="space-x-2">
-          <FormDialog
-            formTemplates={formTemplates}
-            ldas={ldas}
-            callback={dataChanged} />
-        </div>
-      </div>
-      <FilteredLDAForms
-        formTemplates={formTemplates}
-        formStatuses={formStatuses}
-        ldaForms={ldaForms}
-        dataChanged={dataChanged}
-      />
-    </div>
-  )
+  // const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
+  // const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchAllLocalDevelopmentAgencyForms()
+  // const ldas: LocalDevelopmentAgencyFull[] = await fetchLocalDevelopmentAgencies()
+  // const formStatuses: FormStatus[] = await fetchFormStatuses()
+
+  // const dataChanged = async () => {
+  //   "use server"
+  //   revalidateTag('funders')
+  // }
+
+  // return (
+  //   <div>
+  //     <BreadcrumbNav
+  //       className="mb-4"
+  //       links={[
+  //         { label: "Applications & Reports", isCurrent: true }
+  //       ]}
+  //     />
+  //     <div className="flex flex-wrap items-center justify-between">
+  //       <h1 className="text-xl md:text-2xl font-semibold">Applications &amp; Reports</h1>
+  //       <div className="space-x-2">
+  //         <FormDialog
+  //           formTemplates={formTemplates}
+  //           ldas={ldas}
+  //           callback={dataChanged} />
+  //       </div>
+  //     </div>
+  //     <FilteredLDAForms
+  //       formTemplates={formTemplates}
+  //       formStatuses={formStatuses}
+  //       ldaForms={ldaForms}
+  //       dataChanged={dataChanged}
+  //     />
+  //   </div>
+  // )
 }
