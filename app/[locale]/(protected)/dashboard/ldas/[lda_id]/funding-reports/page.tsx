@@ -7,6 +7,7 @@ import {
   fetchLocalDevelopmentAgencyFormsForLDA 
 } from "@/lib/data"
 import { revalidateTag } from "next/cache"
+import { redirect } from "next/navigation"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/types/models"
 import { FormStatus } from "@prisma/client"
 import * as Sentry from '@sentry/nextjs'
@@ -34,6 +35,10 @@ export default async function Page({ params }: LDAApplicationsPageProps) {
   
   // Fetch LDA and forms data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  if (!lda) {
+    return redirect('/dashboard/ldas')
+  }
+  
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchLocalDevelopmentAgencyFormsForLDA(String(lda.id))
   const formStatuses: FormStatus[] = await fetchFormStatuses()

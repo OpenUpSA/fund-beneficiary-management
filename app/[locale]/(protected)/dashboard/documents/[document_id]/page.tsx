@@ -46,7 +46,6 @@ export default async function Page({ params, searchParams }: Props) {
   const { from } = searchParams
 
   let breadcrumbLinks: BreadcrumbLink[] = [
-    { label: "Documents", href: "/dashboard/documents" },
     { label: document.title, isCurrent: true }
   ]
 
@@ -56,6 +55,10 @@ export default async function Page({ params, searchParams }: Props) {
         breadcrumbLinks = [{
           label: document?.localDevelopmentAgency.name,
           href: `/dashboard/ldas/${document?.localDevelopmentAgency.id}`
+        },
+        {
+          label: "Documents",
+          href: `/dashboard/ldas/${document?.localDevelopmentAgency.id}/documents`
         }, ...breadcrumbLinks]
       }
     }

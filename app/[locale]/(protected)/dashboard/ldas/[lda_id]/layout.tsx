@@ -10,6 +10,7 @@ import {
   fetchUsers,
   fetchProvinces
 } from "@/lib/data"
+import { redirect } from "next/navigation"
 
 interface LDALayoutProps {
   children: React.ReactNode
@@ -19,6 +20,9 @@ interface LDALayoutProps {
 export default async function Layout({ children, params }: LDALayoutProps) {
   const { lda_id } = params
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  if (!lda) {
+    return redirect('/dashboard/ldas')
+  }
   const focusAreas = await fetchFocusAreas()
   const developmentStages = await fetchDevelopmentStages()
   const programmeOfficers = await fetchUsers()

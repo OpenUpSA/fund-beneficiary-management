@@ -48,7 +48,7 @@ export function SignInForm({
                     title: "You are signed in",
                     variant: "success"
                   })
-                  router.push("/dashboard")
+                  router.push("/dashboard/ldas")
                 } else {
                   toast({
                     title: "Problem signing in",

@@ -13,6 +13,7 @@ import { DynamicIcon } from "../dynamicIcon"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "@/components/ldas/form"
+// import { usePermissions } from "@/hooks/use-permissions"
 import React, { useCallback, useMemo, useState, useDeferredValue, startTransition } from "react"
 
 const getInitials = (name: string) => name.split(" ").map(w => w[0]).join("")

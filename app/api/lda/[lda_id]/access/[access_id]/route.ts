@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/db";
 import { AccessLevel } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
+import { permissions } from "@/lib/permissions";
 
 // Email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -11,6 +14,13 @@ export async function GET(
   { params }: { params: { lda_id: string; access_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     const accessId = parseInt(params.access_id);
     
@@ -19,6 +29,11 @@ export async function GET(
         { error: "Invalid ID parameters" },
         { status: 400 }
       );
+    }
+
+    // Permission check: Can view LDA
+    if (!permissions.canViewLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     const userAccess = await prisma.userAccess.findFirst({
@@ -51,6 +66,13 @@ export async function PUT(
   { params }: { params: { lda_id: string; access_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     const accessId = parseInt(params.access_id);
     
@@ -59,6 +81,11 @@ export async function PUT(
         { error: "Invalid ID parameters" },
         { status: 400 }
       );
+    }
+
+    // Permission check: Can manage LDA
+    if (!permissions.canManageLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
     
     // Check if the LDA exists
@@ -149,6 +176,13 @@ export async function DELETE(
   { params }: { params: { lda_id: string; access_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     const accessId = parseInt(params.access_id);
     
@@ -157,6 +191,11 @@ export async function DELETE(
         { error: "Invalid ID parameters" },
         { status: 400 }
       );
+    }
+
+    // Permission check: Can manage LDA
+    if (!permissions.canManageLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
     
     // Check if the user access exists and belongs to the specified LDA

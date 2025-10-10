@@ -36,7 +36,8 @@
     "roles": {
       "USER": "LDA User",
       "PROGRAMME_OFFICER": "Programme Officer",
-      "ADMIN": "Admin"
+      "ADMIN": "Admin",
+      "SUPER_USER": "Superuser"
     },
     "mediaTypes": {
       "PHOTOGRAPH": "Photograph",

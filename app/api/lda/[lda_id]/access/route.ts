@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/db";
 import { AccessLevel } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
+import { permissions } from "@/lib/permissions";
 
 // Email validation regex
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -28,6 +31,13 @@ export async function GET(
   { params }: { params: { lda_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     
     const validation = await validateLdaId(ldaId);
@@ -36,6 +46,11 @@ export async function GET(
         { error: validation.error },
         { status: validation.error === "Invalid LDA ID" ? 400 : 404 }
       );
+    }
+
+    // Permission check: Can view LDA
+    if (!permissions.canViewLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     const userAccess = await prisma.userAccess.findMany({
@@ -60,6 +75,13 @@ export async function POST(
   { params }: { params: { lda_id: string } }
 ) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null;
+    
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
     const ldaId = parseInt(params.lda_id);
     
     const validation = await validateLdaId(ldaId);
@@ -68,6 +90,11 @@ export async function POST(
         { error: validation.error },
         { status: validation.error === "Invalid LDA ID" ? 400 : 404 }
       );
+    }
+
+    // Permission check: Can manage LDA
+    if (!permissions.canManageLDA(user, ldaId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     const body = await request.json();

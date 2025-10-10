@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { FilteredDocuments } from "@/components/documents/filtered"
 import { fetchLocalDevelopmentAgency, fetchLDADocuments } from "@/lib/data"
 import { revalidateTag } from "next/cache"
+import { redirect } from "next/navigation"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -27,6 +28,10 @@ export default async function Page({ params }: LDADocumentsPageProps) {
   
   // Fetch LDA data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  if (!lda) {
+    return redirect('/dashboard/ldas')
+  }
+  
   const documents = await fetchLDADocuments(lda_id)
 
   const dataChanged = async () => {

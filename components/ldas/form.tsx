@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FocusArea, DevelopmentStage } from '@prisma/client'
 import { UserWithLDAsBasic } from '@/types/models'
 import { LocalDevelopmentAgencyFull, Province } from '@/types/models'
+import { usePermissions } from '@/hooks/use-permissions'
 
 import {
   Dialog,
@@ -48,6 +49,9 @@ interface FormDialogProps {
 
 export function FormDialog({ lda, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false);
+
+  console.log("lda", lda)
+  const { canCreateLDA } = usePermissions()
   
   const [operationsData, setOperationsData] = useState(
     {
@@ -239,6 +243,11 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
       toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
       setOpen(true) // Reopen the dialog to allow corrections
     }
+  }
+
+  // Only show the Add LDA button (create mode) if the user has permission
+  if (!lda && !canCreateLDA()) {
+    return null
   }
 
   return (

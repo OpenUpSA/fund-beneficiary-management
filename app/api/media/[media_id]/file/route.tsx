@@ -1,9 +1,19 @@
 import prisma from "@/db"
 import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { permissions } from "@/lib/permissions"
 
 const imagekitUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
 
 export async function GET(req: NextRequest, { params }: { params: { media_id: string } }) {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null;
+  
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
   const mediaId = parseInt(params.media_id, 10)
 
   const media = await prisma.media.findUnique({
@@ -15,6 +25,11 @@ export async function GET(req: NextRequest, { params }: { params: { media_id: st
 
   if (!media) {
     return NextResponse.json({ error: "Missing media" }, { status: 400 })
+  }
+
+  // Permission check: Can view LDA (only users with access to this LDA can download the media file)
+  if (!permissions.canViewLDA(user, media.localDevelopmentAgencyId)) {
+    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
   const fileUrl = imagekitUrlEndpoint + media.filePath

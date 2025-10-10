@@ -22,7 +22,6 @@ interface LDAPageProps {
 
 export default async function Page({ params }: LDAPageProps) {
   const { lda_id } = params
-  
   // Redirect to the overview tab by default
   redirect(`/dashboard/ldas/${lda_id}/overview`)
 }

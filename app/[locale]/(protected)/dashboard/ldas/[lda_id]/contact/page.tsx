@@ -1,6 +1,7 @@
 import { fetchLocalDevelopmentAgency, fetchContacts } from "@/lib/data"
 import { FilteredContacts } from "@/components/contacts/filtered"
 import { revalidateTag } from "next/cache"
+import { redirect } from "next/navigation"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: LDAContactPageProps): Promise
   try {
     const lda = await fetchLocalDevelopmentAgency(params.lda_id)
     return {
-      title: `${lda.name} | Contact List`,
+      title: `${lda?.name} | Contact List`,
     }
   } catch (error) {
     Sentry.captureException(error)
@@ -27,6 +28,10 @@ export default async function Page({ params }: LDAContactPageProps) {
   
   // Fetch LDA data
   const lda = await fetchLocalDevelopmentAgency(lda_id)
+  if (!lda) {
+    return redirect('/dashboard/ldas')
+  }
+  
   const contacts = await fetchContacts(lda_id)
 
   const dataChanged = async () => {

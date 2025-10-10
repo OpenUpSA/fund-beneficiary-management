@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { createHash } from '@/lib/hash'
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { permissions } from "@/lib/permissions"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const currentUser = session?.user || null;
+  
+  if (!currentUser) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  // Permission check: Only superuser and admin can view users
+  if (!permissions.isSuperUser(currentUser) && !permissions.isAdmin(currentUser)) {
+    return NextResponse.json({ error: "Permission denied - only superuser and admin can view users" }, { status: 403 });
+  }
+
   const userId = Number(params.id)
 
   if (Number.isNaN(userId)) {
@@ -28,6 +43,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const currentUser = session?.user || null;
+    
+    if (!currentUser) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    // Permission check: Only superuser and admin can edit users
+    if (!permissions.isSuperUser(currentUser) && !permissions.isAdmin(currentUser)) {
+      return NextResponse.json({ error: "Permission denied - only superuser and admin can edit users" }, { status: 403 });
+    }
+
     const body = await req.json()
     const userId = Number(params.id)
 
@@ -43,6 +70,19 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     if (!existingUser) {
       return NextResponse.json({ error: `User not found` }, { status: 404 })
+    }
+
+    // Additional permission check for admin users
+    if (permissions.isAdmin(currentUser) && !permissions.isSuperUser(currentUser)) {
+      // Admin can only edit PROGRAMME_OFFICER and USER (LDA User)
+      if (existingUser.role !== 'PROGRAMME_OFFICER' && existingUser.role !== 'USER') {
+        return NextResponse.json({ error: "Permission denied - admin can only edit Programme Officer and LDA User accounts" }, { status: 403 });
+      }
+      
+      // If changing role, admin can only change to PROGRAMME_OFFICER or USER (LDA User)
+      if (body.role && body.role !== 'PROGRAMME_OFFICER' && body.role !== 'USER') {
+        return NextResponse.json({ error: "Permission denied - admin can only set role to Programme Officer or LDA User" }, { status: 403 });
+      }
     }
 
     // Extract password fields separately so we don't spread them into the update
@@ -101,15 +141,46 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const currentUser = session?.user || null;
+    
+    if (!currentUser) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    // Permission check: Only superuser and admin can delete users
+    if (!permissions.isSuperUser(currentUser) && !permissions.isAdmin(currentUser)) {
+      return NextResponse.json({ error: "Permission denied - only superuser and admin can delete users" }, { status: 403 });
+    }
+
     const userId = Number(params.id)
     if (Number.isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
     }
+
+    // For admin users, check if they can delete this user
+    if (permissions.isAdmin(currentUser) && !permissions.isSuperUser(currentUser)) {
+      const userToDelete = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true }
+      });
+
+      if (!userToDelete) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+
+      // Admin can only delete PROGRAMME_OFFICER and USER (LDA User)
+      if (userToDelete.role !== 'PROGRAMME_OFFICER' && userToDelete.role !== 'USER') {
+        return NextResponse.json({ error: "Permission denied - admin can only delete Programme Officer and LDA User accounts" }, { status: 403 });
+      }
+    }
+
     const deletedUser = await prisma.user.delete({
       where: { id: userId }
     })
     return NextResponse.json(deletedUser)
-  } catch {
+  } catch (error) {
+    console.error("Failed to delete user:", error);
     return NextResponse.json({ error: "Failed to delete user" }, { status: 500 })
   }
 }

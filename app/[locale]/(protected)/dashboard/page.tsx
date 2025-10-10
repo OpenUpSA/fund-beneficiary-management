@@ -1,11 +1,11 @@
 import { getTranslations } from "next-intl/server"
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
-import { DownloadIcon, Share2Icon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { FilteredReport } from "@/components/dashboard/filtered"
+// import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
+// import { DownloadIcon, Share2Icon } from "lucide-react"
+// import { Button } from "@/components/ui/button"
+// import { FilteredReport } from "@/components/dashboard/filtered"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
-
+import { redirect } from "next/navigation"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -21,6 +21,11 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 }
 
 export default function Page() {
+  // TEMPORARY: Redirect users from /dashboard to /dashboard/ldas
+  redirect('/dashboard/ldas')
+
+  // Original dashboard content (temporarily disabled)
+  /*
   return (
     <div>
       <BreadcrumbNav
@@ -45,4 +50,5 @@ export default function Page() {
       <FilteredReport />
     </div>
   )
+  */
 }

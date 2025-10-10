@@ -323,6 +323,7 @@ enum Role {
   USER
   PROGRAMME_OFFICER
   ADMIN
+  SUPER_USER
 }
 
 enum MediaType {

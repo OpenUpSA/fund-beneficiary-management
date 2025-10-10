@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { Prisma } from "@prisma/client";
+import { permissions } from "@/lib/permissions"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -10,6 +13,15 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
 
   if (Number.isNaN(ldaId)) {
     return NextResponse.json({ error: "Invalid LDA id" }, { status: 400 })
+  }
+
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null
+
+  const canViewLDA = permissions.canViewLDA(user, ldaId)
+
+  if (!canViewLDA) {
+    return NextResponse.json({ error: "Permission denied" }, { status: 403 })
   }
 
   try {
@@ -45,6 +57,15 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
     if (Number.isNaN(ldaId)) {
       return NextResponse.json({ error: "Invalid LDA id" }, { status: 400 });
     }
+
+    const session = await getServerSession(NEXT_AUTH_OPTIONS);
+    const user = session?.user || null
+    const canUpdateLDA = permissions.canManageLDA(user, ldaId)
+
+    if (!canUpdateLDA) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 })
+    }
+
     const data = await req.json();
 
     const ldaData: Prisma.LocalDevelopmentAgencyUpdateArgs["data"] = {};
