@@ -92,7 +92,7 @@ export const permissions = {
     return false
   },
 
-  canDeleteUser: (user: User, targetRole: Role): boolean => {
+  canDeleteUser: (user: User): boolean => {
     if (permissions.isSuperUser(user)) return true // SuperUsers can delete all user types
     // Admins cannot delete users anymore - only SuperUsers can delete
     return false
@@ -117,7 +117,7 @@ export const permissions = {
   },
 
   // User deletion permissions (by user object)
-  canDeleteSpecificUser: (currentUser: User, targetUser: User): boolean => {
+  canDeleteSpecificUser: (currentUser: User): boolean => {
     if (permissions.isSuperUser(currentUser)) return true // Only SuperUsers can delete users
     return false // Admins and others cannot delete users
   },

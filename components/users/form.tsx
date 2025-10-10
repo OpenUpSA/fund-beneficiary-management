@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog"
 import { PencilIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
-import { UserFormSchema, RoleEnum } from "@/types/formSchemas"
+import { UserFormSchema } from "@/types/formSchemas"
 import { Checkbox } from "../ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { useTranslations } from "next-intl"

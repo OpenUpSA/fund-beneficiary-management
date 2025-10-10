@@ -27,9 +27,9 @@ export function usePermissions() {
 
     // User management permissions
     canCreateUser: (targetRole: Role) => currentUser ? permissions.canCreateUser(currentUser, targetRole) : false,
-    canDeleteUser: (targetRole: Role) => currentUser ? permissions.canDeleteUser(currentUser, targetRole) : false,
+    canDeleteUser: (targetRole: Role) => currentUser ? permissions.canDeleteUser(currentUser) : false,
     canEditUser: (targetUser: User) => currentUser ? permissions.canEditUser(currentUser, targetUser) : false,
-    canDeleteSpecificUser: (targetUser: User) => currentUser ? permissions.canDeleteSpecificUser(currentUser, targetUser) : false,
+    canDeleteSpecificUser: (targetUser: User) => currentUser ? permissions.canDeleteSpecificUser(currentUser) : false,
     canCreateAdmin: () => currentUser ? permissions.canCreateAdmin(currentUser) : false,
     canDeleteAdmin: () => currentUser ? permissions.canDeleteAdmin(currentUser) : false,
 
