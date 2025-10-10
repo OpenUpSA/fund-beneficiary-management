@@ -8,7 +8,6 @@ export function usePermissions() {
   const currentUser: User | null = session?.user ? {
     id: session.user.id,
     role: session.user.role as Role,
-    programmeOfficerId: session.user.programmeOfficerId
   } : null
 
   return {
@@ -21,8 +20,8 @@ export function usePermissions() {
     isLDAUser: () => currentUser ? permissions.isLDAUser(currentUser) : false,
 
     // LDA permissions
-    canManageLDA: (lda?: LDA) => currentUser ? permissions.canManageLDA(currentUser, lda) : false,
-    canViewLDA: (lda?: LDA) => currentUser ? permissions.canViewLDA(currentUser, lda) : false,
+    canManageLDA: (ldaId: number) => currentUser ? permissions.canManageLDA(currentUser, ldaId) : false,
+    canViewLDA: (ldaId: number) => currentUser ? permissions.canViewLDA(currentUser, ldaId) : false,
     canCreateLDA: () => currentUser ? permissions.canCreateLDA(currentUser) : false,
     canDeleteLDA: () => currentUser ? permissions.canDeleteLDA(currentUser) : false,
 

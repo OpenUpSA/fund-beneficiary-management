@@ -7,7 +7,7 @@ import { permissions } from "@/lib/permissions"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET(req: NextRequest) {
+export async function GET() {
 
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
   const user = session?.user || null

@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server"
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
-import { DownloadIcon, Share2Icon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { FilteredReport } from "@/components/dashboard/filtered"
+// import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
+// import { DownloadIcon, Share2Icon } from "lucide-react"
+// import { Button } from "@/components/ui/button"
+// import { FilteredReport } from "@/components/dashboard/filtered"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 import { redirect } from "next/navigation"

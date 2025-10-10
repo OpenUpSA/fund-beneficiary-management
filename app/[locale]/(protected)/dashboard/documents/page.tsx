@@ -1,11 +1,11 @@
 import { getTranslations } from "next-intl/server"
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
+// import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 // import { FilteredDocuments } from "@/components/documents/filtered"
 // import { fetchAllDocuments, fetchLocalDevelopmentAgencies } from "@/lib/data"
 // import { FormDialog } from "@/components/documents/form"
 import { redirect } from "next/navigation"
-import { revalidateTag } from "next/cache"
+// import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -22,10 +22,10 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-const dataChanged = async () => {
-  "use server"
-  revalidateTag('ldas')
-}
+// const dataChanged = async () => {
+//   "use server"
+//   revalidateTag('ldas')
+// }
 
 export default async function Page() {
   redirect('/dashboard/ldas')

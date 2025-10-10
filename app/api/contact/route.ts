@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "At least one LDA must be specified" }, { status: 400 });
     }
     
-    const ldaIds = data.localDevelopmentAgencies.map((lda: any) => 
-      typeof lda === 'object' ? lda.id : parseInt(lda, 10)
+    const ldaIds = data.localDevelopmentAgencies.map((lda: { id: number } | string | number) => 
+      typeof lda === 'object' ? lda.id : parseInt(lda.toString(), 10)
     ).filter((id: number) => !isNaN(id));
     
     if (ldaIds.length === 0) {
