@@ -15,6 +15,10 @@ import { useTranslations } from "next-intl"
 import { use } from "react"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { permissions } from "@/lib/permissions"
+import { redirect } from "next/navigation"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -31,6 +35,17 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 
 export default function Page() {
   const tC = useTranslations('common')
+  const session = use(getServerSession(NEXT_AUTH_OPTIONS))
+  
+  // Check if user has permission to access users page
+  const user = session?.user || null
+  const canAccessUsers = user && (permissions.isSuperUser(user) || permissions.isAdmin(user))
+  
+  // Redirect non-admin/non-superuser users to LDAs dashboard
+  if (!canAccessUsers) {
+    redirect('/dashboard/ldas')
+  }
+  
   const users: UserWithLDAsBasic[] = use(fetchUsers())
   const ldas = use(fetchLocalDevelopmentAgencies())
 

@@ -94,9 +94,7 @@ export const permissions = {
 
   canDeleteUser: (user: User, targetRole: Role): boolean => {
     if (permissions.isSuperUser(user)) return true // SuperUsers can delete all user types
-    if (permissions.isAdmin(user)) {
-      return targetRole === 'PROGRAMME_OFFICER' || targetRole === 'USER' // Admins can delete POs and LDA users
-    }
+    // Admins cannot delete users anymore - only SuperUsers can delete
     return false
   },
 
@@ -106,6 +104,22 @@ export const permissions = {
 
   canDeleteAdmin: (user: User): boolean => {
     return permissions.isSuperUser(user) // Only SuperUsers can create/delete admins
+  },
+
+  // User editing permissions
+  canEditUser: (currentUser: User, targetUser: User): boolean => {
+    if (permissions.isSuperUser(currentUser)) return true // SuperUsers can edit anyone
+    if (permissions.isAdmin(currentUser)) {
+      // Admins can only edit Programme Officers and LDA Users
+      return targetUser.role === 'PROGRAMME_OFFICER' || targetUser.role === 'USER'
+    }
+    return false
+  },
+
+  // User deletion permissions (by user object)
+  canDeleteSpecificUser: (currentUser: User, targetUser: User): boolean => {
+    if (permissions.isSuperUser(currentUser)) return true // Only SuperUsers can delete users
+    return false // Admins and others cannot delete users
   },
 
   // Document permissions

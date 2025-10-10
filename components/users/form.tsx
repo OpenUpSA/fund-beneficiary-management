@@ -31,6 +31,8 @@ import { Checkbox } from "../ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { useTranslations } from "next-intl"
 import { UserFull } from "@/types/models"
+import { usePermissions } from "@/hooks/use-permissions"
+import { getAvailableRolesForCreation } from "@/lib/permissions"
 
 interface FormDialogProps {
   user?: UserFull
@@ -42,6 +44,13 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
   const [open, setOpen] = useState(false)
   const formSchema = UserFormSchema(user ? false : true)
   const tC = useTranslations('common')
+  const { currentUser, canEditUser } = usePermissions()
+  
+  // Get available roles based on current user's permissions
+  const availableRoles = currentUser ? getAvailableRolesForCreation(currentUser) : []
+  
+  // Check if current user can edit this user (for edit mode)
+  const canEdit = user ? canEditUser(user) : true // Always allow creation if user has create permissions
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -152,6 +161,11 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
     }
   }
 
+  // Don't render the form if user doesn't have edit permissions
+  if (user && !canEdit) {
+    return null
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -212,7 +226,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {RoleEnum.options.map((role) => (
+                      {availableRoles.map((role) => (
                         <SelectItem
                           key={role}
                           value={role}

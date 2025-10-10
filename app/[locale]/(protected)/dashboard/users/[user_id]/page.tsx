@@ -12,6 +12,8 @@ import { DeleteDialog } from "@/components/users/delete"
 import { use } from "react"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { permissions } from "@/lib/permissions"
+import { redirect } from "next/navigation"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -37,6 +39,16 @@ interface UserPageProps {
 export default function Page({ params }: UserPageProps) {
   const { user_id } = params
   const session = use(getServerSession(NEXT_AUTH_OPTIONS))
+  
+  // Check if user has permission to access users page
+  const currentUser = session?.user || null
+  const canAccessUsers = currentUser && (permissions.isSuperUser(currentUser) || permissions.isAdmin(currentUser))
+  
+  // Redirect non-admin/non-superuser users to LDAs dashboard
+  if (!canAccessUsers) {
+    redirect('/dashboard/ldas')
+  }
+  
   const user = use(fetchUser(user_id))
   const ldas = use(fetchLocalDevelopmentAgencies())
 
