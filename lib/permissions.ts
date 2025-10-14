@@ -50,8 +50,8 @@ export const permissions = {
   // LDA Management permissions
   canManageLDA: (user: User | null, ldaId: number): boolean => {
     if (!user || !ldaId) return false
-    if (permissions.isSuperUser(user)) return true
-    if (permissions.isAdmin(user) || permissions.isProgrammeOfficer(user)) {
+    if (permissions.isSuperUser(user) || permissions.isAdmin(user)) return true
+    if (permissions.isProgrammeOfficer(user)) {
       return user.ldaIds?.includes(ldaId) || false
     }
     return false
