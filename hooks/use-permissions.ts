@@ -8,6 +8,7 @@ export function usePermissions() {
   const currentUser: User | null = session?.user ? {
     id: session.user.id,
     role: session.user.role as Role,
+    ldaIds: session.user.ldaIds,
   } : null
 
   return {
