@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
-import { permissions } from "@/lib/permissions"
+import { canViewFunders, canManageFunder } from "@/lib/permissions"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { funder_id: s
   }
 
   // Permission check: Only Admin and Superuser can see funders
-  if (!permissions.isSuperUser(user) && !permissions.isAdmin(user)) {
+  if (!canViewFunders(user)) {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
@@ -29,7 +29,6 @@ export async function GET(req: NextRequest, { params }: { params: { funder_id: s
       locations: true,
       focusAreas: true,
       organisationDetail: true,
-      contacts: true
     },
   })
 
@@ -49,7 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: { funder_id: s
   }
 
   // Permission check: Only Superuser can edit funders
-  if (!permissions.isSuperUser(user)) {
+  if (!canManageFunder(user)) {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 

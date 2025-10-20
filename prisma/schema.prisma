@@ -52,7 +52,6 @@ model Funder {
   locations            Location[]         @relation("FunderToLocation")
   organisationDetailId Int
   organisationDetail   OrganisationDetail @relation(fields: [organisationDetailId], references: [id])
-  contacts             Contact[]          @relation("ContactToFunder")
 }
 
 model Location {
@@ -93,7 +92,6 @@ model Fund {
   locations                Location[]               @relation("FundToLocation")
   organisationDetailId     Int
   organisationDetail       OrganisationDetail       @relation(fields: [organisationDetailId], references: [id])
-  contacts                 Contact[]                @relation("ContactToFund")
   funders                  Funder[]                 @relation("FunderToFund")
 }
 
@@ -129,7 +127,7 @@ model LocalDevelopmentAgency {
   LocalDevelopmentAgencyForm LocalDevelopmentAgencyForm[]
   funds                      Fund[]                       @relation("FundToLocalDevelopmentAgency")
   focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")
-  contacts                   Contact[]                    @relation("ContactToLocalDevelopmentAgency")
+  contacts                   Contact[]                    @relation("ContactToLDA")
   media                      Media[]
   documents                  Document[]
   registrationStatus         RegistrationStatus           @default(not_registered)
@@ -264,9 +262,8 @@ model Contact {
   email                    String                   @default("")
   position                 String                   @default("")
   info                     String                   @default("")
-  localDevelopmentAgencies LocalDevelopmentAgency[] @relation("ContactToLocalDevelopmentAgency")
-  funders                  Funder[]                 @relation("ContactToFunder")
-  funds                    Fund[]                   @relation("ContactToFund")
+  localDevelopmentAgencyId Int
+  localDevelopmentAgency   LocalDevelopmentAgency   @relation("ContactToLDA", fields: [localDevelopmentAgencyId], references: [id])
 }
 
 model MediaSourceType {

@@ -51,7 +51,6 @@ interface FormDialogProps {
 export function FormDialog({ lda, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false);
 
-  console.log("lda", lda)
   const { canCreateLDA, canManageLDA, isSuperUser } = usePermissions()
   
   const [operationsData, setOperationsData] = useState(

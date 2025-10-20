@@ -3,7 +3,7 @@
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEffect, useState, useCallback } from "react"
-import { Contact, LocalDevelopmentAgency } from "@prisma/client"
+import { Contact } from "@prisma/client"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
@@ -29,17 +29,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 
-export interface ContactFull extends Contact {
-  localDevelopmentAgencies?: LocalDevelopmentAgency[]
-}
 
 interface Props {
-  contacts: ContactFull[],
-  lda?: LocalDevelopmentAgency,
+  contacts: Contact[],
+  ldaId: number,
   dataChanged: () => void
 }
 
-export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
+export function FilteredContacts({ contacts, dataChanged, ldaId }: Props) {
 
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
@@ -54,23 +51,9 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
     label: position,
   }))
 
-  let availableLDAs: { id: string; label: string }[] = []
-
-  if (!lda) {
-    availableLDAs = [
-      ...new Map(
-        contacts
-          .flatMap(contact => contact.localDevelopmentAgencies || [])
-          .map((agency) => [agency.id, { id: String(agency.id), label: agency.name }])
-      ).values(),
-    ]
-  }
-
   const positionOptions: FilterOption[] = availablePositions.map(({ id, label }) => ({ id, label }))
-  const ldaOptions: FilterOption[] = availableLDAs.map(({ id, label }) => ({ id, label }))
 
   const filterConfigs = [
-    !lda ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
     { type: 'position', label: 'Role', options: positionOptions },
   ].filter(Boolean) as { type: string, label: string, options: FilterOption[] }[]
 
@@ -96,7 +79,7 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
     const toastId = toast.loading('Deleting contact...')
     
     try {
-      const response = await fetch(`/api/contact/${contactToDelete.id}`, {
+      const response = await fetch(`/api/lda/${ldaId}/contact/${contactToDelete.id}`, {
         method: 'DELETE',
       })
       
@@ -120,16 +103,11 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
     }
   }
 
-  const [filteredContacts, setFilteredContacts] = useState<ContactFull[]>(contacts)
+  const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts)
 
   useEffect(() => {
     const filtered = contacts.filter((item) => {
-      const selectedLdaIds = (activeFilters['lda'] || []).map(o => o.id)
       const selectedPositions = (activeFilters['position'] || []).map(o => o.id)
-
-      const ldaMatch = selectedLdaIds.length === 0 || 
-        (item.localDevelopmentAgencies && 
-          item.localDevelopmentAgencies.some(lda => selectedLdaIds.includes(String(lda.id))))
 
       const positionMatch = selectedPositions.length === 0 || 
         (item.position && selectedPositions.includes(item.position))
@@ -142,11 +120,11 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
         (item.position && item.position.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.info && item.info.toLowerCase().includes(searchTerm.toLowerCase()))
 
-      return ldaMatch && positionMatch && searchMatch
+      return positionMatch && searchMatch
     })
 
     setFilteredContacts(filtered)
-  }, [activeFilters, searchTerm, contacts, lda])
+  }, [activeFilters, searchTerm, contacts])
 
   return (
     <div className="space-y-4 mt-4">
@@ -170,15 +148,9 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
             className="hidden md:flex"
           />
         </div>
-        {lda && (
+        {ldaId && (
           <ContactFormDialog
-            connectOnCreate={{
-              localDevelopmentAgencies: {
-                connect: {
-                  id: lda.id
-                },
-              }
-            }}
+            ldaId={ldaId}
             callback={dataChanged}
           />
         )}
@@ -236,6 +208,7 @@ export function FilteredContacts({ contacts, dataChanged, lda }: Props) {
                             <ContactFormDialog
                               key={contact.id}
                               contact={contact}
+                              ldaId={ldaId}
                               callback={dataChanged}
                             />
                           </DropdownMenuItem>

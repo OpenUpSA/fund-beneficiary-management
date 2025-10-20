@@ -313,19 +313,15 @@ export async function fetchProvince(province_code: string): Promise<Province> {
   return res.json()
 }
 
-export async function fetchContacts(lda_id?: string): Promise<Contact[]> {
-  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contact`)
-  
-  if (lda_id) {
-    url.searchParams.append('ldaId', lda_id)
-  }
+export async function fetchContacts(lda_id: string): Promise<Contact[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}/contact`)
   
   const res = await fetch(url.toString(), { 
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
     next: { 
-      tags: lda_id ? ['contacts:list', `contacts:lda:${lda_id}`] : ['contacts:list'] 
+      tags: ['contacts:list', `contacts:lda:${lda_id}`] 
     } 
   })
 

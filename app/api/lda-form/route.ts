@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Permission check: Can view LDA
-    if (!permissions.canViewLDA(session.user, ldaId) && !permissions.isSuperUser(session.user)) {
+    if (permissions.isLDAUser(session.user)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 

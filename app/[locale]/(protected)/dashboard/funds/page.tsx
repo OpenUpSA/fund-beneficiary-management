@@ -7,6 +7,10 @@ import { fetchFocusAreas, fetchFunders, fetchFundingStatuses, fetchFunds, fetchL
 import { FormDialog } from '@/components/funds/form'
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { canViewFunds } from "@/lib/permissions"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -22,6 +26,13 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 }
 
 export default async function Page() {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null;
+
+  if (!canViewFunds(user)) {
+    redirect('/404')
+  }
+
   const funds = await fetchFunds()
   const funders = await fetchFunders()
   const fundingStatuses = await fetchFundingStatuses()

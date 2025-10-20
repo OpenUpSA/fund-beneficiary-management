@@ -37,7 +37,7 @@ export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSe
       let apiUrl = ''
       switch (field.config?.dynamicOptionTable) {
         case 'funders':
-          apiUrl = '/api/funder'
+          apiUrl = '/api/funder-list'
           break
         case 'staff_members':
           apiUrl = `/api/lda/${lda_id}/staff?is_committee=false`

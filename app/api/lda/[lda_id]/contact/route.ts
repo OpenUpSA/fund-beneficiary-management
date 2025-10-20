@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
   }
 
   const records = await prisma.contact.findMany({
-    where: { localDevelopmentAgencies: { some: { id: ldaId } } },
+    where: { localDevelopmentAgencyId: ldaId },
   });
 
   return NextResponse.json(records);
@@ -56,9 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: { lda_id: str
     const record = await prisma.contact.create({
       data: {
         ...data,
-        localDevelopmentAgencies: {
-          connect: { id: ldaId }
-        }
+        localDevelopmentAgencyId: ldaId
       }
     });
 
