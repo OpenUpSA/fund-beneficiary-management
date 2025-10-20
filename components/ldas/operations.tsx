@@ -68,14 +68,14 @@ export function OperationsView({ lda }: OperationsViewProps) {
                 <div>
                   <h4 className="font-medium text-[14px] mb-2 text-slate-900">Vision of organisation</h4>
                   <p className="font-normal text-[14px] text-slate-500">
-                    {lda.operations?.vision || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius velit sodales, sollicitudin lorem in, mollis ligula. Vestibulum efficitur odio quis quam. In hac habitasse platea dictumst. Aenean aliquam justo et dui varius, ac consequat felis vehicula. Vestibulum vestibulum rutrum ligula et volutpat. Integer efficitur ullamcorper elit. In viverra ante cursus vitae. Praesent metus dui, volutpat eget elit vulputate, pellentesque interdum libero. Nullam scelerisque nulla nisl, et amet rhoncus erat gravida at."}
+                    {lda.operations?.vision || "Information not provided."}
                   </p>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-[14px] mb-2 text-slate-900">Mission of organisation</h4>
                   <p className="font-normal text-[14px] text-slate-500">
-                    {lda.operations?.mission || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent varius velit sodales, sollicitudin lorem in, mollis ligula. Vestibulum efficitur odio quis quam. In hac habitasse platea dictumst. Aenean aliquam justo et dui varius, ac consequat felis vehicula. Vestibulum vestibulum rutrum ligula et volutpat. Integer efficitur ullamcorper elit. In viverra ante cursus vitae. Praesent metus dui, volutpat eget elit vulputate, pellentesque interdum libero. Nullam scelerisque nulla nisl, et amet rhoncus erat gravida at."}
+                    {lda.operations?.mission || "Information not provided."}
                   </p>
                 </div>
               </div>
