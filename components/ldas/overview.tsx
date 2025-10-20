@@ -8,6 +8,7 @@ import { DynamicIcon } from "../dynamicIcon"
 import dynamic from "next/dynamic"
 import { Suspense } from "react"
 import { AsyncFundList, FundListSkeleton } from "./fund-list"
+import { usePermissions } from "@/hooks/use-permissions"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const LDAMap = dynamic(
@@ -21,6 +22,9 @@ interface Props {
 }
 
 export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
+  const { canViewFunds } = usePermissions()
+  const x = canViewFunds()
+  console.log("x", x);
 
   // Format address from LDA details
   const formatAddress = (): string => {
@@ -85,7 +89,7 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
               <span className="text-slate-900">Project funders:</span>
               <div>
                 <Suspense fallback={<FundListSkeleton />}>
-                  <AsyncFundList fundsPromise={funds} />
+                  <AsyncFundList fundsPromise={funds} canViewFunds={canViewFunds} />
                 </Suspense>
               </div>
             </div>

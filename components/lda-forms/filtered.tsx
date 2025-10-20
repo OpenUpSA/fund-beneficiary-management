@@ -14,6 +14,7 @@ import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "./form"
 import Link from "next/link"
 import { FormStatus } from "@prisma/client"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Props {
   ldaForms: LocalDevelopmentAgencyFormFull[]
@@ -28,6 +29,7 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'amount' | 'status' | 'submitted' | 'approved' | null
 
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
+  const { isLDAUser } = usePermissions()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
@@ -178,7 +180,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           />
         </div>
         
-        {lda && (
+        {lda && !isLDAUser() && (
           // open form dialog 
           <FormDialog
             formTemplates={formTemplates}

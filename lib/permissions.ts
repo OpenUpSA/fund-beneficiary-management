@@ -297,3 +297,39 @@ export const getAvailableRolesForCreation = (currentUser: User): Role[] => {
   }
   return []
 }
+
+export const canViewFunders = (user: User | null): boolean => {
+  if (!user) return false
+  if (permissions.isSuperUser(user)) return true
+  if (permissions.isAdmin(user)) return true
+  if (permissions.isProgrammeOfficer(user)) return true
+  if (permissions.isLDAUser(user)) return false
+  return false
+}
+
+export const canViewFunds = (user: User | null): boolean => {
+  if (!user) return false
+  if (permissions.isSuperUser(user)) return true
+  if (permissions.isAdmin(user)) return true
+  if (permissions.isProgrammeOfficer(user)) return true
+  if (permissions.isLDAUser(user)) return false
+  return false
+}
+
+export const canManageFund = (user: User | null): boolean => {
+  if (!user) return false
+  if (permissions.isSuperUser(user)) return true
+  if (permissions.isAdmin(user)) return true
+  if (permissions.isProgrammeOfficer(user)) return true
+  if (permissions.isLDAUser(user)) return false
+  return false
+}
+
+export const canManageFunder = (user: User | null): boolean => {
+  if (!user) return false
+  if (permissions.isSuperUser(user)) return true
+  if (permissions.isAdmin(user)) return true
+  if (permissions.isProgrammeOfficer(user)) return true
+  if (permissions.isLDAUser(user)) return false
+  return false
+}

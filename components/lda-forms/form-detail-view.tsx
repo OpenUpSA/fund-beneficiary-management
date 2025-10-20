@@ -14,6 +14,7 @@ import {PenLine, Send, CalendarIcon} from "lucide-react"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "@/hooks/use-toast"
 import { useSession } from "next-auth/react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Input } from "@/components/ui/input"
 import { 
   Select,
@@ -63,7 +64,9 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     completed: 0,
     required: 0
   })
+
   const { data: session } = useSession()
+  const { isLDAUser } = usePermissions()
 
   // Format date or show placeholder
   const formatDate = (date: Date | null | undefined) => {
@@ -202,7 +205,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
       <Card className="col-span-7 h-fit">
         <CardHeader className="border-b pb-2 grid grid-cols-2 items-center p-4">
           <h2 className="text-lg font-bold text-slate-900">{getFormTypeName()}</h2>
-          {ldaForm.formStatus?.label === "Draft" && <div className="flex gap-2 justify-end">
+          {ldaForm.formStatus?.label === "Draft" && !isLDAUser() && <div className="flex gap-2 justify-end">
             {!isEditing && <Button onClick={() => setIsEditing(true)}>
               <PenLine className="h-4 w-4" />
               <span>Edit form</span>

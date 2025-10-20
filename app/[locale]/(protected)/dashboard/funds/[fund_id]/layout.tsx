@@ -9,6 +9,10 @@ import {
   fetchFundingStatuses, 
   fetchLocations 
 } from "@/lib/data"
+import { redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { canViewFunds } from "@/lib/permissions"
 
 interface FundLayoutProps {
   children: React.ReactNode
@@ -16,6 +20,13 @@ interface FundLayoutProps {
 }
 
 export default async function Layout({ children, params }: FundLayoutProps) {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS);
+  const user = session?.user || null;
+
+  if (!canViewFunds(user)) {
+    redirect('/404')
+  }
+
   const { fund_id } = params
   const fund = await fetchFund(fund_id)
   const fundingStatuses = await fetchFundingStatuses()

@@ -9,10 +9,8 @@ export function FundListSkeleton() {
   return <span className="text-slate-500">Loading funders...</span>
 }
 
-// Async component that will suspend
-export async function AsyncFundList({ fundsPromise }: { fundsPromise: Promise<FundFull[]> }) {
-  const funds = await fundsPromise; // This will suspend until the promise resolves
-  
+// Regular component for rendering fund list
+function FundListRenderer({ funds, canViewFunds }: { funds: FundFull[], canViewFunds: boolean }) {
   if (!funds || funds.length === 0) {
     return <span>None</span>
   }
@@ -21,15 +19,26 @@ export async function AsyncFundList({ fundsPromise }: { fundsPromise: Promise<Fu
     <>
       {funds.map((fund, index) => (
         <React.Fragment key={fund.id}>
-          <Link 
-            href={`/dashboard/funds/${fund.id}`} 
-            className="text-slate-700 underline"
-          >
-            {fund.name}
-          </Link>
+          {canViewFunds ? (
+            <Link 
+              href={`/dashboard/funds/${fund.id}`} 
+              className="text-slate-700 underline"
+            >
+              {fund.name}
+            </Link>
+          ) : (
+            <span className="text-slate-700">{fund.name}</span>
+          )}
           {index < funds.length - 1 && <span className="mx-1">,</span>}
         </React.Fragment>
       ))}
     </>
   )
+}
+
+// Async component that will suspend
+export async function AsyncFundList({ fundsPromise, canViewFunds }: { fundsPromise: Promise<FundFull[]>, canViewFunds: () => boolean }) {
+  const funds = await fundsPromise; // This will suspend until the promise resolves
+  
+  return <FundListRenderer funds={funds} canViewFunds={canViewFunds()} />
 }
