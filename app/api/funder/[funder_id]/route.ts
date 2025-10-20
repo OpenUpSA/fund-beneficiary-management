@@ -29,7 +29,6 @@ export async function GET(req: NextRequest, { params }: { params: { funder_id: s
       locations: true,
       focusAreas: true,
       organisationDetail: true,
-      contacts: true
     },
   })
 

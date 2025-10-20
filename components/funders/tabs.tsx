@@ -25,11 +25,6 @@ export function FunderTabs({ funderId, className }: FunderTabsProps) {
       href: `/dashboard/funders/${funderId}/funded`
     },
     {
-      label: "Contact",
-      value: "contact",
-      href: `/dashboard/funders/${funderId}/contact`
-    },
-    {
       label: "Documents",
       value: "documents",
       href: `/dashboard/funders/${funderId}/documents`

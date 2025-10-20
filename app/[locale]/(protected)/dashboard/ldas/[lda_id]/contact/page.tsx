@@ -42,7 +42,7 @@ export default async function Page({ params }: LDAContactPageProps) {
 
   return (
     <div className="space-y-4">
-      <FilteredContacts lda={lda} contacts={contacts} dataChanged={dataChanged} />
+      <FilteredContacts ldaId={Number(lda_id)} contacts={contacts} dataChanged={dataChanged} />
     </div>
   )
 }

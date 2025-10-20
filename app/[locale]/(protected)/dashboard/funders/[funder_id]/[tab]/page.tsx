@@ -1,8 +1,5 @@
 import { getTranslations } from "next-intl/server"
 import { FilteredMedia } from "@/components/media/filtered"
-import { OrganisationDetails } from "@/components/organisations/details"
-import { Contacts } from "@/components/contacts/list"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { FilteredDocuments } from "@/components/documents/filtered"
 import { Overview } from "@/components/funders/overview"
 import { FilteredFunds } from "@/components/funds/filtered"
@@ -17,8 +14,6 @@ import {
   fetchProvinces,
   fetchFundingStatuses
 } from "@/lib/data"
-import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
-import { FormDialog as OrganisationDetailFormDialog } from "@/components/organisations/form"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import * as Sentry from '@sentry/nextjs'
@@ -47,7 +42,7 @@ export default async function Page({ params }: FunderTabPageProps) {
   const { funder_id, tab } = params
 
   // Validate tab parameter
-  const validTabs = ["overview", "funds", "funded", "contact", "documents", "media"]
+  const validTabs = ["overview", "funds", "funded", "documents", "media"]
   if (!validTabs.includes(tab)) {
     redirect(`/dashboard/funders/${funder_id}/overview`)
   }
@@ -64,14 +59,6 @@ export default async function Page({ params }: FunderTabPageProps) {
   const dataChanged = async () => {
     "use server"
     revalidateTag('funders')
-  }
-
-  const contactConnectCommand = {
-    funders: {
-      connect: {
-        id: funder.id
-      },
-    }
   }
 
   return (
@@ -95,43 +82,6 @@ export default async function Page({ params }: FunderTabPageProps) {
                 provinces={provinces} 
                 fundingStatus={fundingStatus} 
               />;
-
-            case "contact":
-              return (
-                <div className="sm:flex gap-4 mt-4">
-                  <Card className="w-full sm:w-[40rem]">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <span>Organisation</span>
-                        <div>
-                          <OrganisationDetailFormDialog
-                            organisationDetail={funder.organisationDetail}
-                            callback={dataChanged} />
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-2 space-y-2 text-sm">
-                      <OrganisationDetails organisationDetail={funder.organisationDetail} />
-                    </CardContent>
-                  </Card>
-                  <Card className="w-full">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <span>Leadership</span>
-                        <div>
-                          <ContactFormDialog
-                            connectOnCreate={contactConnectCommand}
-                            callback={dataChanged} />
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <Contacts
-                        contacts={funder.contacts} />
-                    </CardContent>
-                  </Card>
-                </div>
-              );
 
             case "documents":
               return (

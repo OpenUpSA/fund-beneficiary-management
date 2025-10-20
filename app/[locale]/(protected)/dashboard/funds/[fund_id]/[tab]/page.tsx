@@ -3,12 +3,9 @@ import { redirect } from "next/navigation";
 import { Overview } from "@/components/funds/overview";
 import { FilteredLDAs } from "@/components/ldas/filtered";
 import { FilteredForms } from "@/components/forms/filtered";
-import { Contacts } from "@/components/contacts/list";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { FilteredDocuments } from "@/components/documents/filtered";
 import { FilteredMedia } from "@/components/media/filtered";
 import { fetchFund, fetchLocalDevelopmentAgencies, fetchFocusAreas, fetchDevelopmentStages, fetchUsers, fetchProvinces, fetchFundingStatuses } from "@/lib/data";
-import { FormDialog as ContactFormDialog } from "@/components/contacts/form";
 import { revalidateTag } from "next/cache";
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
@@ -36,7 +33,7 @@ export default async function Page({ params }: FundTabPageProps) {
   const { fund_id, tab } = params;
 
   // Validate tab parameter
-  const validTabs = ["overview", "ldas", "forms", "contacts", "documents", "media"]
+  const validTabs = ["overview", "ldas", "forms", "documents", "media"]
   if (!validTabs.includes(tab)) {
     redirect(`/dashboard/funds/${fund_id}/overview`)
   }
@@ -52,14 +49,6 @@ export default async function Page({ params }: FundTabPageProps) {
   const dataChanged = async () => {
     "use server"
     revalidateTag('funds');
-  };
-
-  const contactConnectCommand = {
-    funds: {
-      connect: {
-        id: fund.id,
-      },
-    },
   };
 
   return (
@@ -83,25 +72,6 @@ export default async function Page({ params }: FundTabPageProps) {
 
             case "forms":
               return <FilteredForms />;
-
-            case "contacts":
-              return (
-                <Card className="w-full">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <span>Contacts</span>
-                      <div>
-                        <ContactFormDialog
-                          connectOnCreate={contactConnectCommand}
-                          callback={dataChanged} />
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Contacts contacts={fund.contacts} />
-                  </CardContent>
-                </Card>
-              );
 
             case "documents":
               return (

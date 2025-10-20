@@ -25,11 +25,6 @@ export function FundsTabs({ fundId, className }: FundsTabsProps) {
       href: `/dashboard/funds/${fundId}/forms`
     },
     {
-      label: "Contacts",
-      value: "contacts",
-      href: `/dashboard/funds/${fundId}/contacts`
-    },
-    {
       label: "Documents",
       value: "documents",
       href: `/dashboard/funds/${fundId}/documents`
