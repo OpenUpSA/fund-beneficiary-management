@@ -9,7 +9,7 @@ import { permissions } from "@/lib/permissions"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
   const user = session?.user || null;
   
@@ -17,7 +17,44 @@ export async function GET() {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  // Check user permissions and filter accordingly
+  // Get ldaId query parameter
+  const { searchParams } = new URL(req.url);
+  const ldaId = searchParams.get('ldaId');
+
+  // If ldaId is provided, filter by specific LDA
+  if (ldaId) {
+    const ldaIdNum = parseInt(ldaId);
+
+    // Validate ldaId is a valid number
+    if (isNaN(ldaIdNum)) {
+      return NextResponse.json({ error: "Invalid LDA ID" }, { status: 400 });
+    }
+
+    // Check if user can access this specific LDA
+    if (!permissions.canViewLDA(user, ldaIdNum)) {
+      return NextResponse.json({ error: "No LDA access" }, { status: 403 });
+    }
+
+    // Fetch media for the specific LDA
+    const records = await prisma.media.findMany({
+      where: {
+        localDevelopmentAgencyId: ldaIdNum
+      },
+      include: {
+        localDevelopmentAgency: {
+          include: {
+            focusAreas: true,
+            developmentStage: true
+          }
+        },
+        createdBy: true,
+        mediaSourceType: true,
+      }
+    });
+    return NextResponse.json(records);
+  }
+
+  // No ldaId provided - return all media based on user permissions
   if (permissions.isSuperUser(user) || permissions.isAdmin(user) || permissions.isProgrammeOfficer(user)) {
     // These roles can view all media
     const records = await prisma.media.findMany({
