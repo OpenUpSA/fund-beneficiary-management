@@ -186,7 +186,10 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     }
 
     // Permission check: Can view LDA
-    if (!permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)) {
+    if (
+      !permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)
+      || permissions.isLDAUser(user)
+    ) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
@@ -236,7 +239,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { lda_form_
     }
 
     // Permission check: Can view LDA
-    if (!permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)) {
+    if (!permissions.isSuperUser(user)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
@@ -258,12 +261,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Only PROGRAMME_OFFICER and ADMIN can update amount and status
-    const canUpdateAmountAndStatus = 
-      session.user.role === "PROGRAMME_OFFICER" || 
-      session.user.role === "ADMIN";
+    const user = session?.user || null;
+    if (!user) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
 
     const ldaFormId = parseInt(params.lda_form_id, 10);
+
+    const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
+      where: { id: ldaFormId },
+      select: { localDevelopmentAgencyId: true }
+    });
+
+    if (!existingForm) {
+      return NextResponse.json({ error: "Form not found" }, { status: 404 });
+    }
+
+    if (
+      !permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)
+      || permissions.isLDAUser(user)
+    ) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
     const data = await req.json();
     
     // Prepare update data
@@ -277,7 +297,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     } = {};
     
     // Process form status (needs to map from label to ID)
-    if (data.formStatusLabel && canUpdateAmountAndStatus) {
+    if (data.formStatusLabel) {
       // Find the form status ID by label
       const formStatus = await prisma.formStatus.findFirst({
         where: { label: data.formStatusLabel }
@@ -299,7 +319,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     }
     
     // Process other fields
-    if (data.amount !== undefined && canUpdateAmountAndStatus) {
+    if (data.amount !== undefined) {
       // Clean amount string and convert to number
       const amountStr = data.amount.toString().replace(/[^0-9.]/g, '');
       updateData.amount = parseFloat(amountStr);
