@@ -139,12 +139,13 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
             </>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-w-[40vw]">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
+        <DialogHeader className="p-6 border-b">
           <DialogTitle>{ldaForm ? "Edit" : "Add"} Form</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
+            <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4" style={{ maxHeight: 'calc(90vh - 180px)' }}>
             {ldas &&
               <FormField
                 control={form.control}
@@ -202,7 +203,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                 </FormItem>
               )} />}
 
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-4 md:flex-row">
               <FormField
                 control={form.control}
                 name="fundingStart"
@@ -300,10 +301,18 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
               />
             </div>
 
+            </div>
+
           </form>
         </Form>
-        <DialogFooter>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>{ldaForm ? "Save changes" : "Add Form"}</Button>
+        <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-6 pb-6 pt-4 border-t mt-auto">
+          <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+          <Button 
+            type="submit" 
+            className="sm:order-2 order-1"
+          >
+            {ldaForm ? "Save changes" : "Add Form"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog >
