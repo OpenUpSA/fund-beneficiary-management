@@ -6,7 +6,16 @@ import { useState, useCallback, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, FormTemplateWithRelations } from "@/types/models"
 import { format } from "date-fns"
-import { AlertTriangleIcon, Clock3Icon, ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react"
+import {
+  AlertTriangleIcon,
+  Clock3Icon,
+  ChevronsUpDownIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  AlertCircle,
+  MoreHorizontal,
+  Trash2
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -15,6 +24,23 @@ import { FormDialog } from "./form"
 import Link from "next/link"
 import { FormStatus } from "@prisma/client"
 import { usePermissions } from "@/hooks/use-permissions"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 interface Props {
   ldaForms: LocalDevelopmentAgencyFormFull[]
@@ -29,11 +55,13 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'amount' | 'status' | 'submitted' | 'approved' | null
 
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
-  const { isLDAUser } = usePermissions()
+  const { isLDAUser, isSuperUser } = usePermissions()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [formToDelete, setFormToDelete] = useState<LocalDevelopmentAgencyFormFull | null>(null)
 
   // Filter configurations
   const typeOptions: FilterOption[] = formTemplates.map(template => ({
@@ -154,6 +182,37 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
     return 'R' + value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  const handleDeleteForm = async () => {
+    if (!formToDelete) return
+
+    setIsDeleting(true)
+    const toastId = toast.loading('Deleting form...')
+
+    try {
+      const response = await fetch(`/api/lda-form/${formToDelete.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete form')
+      }
+
+      toast.dismiss(toastId)
+      toast.success('Form deleted')
+
+      dataChanged()
+    } catch (error) {
+      console.error('Error deleting form:', error)
+      toast.dismiss(toastId)
+      toast.error('Failed to delete form', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      })
+    } finally {
+      setIsDeleting(false)
+      setFormToDelete(null)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Funding Applications</h1>
@@ -251,6 +310,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                 </div>
               </TableHead>
               <TableHead className="font-medium">Reporting status</TableHead>
+              {isSuperUser() && <TableHead className="font-medium"></TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -339,6 +399,24 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   <TableCell>
                     {getReportingStatus()}
                   </TableCell>
+                  {isSuperUser() && <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => setFormToDelete(ldaForm)}>
+                          <div className="flex items-center gap-2 text-destructive hover:cursor-pointer">
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </div>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>}
                 </TableRow>
               );
             })}
@@ -355,6 +433,29 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           Showing {filteredForms.length} of {ldaForms.length} applications
         </div>
       </div>
+      <AlertDialog open={!!formToDelete} onOpenChange={(open) => !open && setFormToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Confirm Deletion
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the form <strong>{formToDelete?.title}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteForm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
