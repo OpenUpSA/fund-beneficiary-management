@@ -308,7 +308,8 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
         <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-6 pb-6 pt-4 border-t mt-auto">
           <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
           <Button 
-            type="submit" 
+            type="button" 
+            onClick={form.handleSubmit(onSubmit)}
             className="sm:order-2 order-1"
           >
             {ldaForm ? "Save changes" : "Add Form"}
