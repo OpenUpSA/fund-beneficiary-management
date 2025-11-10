@@ -30,6 +30,8 @@ const prisma = new PrismaClient()
 async function main() {
   await prisma.media.deleteMany()
   await prisma.localDevelopmentAgencyForm.deleteMany()
+  await prisma.fundLocalDevelopmentAgency.deleteMany()
+  await prisma.fundFunder.deleteMany()
   await prisma.localDevelopmentAgency.deleteMany()
   await prisma.developmentStage.deleteMany()
   await prisma.fund.deleteMany()
@@ -400,15 +402,9 @@ async function main() {
       In South Africa, our social development efforts are overseen by the Woolworths Trust. 
       Established in 2003, The Woolworths Trust is managed by a Board of Trustees and reports to the WHL Social and Ethics Committee.`,
         amount: 12345,
-
-        fundingStatus: { connect: { id: fundingStatusUnderway.id } },
-
-        locations: {
-          connect: [
-            { id: locationEasternCape.id },
-            { id: locationWesternCape.id },
-          ],
-        },
+        fundingStatus: 'Active',
+        fundingStart: new Date('2024-01-01'),
+        fundingEnd: new Date('2025-12-31'),
         focusAreas: {
           connect: [
             { id: focusAreaClimateResilience.id },
@@ -425,19 +421,14 @@ async function main() {
   const fundCommunityGardeningFund = await prisma.fund.create(
     {
       data: {
-        funders: { connect: [{ id: funderWoolworths.id }] },
         name: 'Community Gardening fund',
-        about: 'How can learners stay safe when many schools throughout South Africa don’t have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.',
+        about: `How can learners stay safe when many schools throughout South Africa don't have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.`,
         amount: 9999999,
-        fundingStatus: { connect: { id: fundingStatusDelayed.id } },
+        fundingStatus: 'Active',
+        fundingStart: new Date('2024-01-01'),
+        fundingEnd: new Date('2025-12-31'),
         focusAreas: {
           connect: [{ id: focusEcological.id }]
-        },
-        locations: {
-          connect: [
-            { id: locationEasternCape.id },
-            { id: locationWesternCape.id },
-          ],
         },
         organisationDetail: {
           create: {},
@@ -445,16 +436,27 @@ async function main() {
       },
     })
 
+  // Link Funder to Fund
+  await prisma.fundFunder.create({
+    data: {
+      fundId: fundCommunityGardeningFund.id,
+      funderId: funderWoolworths.id,
+      amount: 500000,
+      fundingStart: new Date('2024-01-01'),
+      fundingEnd: new Date('2025-12-31'),
+      notes: 'Primary funder for community gardening initiative'
+    }
+  })
+
   const funderCSA = await prisma.funder.create(
     {
       data: {
         name: 'CSA',
         about: `Cricket South Africa funds many worthwile cricket clubs`,
         amount: 78923,
-        fundingStatus: { connect: { id: fundingStatusDead.id } },
-        locations: {
-          connect: [{ id: locationNorthernCape.id }]
-        },
+        fundingStatus: 'Cancelled',
+        fundingStart: new Date('2023-01-01'),
+        fundingEnd: new Date('2023-12-31'),
         focusAreas: {
           connect: [{ id: focusAreaTransport.id }]
         },
@@ -467,14 +469,12 @@ async function main() {
   const fundCricket = await prisma.fund.create(
     {
       data: {
-        funders: { connect: [{ id: funderCSA.id }] },
         name: 'Strikers Cricket Fund ',
         about: 'A fund for cricket lovers in parternship with Strikers',
         amount: 500,
-        fundingStatus: { connect: { id: fundingStatusFinished.id } },
-        locations: {
-          connect: [{ id: locationNorthernCape.id }]
-        },
+        fundingStatus: 'Cancelled',
+        fundingStart: new Date('2023-01-01'),
+        fundingEnd: new Date('2023-12-31'),
         focusAreas: {
           connect: [{ id: focusAreaTransport.id }]
         },
@@ -484,18 +484,27 @@ async function main() {
       }
     })
 
+  // Link Funder to Fund
+  await prisma.fundFunder.create({
+    data: {
+      fundId: fundCricket.id,
+      funderId: funderCSA.id,
+      amount: 500,
+      fundingStart: new Date('2023-01-01'),
+      fundingEnd: new Date('2023-12-31'),
+      notes: 'Cricket development funding'
+    }
+  })
+
   const funderShoprite = await prisma.funder.create(
     {
       data: {
         name: 'Shoprite',
         about: "As a South African retailer, we are faced with complex social challenges, and we believe in working together to make a real difference. Every programme or initiative we launch makes room for collaboration with one or more of our partners or suppliers. We take this approach in every country in which we operate, and are sure to tailor the way we do things to their specific social context. In South Africa, our social development efforts are overseen by the Woolworths Trust. Established in 2003, The Woolworths Trust is managed by a Board of Trustees, and reports to the WHL Social and Ethics Committee.",
         amount: 121921,
-        fundingStatus: { connect: { id: fundingStatusPaused.id } },
-        locations: {
-          connect: [
-            { id: locationGauteng.id }
-          ]
-        },
+        fundingStatus: 'Paused',
+        fundingStart: new Date('2024-01-01'),
+        fundingEnd: new Date('2025-12-31'),
         focusAreas: {
           connect: [
             { id: focusAreaClimateResilience.id }
@@ -510,25 +519,32 @@ async function main() {
   const fundYouthDevelopmentFund = await prisma.fund.create(
     {
       data: {
-        funders: { connect: [{ id: funderShoprite.id }] },
         name: 'Youth Development Fund',
-        about: 'How can learners stay safe when many schools throughout South Africa don’t have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.',
+        about: `How can learners stay safe when many schools throughout South Africa don't have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.`,
         amount: 891289,
-        fundingStatus: { connect: { id: fundingStatusUnderway.id } },
+        fundingStatus: 'Active',
+        fundingStart: new Date('2024-06-01'),
+        fundingEnd: new Date('2026-05-31'),
         focusAreas: {
           connect: [{ id: focusAreaYouth.id }]
-        },
-        locations: {
-          connect: [
-            { id: locationEasternCape.id },
-            { id: locationWesternCape.id },
-          ],
         },
         organisationDetail: {
           create: {},
         },
       },
     })
+
+  // Link Funder to Fund
+  await prisma.fundFunder.create({
+    data: {
+      fundId: fundYouthDevelopmentFund.id,
+      funderId: funderShoprite.id,
+      amount: 891289,
+      fundingStart: new Date('2024-06-01'),
+      fundingEnd: new Date('2026-05-31'),
+      notes: 'Youth empowerment and development program'
+    }
+  })
 
   const ldaOtsile = await prisma.localDevelopmentAgency.create(
     {
@@ -541,13 +557,24 @@ async function main() {
         amount: 1000,
         focusAreas: { connect: { id: focusAreaTransport.id } },
         location: { connect: { id: locationNorthernCape.id } },
-        funds: { connect: { id: fundCricket.id } },
         programmeOfficer: { connect: { id: userNala.id } },
         organisationDetail: {
           create: {},
         },
       }
     })
+
+  // Link LDA to Fund
+  await prisma.fundLocalDevelopmentAgency.create({
+    data: {
+      fundId: fundCricket.id,
+      localDevelopmentAgencyId: ldaOtsile.id,
+      description: 'Cricket development funding for community organization',
+      fundingStart: new Date('2023-01-01'),
+      fundingEnd: new Date('2023-12-31'),
+      fundingStatus: 'Cancelled'
+    }
+  })
 
   const ldaInterchurchLocalDevelopmentAgency = await prisma.localDevelopmentAgency.create(
     {
@@ -562,9 +589,6 @@ async function main() {
           connect: { id: focusAreaTransport.id }
         },
         location: { connect: { id: locationNorthernCape.id } },
-        funds: {
-          connect: { id: fundCommunityGardeningFund.id }
-        },
         programmeOfficer: { connect: { id: userNala.id } },
         organisationDetail: {
           create: {},
@@ -572,6 +596,18 @@ async function main() {
       },
     },
   )
+
+  // Link LDA to Fund
+  await prisma.fundLocalDevelopmentAgency.create({
+    data: {
+      fundId: fundCommunityGardeningFund.id,
+      localDevelopmentAgencyId: ldaInterchurchLocalDevelopmentAgency.id,
+      description: 'Community gardening initiative support',
+      fundingStart: new Date('2024-01-01'),
+      fundingEnd: new Date('2025-12-31'),
+      fundingStatus: 'Active'
+    }
+  })
 
   const organisationDetailLdaZanoncedoEmpowermentCentre = await prisma.organisationDetail.create(
     {
@@ -607,13 +643,33 @@ async function main() {
           connect: [{ id: focusAreaClimateResilience.id }, { id: focusAreaTransport.id }]
         },
         locationId: locationGauteng.id,
-        funds: {
-          connect: [{ id: fundCommunityGardeningFund.id }, { id: fundYouthDevelopmentFund.id }]
-        },
         programmeOfficerId: userNala.id,
         organisationDetailId: organisationDetailLdaZanoncedoEmpowermentCentre.id
       }
     })
+
+  // Link LDA to Funds
+  await prisma.fundLocalDevelopmentAgency.create({
+    data: {
+      fundId: fundCommunityGardeningFund.id,
+      localDevelopmentAgencyId: ldaZanoncedoEmpowermentCentre.id,
+      description: 'Community gardening and ecological development',
+      fundingStart: new Date('2024-01-01'),
+      fundingEnd: new Date('2025-12-31'),
+      fundingStatus: 'Active'
+    }
+  })
+
+  await prisma.fundLocalDevelopmentAgency.create({
+    data: {
+      fundId: fundYouthDevelopmentFund.id,
+      localDevelopmentAgencyId: ldaZanoncedoEmpowermentCentre.id,
+      description: 'Youth empowerment and skills development',
+      fundingStart: new Date('2024-06-01'),
+      fundingEnd: new Date('2026-05-31'),
+      fundingStatus: 'Active'
+    }
+  })
 
   await prisma.localDevelopmentAgencyForm.create(
     {

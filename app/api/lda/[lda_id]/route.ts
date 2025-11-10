@@ -37,6 +37,20 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
         operations: true,
         userAccess: true,
         staffMembers: true,
+        fundLocalDevelopmentAgencies: {
+          include: {
+            fund: {
+              include: {
+                focusAreas: true,
+                fundFunders: {
+                  include: {
+                    funder: true
+                  }
+                }
+              }
+            }
+          }
+        }
       },
     })
 
@@ -151,12 +165,6 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
         connect: data.focusAreas.map((id: number) => ({ id })),
       };
     }
-    if (Array.isArray(data.funds)) {
-      ldaData.funds = {
-        set: [],
-        connect: data.funds.map((id: number) => ({ id })),
-      };
-    }
 
     const updated = await prisma.localDevelopmentAgency.update({
       where: { id: ldaId },
@@ -207,7 +215,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { lda_id: s
       await tx.localDevelopmentAgency.update({
         where: { id: ldaId },
         data: {
-          funds: { set: [] },
           focusAreas: { set: [] },
           contacts: { set: [] }
         }

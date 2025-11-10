@@ -32,9 +32,6 @@ export default function FormAccordionItem({
   onSectionStatusChange,
 }: FormAccordionItemProps) {
 
-  console.log('sectionData', sectionData)
-  console.log('defaultValues', defaultValues)
-
   const isValueValid = (value: string, field: Field) => {
     if (field.type === "fileUpload") {
       return JSON.parse(value).length > 0;

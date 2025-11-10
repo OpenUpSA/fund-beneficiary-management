@@ -25,10 +25,17 @@ export async function GET(req: NextRequest, { params }: { params: { funder_id: s
   const record = await prisma.funder.findUnique({
     where: { id: id },
     include: {
-      fundingStatus: true,
-      locations: true,
       focusAreas: true,
       organisationDetail: true,
+      fundFunders: {
+        include: {
+          fund: {
+            include: {
+              focusAreas: true
+            }
+          }
+        }
+      }
     },
   })
 
@@ -57,24 +64,62 @@ export async function PUT(req: NextRequest, { params }: { params: { funder_id: s
   try {
     const data = await req.json()
 
+    // Get existing funder to access organisationDetailId
+    const existingFunder = await prisma.funder.findUnique({
+      where: { id: id },
+      select: { organisationDetailId: true }
+    });
+
+    if (!existingFunder) {
+      return NextResponse.json({ error: "Funder not found" }, { status: 404 });
+    }
+
+    // Update organisation detail
+    await prisma.organisationDetail.update({
+      where: { id: existingFunder.organisationDetailId },
+      data: {
+        contactNumber: data.contactNumber || "",
+        email: data.email || "",
+        website: data.website || "",
+        physicalStreet: data.physicalStreet || "",
+        physicalComplexName: data.physicalComplexName || "",
+        physicalComplexNumber: data.physicalComplexNumber || "",
+        physicalCity: data.physicalCity || "",
+        physicalPostalCode: data.physicalPostalCode || "",
+        physicalProvince: data.physicalProvince || "",
+        physicalDistrict: data.physicalDistrict || "",
+        useDifferentPostalAddress: data.useDifferentPostalAddress || false,
+        postalStreet: data.postalStreet || "",
+        postalComplexName: data.postalComplexName || "",
+        postalComplexNumber: data.postalComplexNumber || "",
+        postalCity: data.postalCity || "",
+        postalCode: data.postalCode || "",
+        postalProvince: data.postalProvince || "",
+        postalDistrict: data.postalDistrict || "",
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
+        mapAddress: data.mapAddress || "",
+      },
+    });
+
+    // Update the funder
     const updated = await prisma.funder.update({
       where: { id: id },
       data: {
         name: data.name,
         about: data.about,
         amount: data.amount,
-        fundingStatus: {
-          connect: { id: data.fundingStatusId },
-        },
-        fundingStart: data.fundingStart,
-        fundingEnd: data.fundingEnd,
-        locations: {
-          set: data.locations.map((locationId: number) => ({ id: locationId })),
-        },
+        fundingStatus: data.fundingStatus,
+        fundingStart: new Date(data.fundingStart),
+        fundingEnd: new Date(data.fundingEnd),
         focusAreas: {
           set: data.focusAreas.map((focusAreaId: number) => ({ id: focusAreaId })),
         },
-      }
+      },
+      include: {
+        focusAreas: true,
+        organisationDetail: true,
+      },
     })
 
     return NextResponse.json(updated)

@@ -27,9 +27,18 @@ export async function GET() {
       location: true,
       programmeOfficer: true,
       developmentStage: true,
-      funds: {
+      fundLocalDevelopmentAgencies: {
         include: {
-          funders: true
+          fund: {
+            include: {
+              focusAreas: true,
+              fundFunders: {
+                include: {
+                  funder: true
+                }
+              }
+            }
+          }
         }
       },
       organisationDetail: {
@@ -48,7 +57,28 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json(records);
+  // Transform the response to use cleaner key names
+  const transformedRecords = records.map(record => ({
+    ...record,
+    funds: record.fundLocalDevelopmentAgencies.map(fLda => ({
+      ...fLda.fund,
+      description: fLda.description,
+      fundingStart: fLda.fundingStart,
+      fundingEnd: fLda.fundingEnd,
+      fundingStatus: fLda.fundingStatus,
+      funders: fLda.fund.fundFunders.map(ff => ({
+        ...ff.funder,
+        fundAmount: ff.amount,
+        fundingStart: ff.fundingStart,
+        fundingEnd: ff.fundingEnd,
+        notes: ff.notes
+      })),
+      fundFunders: undefined
+    })),
+    fundLocalDevelopmentAgencies: undefined
+  }));
+
+  return NextResponse.json(transformedRecords);
 }
 
 export async function POST(req: NextRequest) {

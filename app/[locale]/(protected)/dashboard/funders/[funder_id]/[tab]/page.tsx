@@ -1,18 +1,19 @@
 import { getTranslations } from "next-intl/server"
 import { FilteredMedia } from "@/components/media/filtered"
 import { FilteredDocuments } from "@/components/documents/filtered"
+import { FilteredLDAForms } from "@/components/lda-forms/filtered"
 import { Overview } from "@/components/funders/overview"
-import { FilteredFunds } from "@/components/funds/filtered"
-import { FilteredLDAs } from "@/components/ldas/filtered"
+import { ContributedFunds } from "@/components/funders/contributed-funds"
+import { FilteredFundLDAs } from "@/components/funds/funded-ldas"
 import {
   fetchFunder,
-  fetchFunderFunds,
+  fetchFunderLDAs,
+  fetchFunderLDAForms,
+  fetchFunds,
   fetchLocalDevelopmentAgencies,
-  fetchFocusAreas,
-  fetchDevelopmentStages,
-  fetchUsers,
-  fetchProvinces,
-  fetchFundingStatuses
+  fetchFormTemplates,
+  fetchFormStatuses,
+  fetchFocusAreas
 } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -42,23 +43,30 @@ export default async function Page({ params }: FunderTabPageProps) {
   const { funder_id, tab } = params
 
   // Validate tab parameter
-  const validTabs = ["overview", "funds", "funded", "documents", "media"]
+  const validTabs = ["overview", "funds", "funded", "applications", "documents", "media"]
   if (!validTabs.includes(tab)) {
     redirect(`/dashboard/funders/${funder_id}/overview`)
   }
 
   const funder = await fetchFunder(funder_id)
-  const funds = await fetchFunderFunds(funder_id)
-  const ldas = await fetchLocalDevelopmentAgencies()
+  const allFunds = await fetchFunds()
+  const allLDAs = await fetchLocalDevelopmentAgencies()
+  
+  // Fetch all LDAs linked to this funder through its funds
+  const funderLDAs = await fetchFunderLDAs(funder_id)
+  
+  // Fetch form-related data for applications tab
+  const ldaForms = await fetchFunderLDAForms(funder_id)
+  const formTemplates = await fetchFormTemplates()
+  const formStatuses = await fetchFormStatuses()
   const focusAreas = await fetchFocusAreas()
-  const developmentStages = await fetchDevelopmentStages()
-  const programmeOfficers = await fetchUsers()
-  const provinces = await fetchProvinces()
-  const fundingStatus = await fetchFundingStatuses()
 
   const dataChanged = async () => {
     "use server"
     revalidateTag('funders')
+    revalidateTag(`funder:${funder_id}:ldas`)
+    revalidateTag(`funder-lda-forms:${funder_id}`)
+    revalidateTag('lda-forms:list')
   }
 
   return (
@@ -68,19 +76,34 @@ export default async function Page({ params }: FunderTabPageProps) {
         {(() => {
           switch (tab) {
             case "overview":
-              return <Overview funder={funder} />;
+              return <Overview funder={funder} ldaCount={funderLDAs.length} />;
 
             case "funds":
-              return <FilteredFunds funds={funds} />;
+              return <ContributedFunds
+                fundFunders={funder.fundFunders}
+                funderId={Number(funder_id)}
+                funderName={funder.name}
+                availableFunds={allFunds}
+                focusAreas={focusAreas}
+                callback={dataChanged}
+              />;
 
             case "funded":
-              return <FilteredLDAs 
-                ldas={ldas} 
-                focusAreas={focusAreas} 
-                developmentStages={developmentStages} 
-                programmeOfficers={programmeOfficers} 
-                provinces={provinces} 
-                fundingStatus={fundingStatus} 
+              return <FilteredFundLDAs 
+                fundedLDAs={funderLDAs}
+                fundingCalculationType="total_funded_amount"
+                showLinkButton={false}
+                availableLDAs={allLDAs.map(lda => ({ id: lda.id, name: lda.name }))}
+                funds={allFunds.map(fund => ({ id: fund.id, label: fund.name }))}
+                callback={dataChanged}
+              />;
+
+            case "applications":
+              return <FilteredLDAForms 
+                ldaForms={ldaForms}
+                formTemplates={formTemplates}
+                formStatuses={formStatuses}
+                dataChanged={dataChanged}
               />;
 
             case "documents":

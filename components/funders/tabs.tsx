@@ -25,15 +25,20 @@ export function FunderTabs({ funderId, className }: FunderTabsProps) {
       href: `/dashboard/funders/${funderId}/funded`
     },
     {
-      label: "Documents",
-      value: "documents",
-      href: `/dashboard/funders/${funderId}/documents`
+      label: "Applications & Reports",
+      value: "applications",
+      href: `/dashboard/funders/${funderId}/applications`
     },
-    {
-      label: "Media",
-      value: "media",
-      href: `/dashboard/funders/${funderId}/media`
-    }
+    // {
+    //   label: "Documents",
+    //   value: "documents",
+    //   href: `/dashboard/funders/${funderId}/documents`
+    // },
+    // {
+    //   label: "Media",
+    //   value: "media",
+    //   href: `/dashboard/funders/${funderId}/media`
+    // }
   ]
   
   return <TabNav tabs={tabs} className={className} />
