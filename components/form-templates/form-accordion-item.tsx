@@ -32,9 +32,6 @@ export default function FormAccordionItem({
   onSectionStatusChange,
 }: FormAccordionItemProps) {
 
-  console.log('sectionData', sectionData)
-  console.log('defaultValues', defaultValues)
-
   const isValueValid = (value: string, field: Field) => {
     if (field.type === "fileUpload") {
       return JSON.parse(value).length > 0;
@@ -128,7 +125,7 @@ export default function FormAccordionItem({
             ...subfield,
             name: subfieldName,
             show: show_subfield,
-            isValid: subfield.required ? false : true
+            isValid: subfield.required && show_subfield ? false : true
           };
 
           if (defaultValues && subfieldName in defaultValues) {
@@ -139,7 +136,7 @@ export default function FormAccordionItem({
           }
           return subFieldObj;
         });
-        
+
         // For a field with subfields, check if all required subfields are valid
         const requiredSubfields = subFields.filter(sf => sf.required);
         const allRequiredSubfieldsValid = requiredSubfields.length > 0 ? 
@@ -353,17 +350,10 @@ export default function FormAccordionItem({
           }
         }
 
-        // Update the field with new value and validate it
-        if (f.name === field.name) {
-          // A field is valid if it has a value (for required fields) or is optional
-          const isFieldValid = f.required ? Boolean(value.trim().length > 0) : true;
-          return { ...f, value, isValid: isFieldValid };
-        }
-
         // If the field is a show_if field, update its visibility according to current field response
         if (f?.show_if) {
           if (f.show_if.field === field.name) {
-            return { ...f, show: value === f?.show_if?.value };
+            f = { ...f, show: value === f?.show_if?.value };
           }
         }
 
@@ -372,20 +362,28 @@ export default function FormAccordionItem({
             if (subfield.name === field.name) {
               // A field is valid if it has a value (for required fields) or is optional
               const isFieldValid = subfield.required ? Boolean(value.trim().length > 0) : true;
-              return { ...subfield, value, isValid: isFieldValid };
+              subfield = { ...subfield, value, isValid: isFieldValid };
             }
 
             // If the subfield is a show_if field, update its visibility according to current field response
             if (subfield?.show_if) {
               if (subfield.show_if.field === field.name) {
-                return { ...subfield, show: value === subfield?.show_if?.value };
+                subfield = { ...subfield, show: value === subfield?.show_if?.value };
               }
             }
             return subfield;
           }) as Field[];
         }
 
-        return f;
+        // Update the field with new value and validate it
+        if (f.name === field.name) {
+          f =  { ...f, value, isValid: f.required ? Boolean(value.trim().length > 0) : true };
+        }
+        let isFieldValid = f.isValid;
+        if (f.fields) {
+          isFieldValid = f.fields.every((subfield: Field) => subfield.show && subfield.required ? subfield.isValid : true);
+        }
+        return { ...f, isValid: isFieldValid };
       }) as Field[];
       
       // Recalculate completion status
