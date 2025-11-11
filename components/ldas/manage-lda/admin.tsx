@@ -83,7 +83,7 @@ export function AdminTab({
                 <Select value={field.value?.toString()} onValueChange={field.onChange}>
                 <FormControl>
                     <SelectTrigger>
-                    <SelectValue placeholder="Registered NPO" />
+                    <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -172,7 +172,7 @@ export function AdminTab({
             <Select value={field.value?.toString()} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Established" />
+                  <SelectValue placeholder="Select stage" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -198,7 +198,7 @@ export function AdminTab({
             <Select value={field.value?.toString()} onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="James Smith" />
+                  <SelectValue placeholder="Select officer" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -224,7 +224,7 @@ export function AdminTab({
               <Select value={field.value?.toString()} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Active" />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
