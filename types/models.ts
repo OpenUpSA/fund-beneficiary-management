@@ -22,39 +22,102 @@ export type UserWithLDAsBasic = Prisma.UserGetPayload<{
   }
 }>
 
+export type FunderFullWithoutFundFunders = Prisma.FunderGetPayload<{
+  include: {
+    focusAreas: true,
+    organisationDetail: true,
+    fundFunders: false
+  }
+}>
+
+// Base FunderFull type from Prisma
+type FunderFullBase = Prisma.FunderGetPayload<{
+  include: {
+    focusAreas: true,
+    organisationDetail: true,
+    fundFunders: {
+      include: {
+        fund: true
+      }
+    }
+  }
+}>
+
+export type FundWithFocusAreas = Prisma.FundGetPayload<{
+  include: {
+    focusAreas: true,
+  }
+}>
+
+export type FunderWithFocusAreas = Prisma.FunderGetPayload<{
+  include: {
+    focusAreas: true
+  }
+}>
+
 export type FunderFull = Prisma.FunderGetPayload<{
   include: {
-    fundingStatus: true,
-    locations: true,
     focusAreas: true,
-    organisationDetail: true
-    contacts: true
+    organisationDetail: true,
+    fundFunders: {
+      include: {
+        fund: {
+          include: {
+            focusAreas: true
+          }
+        }
+      }
+    }
+  }
+}>
+
+// Extended FundFull type with transformed API response properties
+export type LimitedFundModel = Prisma.FundGetPayload<{
+  include: {
+    focusAreas: true,
+    organisationDetail: true,
+    fundFunders: {
+      select: {
+        id: true,
+      }
+    },
+    fundLocalDevelopmentAgencies: {
+      select: {
+        id: true,
+        fundingStatus: true
+      }
+    }
   }
 }>
 
 export type FundFull = Prisma.FundGetPayload<{
   include: {
-    fundingStatus: true,
-    locations: true,
     focusAreas: true,
-    funders: true,
-    localDevelopmentAgencies: true,
-    organisationDetail: true
-    contacts: true
+    organisationDetail: true,
+    fundFunders: {
+      include: {
+        funder: true
+      }
+    },
+    fundLocalDevelopmentAgencies: {
+      include: {
+        localDevelopmentAgency: true,
+        fund: {
+          select: {
+            name: true,
+            id: true
+          }
+        }
+      }
+    }
   }
 }>
 
 export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload<{
   include: {
-    funds: {
-      include: {
-        funders: true
-      }
-    },
     fundingStatus: true,
     location: true,
     focusAreas: true,
-    funders: true,
     developmentStage: true,
     programmeOfficer: true,
     organisationDetail: true,
@@ -82,6 +145,20 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
     operations: true,
     userAccess: true,
     staffMembers: true,
+    fundLocalDevelopmentAgencies: {
+      include: {
+        fund: {
+          include: {
+            focusAreas: true,
+            fundFunders: {
+              include: {
+                funder: true
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }>
 
@@ -136,6 +213,34 @@ export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGe
     }
     formStatus: true
     formTemplate: true
+  }
+}>
+
+export type FundForFunder = Prisma.FundFunderGetPayload<{
+  include: {
+    fund: {
+      include: {
+        focusAreas: true,
+      }
+    }
+  }
+}>
+
+export type FunderForFund = Prisma.FundFunderGetPayload<{
+  include: {
+    funder: true
+  }
+}>
+
+export type FundedLDAs = Prisma.FundLocalDevelopmentAgencyGetPayload<{
+  include: {
+    localDevelopmentAgency: true,
+    fund: {
+      select: {
+        name: true,
+        id: true
+      }
+    }
   }
 }>
 

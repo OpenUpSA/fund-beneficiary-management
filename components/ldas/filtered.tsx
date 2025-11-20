@@ -94,7 +94,6 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
 
   const handleSort = useCallback((column: SortableColumn) => {
     setSortColumn(prev => {
-      console.log(prev, column)
       if (prev === column) {
         setSortDirection(dir => (dir === 'asc' ? 'desc' : dir === 'desc' ? null : 'asc'))
         return column

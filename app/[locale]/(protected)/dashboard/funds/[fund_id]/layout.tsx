@@ -5,9 +5,7 @@ import { revalidateTag } from "next/cache"
 import { 
   fetchFocusAreas, 
   fetchFund,
-  fetchFunders,
-  fetchFundingStatuses, 
-  fetchLocations 
+  fetchProvinces
 } from "@/lib/data"
 import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
@@ -29,10 +27,8 @@ export default async function Layout({ children, params }: FundLayoutProps) {
 
   const { fund_id } = params
   const fund = await fetchFund(fund_id)
-  const fundingStatuses = await fetchFundingStatuses()
-  const locations = await fetchLocations()
   const focusAreas = await fetchFocusAreas()
-  const funders = await fetchFunders()
+  const provinces = await fetchProvinces()
 
   const dataChanged = async () => {
     "use server"
@@ -54,10 +50,8 @@ export default async function Layout({ children, params }: FundLayoutProps) {
         <div className="space-x-2">
           <FormDialog
             fund={fund}
-            funders={funders}
-            fundingStatuses={fundingStatuses}
-            locations={locations}
             focusAreas={focusAreas}
+            provinces={provinces}
             callback={dataChanged} />
         </div>
       </div>

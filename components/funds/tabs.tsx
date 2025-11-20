@@ -15,25 +15,30 @@ export function FundsTabs({ fundId, className }: FundsTabsProps) {
       href: `/dashboard/funds/${fundId}/overview`
     },
     {
-      label: "LDAs",
+      label: "Funders",
+      value: "funders",
+      href: `/dashboard/funds/${fundId}/funders`
+    },
+    {
+      label: "Funded LDAs",
       value: "ldas",
       href: `/dashboard/funds/${fundId}/ldas`
     },
     {
-      label: "Forms",
-      value: "forms",
-      href: `/dashboard/funds/${fundId}/forms`
+      label: "Applications & Reports",
+      value: "applications",
+      href: `/dashboard/funds/${fundId}/applications`
     },
-    {
-      label: "Documents",
-      value: "documents",
-      href: `/dashboard/funds/${fundId}/documents`
-    },
-    {
-      label: "Media",
-      value: "media",
-      href: `/dashboard/funds/${fundId}/media`
-    }
+    // {
+    //   label: "Documents",
+    //   value: "documents",
+    //   href: `/dashboard/funds/${fundId}/documents`
+    // },
+    // {
+    //   label: "Media",
+    //   value: "media",
+    //   href: `/dashboard/funds/${fundId}/media`
+    // }
   ]
   
   return <TabNav tabs={tabs} className={className} />

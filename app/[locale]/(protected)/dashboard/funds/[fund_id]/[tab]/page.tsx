@@ -1,11 +1,19 @@
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation";
 import { Overview } from "@/components/funds/overview";
-import { FilteredLDAs } from "@/components/ldas/filtered";
-import { FilteredForms } from "@/components/forms/filtered";
+import { FilteredFundFunders } from "@/components/funds/filtered-funders";
+import { FilteredFundLDAs } from "@/components/funds/funded-ldas";
+import { FilteredLDAForms } from "@/components/lda-forms/filtered";
 import { FilteredDocuments } from "@/components/documents/filtered";
 import { FilteredMedia } from "@/components/media/filtered";
-import { fetchFund, fetchLocalDevelopmentAgencies, fetchFocusAreas, fetchDevelopmentStages, fetchUsers, fetchProvinces, fetchFundingStatuses } from "@/lib/data";
+import { 
+  fetchFund,
+  fetchFunders,
+  fetchLocalDevelopmentAgencies,
+  fetchFundLDAForms,
+  fetchFormTemplates,
+  fetchFormStatuses
+} from "@/lib/data";
 import { revalidateTag } from "next/cache";
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
@@ -33,22 +41,30 @@ export default async function Page({ params }: FundTabPageProps) {
   const { fund_id, tab } = params;
 
   // Validate tab parameter
-  const validTabs = ["overview", "ldas", "forms", "documents", "media"]
+  const validTabs = ["overview", "funders", "ldas", "applications", "documents", "media"]
   if (!validTabs.includes(tab)) {
     redirect(`/dashboard/funds/${fund_id}/overview`)
   }
 
   const fund = await fetchFund(fund_id);
-  const ldas = await fetchLocalDevelopmentAgencies();
-  const focusAreas = await fetchFocusAreas()
-  const developmentStages = await fetchDevelopmentStages()
-  const programmeOfficers = await fetchUsers()
-  const provinces = await fetchProvinces()
-  const fundingStatus = await fetchFundingStatuses()
+  const fundFunders = fund.fundFunders || [];
+  const fundLocalDevelopmentAgencies = fund.fundLocalDevelopmentAgencies || [];
+  
+  // Fetch all funders and LDAs for linking dialogs
+  const allFunders = await fetchFunders()
+  const allLDAs = await fetchLocalDevelopmentAgencies()
+  
+  // Fetch form-related data
+  const ldaForms = await fetchFundLDAForms(fund_id)
+  const formTemplates = await fetchFormTemplates()
+  const formStatuses = await fetchFormStatuses()
+  
 
   const dataChanged = async () => {
     "use server"
     revalidateTag('funds');
+    revalidateTag('lda-forms:list');
+    revalidateTag(`fund-lda-forms:${fund_id}`);
   };
 
   return (
@@ -60,18 +76,34 @@ export default async function Page({ params }: FundTabPageProps) {
             case "overview":
               return <Overview fund={fund} />;
 
-            case "ldas":
-              return <FilteredLDAs 
-                ldas={ldas} 
-                focusAreas={focusAreas} 
-                developmentStages={developmentStages} 
-                programmeOfficers={programmeOfficers} 
-                provinces={provinces} 
-                fundingStatus={fundingStatus} 
+            case "funders":
+              return <FilteredFundFunders 
+                fundFunders={fundFunders}
+                fundId={parseInt(fund_id)}
+                fundName={fund.name}
+                allFunders={allFunders}
+                callback={dataChanged}
               />;
 
-            case "forms":
-              return <FilteredForms />;
+            case "ldas":
+              return <FilteredFundLDAs 
+                fundedLDAs={fundLocalDevelopmentAgencies} 
+                fundId={parseInt(fund_id)}
+                fundName={fund.name}
+                fundAmount={Number(fund.amount)}
+                fundingCalculationType="total_funded_amount"
+                funds={[]}
+                availableLDAs={allLDAs.map(lda => ({ id: lda.id, name: lda.name }))}
+                callback={dataChanged}
+              />;
+
+            case "applications":
+              return <FilteredLDAForms 
+                ldaForms={ldaForms}
+                formTemplates={formTemplates}
+                formStatuses={formStatuses}
+                dataChanged={dataChanged}
+              />;
 
             case "documents":
               return (

@@ -31,8 +31,6 @@ model FundingStatus {
   description              String
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
-  funds                    Fund[]
-  funders                  Funder[]
   localDevelopmentAgencies LocalDevelopmentAgency[]
 }
 
@@ -41,17 +39,15 @@ model Funder {
   name                 String             @unique
   amount               Decimal            @db.Money
   about                String
-  fundingStatusId      Int
+  fundingStatus        FundStatus         @default(Active)
   fundingStart         DateTime           @default(now())
   fundingEnd           DateTime           @default(now())
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
-  funds                Fund[]             @relation("FunderToFund")
-  fundingStatus        FundingStatus      @relation(fields: [fundingStatusId], references: [id])
   focusAreas           FocusArea[]        @relation("FunderToFocusArea")
-  locations            Location[]         @relation("FunderToLocation")
   organisationDetailId Int
   organisationDetail   OrganisationDetail @relation(fields: [organisationDetailId], references: [id])
+  fundFunders          FundFunder[]
 }
 
 model Location {
@@ -61,8 +57,6 @@ model Location {
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   localDevelopmentAgencies LocalDevelopmentAgency[]
-  funds                    Fund[]                   @relation("FundToLocation")
-  funders                  Funder[]                 @relation("FunderToLocation")
 }
 
 model FocusArea {
@@ -80,19 +74,51 @@ model Fund {
   id                       Int                      @id @default(autoincrement())
   name                     String
   about                    String
-  fundingStatusId          Int
+  fundingStatus            FundStatus               @default(Active)
+  fundType                 FundType                 @default(CORE_FUND)
+  fundingCalculationType   FundingCalculationType   @default(total_funded_amount)
   amount                   Decimal                  @db.Money
   fundingStart             DateTime                 @default(now())
   fundingEnd               DateTime                 @default(now())
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
-  fundingStatus            FundingStatus            @relation(fields: [fundingStatusId], references: [id])
   focusAreas               FocusArea[]              @relation("FundToFocusArea")
-  localDevelopmentAgencies LocalDevelopmentAgency[] @relation("FundToLocalDevelopmentAgency")
-  locations                Location[]               @relation("FundToLocation")
   organisationDetailId     Int
   organisationDetail       OrganisationDetail       @relation(fields: [organisationDetailId], references: [id])
-  funders                  Funder[]                 @relation("FunderToFund")
+  fundFunders              FundFunder[]
+  fundLocalDevelopmentAgencies FundLocalDevelopmentAgency[]
+}
+
+model FundFunder {
+  id           Int      @id @default(autoincrement())
+  fundId       Int
+  funderId     Int
+  amount       Decimal  @db.Money
+  fundingStart DateTime @default(now())
+  fundingEnd   DateTime @default(now())
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  fund         Fund     @relation(fields: [fundId], references: [id])
+  funder       Funder   @relation(fields: [funderId], references: [id])
+
+  @@unique([fundId, funderId])
+}
+
+model FundLocalDevelopmentAgency {
+  id                       Int                    @id @default(autoincrement())
+  fundId                   Int
+  localDevelopmentAgencyId Int
+  description              String                 @default("")
+  fundingStart             DateTime               @default(now())
+  fundingEnd               DateTime               @default(now())
+  fundingStatus            FundLDAStatus          @default(Active)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  fund                     Fund                   @relation(fields: [fundId], references: [id])
+  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+
+  @@unique([fundId, localDevelopmentAgencyId])
 }
 
 model DevelopmentStage {
@@ -125,7 +151,6 @@ model LocalDevelopmentAgency {
   organisationDetail         OrganisationDetail           @relation(fields: [organisationDetailId], references: [id])
   programmeOfficer           User?                        @relation(fields: [programmeOfficerId], references: [id])
   LocalDevelopmentAgencyForm LocalDevelopmentAgencyForm[]
-  funds                      Fund[]                       @relation("FundToLocalDevelopmentAgency")
   focusAreas                 FocusArea[]                  @relation("LocalDevelopmentAgencyToFocusArea")
   contacts                   Contact[]                    @relation("ContactToLDA")
   media                      Media[]
@@ -137,6 +162,7 @@ model LocalDevelopmentAgency {
   operations                 OrganisationOperations?
   staffMembers               StaffMember[]
   userAccess                 UserAccess[]
+  fundLocalDevelopmentAgencies FundLocalDevelopmentAgency[]
 }
 
 model FormStatus {
@@ -361,4 +387,26 @@ enum Gender {
 enum AccessLevel {
   Admin
   ReadOnly
+}
+
+enum FundType {
+  CORE_FUND
+  PROJECT_FUND
+}
+
+enum FundLDAStatus {
+  Paused
+  Active
+  Cancelled
+}
+
+enum FundStatus {
+  Paused
+  Active
+  Cancelled
+}
+
+enum FundingCalculationType {
+  total_funded_amount
+  lda_funding_per_month
 }

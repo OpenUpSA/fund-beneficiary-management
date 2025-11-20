@@ -11,6 +11,7 @@ import { CirclePlusIcon } from "lucide-react"
 export interface FilterOption {
   id: string | number
   label: string
+  value?: string | number
   from?: Date | string
   to?: Date | string
 }

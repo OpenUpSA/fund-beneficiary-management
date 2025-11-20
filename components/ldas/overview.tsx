@@ -23,8 +23,6 @@ interface Props {
 
 export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
   const { canViewFunds } = usePermissions()
-  const x = canViewFunds()
-  console.log("x", x);
 
   // Format address from LDA details
   const formatAddress = (): string => {
@@ -227,11 +225,11 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
           </Card>
           
           {/* Funding by Fund Type */}
-          {lda.funds?.slice(0, 2).map((fund, index) => (
+          {lda.fundLocalDevelopmentAgencies.slice(0, 2).map((fund, index) => (
             <Card key={fund.id || index}>
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-1">
-                  <p className="text-sm text-gray-500">{fund.name || 'Fund'} allocation</p>
+                  <p className="text-sm text-gray-500">{fund.fund.name || 'Fund'} allocation</p>
                   <h3 className="text-2xl font-bold">R 0</h3>
                   <p className="text-sm text-gray-500">Estimated allocation</p>
                 </div>
@@ -240,8 +238,8 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
           ))}
           
           {/* Fill in with placeholder cards if needed */}
-          {(!lda.funds || lda.funds.length < 2) && 
-            [...Array(2 - (lda.funds?.length || 0))].map((_, index) => (
+          {(!lda.fundLocalDevelopmentAgencies || lda.fundLocalDevelopmentAgencies.length < 2) && 
+            [...Array(2 - (lda.fundLocalDevelopmentAgencies?.length || 0))].map((_, index) => (
               <Card key={`placeholder-${index}`}>
                 <CardContent className="pt-6 pb-4">
                   <div className="space-y-1">

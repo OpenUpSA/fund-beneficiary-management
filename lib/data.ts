@@ -45,6 +45,26 @@ export async function fetchFunderFund(funder_id: string, fund_id: string): Promi
   return res.json()
 }
 
+export async function fetchFunderLDAs(funder_id: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/lda`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: [`funder:${funder_id}:ldas`] } 
+  })
+  return res.json()
+}
+
+export async function fetchFunderLDAForms(funder_id: string): Promise<LocalDevelopmentAgencyFormFull[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/lda-form`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: [`funder-lda-forms:${funder_id}`] } 
+  })
+  return res.json()
+}
+
 export async function fetchFunds(lda_id?: string): Promise<FundFull[]> {
   const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund`)
   const tags = ['funds:list']
@@ -289,6 +309,16 @@ export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmen
       next: { tags: ['lda-forms:list', `lda-forms:detail:${lda_form_id}`] },
     }
   )
+  return res.json()
+}
+
+export async function fetchFundLDAForms(fund_id: string): Promise<LocalDevelopmentAgencyFormFull[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund/${fund_id}/lda-form`, { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['lda-forms:list', `fund-lda-forms:${fund_id}`] },
+  })
   return res.json()
 }
 

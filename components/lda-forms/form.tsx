@@ -107,12 +107,9 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         })
-        console.log(response)
         if (!response.ok) {
           throw new Error('Failed to add form')
         }
-        console.log("localDevelopmentAgencyId")
-        console.log(data)
         callback(data.localDevelopmentAgencyId)
         toast.dismiss(toastId)
         toast.success('Form added successfully')
