@@ -48,6 +48,7 @@ model Funder {
   organisationDetailId Int
   organisationDetail   OrganisationDetail @relation(fields: [organisationDetailId], references: [id])
   fundFunders          FundFunder[]
+  documents            Document[]
 }
 
 model Location {
@@ -71,22 +72,23 @@ model FocusArea {
 }
 
 model Fund {
-  id                       Int                      @id @default(autoincrement())
-  name                     String
-  about                    String
-  fundingStatus            FundStatus               @default(Active)
-  fundType                 FundType                 @default(CORE_FUND)
-  fundingCalculationType   FundingCalculationType   @default(total_funded_amount)
-  amount                   Decimal                  @db.Money
-  fundingStart             DateTime                 @default(now())
-  fundingEnd               DateTime                 @default(now())
-  createdAt                DateTime                 @default(now())
-  updatedAt                DateTime                 @updatedAt
-  focusAreas               FocusArea[]              @relation("FundToFocusArea")
-  organisationDetailId     Int
-  organisationDetail       OrganisationDetail       @relation(fields: [organisationDetailId], references: [id])
-  fundFunders              FundFunder[]
+  id                           Int                            @id @default(autoincrement())
+  name                         String
+  about                        String
+  fundingStatus                FundStatus                     @default(Active)
+  fundType                     FundType                       @default(CORE_FUND)
+  fundingCalculationType       FundingCalculationType         @default(total_funded_amount)
+  amount                       Decimal                        @db.Money
+  fundingStart                 DateTime                       @default(now())
+  fundingEnd                   DateTime                       @default(now())
+  createdAt                    DateTime                       @default(now())
+  updatedAt                    DateTime                       @updatedAt
+  focusAreas                   FocusArea[]                    @relation("FundToFocusArea")
+  organisationDetailId         Int
+  organisationDetail           OrganisationDetail             @relation(fields: [organisationDetailId], references: [id])
+  fundFunders                  FundFunder[]
   fundLocalDevelopmentAgencies FundLocalDevelopmentAgency[]
+  documents                    Document[]
 }
 
 model FundFunder {
@@ -205,6 +207,7 @@ model LocalDevelopmentAgencyForm {
   formTemplate             FormTemplate           @relation(fields: [formTemplateId], references: [id])
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
   createdBy                User?                  @relation(fields: [createdById], references: [id])
+  documents                Document[]
 }
 
 model OrganisationDetail {
@@ -317,20 +320,26 @@ model Media {
 }
 
 model Document {
-  id                       Int                    @id @default(autoincrement())
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
-  title                    String
-  description              String
-  filePath                 String
-  documentType             DocumentType           @default(DOC)
-  validFromDate            DateTime
-  validUntilDate           DateTime
-  localDevelopmentAgencyId Int
-  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
-  uploadedBy               DocumentUploadType     @default(SCAT)
-  createdById              Int?
-  createdBy                User?                  @relation(fields: [createdById], references: [id])
+  id                            Int                         @id @default(autoincrement())
+  createdAt                     DateTime                    @default(now())
+  updatedAt                     DateTime                    @updatedAt
+  title                         String
+  description                   String
+  filePath                      String
+  documentType                  DocumentType                @default(DOC)
+  validFromDate                 DateTime
+  validUntilDate                DateTime
+  localDevelopmentAgencyId      Int?
+  localDevelopmentAgency        LocalDevelopmentAgency?     @relation(fields: [localDevelopmentAgencyId], references: [id])
+  localDevelopmentAgencyFormId  Int?
+  localDevelopmentAgencyForm    LocalDevelopmentAgencyForm? @relation(fields: [localDevelopmentAgencyFormId], references: [id])
+  fundId                        Int?
+  fund                          Fund?                       @relation(fields: [fundId], references: [id])
+  funderId                      Int?
+  funder                        Funder?                     @relation(fields: [funderId], references: [id])
+  uploadedBy                    DocumentUploadType          @default(SCAT)
+  createdById                   Int?
+  createdBy                     User?                       @relation(fields: [createdById], references: [id])
 }
 
 model Province {

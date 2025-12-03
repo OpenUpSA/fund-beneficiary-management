@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { useEffect, useState, useCallback } from "react"
 import Link from "next/link"
-import { FocusArea, LocalDevelopmentAgency } from "@prisma/client"
+import { LocalDevelopmentAgency } from "@prisma/client"
 import { FormDialog as DocumentFormDialog } from "@/components/documents/form"
 import { DeleteDialog } from "@/components/documents/delete"
 import { DocumentTypeEnum } from "@/types/formSchemas"
@@ -16,13 +16,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
+import { InfoIcon, MoreHorizontal } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface Props {
   documents: DocumentFull[],
@@ -47,49 +48,11 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
       ? `/dashboard/documents/${documentId}?from=${navigatedFrom}`
       : `/dashboard/documents/${documentId}`;
   }
-  let availableLDAs: { id: string; label: string }[] = []
-  let focusAreas: FocusArea[] = []
-  let availableFundingPeriods: { id: string; label: string }[] = [];
 
-  if (!lda) {
-    availableLDAs = [
-      ...new Map(
-        documents
-          .map((item) => item.localDevelopmentAgency)
-          .map((agency) => [agency.id, { id: String(agency.id), label: agency.name }])
-      ).values(),
-    ]
-
-    focusAreas = [
-      ...new Map(
-        documents.flatMap(m =>
-          m.localDevelopmentAgency.focusAreas.map(fa => [fa.id, fa] as unknown as [string, FocusArea])
-        )
-      ).values(),
-    ]
-
-    const years = new Set<number>()
-
-    documents.forEach((document) => {
-      if (document.localDevelopmentAgency.fundingStart) years.add(new Date(document.localDevelopmentAgency.fundingStart).getFullYear())
-      if (document.localDevelopmentAgency.fundingEnd) years.add(new Date(document.localDevelopmentAgency.fundingEnd).getFullYear())
-    })
-
-    availableFundingPeriods = Array.from(years)
-      .sort((a, b) => a - b)
-      .map((year) => ({ id: String(year), label: String(year) }))
-  }
-
-  const ldaOptions: FilterOption[] = availableLDAs.map(({ id, label }) => ({ id, label }))
-  const focusAreaOptions: FilterOption[] = focusAreas.map(({ id, label }) => ({ id: String(id), label }))
   const documentTypeOptions: FilterOption[] = availableDocumentTypes.map(({ id, label }) => ({ id, label }))
-  const periodOptions: FilterOption[] = availableFundingPeriods.map(({ id, label }) => ({ id, label }))
 
   const filterConfigs = [
-    !lda ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
     { type: 'type', label: 'Type', options: documentTypeOptions },
-    !lda ? { type: 'focus', label: 'Focus areas', options: focusAreaOptions } : null,
-    !lda ? { type: 'period', label: 'Year', options: periodOptions } : null,
   ].filter(Boolean) as { type: string, label: string, options: FilterOption[] }[]
 
   const handleSearch = (term: string) => setSearchTerm(term)
@@ -111,16 +74,7 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
 
   useEffect(() => {
     const filtered = documents.filter((item) => {
-      const selectedLdaIds = (activeFilters['lda'] || []).map(o => o.id)
       const selectedTypes = (activeFilters['type'] || []).map(o => o.id)
-      const selectedFocusIds = (activeFilters['focus'] || []).map(o => o.id)
-      const selectedPeriods = (activeFilters['period'] || []).map(o => o.id)
-
-      const ldaMatch = selectedLdaIds.length === 0 || selectedLdaIds.includes(String(item.localDevelopmentAgencyId))
-
-      const focusAreaMatch =
-        selectedFocusIds.length === 0 ||
-        item.localDevelopmentAgency.focusAreas.some((fa) => selectedFocusIds.includes(String(fa.id)))
 
       const selectedDocumentTypeMatch =
         selectedTypes.length === 0 || selectedTypes.includes(item.documentType)
@@ -130,22 +84,11 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description.toLowerCase().includes(searchTerm.toLowerCase())
 
-      let fundingPeriodMatch = true
-      if (!lda) {
-        const agency = item.localDevelopmentAgency
-        const fundingStartYear = agency?.fundingStart ? new Date(agency.fundingStart).getFullYear() : null
-        const fundingEndYear = agency?.fundingEnd ? new Date(agency.fundingEnd).getFullYear() : null
-        fundingPeriodMatch =
-          selectedPeriods.length === 0 ||
-          (fundingStartYear !== null && selectedPeriods.includes(String(fundingStartYear))) ||
-          (fundingEndYear !== null && selectedPeriods.includes(String(fundingEndYear)))
-      }
-
-      return focusAreaMatch && searchMatch && selectedDocumentTypeMatch && fundingPeriodMatch && ldaMatch
+      return searchMatch && selectedDocumentTypeMatch
     })
 
     setFilteredDocuments(filtered)
-  }, [activeFilters, searchTerm, documents, lda])
+  }, [activeFilters, searchTerm, documents])
 
   return (
     <div className="space-y-4 mt-4">
@@ -199,7 +142,22 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
                       </Link>
                     </TableCell>
                     <TableCell className="text-nowrap">{format(document.createdAt, 'MMM d, yyyy')}</TableCell>
-                    <TableCell></TableCell>
+                    <TableCell>
+                      {document.description && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                <InfoIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-[20rem]">
+                              {document.description}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </TableCell>
                     <TableCell>{document.createdBy?.name || '-'}</TableCell>
                     <TableCell>
                       <DropdownMenu>

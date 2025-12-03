@@ -29,11 +29,11 @@ export function FunderTabs({ funderId, className }: FunderTabsProps) {
       value: "applications",
       href: `/dashboard/funders/${funderId}/applications`
     },
-    // {
-    //   label: "Documents",
-    //   value: "documents",
-    //   href: `/dashboard/funders/${funderId}/documents`
-    // },
+    {
+      label: "Documents",
+      value: "documents",
+      href: `/dashboard/funders/${funderId}/documents`
+    },
     // {
     //   label: "Media",
     //   value: "media",

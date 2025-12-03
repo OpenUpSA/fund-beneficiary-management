@@ -83,8 +83,15 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
   const description = form.get("description") as string
   const validFromDate = form.get("validFromDate") as string
   const validUntilDate = form.get("validUntilDate") as string
-  const localDevelopmentAgencyId = parseInt(form.get("localDevelopmentAgencyId") as string)
-  const uploadedBy = form.get("uploadedBy") as DocumentUploadType
+  let uploadedBy = form.get("uploadedBy") as DocumentUploadType
+  
+  // Set default uploadedBy if not provided
+  if (!uploadedBy) {
+    uploadedBy = permissions.isLDAUser(user) ? 'LDA' : 'SCAT'
+  }
+  
+  // Note: We do not allow updating entity FKs (localDevelopmentAgencyId, fundId, funderId, ldaFormId)
+  // These relationships are set at creation and cannot be changed
 
   // Permission check: Superuser can edit all documents
   // Other users can only edit documents they have GET access to and that match their uploadedBy permissions
@@ -122,9 +129,9 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
         return NextResponse.json({ error: "No LDA access" }, { status: 403 });
       }
       
-      // Check if user has access to the target LDA
-      if (!user.ldaIds.includes(localDevelopmentAgencyId)) {
-        return NextResponse.json({ error: "Access denied to target LDA" }, { status: 403 });
+      // Check if user has access to the existing document's LDA (if it has one)
+      if (existingDocument.localDevelopmentAgencyId && !user.ldaIds.includes(existingDocument.localDevelopmentAgencyId)) {
+        return NextResponse.json({ error: "Access denied to this LDA" }, { status: 403 });
       }
     } else {
       return NextResponse.json({ error: "Invalid uploadedBy value" }, { status: 400 });
@@ -153,7 +160,6 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
     description: string
     validFromDate: string
     validUntilDate: string
-    localDevelopmentAgency: { connect: { id: number } }
     filePath?: string,
     uploadedBy: DocumentUploadType
   } = {
@@ -161,10 +167,10 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
     description,
     validFromDate,
     validUntilDate,
-    localDevelopmentAgency: { connect: { id: localDevelopmentAgencyId } },
     uploadedBy,
   }
 
+  // Add file path if a new file was uploaded
   if (filePath) {
     data.filePath = filePath
   }
