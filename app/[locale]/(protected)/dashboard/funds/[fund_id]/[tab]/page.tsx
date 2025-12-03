@@ -12,7 +12,8 @@ import {
   fetchLocalDevelopmentAgencies,
   fetchFundLDAForms,
   fetchFormTemplates,
-  fetchFormStatuses
+  fetchFormStatuses,
+  fetchFundDocuments
 } from "@/lib/data";
 import { revalidateTag } from "next/cache";
 import * as Sentry from '@sentry/nextjs'
@@ -59,6 +60,8 @@ export default async function Page({ params }: FundTabPageProps) {
   const formTemplates = await fetchFormTemplates()
   const formStatuses = await fetchFormStatuses()
   
+  // Fetch documents for this fund
+  const fundDocuments = await fetchFundDocuments(fund_id)
 
   const dataChanged = async () => {
     "use server"
@@ -109,7 +112,7 @@ export default async function Page({ params }: FundTabPageProps) {
               return (
                 <FilteredDocuments
                   dataChanged={dataChanged}
-                  documents={[]} />
+                  documents={fundDocuments} />
               );
 
             case "media":

@@ -95,7 +95,7 @@ export default async function Page({ params, searchParams }: Props) {
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Local Development Agency:</span>
-                <span>{document.localDevelopmentAgency.name}</span>
+                <span>{document?.localDevelopmentAgency?.name || "-"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium">Created At:</span>

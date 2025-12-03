@@ -269,6 +269,30 @@ export async function fetchLDADocuments(lda_id: string): Promise<DocumentFull[]>
   return res.json()
 }
 
+export async function fetchFundDocuments(fund_id: string): Promise<DocumentFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`)
+  url.searchParams.append('fundId', fund_id)
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['documents:list', `documents:fund:${fund_id}`] } 
+  })
+  return res.json()
+}
+
+export async function fetchFunderDocuments(funder_id: string): Promise<DocumentFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/`)
+  url.searchParams.append('funderId', funder_id)
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['documents:list', `documents:funder:${funder_id}`] } 
+  })
+  return res.json()
+}
+
 export async function fetchAllLocalDevelopmentAgencyForms(): Promise<LocalDevelopmentAgencyFormFull[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda-form/`, { 
     headers: {

@@ -29,11 +29,11 @@ export function FundsTabs({ fundId, className }: FundsTabsProps) {
       value: "applications",
       href: `/dashboard/funds/${fundId}/applications`
     },
-    // {
-    //   label: "Documents",
-    //   value: "documents",
-    //   href: `/dashboard/funds/${fundId}/documents`
-    // },
+    {
+      label: "Documents",
+      value: "documents",
+      href: `/dashboard/funds/${fundId}/documents`
+    },
     // {
     //   label: "Media",
     //   value: "media",

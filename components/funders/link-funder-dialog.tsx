@@ -31,6 +31,7 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Funder, Fund } from "@prisma/client"
 import { Decimal } from "@prisma/client/runtime/library"
+import { DocumentFull } from "@/types/models"
 
 interface EditingFund {
   id: number
@@ -68,6 +69,8 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
   const [endDate, setEndDate] = useState<Date | undefined>(editMode && editingFund?.fundingEnd ? new Date(editingFund.fundingEnd) : undefined)
   const [notes, setNotes] = useState<string>(editMode && editingFund?.notes ? editingFund.notes : "")
   const [documents, setDocuments] = useState<File[]>([])
+  const [existingDocuments, setExistingDocuments] = useState<DocumentFull[]>([])
+  const [loadingDocuments, setLoadingDocuments] = useState(false)
   
   // Use controlled or internal open state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
@@ -76,6 +79,35 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
   // Determine which field is locked
   const isFundLocked = !!fundId && !!fundName
   const isFunderLocked = !!funderId && !!funderName
+
+  // Fetch existing documents when in edit mode
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      if (!editMode || !funderId || !editingFund?.id) {
+        setExistingDocuments([])
+        return
+      }
+      
+      setLoadingDocuments(true)
+      try {
+        const response = await fetch(`/api/document?fundId=${editingFund.id}&funderId=${funderId}`, {
+          cache: 'no-store'
+        })
+        if (response.ok) {
+          const docs: DocumentFull[] = await response.json()
+          // Filter to only show documents that have BOTH fundId and funderId
+          const linkedDocs = docs.filter((doc) => doc.fundId && doc.funderId)
+          setExistingDocuments(linkedDocs)
+        }
+      } catch (error) {
+        console.error("Error fetching documents:", error)
+      } finally {
+        setLoadingDocuments(false)
+      }
+    }
+
+    fetchDocuments()
+  }, [editMode, funderId, editingFund?.id])
 
   // Update form when editingFund changes
   useEffect(() => {
@@ -95,6 +127,7 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
       setEndDate(undefined)
       setNotes("")
       setDocuments([])
+      setExistingDocuments([])
     }
   }, [editMode, editingFund, funderId])
 
@@ -126,27 +159,36 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
     setLoading(true)
 
     try {
+      // Use FormData for both POST and PUT to support file uploads
+      const formData = new FormData()
+      formData.append("fundId", String(finalFundId))
+      formData.append("funderId", String(finalFunderId))
+      formData.append("amount", amount)
+      formData.append("fundingStart", startDate.toISOString())
+      formData.append("fundingEnd", endDate.toISOString())
+      formData.append("notes", notes || "")
+
+      // Add documents to FormData
+      documents.forEach((doc, index) => {
+        formData.append(`document_${index}`, doc)
+      })
+
       const response = await fetch(`/api/fund-funder`, {
         method: editMode ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fundId: finalFundId,
-          funderId: finalFunderId,
-          amount: parseFloat(amount),
-          fundingStart: startDate.toISOString(),
-          fundingEnd: endDate.toISOString(),
-          notes: notes,
-          // TODO: Handle document uploads separately
-        }),
+        body: formData,
       })
 
       if (!response.ok) {
         throw new Error(editMode ? "Failed to update contribution" : "Failed to link funder")
       }
 
-      toast.success(editMode ? "Contribution updated successfully" : (isFundLocked ? "Funder linked successfully" : "Fund linked successfully"))
+      const documentsUploaded = documents.length
+      
+      toast.success(
+        editMode 
+          ? `Contribution updated successfully${documentsUploaded > 0 ? ` with ${documentsUploaded} new document(s)` : ""}` 
+          : `${isFundLocked ? "Funder" : "Fund"} linked successfully${documentsUploaded > 0 ? ` with ${documentsUploaded} document(s)` : ""}`
+      )
       setOpen(false)
       
       // Reset form
@@ -363,6 +405,45 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
                   Upload file
                 </Button>
               </div>
+
+              {/* Existing Documents (Edit Mode) */}
+              {editMode && (
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-sm font-medium">Existing documents</Label>
+                    {loadingDocuments && (
+                      <span className="text-xs text-gray-500">Loading...</span>
+                    )}
+                  </div>
+                  
+                  {existingDocuments.length > 0 ? (
+                    <div className="space-y-2">
+                      {existingDocuments.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between py-3 px-4 border rounded-md bg-gray-50">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{doc.title}</p>
+                            {doc.description && (
+                              <p className="text-xs text-gray-500 mt-1">{doc.description}</p>
+                            )}
+                          </div>
+                          <a
+                            href={doc.filePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-blue-600 hover:text-blue-800 underline ml-4"
+                          >
+                            View
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    !loadingDocuments && (
+                      <p className="text-sm text-gray-500 italic">No existing documents found</p>
+                    )
+                  )}
+                </div>
+              )}
               </div>
 
               {/* Notes */}

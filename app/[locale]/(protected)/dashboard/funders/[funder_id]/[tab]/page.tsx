@@ -13,7 +13,8 @@ import {
   fetchLocalDevelopmentAgencies,
   fetchFormTemplates,
   fetchFormStatuses,
-  fetchFocusAreas
+  fetchFocusAreas,
+  fetchFunderDocuments
 } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -60,6 +61,9 @@ export default async function Page({ params }: FunderTabPageProps) {
   const formTemplates = await fetchFormTemplates()
   const formStatuses = await fetchFormStatuses()
   const focusAreas = await fetchFocusAreas()
+  
+  // Fetch documents for this funder
+  const funderDocuments = await fetchFunderDocuments(funder_id)
 
   const dataChanged = async () => {
     "use server"
@@ -110,7 +114,7 @@ export default async function Page({ params }: FunderTabPageProps) {
               return (
                 <FilteredDocuments
                   dataChanged={dataChanged}
-                  documents={[]} />
+                  documents={funderDocuments} />
               );
 
             case "media":
