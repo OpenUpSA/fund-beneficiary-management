@@ -64,7 +64,7 @@ const FormSchema = z.object({
   about: z.string().min(2, { message: "About must be at least 2 characters." }),
   fundingStatus: z.nativeEnum(FundStatus, { required_error: "Please select a funding status." }),
   fundType: z.nativeEnum(FundType, { required_error: "Please select a fund type." }),
-  amount: z.coerce.number({ required_error: "Please enter an amount." }),
+  defaultAmount: z.coerce.number().optional(),
   fundingCalculationType: z.enum(["total_funded_amount", "lda_funding_per_month"]).optional(),
   focusAreas: z.array(z.number()).min(1, { message: "Please select at least one focus area." }),
   fundingStart: z.date({ required_error: "Please select a funding start." }).refine(date => date !== undefined, {
@@ -105,7 +105,7 @@ export function FormDialog({ fund, focusAreas, provinces, callback }: FormDialog
     defaultValues: {
       name: fund ? fund.name : "",
       about: fund ? fund.about : "",
-      amount: fund ? Number(fund.amount) : 0,
+      defaultAmount: fund?.defaultAmount ? Number(fund.defaultAmount) : undefined,
       fundingStatus: fund ? fund.fundingStatus : FundStatus.Active,
       fundType: fund ? fund.fundType : FundType.CORE_FUND,
       focusAreas: fund ? fund.focusAreas.map((focusArea: FocusArea) => focusArea.id) : [],
@@ -439,7 +439,7 @@ export function FormDialog({ fund, focusAreas, provinces, callback }: FormDialog
                         />
                       </div>
 
-                      {/* Funding calculation type and Total fund amount */}
+                      {/* Funding calculation type and Default amount */}
                       <div className="flex gap-4">
                         <FormField
                           control={form.control}
@@ -464,10 +464,10 @@ export function FormDialog({ fund, focusAreas, provinces, callback }: FormDialog
 
                         <FormField
                           control={form.control}
-                          name="amount"
+                          name="defaultAmount"
                           render={({ field }) => (
                             <FormItem className="flex-1">
-                              <FormLabel>Total fund amount</FormLabel>
+                              <FormLabel>Default amount (per LDA)</FormLabel>
                               <FormControl>
                                 <Input type="number" placeholder="R 0.00" {...field} />
                               </FormControl>

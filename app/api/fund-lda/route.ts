@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { fundId, localDevelopmentAgencyId, description, fundingStart, fundingEnd, fundingStatus } = body
+    const { fundId, localDevelopmentAgencyId, description, fundingStart, fundingEnd, fundingStatus, amountType, amount } = body
 
     // Validate required fields
-    if (!fundId || !localDevelopmentAgencyId || !fundingStart || !fundingEnd) {
+    if (!fundId || !localDevelopmentAgencyId || !fundingStart || !fundingEnd || !amount) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -81,6 +81,8 @@ export async function POST(req: NextRequest) {
         fundingStart: new Date(fundingStart),
         fundingEnd: new Date(fundingEnd),
         fundingStatus: fundingStatus || "Active",
+        amountType: amountType || "USE_DEFAULT",
+        amount: amount,
       },
       include: {
         localDevelopmentAgency: true,
@@ -113,10 +115,10 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { fundId, localDevelopmentAgencyId, description, fundingStart, fundingEnd, fundingStatus } = body
+    const { fundId, localDevelopmentAgencyId, description, fundingStart, fundingEnd, fundingStatus, amountType, amount } = body
 
     // Validate required fields
-    if (!fundId || !localDevelopmentAgencyId || !fundingStart || !fundingEnd) {
+    if (!fundId || !localDevelopmentAgencyId || !fundingStart || !fundingEnd || !amount) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -155,6 +157,8 @@ export async function PUT(req: NextRequest) {
         fundingStart: new Date(fundingStart),
         fundingEnd: new Date(fundingEnd),
         fundingStatus: fundingStatus || "Active",
+        amountType: amountType || "USE_DEFAULT",
+        amount: amount,
       },
       include: {
         localDevelopmentAgency: true,

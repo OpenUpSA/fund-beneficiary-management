@@ -94,6 +94,7 @@ export default async function Page({ params }: FundTabPageProps) {
                 fundId={parseInt(fund_id)}
                 fundName={fund.name}
                 fundAmount={Number(fund.amount)}
+                fundDefaultAmount={fund.defaultAmount ? Number(fund.defaultAmount) : null}
                 fundingCalculationType="total_funded_amount"
                 funds={[]}
                 availableLDAs={allLDAs.map(lda => ({ id: lda.id, name: lda.name }))}

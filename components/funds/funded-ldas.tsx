@@ -34,7 +34,7 @@ import { FundedLDAs } from "@/types/models"
 import { FundLDAStatus } from "@prisma/client"
 
 type SortDirection = 'asc' | 'desc' | null
-type SortableColumn = 'name' | 'fund' | 'total' | 'monthly' | 'status' | 'startDate' | 'endDate' | null
+type SortableColumn = 'name' | 'fund' | 'total' | 'status' | 'startDate' | 'endDate' | null
 
 
 interface FilteredFundLDAsProps {
@@ -42,6 +42,7 @@ interface FilteredFundLDAsProps {
   fundId?: number
   fundName?: string
   fundAmount?: number
+  fundDefaultAmount?: number | null
   fundingCalculationType?: string
   availableLDAs?: { id: number; name: string }[]
   funds?: { id: number; label: string }[]
@@ -54,6 +55,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
   fundId,
   fundName,
   // fundAmount,
+  fundDefaultAmount,
   // fundingCalculationType,
   availableLDAs,
   funds,
@@ -166,9 +168,9 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
             bValue = b.fund.name.toLowerCase()
             break
           case 'total':
-          case 'monthly':
-            // Same value for all LDAs in this fund
-            return 0
+            aValue = a.amount ? Number(a.amount) : 0
+            bValue = b.amount ? Number(b.amount) : 0
+            break
           case 'status':
             aValue = a.fundingStatus.toLowerCase()
             bValue = b.fundingStatus.toLowerCase()
@@ -317,6 +319,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
               <LinkLDADialog
                 fundId={fundId || 0}
                 fundName={fundName}
+                fundDefaultAmount={fundDefaultAmount}
                 availableLDAs={availableLDAs}
                 callback={callback}
               />
@@ -328,6 +331,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
             <LinkLDADialog
               fundId={ldaToEdit.fundId}
               fundName={ldaToEdit.fund.name}
+              fundDefaultAmount={fundDefaultAmount}
               availableLDAs={availableLDAs}
               editingLDA={ldaToEdit}
               open={!!ldaToEdit}
@@ -362,14 +366,8 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
                     )}
                     <TableHead className="h-12 cursor-pointer select-none" onClick={() => handleSort('total')}>
                       <div className="flex items-center justify-start">
-                        <span>Total</span>
+                        <span>Amount</span>
                         {getSortIcon('total')}
-                      </div>
-                    </TableHead>
-                    <TableHead className="h-12 cursor-pointer select-none" onClick={() => handleSort('monthly')}>
-                      <div className="flex items-center justify-start">
-                        <span>Monthly</span>
-                        {getSortIcon('monthly')}
                       </div>
                     </TableHead>
                     <TableHead className="h-12 cursor-pointer select-none" onClick={() => handleSort('status')}>
@@ -396,7 +394,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
                 <TableBody>
                   {filteredAndSortedLDAs.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={funds && funds.length > 0 ? 8 : 7} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={funds && funds.length > 0 ? 7 : 6} className="h-24 text-center text-muted-foreground">
                         No LDAs found
                       </TableCell>
                     </TableRow>
@@ -417,10 +415,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
                           </TableCell>
                         )}
                         <TableCell className="p-3">
-                          R{fundedLDA?.localDevelopmentAgency?.amount?.toLocaleString() || 0}
-                        </TableCell>
-                        <TableCell className="p-3">
-                          R{fundedLDA?.localDevelopmentAgency?.amount?.toLocaleString() || 0}
+                          R{fundedLDA?.amount ? Number(fundedLDA.amount).toLocaleString() : 0}
                         </TableCell>
                         <TableCell className="p-3">
                           {getStatusBadge(fundedLDA.fundingStatus)}

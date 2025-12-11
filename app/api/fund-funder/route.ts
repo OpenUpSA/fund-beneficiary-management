@@ -9,6 +9,25 @@ import imagekit from "@/lib/imagekit"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+/**
+ * Recalculates and updates the fund's total amount based on all linked funders
+ */
+async function updateFundTotalAmount(fundId: number) {
+  const allFundFunders = await prisma.fundFunder.findMany({
+    where: { fundId },
+    select: { amount: true }
+  })
+
+  const totalAmount = allFundFunders.reduce((sum, funder) => {
+    return sum + (funder.amount ? Number(funder.amount) : 0)
+  }, 0)
+
+  await prisma.fund.update({
+    where: { id: fundId },
+    data: { amount: totalAmount }
+  })
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
   const user = session?.user || null
@@ -139,6 +158,9 @@ export async function POST(req: NextRequest) {
         // Continue with other documents even if one fails
       }
     }
+
+    // Recalculate and update fund total amount
+    await updateFundTotalAmount(parsedFundId)
 
     // Revalidate cache tags
     revalidateTag(`funder-${parsedFunderId}`)
@@ -279,6 +301,9 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Recalculate and update fund total amount
+    await updateFundTotalAmount(parsedFundId)
+
     // Revalidate cache tags
     revalidateTag(`funder-${parsedFunderId}`)
     revalidateTag(`fund-${parsedFundId}`)
@@ -351,6 +376,9 @@ export async function DELETE(req: NextRequest) {
         }
       }
     })
+
+    // Recalculate and update fund total amount
+    await updateFundTotalAmount(parsedFundId)
 
     // Revalidate cache tags
     revalidateTag(`funder-${parsedFunderId}`)
