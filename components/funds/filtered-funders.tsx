@@ -40,6 +40,8 @@ interface FilteredFundFundersProps {
   fundFunders: FunderForFund[]
   fundId: number
   fundName: string
+  fundAmount: number
+  allocatedAmount: number
   allFunders: Funder[]
   callback?: () => void
 }
@@ -48,9 +50,14 @@ export const FilteredFundFunders: React.FC<FilteredFundFundersProps> = ({
   fundFunders, 
   fundId, 
   fundName, 
+  fundAmount,
+  allocatedAmount,
   allFunders,
   callback 
 }) => {
+  // Calculate surplus/shortfall
+  const balance = fundAmount - allocatedAmount
+  const isSurplus = balance >= 0
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -366,6 +373,30 @@ export const FilteredFundFunders: React.FC<FilteredFundFundersProps> = ({
                 </TableHeader>
 
                 <TableBody>
+                  {/* SCAT Row - Always at top */}
+                  <TableRow className="bg-slate-50 font-semibold">
+                    <TableCell className="p-3 w-1/3">
+                      SCAT
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <span className="text-nowrap">
+                        {isSurplus ? 'R' : '-R'}{Math.abs(balance).toLocaleString()}
+                      </span>
+                    </TableCell>
+                    <TableCell className="p-3">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-green-50 text-green-700 border-green-200"
+                      >
+                        Active
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="p-3">-</TableCell>
+                    <TableCell className="p-3">-</TableCell>
+                    <TableCell className="p-3"></TableCell>
+                  </TableRow>
+                  
+                  {/* Regular Funder Rows */}
                   {filteredFunders.length > 0 ? (
                     filteredFunders.map(ff => <FunderRow key={ff.id} ff={ff} />)
                   ) : (
