@@ -376,7 +376,7 @@ export const FilteredFundFunders: React.FC<FilteredFundFundersProps> = ({
                   {/* SCAT Row - Always at top */}
                   <TableRow className="bg-slate-50 font-semibold">
                     <TableCell className="p-3 w-1/3">
-                      SCAT
+                      SCAT (overhead)
                     </TableCell>
                     <TableCell className="p-3">
                       <span className="text-nowrap">
