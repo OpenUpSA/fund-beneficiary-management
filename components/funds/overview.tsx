@@ -19,6 +19,14 @@ interface Props {
 }
 
 export const Overview: React.FC<Props> = ({ fund }: Props) => {
+  // Calculate total allocated amount from all FundLocalDevelopmentAgencies
+  const totalAllocated = fund.fundLocalDevelopmentAgencies.reduce((sum, lda) => {
+    return sum + (lda.amount ? Number(lda.amount) : 0)
+  }, 0)
+
+  // Calculate remaining balance
+  const remainingBalance = Number(fund.amount) - totalAllocated
+
   // Format address from fund details
   const formatAddress = (): string => {
     const details = fund.organisationDetail;
@@ -207,7 +215,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Current allocation</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
+                <h3 className="text-2xl font-bold">R {totalAllocated.toLocaleString()}</h3>
                 <p className="text-sm text-gray-500">Allocated to LDAs</p>
               </div>
             </CardContent>
@@ -228,9 +236,15 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
           <Card>
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
-                <p className="text-sm text-gray-500">Remaining balance</p>
-                <h3 className="text-2xl font-bold">R {Number(fund.amount).toLocaleString()}</h3>
-                <p className="text-sm text-gray-500">Unallocated funds</p>
+                <p className="text-sm text-gray-500">
+                  {remainingBalance >= 0 ? "Surplus" : "Shortfall"}
+                </p>
+                <h3 className={`text-2xl font-bold ${remainingBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  R {Math.abs(remainingBalance).toLocaleString()}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {remainingBalance >= 0 ? "Unallocated funds" : "Over-allocated"}
+                </p>
               </div>
             </CardContent>
           </Card>

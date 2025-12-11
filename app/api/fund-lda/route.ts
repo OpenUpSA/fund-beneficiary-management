@@ -7,25 +7,6 @@ import { canManageFund } from "@/lib/permissions"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-/**
- * Recalculates and updates the fund's total amount based on all linked LDAs
- */
-async function updateFundTotalAmount(fundId: number) {
-  const allFundLDAs = await prisma.fundLocalDevelopmentAgency.findMany({
-    where: { fundId },
-    select: { amount: true }
-  })
-
-  const totalAmount = allFundLDAs.reduce((sum, lda) => {
-    return sum + (lda.amount ? Number(lda.amount) : 0)
-  }, 0)
-
-  await prisma.fund.update({
-    where: { id: fundId },
-    data: { amount: totalAmount }
-  })
-}
-
 export async function POST(req: NextRequest) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
   const user = session?.user || null
@@ -109,9 +90,6 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Recalculate and update fund total amount
-    await updateFundTotalAmount(parsedFundId)
-
     return NextResponse.json(fundLDA, { status: 201 })
   } catch (error) {
     console.error("Error linking LDA to fund:", error)
@@ -188,9 +166,6 @@ export async function PUT(req: NextRequest) {
       }
     })
 
-    // Recalculate and update fund total amount
-    await updateFundTotalAmount(parsedFundId)
-
     return NextResponse.json(updatedFundLDA, { status: 200 })
   } catch (error) {
     console.error("Error updating funding:", error)
@@ -254,9 +229,6 @@ export async function DELETE(req: NextRequest) {
         id: existingLink.id
       }
     })
-
-    // Recalculate and update fund total amount
-    await updateFundTotalAmount(parsedFundId)
 
     return NextResponse.json(
       { message: "Funding removed successfully" },

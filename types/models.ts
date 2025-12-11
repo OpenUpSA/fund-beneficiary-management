@@ -84,7 +84,8 @@ export type LimitedFundModel = Prisma.FundGetPayload<{
     fundLocalDevelopmentAgencies: {
       select: {
         id: true,
-        fundingStatus: true
+        fundingStatus: true,
+        amount: true
       }
     }
   }
