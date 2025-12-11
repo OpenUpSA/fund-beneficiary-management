@@ -79,6 +79,7 @@ model Fund {
   fundType                     FundType                       @default(CORE_FUND)
   fundingCalculationType       FundingCalculationType         @default(total_funded_amount)
   amount                       Decimal                        @db.Money
+  defaultAmount                Decimal?                       @db.Money
   fundingStart                 DateTime                       @default(now())
   fundingEnd                   DateTime                       @default(now())
   createdAt                    DateTime                       @default(now())
@@ -115,6 +116,8 @@ model FundLocalDevelopmentAgency {
   fundingStart             DateTime               @default(now())
   fundingEnd               DateTime               @default(now())
   fundingStatus            FundLDAStatus          @default(Active)
+  amountType               FundAmountType         @default(USE_DEFAULT)
+  amount                   Decimal?               @db.Money
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
   fund                     Fund                   @relation(fields: [fundId], references: [id])
@@ -418,4 +421,9 @@ enum FundStatus {
 enum FundingCalculationType {
   total_funded_amount
   lda_funding_per_month
+}
+
+enum FundAmountType {
+  USE_DEFAULT
+  AD_HOC
 }

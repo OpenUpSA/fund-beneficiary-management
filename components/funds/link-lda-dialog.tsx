@@ -24,6 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { CalendarIcon, PlusIcon, Lock } from "lucide-react"
 import { format } from "date-fns"
 import { useState, useEffect } from "react"
@@ -38,6 +39,7 @@ interface LDA {
 interface LinkLDADialogProps {
   fundId: number
   fundName?: string
+  fundDefaultAmount?: number | null
   availableLDAs: LDA[]
   editingLDA?: FundedLDAs | null
   open?: boolean
@@ -45,7 +47,7 @@ interface LinkLDADialogProps {
   callback?: () => void
 }
 
-export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, open: controlledOpen, onOpenChange, callback }: LinkLDADialogProps) {
+export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLDAs, editingLDA, open: controlledOpen, onOpenChange, callback }: LinkLDADialogProps) {
 
   const [internalOpen, setInternalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -54,10 +56,28 @@ export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, ope
   const [startDate, setStartDate] = useState<Date | undefined>(editingLDA?.fundingStart ? new Date(editingLDA.fundingStart) : undefined)
   const [endDate, setEndDate] = useState<Date | undefined>(editingLDA?.fundingEnd ? new Date(editingLDA.fundingEnd) : undefined)
   const [fundingStatus, setFundingStatus] = useState<string>(editingLDA?.fundingStatus || "Active")
+  const [amountType, setAmountType] = useState<string>(editingLDA?.amountType || "USE_DEFAULT")
+  const [amount, setAmount] = useState<string>(editingLDA?.amount ? String(editingLDA.amount) : (fundDefaultAmount ? String(fundDefaultAmount) : ""))
 
   // Use controlled or internal open state
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
   const setOpen = onOpenChange || setInternalOpen
+
+  // Handle amountType change - auto-fill or clear amount
+  useEffect(() => {
+    if (amountType === "USE_DEFAULT" && fundDefaultAmount) {
+      setAmount(String(fundDefaultAmount))
+    } else if (amountType === "AD_HOC") {
+      // If editing and there's an existing amount, preserve it
+      // Otherwise, clear the field for new entry
+      if (editingLDA && editingLDA.amount) {
+        setAmount(String(editingLDA.amount))
+      } else if (!editingLDA) {
+        // Only clear if creating new, not editing
+        setAmount("")
+      }
+    }
+  }, [amountType, fundDefaultAmount, editingLDA])
 
   // Update form when editingLDA changes
   useEffect(() => {
@@ -67,6 +87,8 @@ export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, ope
       setStartDate(new Date(editingLDA.fundingStart))
       setEndDate(new Date(editingLDA.fundingEnd))
       setFundingStatus(editingLDA.fundingStatus)
+      setAmountType(editingLDA.amountType || "USE_DEFAULT")
+      setAmount(editingLDA.amount ? String(editingLDA.amount) : (fundDefaultAmount ? String(fundDefaultAmount) : ""))
     } else {
       // Reset form when not editing
       setSelectedLDA("")
@@ -74,14 +96,22 @@ export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, ope
       setStartDate(undefined)
       setEndDate(undefined)
       setFundingStatus("Active")
+      setAmountType("USE_DEFAULT")
+      setAmount(fundDefaultAmount ? String(fundDefaultAmount) : "")
     }
-  }, [editingLDA])
+  }, [editingLDA, fundDefaultAmount])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!selectedLDA || !startDate || !endDate) {
+    if (!selectedLDA || !startDate || !endDate || !amount) {
       toast.error("Please fill in all required fields")
+      return
+    }
+
+    const parsedAmount = parseFloat(amount)
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error("Please enter a valid amount")
       return
     }
 
@@ -101,6 +131,8 @@ export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, ope
           fundingStart: startDate.toISOString(),
           fundingEnd: endDate.toISOString(),
           fundingStatus: fundingStatus,
+          amountType: amountType,
+          amount: parsedAmount,
         }),
       })
 
@@ -117,6 +149,8 @@ export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, ope
       setStartDate(undefined)
       setEndDate(undefined)
       setFundingStatus("Active")
+      setAmountType("USE_DEFAULT")
+      setAmount(fundDefaultAmount ? String(fundDefaultAmount) : "")
       
       if (callback) {
         callback()
@@ -243,6 +277,35 @@ export function LinkLDADialog({ fundId, fundName, availableLDAs, editingLDA, ope
                       />
                     </PopoverContent>
                   </Popover>
+                </div>
+              </div>
+
+              {/* Amount Type and Amount */}
+              <div className="flex gap-4">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="amountType">Amount type</Label>
+                  <Select value={amountType} onValueChange={setAmountType}>
+                    <SelectTrigger id="amountType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USE_DEFAULT">Use default</SelectItem>
+                      <SelectItem value="AD_HOC">Ad hoc</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="amount">Amount <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="R 0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    disabled={amountType === "USE_DEFAULT"}
+                    required
+                  />
                 </div>
               </div>
 

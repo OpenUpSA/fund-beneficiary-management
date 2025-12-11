@@ -129,6 +129,7 @@ export async function PUT(req: NextRequest, { params }: { params: { fund_id: str
         fundingStatus: data.fundingStatus,
         fundType: data.fundType,
         amount: data.amount,
+        defaultAmount: data.defaultAmount || null,
         fundingCalculationType: data.fundingCalculationType,
         fundingStart: new Date(data.fundingStart),
         fundingEnd: new Date(data.fundingEnd),

@@ -104,6 +104,7 @@ export async function POST(request: Request) {
         fundingStatus: data.fundingStatus,
         fundType: data.fundType,
         amount: data.amount,
+        defaultAmount: data.defaultAmount || null,
         fundingCalculationType: data.fundingCalculationType || "total_funded_amount",
         fundingStart: new Date(data.fundingStart),
         fundingEnd: new Date(data.fundingEnd),
