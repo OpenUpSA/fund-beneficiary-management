@@ -51,6 +51,11 @@ export default async function Page({ params }: FundTabPageProps) {
   const fundFunders = fund.fundFunders || [];
   const fundLocalDevelopmentAgencies = fund.fundLocalDevelopmentAgencies || [];
   
+  // Calculate total allocated amount to LDAs
+  const allocatedAmount = fundLocalDevelopmentAgencies.reduce((sum, lda) => {
+    return sum + (lda.amount ? Number(lda.amount) : 0)
+  }, 0)
+  
   // Fetch all funders and LDAs for linking dialogs
   const allFunders = await fetchFunders()
   const allLDAs = await fetchLocalDevelopmentAgencies()
@@ -84,6 +89,8 @@ export default async function Page({ params }: FundTabPageProps) {
                 fundFunders={fundFunders}
                 fundId={parseInt(fund_id)}
                 fundName={fund.name}
+                fundAmount={Number(fund.amount)}
+                allocatedAmount={allocatedAmount}
                 allFunders={allFunders}
                 callback={dataChanged}
               />;
