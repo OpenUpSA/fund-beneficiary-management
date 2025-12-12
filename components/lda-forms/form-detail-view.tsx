@@ -83,7 +83,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     }
   })
 
-  const canEditAmountAndStatus = session?.user?.role === 'ADMIN' || session?.user?.role === 'PROGRAMME_OFFICER'
+  const canEditAmountAndStatus = session?.user?.role === 'ADMIN' || session?.user?.role === 'PROGRAMME_OFFICER' || session?.user?.role === 'SUPER_USER'
 
   const updateField = async (field: string, value: string | Date | number | undefined) => {
     if (value === undefined) return; // Don't update if value is undefined
