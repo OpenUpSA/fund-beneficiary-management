@@ -26,15 +26,17 @@ interface LDAMediaPageProps {
 export default async function Page({ params }: LDAMediaPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA data
-  const lda = await fetchLocalDevelopmentAgency(lda_id)
+  // Fetch all data in parallel (LDA fetch will be deduplicated with layout)
+  const [lda, media, mediaSourceTypes, users] = await Promise.all([
+    fetchLocalDevelopmentAgency(lda_id),
+    fetchLDAMedia(lda_id),
+    fetchMediaSourceTypes(),
+    fetchUsers()
+  ])
+  
   if (!lda) {
     return redirect(`/dashboard/ldas`)
   }
-
-  const media = await fetchLDAMedia(lda_id)
-  const mediaSourceTypes = await fetchMediaSourceTypes()
-  const users = await fetchUsers()
 
   const dataChanged = async (media_id?: string) => {
     "use server"

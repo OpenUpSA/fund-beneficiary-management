@@ -97,10 +97,10 @@ export default async function Page({ params, searchParams }: Props) {
                 <span className="font-medium">Media Type:</span>
                 <span>{media.mediaType}</span>
               </div>
-              <div className="flex justify-between">
+              {media?.localDevelopmentAgency && <div className="flex justify-between">
                 <span className="font-medium">Local Development Agency:</span>
-                <span>{media.localDevelopmentAgency.name}</span>
-              </div>
+                <span>{media?.localDevelopmentAgency?.name}</span>
+              </div>}
               <div className="flex justify-between">
                 <span className="font-medium">Created At:</span>
                 <span>{format(media.createdAt, 'PPpp')}</span>

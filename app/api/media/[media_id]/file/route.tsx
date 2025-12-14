@@ -27,9 +27,21 @@ export async function GET(req: NextRequest, { params }: { params: { media_id: st
     return NextResponse.json({ error: "Missing media" }, { status: 400 })
   }
 
-  // Permission check: Can view LDA (only users with access to this LDA can download the media file)
-  if (!permissions.canViewLDA(user, media.localDevelopmentAgencyId)) {
-    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+  // Permission check
+  // If media has an LDA, check if user can view that LDA
+  // If media has no LDA (fund/funder media), only staff can download
+  const isLDAUser = permissions.isLDAUser(user)
+  
+  if (media.localDevelopmentAgencyId) {
+    // Media linked to LDA - check LDA permissions
+    if (!permissions.canViewLDA(user, media.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+  } else {
+    // Media linked to fund/funder - only staff can download
+    if (isLDAUser) {
+      return NextResponse.json({ error: "Permission denied. LDA users cannot download fund/funder media." }, { status: 403 });
+    }
   }
 
   const fileUrl = imagekitUrlEndpoint + media.filePath

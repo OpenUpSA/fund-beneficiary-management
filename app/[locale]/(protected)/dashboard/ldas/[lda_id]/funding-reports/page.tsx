@@ -8,8 +8,6 @@ import {
 } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
-import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/types/models"
-import { FormStatus } from "@prisma/client"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -33,15 +31,17 @@ interface LDAApplicationsPageProps {
 export default async function Page({ params }: LDAApplicationsPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA and forms data
-  const lda = await fetchLocalDevelopmentAgency(lda_id)
+  // Fetch all data in parallel (LDA fetch will be deduplicated with layout)
+  const [lda, formTemplates, ldaForms, formStatuses] = await Promise.all([
+    fetchLocalDevelopmentAgency(lda_id),
+    fetchFormTemplates(),
+    fetchLocalDevelopmentAgencyFormsForLDA(lda_id),
+    fetchFormStatuses()
+  ])
+  
   if (!lda) {
     return redirect('/dashboard/ldas')
   }
-  
-  const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
-  const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchLocalDevelopmentAgencyFormsForLDA(String(lda.id))
-  const formStatuses: FormStatus[] = await fetchFormStatuses()
 
   const dataChanged = async (ldaId?: number) => {
     "use server"

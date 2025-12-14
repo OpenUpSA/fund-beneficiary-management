@@ -25,7 +25,7 @@ interface OperationsPageProps {
 export default async function OperationsPage({ params }: OperationsPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA data
+  // Fetch LDA data (Next.js will automatically deduplicate this with layout's fetch)
   const lda = await fetchLocalDevelopmentAgency(lda_id)
   if (!lda) {
     return redirect('/dashboard/ldas')

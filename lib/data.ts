@@ -237,6 +237,30 @@ export async function fetchLDAMedia(lda_id: string): Promise<MediaFull[]> {
   return res.json()
 }
 
+export async function fetchFundMedia(fund_id: string): Promise<MediaFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`)
+  url.searchParams.append('fundId', fund_id)
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['media:list', `media:fund:${fund_id}`] } 
+  })
+  return res.json()
+}
+
+export async function fetchFunderMedia(funder_id: string): Promise<MediaFull[]> {
+  const url = new URL(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/`)
+  url.searchParams.append('funderId', funder_id)
+  const res = await fetch(url.toString(), { 
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    next: { tags: ['media:list', `media:funder:${funder_id}`] } 
+  })
+  return res.json()
+}
+
 export async function fetchDocument(document_id: string): Promise<DocumentFull> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/document/${document_id}`, { 
     headers: {

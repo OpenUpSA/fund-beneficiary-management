@@ -19,14 +19,19 @@ interface LDALayoutProps {
 
 export default async function Layout({ children, params }: LDALayoutProps) {
   const { lda_id } = params
-  const lda = await fetchLocalDevelopmentAgency(lda_id)
+  
+  // Fetch all data in parallel for better performance
+  const [lda, focusAreas, developmentStages, programmeOfficers, provinces] = await Promise.all([
+    fetchLocalDevelopmentAgency(lda_id),
+    fetchFocusAreas(),
+    fetchDevelopmentStages(),
+    fetchUsers(),
+    fetchProvinces()
+  ])
+  
   if (!lda) {
     return redirect('/dashboard/ldas')
   }
-  const focusAreas = await fetchFocusAreas()
-  const developmentStages = await fetchDevelopmentStages()
-  const programmeOfficers = await fetchUsers()
-  const provinces = await fetchProvinces()
 
   const dataChanged = async (ldaId?: number) => {
     "use server"

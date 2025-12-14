@@ -33,13 +33,15 @@ import { InitialsBadge } from "@/components/ui/initials-badge"
 interface Props {
   media: MediaFull[],
   lda?: LocalDevelopmentAgency,
+  fund?: { id: number, name: string },
+  funder?: { id: number, name: string },
   dataChanged: (media_id?: string) => void
   navigatedFrom?: string
   mediaSourceTypes?: MediaSourceType[]
   users?: UserWithLDAsBasic[]
 }
 
-export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSourceTypes, users }: Props) {
+export function FilteredMedia({ media, dataChanged, lda, fund, funder, navigatedFrom, mediaSourceTypes, users }: Props) {
   const tC = useTranslations('common')
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -68,7 +70,8 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     availableLDAs = [
       ...new Map(
         media
-          .map((item) => item.localDevelopmentAgency)
+          .filter((item) => item.localDevelopmentAgency) // Filter out media without LDA (fund/funder media)
+          .map((item) => item.localDevelopmentAgency!)
           .map((agency) => [agency.id, { id: String(agency.id), label: agency.name }])
       ).values(),
     ]
@@ -76,8 +79,8 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     const years = new Set<number>()
 
     media.forEach((media) => {
-      if (media.localDevelopmentAgency.fundingStart) years.add(new Date(media.localDevelopmentAgency.fundingStart).getFullYear())
-      if (media.localDevelopmentAgency.fundingEnd) years.add(new Date(media.localDevelopmentAgency.fundingEnd).getFullYear())
+      if (media?.localDevelopmentAgency?.fundingStart) years.add(new Date(media.localDevelopmentAgency.fundingStart).getFullYear())
+      if (media?.localDevelopmentAgency?.fundingEnd) years.add(new Date(media.localDevelopmentAgency.fundingEnd).getFullYear())
     })
 
     availableFundingPeriods = Array.from(years)
@@ -106,18 +109,20 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
     label: user.name || user.email || 'Unknown user' 
   })) || []
 
+  const sourceTypeOptions: FilterOption[] = mediaSourceTypes?.map(({ id, title }) => ({ id: String(id), label: title })) || []
+
   const filterConfigs = [
-    !lda ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
+    !lda && ldaOptions.length > 0 ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
     { type: 'type', label: 'Type', options: mediaTypeOptions },
-    { type: 'sourceType', label: 'Source', options: mediaSourceTypes?.map(({ id, title }) => ({ id: String(id), label: title })) },
-    !lda ? { type: 'period', label: 'Funding period', options: periodOptions } : null,
+    sourceTypeOptions.length > 0 ? { type: 'sourceType', label: 'Source', options: sourceTypeOptions } : null,
+    !lda && periodOptions.length > 0 ? { type: 'period', label: 'Funding period', options: periodOptions } : null,
     { 
       type: 'dateCreated', 
       label: 'Date added', 
       options: dateCreatedOptions,
       customFilterComponent: CustomDateFilter
     },
-    { type: 'createdBy', label: 'Uploaded by', options: createdByOptions },
+    createdByOptions.length > 0 ? { type: 'createdBy', label: 'Uploaded by', options: createdByOptions } : null,
   ].filter(Boolean) as { 
     type: string, 
     label: string, 
@@ -303,8 +308,14 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
             <Settings2 className="h-4 w-4 mr-1" />
             <span>View</span>
           </Button>
-          {lda && (
-            <MediaFormDialog lda={lda} callback={dataChanged} mediaSourceTypes={mediaSourceTypes}/>
+          {(lda || fund || funder) && (
+            <MediaFormDialog 
+              lda={lda} 
+              fund={fund}
+              funder={funder}
+              callback={dataChanged} 
+              mediaSourceTypes={mediaSourceTypes}
+            />
           )}
         </div>
       </div>
@@ -346,6 +357,8 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
                             <MediaFormDialog
                               key={item.id}
                               media={item}
+                              fund={fund}
+                              funder={funder}
                               callback={dataChanged}
                               mediaSourceTypes={mediaSourceTypes}
                             />
@@ -495,6 +508,8 @@ export function FilteredMedia({ media, dataChanged, lda, navigatedFrom, mediaSou
                                 <MediaFormDialog
                                   key={item.id}
                                   media={item}
+                                  fund={fund}
+                                  funder={funder}
                                   callback={dataChanged}
                                   mediaSourceTypes={mediaSourceTypes}
                                 />

@@ -35,9 +35,21 @@ export async function GET(req: NextRequest, { params }: { params: { media_id: st
     return NextResponse.json({ error: "Record not found" }, { status: 404 })
   }
 
-  // Permission check: Can view LDA (only users with access to this LDA can view the media)
-  if (!permissions.canViewLDA(user, record.localDevelopmentAgencyId)) {
-    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+  // Permission check
+  // If media has an LDA, check if user can view that LDA
+  // If media has no LDA (fund/funder media), only staff can view
+  const isLDAUser = permissions.isLDAUser(user)
+  
+  if (record.localDevelopmentAgencyId) {
+    // Media linked to LDA - check LDA permissions
+    if (!permissions.canViewLDA(user, record.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+  } else {
+    // Media linked to fund/funder - only staff can view
+    if (isLDAUser) {
+      return NextResponse.json({ error: "Permission denied. LDA users cannot view fund/funder media." }, { status: 403 });
+    }
   }
 
   return NextResponse.json(record)
@@ -84,7 +96,8 @@ export async function PUT(req: NextRequest, { params }: { params: { media_id: st
 
   // Additional check: If changing LDA, ensure user has access to the new LDA
   if (localDevelopmentAgencyId !== existingMedia.localDevelopmentAgencyId) {
-    if (!permissions.canViewLDA(user, localDevelopmentAgencyId)) {
+    // Only check LDA permissions if the new LDA ID is not null/0
+    if (localDevelopmentAgencyId && !permissions.canViewLDA(user, localDevelopmentAgencyId)) {
       return NextResponse.json({ error: "Permission denied - no access to the specified LDA" }, { status: 403 });
     }
   }
