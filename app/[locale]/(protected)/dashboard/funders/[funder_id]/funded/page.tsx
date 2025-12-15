@@ -53,11 +53,14 @@ export default async function Page({ params }: FunderFundedPageProps) {
     <div>
       <FilteredFundLDAs 
         fundedLDAs={funderLDAs}
+        fundId={Number(funder_id)}
+        fundName={funder.name}
         fundingCalculationType="total_funded_amount"
         showLinkButton={false}
         availableLDAs={allLDAs.map(lda => ({ id: lda.id, name: lda.name }))}
         funds={allFunds.map(fund => ({ id: fund.id, label: fund.name }))}
         callback={dataChanged}
+        referrerType="funder"
       />
     </div>
   )

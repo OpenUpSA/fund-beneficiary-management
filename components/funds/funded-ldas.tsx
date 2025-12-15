@@ -11,6 +11,7 @@ import Link from "next/link"
 import { format } from "date-fns"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
+import { buildReferrerUrl } from "@/lib/breadcrumb-utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +49,7 @@ interface FilteredFundLDAsProps {
   funds?: { id: number; label: string }[]
   callback?: () => void
   showLinkButton?: boolean
+  referrerType?: 'fund' | 'funder' // Specify if links should include fund or funder as referrer
 }
 
 export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({ 
@@ -60,7 +62,8 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
   availableLDAs,
   funds,
   callback,
-  showLinkButton = true
+  showLinkButton = true,
+  referrerType = 'fund'
 }) => {
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -403,7 +406,15 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
                       <TableRow key={fundedLDA.id}>
                         <TableCell className="p-3 font-medium">
                           <Link 
-                            href={`/dashboard/ldas/${fundedLDA.localDevelopmentAgency.id}/overview`}
+                            href={
+                              fundId && fundName
+                                ? buildReferrerUrl(`/dashboard/ldas/${fundedLDA.localDevelopmentAgency.id}/overview`, {
+                                    type: referrerType,
+                                    id: fundId,
+                                    name: fundName
+                                  })
+                                : `/dashboard/ldas/${fundedLDA.localDevelopmentAgency.id}/overview`
+                            }
                             className="hover:underline"
                           >
                             {fundedLDA.localDevelopmentAgency.name}

@@ -12,6 +12,7 @@ import { Funder } from '@prisma/client'
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { LinkFunderDialog } from "@/components/funders/link-funder-dialog"
+import { buildReferrerUrl } from "@/lib/breadcrumb-utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -195,7 +196,14 @@ export const FilteredFundFunders: React.FC<FilteredFundFundersProps> = ({
     return (
       <TableRow key={ff.id}>
         <TableCell className="p-3 w-1/3">
-          <Link href={`/dashboard/funders/${ff.funder.id}/overview`} className="font-medium hover:underline">
+          <Link 
+            href={buildReferrerUrl(`/dashboard/funders/${ff.funder.id}/overview`, {
+              type: 'fund',
+              id: fundId,
+              name: fundName
+            })}
+            className="font-medium hover:underline"
+          >
             {ff.funder.name}
           </Link>
         </TableCell>
@@ -248,7 +256,7 @@ export const FilteredFundFunders: React.FC<FilteredFundFundersProps> = ({
         </TableCell>
       </TableRow>
     )
-  }), [])
+  }), [fundId, fundName])
 
   return (
     <>
