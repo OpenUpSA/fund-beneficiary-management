@@ -10,6 +10,7 @@ interface LDAContactPageProps {
 }
 
 export async function generateMetadata({ params }: LDAContactPageProps): Promise<Metadata> {
+  // Fetch LDA for metadata (Next.js will deduplicate with page fetch)
   try {
     const lda = await fetchLocalDevelopmentAgency(params.lda_id)
     return {
@@ -26,13 +27,15 @@ export async function generateMetadata({ params }: LDAContactPageProps): Promise
 export default async function Page({ params }: LDAContactPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA data
-  const lda = await fetchLocalDevelopmentAgency(lda_id)
+  // Fetch LDA and contacts in parallel (LDA fetch will be deduplicated with layout)
+  const [lda, contacts] = await Promise.all([
+    fetchLocalDevelopmentAgency(lda_id),
+    fetchContacts(lda_id)
+  ])
+  
   if (!lda) {
     return redirect('/dashboard/ldas')
   }
-  
-  const contacts = await fetchContacts(lda_id)
 
   const dataChanged = async () => {
     "use server"

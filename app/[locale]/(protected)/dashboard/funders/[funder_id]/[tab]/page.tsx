@@ -14,7 +14,10 @@ import {
   fetchFormTemplates,
   fetchFormStatuses,
   fetchFocusAreas,
-  fetchFunderDocuments
+  fetchFunderDocuments,
+  fetchFunderMedia,
+  fetchMediaSourceTypes,
+  fetchUsers
 } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
@@ -49,21 +52,34 @@ export default async function Page({ params }: FunderTabPageProps) {
     redirect(`/dashboard/funders/${funder_id}/overview`)
   }
 
-  const funder = await fetchFunder(funder_id)
-  const allFunds = await fetchFunds()
-  const allLDAs = await fetchLocalDevelopmentAgencies()
-  
-  // Fetch all LDAs linked to this funder through its funds
-  const funderLDAs = await fetchFunderLDAs(funder_id)
-  
-  // Fetch form-related data for applications tab
-  const ldaForms = await fetchFunderLDAForms(funder_id)
-  const formTemplates = await fetchFormTemplates()
-  const formStatuses = await fetchFormStatuses()
-  const focusAreas = await fetchFocusAreas()
-  
-  // Fetch documents for this funder
-  const funderDocuments = await fetchFunderDocuments(funder_id)
+  // Fetch all data in parallel for better performance
+  const [
+    funder,
+    allFunds,
+    allLDAs,
+    funderLDAs,
+    ldaForms,
+    formTemplates,
+    formStatuses,
+    focusAreas,
+    funderDocuments,
+    funderMedia,
+    mediaSourceTypes,
+    users
+  ] = await Promise.all([
+    fetchFunder(funder_id),
+    fetchFunds(),
+    fetchLocalDevelopmentAgencies(),
+    fetchFunderLDAs(funder_id),
+    fetchFunderLDAForms(funder_id),
+    fetchFormTemplates(),
+    fetchFormStatuses(),
+    fetchFocusAreas(),
+    fetchFunderDocuments(funder_id),
+    fetchFunderMedia(funder_id),
+    fetchMediaSourceTypes(),
+    fetchUsers()
+  ])
 
   const dataChanged = async () => {
     "use server"
@@ -71,6 +87,8 @@ export default async function Page({ params }: FunderTabPageProps) {
     revalidateTag(`funder:${funder_id}:ldas`)
     revalidateTag(`funder-lda-forms:${funder_id}`)
     revalidateTag('lda-forms:list')
+    revalidateTag('media:list')
+    revalidateTag(`media:funder:${funder_id}`)
   }
 
   return (
@@ -121,7 +139,10 @@ export default async function Page({ params }: FunderTabPageProps) {
               return (
                 <FilteredMedia
                   dataChanged={dataChanged}
-                  media={[]} />
+                  media={funderMedia}
+                  funder={{ id: parseInt(funder_id), name: funder.name }}
+                  mediaSourceTypes={mediaSourceTypes}
+                  users={users} />
               );
 
             default:

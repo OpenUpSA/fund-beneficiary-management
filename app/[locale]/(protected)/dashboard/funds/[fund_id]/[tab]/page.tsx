@@ -13,7 +13,10 @@ import {
   fetchFundLDAForms,
   fetchFormTemplates,
   fetchFormStatuses,
-  fetchFundDocuments
+  fetchFundDocuments,
+  fetchFundMedia,
+  fetchMediaSourceTypes,
+  fetchUsers
 } from "@/lib/data";
 import { revalidateTag } from "next/cache";
 import * as Sentry from '@sentry/nextjs'
@@ -67,12 +70,19 @@ export default async function Page({ params }: FundTabPageProps) {
   
   // Fetch documents for this fund
   const fundDocuments = await fetchFundDocuments(fund_id)
+  
+  // Fetch media for this fund
+  const fundMedia = await fetchFundMedia(fund_id)
+  const mediaSourceTypes = await fetchMediaSourceTypes()
+  const users = await fetchUsers()
 
   const dataChanged = async () => {
     "use server"
     revalidateTag('funds');
     revalidateTag('lda-forms:list');
     revalidateTag(`fund-lda-forms:${fund_id}`);
+    revalidateTag('media:list');
+    revalidateTag(`media:fund:${fund_id}`);
   };
 
   return (
@@ -127,7 +137,10 @@ export default async function Page({ params }: FundTabPageProps) {
               return (
                 <FilteredMedia
                   dataChanged={dataChanged}
-                  media={[]} />
+                  media={fundMedia}
+                  fund={{ id: parseInt(fund_id), name: fund.name }}
+                  mediaSourceTypes={mediaSourceTypes}
+                  users={users} />
               );
 
             default:

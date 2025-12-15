@@ -24,12 +24,13 @@ interface LDAOverviewPageProps {
 export default async function Page({ params }: LDAOverviewPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA data
+  // Fetch LDA (Next.js will automatically deduplicate this with layout's fetch)
   const lda = await fetchLocalDevelopmentAgency(lda_id)
   if (!lda) {
     return redirect('/dashboard/ldas')
   }
 
+  // Overview component expects funds as a Promise (it uses React.use())
   const funds = fetchFunds(lda_id)
 
   return (

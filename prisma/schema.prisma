@@ -49,6 +49,7 @@ model Funder {
   organisationDetail   OrganisationDetail @relation(fields: [organisationDetailId], references: [id])
   fundFunders          FundFunder[]
   documents            Document[]
+  media                Media[]
 }
 
 model Location {
@@ -90,6 +91,7 @@ model Fund {
   fundFunders                  FundFunder[]
   fundLocalDevelopmentAgencies FundLocalDevelopmentAgency[]
   documents                    Document[]
+  media                        Media[]
 }
 
 model FundFunder {
@@ -211,6 +213,7 @@ model LocalDevelopmentAgencyForm {
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
   createdBy                User?                  @relation(fields: [createdById], references: [id])
   documents                Document[]
+  media                    Media[]
 }
 
 model OrganisationDetail {
@@ -307,19 +310,25 @@ model MediaSourceType {
 }
 
 model Media {
-  id                       Int                    @id @default(autoincrement())
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
-  title                    String
-  description              String
-  filePath                 String
-  mediaType                MediaType              @default(PHOTOGRAPH)
-  localDevelopmentAgencyId Int
-  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
-  mediaSourceTypeId        Int?
-  mediaSourceType          MediaSourceType?       @relation(fields: [mediaSourceTypeId], references: [id])
-  createdById              Int?
-  createdBy                User?                  @relation(fields: [createdById], references: [id])
+  id                            Int                         @id @default(autoincrement())
+  createdAt                     DateTime                    @default(now())
+  updatedAt                     DateTime                    @updatedAt
+  title                         String
+  description                   String
+  filePath                      String
+  mediaType                     MediaType                   @default(PHOTOGRAPH)
+  localDevelopmentAgencyId      Int?
+  localDevelopmentAgency        LocalDevelopmentAgency?     @relation(fields: [localDevelopmentAgencyId], references: [id])
+  localDevelopmentAgencyFormId  Int?
+  localDevelopmentAgencyForm    LocalDevelopmentAgencyForm? @relation(fields: [localDevelopmentAgencyFormId], references: [id])
+  fundId                        Int?
+  fund                          Fund?                       @relation(fields: [fundId], references: [id])
+  funderId                      Int?
+  funder                        Funder?                     @relation(fields: [funderId], references: [id])
+  mediaSourceTypeId             Int?
+  mediaSourceType               MediaSourceType?            @relation(fields: [mediaSourceTypeId], references: [id])
+  createdById                   Int?
+  createdBy                     User?                       @relation(fields: [createdById], references: [id])
 }
 
 model Document {

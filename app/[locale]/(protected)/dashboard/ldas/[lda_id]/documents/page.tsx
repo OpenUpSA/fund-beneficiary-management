@@ -26,13 +26,15 @@ interface LDADocumentsPageProps {
 export default async function Page({ params }: LDADocumentsPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA data
-  const lda = await fetchLocalDevelopmentAgency(lda_id)
+  // Fetch LDA and documents in parallel (LDA fetch will be deduplicated with layout)
+  const [lda, documents] = await Promise.all([
+    fetchLocalDevelopmentAgency(lda_id),
+    fetchLDADocuments(lda_id)
+  ])
+  
   if (!lda) {
     return redirect('/dashboard/ldas')
   }
-  
-  const documents = await fetchLDADocuments(lda_id)
 
   const dataChanged = async () => {
     "use server"

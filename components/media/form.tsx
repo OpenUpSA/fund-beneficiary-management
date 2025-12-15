@@ -39,11 +39,13 @@ import { useTranslations } from "next-intl"
 import { MediaTypeEnum } from "@/types/formSchemas"
 import { MediaSourceType } from "@prisma/client"
 
-const getFormSchema = (media?: Media) => {
+const getFormSchema = (media?: Media, hasEntityContext?: boolean) => {
   return z.object({
     title: z.string().min(2, { message: "Title must be at least 2 characters." }),
     description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-    localDevelopmentAgencyId: z.coerce.number({ required_error: "Please select a local development agency." }),
+    localDevelopmentAgencyId: hasEntityContext 
+      ? z.coerce.number().optional()
+      : z.coerce.number({ required_error: "Please select a local development agency." }),
     mediaType: MediaTypeEnum,
     mediaSourceTypeId: z.coerce.number({ required_error: "Please select a media source type." }),
     file: z
@@ -78,23 +80,26 @@ interface FormDialogProps {
   media?: Media,
   lda?: LocalDevelopmentAgency,
   ldas?: LocalDevelopmentAgency[],
+  fund?: { id: number, name: string },
+  funder?: { id: number, name: string },
   mediaSourceTypes?: MediaSourceType[],
   callback: (media_id?: string) => void
 }
 
-export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: FormDialogProps) {
+export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false)
 
   const tC = useTranslations('common')
 
-  const FormSchema = getFormSchema(media)
+  const hasEntityContext = !!(fund || funder)
+  const FormSchema = getFormSchema(media, hasEntityContext)
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: media ? media.title : "",
       description: media ? media?.description : "",
-      localDevelopmentAgencyId: media?.localDevelopmentAgencyId ?? lda?.id ?? 0,
+      localDevelopmentAgencyId: media?.localDevelopmentAgencyId ?? lda?.id,
       mediaType: media ? media.mediaType : undefined,
       mediaSourceTypeId: media && media.mediaSourceTypeId !== null ? media.mediaSourceTypeId : undefined,
     },
@@ -105,7 +110,18 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
     const formData = new FormData();
     formData.append("title", data.title);
     formData.append("description", data.description);
-    formData.append("localDevelopmentAgencyId", data.localDevelopmentAgencyId.toString());
+    
+    // Add entity IDs based on context
+    if (data.localDevelopmentAgencyId) {
+      formData.append("ldaId", data.localDevelopmentAgencyId.toString());
+    }
+    if (fund) {
+      formData.append("fundId", fund.id.toString());
+    }
+    if (funder) {
+      formData.append("funderId", funder.id.toString());
+    }
+    
     formData.append("mediaSourceTypeId", data.mediaSourceTypeId.toString());
     formData.append("mediaType", data.mediaType);
 
@@ -136,7 +152,7 @@ export function FormDialog({ media, lda, ldas, mediaSourceTypes, callback }: For
       form.reset({
         title: "",
         description: "",
-        localDevelopmentAgencyId: lda?.id ?? 0,
+        localDevelopmentAgencyId: lda?.id,
         mediaType: undefined,
         mediaSourceTypeId: undefined,
       });

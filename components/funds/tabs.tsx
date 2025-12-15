@@ -34,11 +34,11 @@ export function FundsTabs({ fundId, className }: FundsTabsProps) {
       value: "documents",
       href: `/dashboard/funds/${fundId}/documents`
     },
-    // {
-    //   label: "Media",
-    //   value: "media",
-    //   href: `/dashboard/funds/${fundId}/media`
-    // }
+    {
+      label: "Media",
+      value: "media",
+      href: `/dashboard/funds/${fundId}/media`
+    }
   ]
   
   return <TabNav tabs={tabs} className={className} />

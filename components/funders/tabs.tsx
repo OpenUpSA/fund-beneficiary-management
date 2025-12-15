@@ -34,11 +34,11 @@ export function FunderTabs({ funderId, className }: FunderTabsProps) {
       value: "documents",
       href: `/dashboard/funders/${funderId}/documents`
     },
-    // {
-    //   label: "Media",
-    //   value: "media",
-    //   href: `/dashboard/funders/${funderId}/media`
-    // }
+    {
+      label: "Media",
+      value: "media",
+      href: `/dashboard/funders/${funderId}/media`
+    }
   ]
   
   return <TabNav tabs={tabs} className={className} />

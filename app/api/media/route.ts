@@ -17,93 +17,115 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  // Get ldaId query parameter
+  // Get query parameters for filtering
   const { searchParams } = new URL(req.url);
-  const ldaId = searchParams.get('ldaId');
+  const ldaId = searchParams.get("ldaId");
+  const ldaFormId = searchParams.get("ldaFormId");
+  const fundId = searchParams.get("fundId");
+  const funderId = searchParams.get("funderId");
 
-  // If ldaId is provided, filter by specific LDA
-  if (ldaId) {
-    const ldaIdNum = parseInt(ldaId);
+  const isLDAUser = permissions.isLDAUser(user);
+  const isStaff = permissions.isSuperUser(user) || permissions.isAdmin(user) || permissions.isProgrammeOfficer(user);
 
-    // Validate ldaId is a valid number
-    if (isNaN(ldaIdNum)) {
-      return NextResponse.json({ error: "Invalid LDA ID" }, { status: 400 });
+  // If no filter is passed
+  if (!ldaId && !ldaFormId && !fundId && !funderId) {
+    // Staff can view all media without filters
+    if (isStaff) {
+      const records = await prisma.media.findMany({
+        include: {
+          localDevelopmentAgency: {
+            include: {
+              focusAreas: true,
+              developmentStage: true
+            }
+          },
+          createdBy: true,
+          mediaSourceType: true,
+        }
+      });
+      return NextResponse.json(records);
     }
-
-    // Check if user can access this specific LDA
-    if (!permissions.canViewLDA(user, ldaIdNum)) {
-      return NextResponse.json({ error: "No LDA access" }, { status: 403 });
-    }
-
-    // Fetch media for the specific LDA
-    const records = await prisma.media.findMany({
-      where: {
-        localDevelopmentAgencyId: ldaIdNum
-      },
-      include: {
-        localDevelopmentAgency: {
-          include: {
-            focusAreas: true,
-            developmentStage: true
-          }
-        },
-        createdBy: true,
-        mediaSourceType: true,
-      }
-    });
-    return NextResponse.json(records);
+    // LDA users and others must provide filters
+    return NextResponse.json([]);
   }
 
-  // No ldaId provided - return all media based on user permissions
-  if (permissions.isSuperUser(user) || permissions.isAdmin(user) || permissions.isProgrammeOfficer(user)) {
-    // These roles can view all media
-    const records = await prisma.media.findMany({
-      include: {
-        localDevelopmentAgency: {
-          include: {
-            focusAreas: true,
-            developmentStage: true
-          }
-        },
-        createdBy: true,
-        mediaSourceType: true,
-      }
-    });
-    return NextResponse.json(records);
-  } else if (permissions.isLDAUser(user)) {
-    // LDA users can only view media from their LDAs
+  // Permission checks for LDA users
+  if (isLDAUser) {
     if (!user.ldaIds || user.ldaIds.length === 0) {
       return NextResponse.json({ error: "No LDA access" }, { status: 403 });
     }
-    
-    const records = await prisma.media.findMany({
-      where: {
-        localDevelopmentAgencyId: { in: user.ldaIds }
-      },
-      include: {
-        localDevelopmentAgency: {
-          include: {
-            focusAreas: true,
-            developmentStage: true
-          }
-        },
-        createdBy: true,
-        mediaSourceType: true,
+
+    // Check if LDA user has access to the requested entities
+    if (ldaId) {
+      const requestedLdaId = parseInt(ldaId);
+      if (!user.ldaIds.includes(requestedLdaId)) {
+        return NextResponse.json({ error: "Access denied to this LDA" }, { status: 403 });
       }
-    });
-    return NextResponse.json(records);
-  } else {
-    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
+    if (ldaFormId) {
+      // Check if the form belongs to an LDA the user has access to
+      const form = await prisma.localDevelopmentAgencyForm.findUnique({
+        where: { id: parseInt(ldaFormId) },
+        select: { localDevelopmentAgencyId: true }
+      });
+      
+      if (!form || !user.ldaIds.includes(form.localDevelopmentAgencyId)) {
+        return NextResponse.json({ error: "Access denied to this LDA form" }, { status: 403 });
+      }
+    }
+
+    // LDA users cannot access fund or funder media
+    if (fundId || funderId) {
+      return NextResponse.json({ error: "Access denied to fund/funder media" }, { status: 403 });
+    }
   }
+
+  // Build where clause with AND logic - all provided filters must match
+  const whereClause: {
+    localDevelopmentAgencyId?: number;
+    localDevelopmentAgencyFormId?: number;
+    fundId?: number;
+    funderId?: number;
+  } = {};
+  
+  if (ldaId) {
+    whereClause.localDevelopmentAgencyId = parseInt(ldaId);
+  }
+  if (ldaFormId) {
+    whereClause.localDevelopmentAgencyFormId = parseInt(ldaFormId);
+  }
+  if (fundId) {
+    whereClause.fundId = parseInt(fundId);
+  }
+  if (funderId) {
+    whereClause.funderId = parseInt(funderId);
+  }
+
+  const records = await prisma.media.findMany({
+    where: whereClause,
+    include: {
+      localDevelopmentAgency: {
+        include: {
+          focusAreas: true,
+          developmentStage: true
+        }
+      },
+      createdBy: true,
+      mediaSourceType: true,
+    }
+  });
+  return NextResponse.json(records);
 }
 
 
 export async function POST(req: NextRequest) {
   // Get the current user from the session
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
+  const user = session?.user || null;
   
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 })
   }
 
   const form = await req.formData()
@@ -111,20 +133,60 @@ export async function POST(req: NextRequest) {
 
   const title = form.get("title") as string
   const description = form.get("description") as string
-  const localDevelopmentAgencyId = parseInt(form.get("localDevelopmentAgencyId") as string)
   const mediaSourceTypeId = form.get("mediaSourceTypeId") as string
   const mediaType = form.get("mediaType") as MediaType
 
-  // Validate LDA ID
-  if (isNaN(localDevelopmentAgencyId)) {
-    return NextResponse.json({ error: "Invalid LDA ID" }, { status: 400 })
+  // Get entity IDs from form data
+  const ldaIdStr = form.get("ldaId") as string
+  const ldaFormIdStr = form.get("ldaFormId") as string
+  const fundIdStr = form.get("fundId") as string
+  const funderIdStr = form.get("funderId") as string
+
+  const ldaId = ldaIdStr ? parseInt(ldaIdStr) : null
+  const ldaFormId = ldaFormIdStr ? parseInt(ldaFormIdStr) : null
+  const fundId = fundIdStr ? parseInt(fundIdStr) : null
+  const funderId = funderIdStr ? parseInt(funderIdStr) : null
+
+  // Validate that at least one entity link is provided
+  if (!ldaId && !ldaFormId && !fundId && !funderId) {
+    return NextResponse.json({ error: "At least one entity link (ldaId, ldaFormId, fundId, funderId) is required" }, { status: 400 })
   }
 
-  // Permission check: Can view LDA
-  if (!permissions.canViewLDA(session.user, localDevelopmentAgencyId)) {
+  const isLDAUser = permissions.isLDAUser(user);
+  const hasFullAccess = permissions.isSuperUser(user) || permissions.isAdmin(user) || permissions.isProgrammeOfficer(user);
+
+  // Permission checks
+  if (isLDAUser) {
+    // LDA users cannot add media to Fund or Funder
+    if (fundId || funderId) {
+      return NextResponse.json({ error: "Permission denied: LDA users cannot add media to funds or funders" }, { status: 403 });
+    }
+
+    if (!user.ldaIds || user.ldaIds.length === 0) {
+      return NextResponse.json({ error: "No LDA access" }, { status: 403 });
+    }
+
+    // Check LDA access
+    if (ldaId && !user.ldaIds.includes(ldaId)) {
+      return NextResponse.json({ error: "Access denied to this LDA" }, { status: 403 });
+    }
+
+    // Check LDA Form access
+    if (ldaFormId) {
+      const formRecord = await prisma.localDevelopmentAgencyForm.findUnique({
+        where: { id: ldaFormId },
+        select: { localDevelopmentAgencyId: true }
+      });
+      
+      if (!formRecord || !user.ldaIds.includes(formRecord.localDevelopmentAgencyId)) {
+        return NextResponse.json({ error: "Access denied to this LDA form" }, { status: 403 });
+      }
+    }
+  } else if (!hasFullAccess) {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
+  // Upload file to ImageKit
   const fileBuffer = Buffer.from(await file.arrayBuffer())
   const fileBase64 = fileBuffer.toString("base64")
   const fileName = file.name
@@ -134,14 +196,43 @@ export async function POST(req: NextRequest) {
     fileName: fileName,
   })
 
-  const data = {
+  // Build media data with appropriate entity links
+  const data: {
+    title: string;
+    description: string;
+    filePath: string;
+    mediaType: MediaType;
+    mediaSourceType?: { connect: { id: number } };
+    createdBy: { connect: { id: number } };
+    localDevelopmentAgency?: { connect: { id: number } };
+    localDevelopmentAgencyForm?: { connect: { id: number } };
+    fund?: { connect: { id: number } };
+    funder?: { connect: { id: number } };
+  } = {
     title: title,
     description: description,
-    localDevelopmentAgency: { connect: { id: localDevelopmentAgencyId } },
     filePath: uploadResponse.filePath,
     mediaType: mediaType,
-    mediaSourceType: { connect: { id: parseInt(mediaSourceTypeId) } },
-    createdBy: { connect: { id: parseInt(session.user.id) } }
+    createdBy: { connect: { id: parseInt(user.id as string) } }
+  }
+
+  // Add media source type if provided
+  if (mediaSourceTypeId) {
+    data.mediaSourceType = { connect: { id: parseInt(mediaSourceTypeId) } }
+  }
+
+  // Add entity connections
+  if (ldaId) {
+    data.localDevelopmentAgency = { connect: { id: ldaId } }
+  }
+  if (ldaFormId) {
+    data.localDevelopmentAgencyForm = { connect: { id: ldaFormId } }
+  }
+  if (fundId) {
+    data.fund = { connect: { id: fundId } }
+  }
+  if (funderId) {
+    data.funder = { connect: { id: funderId } }
   }
 
   const record = await prisma.media.create({
