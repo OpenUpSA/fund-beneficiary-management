@@ -1,6 +1,6 @@
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { LDATabs } from "@/components/ldas/tabs"
 import { FormDialog } from "@/components/ldas/form"
+import { DynamicBreadcrumb } from "@/components/ui/dynamic-breadcrumb"
 import { revalidateTag } from "next/cache"
 import 'leaflet/dist/leaflet.css';
 import { 
@@ -46,16 +46,25 @@ export default async function Layout({ children, params }: LDALayoutProps) {
     }
   }
 
+  // Tab label mapping for breadcrumbs
+  const tabLabels = {
+    'overview': 'Overview',
+    'operations': 'Operations',
+    'contact': 'Contact List',
+    'funding-reports': 'Applications & Reports',
+    'documents': 'Documents',
+    'media': 'Media'
+  }
+
   return (
     <div>
-      <BreadcrumbNav
-        className="mb-4"
-        links={[
-          { label: "LDAs", href: "/dashboard/ldas" },
-          { label: lda.name, isCurrent: true }
-        ]}
+      <DynamicBreadcrumb
+        basePath="/dashboard/ldas"
+        entityName={lda.name}
+        entityPath={`/dashboard/ldas/${lda_id}`}
+        tabLabels={tabLabels}
       />
-
+      
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{lda.name}</h1>
         <div className="space-x-2">

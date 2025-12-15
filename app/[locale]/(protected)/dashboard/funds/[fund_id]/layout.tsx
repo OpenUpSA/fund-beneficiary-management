@@ -1,6 +1,6 @@
-import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { FundsTabs } from "@/components/funds/tabs"
 import { FormDialog } from '@/components/funds/form'
+import { DynamicBreadcrumb } from "@/components/ui/dynamic-breadcrumb"
 import { revalidateTag } from "next/cache"
 import { 
   fetchFocusAreas, 
@@ -39,16 +39,25 @@ export default async function Layout({ children, params }: FundLayoutProps) {
     revalidateTag('funds')
   }
 
+  // Tab label mapping for breadcrumbs
+  const tabLabels = {
+    'overview': 'Overview',
+    'funders': 'Funders',
+    'ldas': 'Funded LDAs',
+    'applications': 'Applications & Reports',
+    'documents': 'Documents',
+    'media': 'Media'
+  }
+
   return (
     <div>
-      <BreadcrumbNav 
-        className="mb-4"
-        links={[
-          { label: "Funds", href: "/dashboard/funds" },
-          { label: fund.name, isCurrent: true }
-        ]}
+      <DynamicBreadcrumb
+        basePath="/dashboard/funds"
+        entityName={fund.name}
+        entityPath={`/dashboard/funds/${fund_id}`}
+        tabLabels={tabLabels}
       />
-
+      
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">{fund.name}</h1>
         <div className="space-x-2">

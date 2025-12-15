@@ -1,6 +1,8 @@
 "use client"
 
 import { TabNav, TabItem } from "@/components/navigation/tab-nav"
+import { useSearchParams } from "next/navigation"
+import { preserveReferrer } from "@/lib/breadcrumb-utils"
 
 interface FundsTabsProps {
   fundId: string
@@ -8,36 +10,38 @@ interface FundsTabsProps {
 }
 
 export function FundsTabs({ fundId, className }: FundsTabsProps) {
+  const searchParams = useSearchParams()
+  
   const tabs: TabItem[] = [
     {
       label: "Overview",
       value: "overview",
-      href: `/dashboard/funds/${fundId}/overview`
+      href: preserveReferrer(`/dashboard/funds/${fundId}/overview`, searchParams)
     },
     {
       label: "Funders",
       value: "funders",
-      href: `/dashboard/funds/${fundId}/funders`
+      href: preserveReferrer(`/dashboard/funds/${fundId}/funders`, searchParams)
     },
     {
       label: "Funded LDAs",
       value: "ldas",
-      href: `/dashboard/funds/${fundId}/ldas`
+      href: preserveReferrer(`/dashboard/funds/${fundId}/ldas`, searchParams)
     },
     {
       label: "Applications & Reports",
       value: "applications",
-      href: `/dashboard/funds/${fundId}/applications`
+      href: preserveReferrer(`/dashboard/funds/${fundId}/applications`, searchParams)
     },
     {
       label: "Documents",
       value: "documents",
-      href: `/dashboard/funds/${fundId}/documents`
+      href: preserveReferrer(`/dashboard/funds/${fundId}/documents`, searchParams)
     },
     {
       label: "Media",
       value: "media",
-      href: `/dashboard/funds/${fundId}/media`
+      href: preserveReferrer(`/dashboard/funds/${fundId}/media`, searchParams)
     }
   ]
   
