@@ -1,6 +1,8 @@
 "use client"
 
 import { TabNav, TabItem } from "@/components/navigation/tab-nav"
+import { useSearchParams } from "next/navigation"
+import { preserveReferrer } from "@/lib/breadcrumb-utils"
 
 interface FunderTabsProps {
   funderId: string
@@ -8,36 +10,37 @@ interface FunderTabsProps {
 }
 
 export function FunderTabs({ funderId, className }: FunderTabsProps) {
+  const searchParams = useSearchParams()
   const tabs: TabItem[] = [
     {
       label: "Overview",
       value: "overview",
-      href: `/dashboard/funders/${funderId}/overview`
+      href: preserveReferrer(`/dashboard/funders/${funderId}/overview`, searchParams)
     },
     {
       label: "Funds",
       value: "funds",
-      href: `/dashboard/funders/${funderId}/funds`
+      href: preserveReferrer(`/dashboard/funders/${funderId}/funds`, searchParams)
     },
     {
       label: "Funded LDAs",
       value: "funded",
-      href: `/dashboard/funders/${funderId}/funded`
+      href: preserveReferrer(`/dashboard/funders/${funderId}/funded`, searchParams)
     },
     {
       label: "Applications & Reports",
       value: "applications",
-      href: `/dashboard/funders/${funderId}/applications`
+      href: preserveReferrer(`/dashboard/funders/${funderId}/applications`, searchParams)
     },
     {
       label: "Documents",
       value: "documents",
-      href: `/dashboard/funders/${funderId}/documents`
+      href: preserveReferrer(`/dashboard/funders/${funderId}/documents`, searchParams)
     },
     {
       label: "Media",
       value: "media",
-      href: `/dashboard/funders/${funderId}/media`
+      href: preserveReferrer(`/dashboard/funders/${funderId}/media`, searchParams)
     }
   ]
   

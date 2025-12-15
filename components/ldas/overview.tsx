@@ -87,7 +87,12 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
               <span className="text-slate-900">Project funders:</span>
               <div>
                 <Suspense fallback={<FundListSkeleton />}>
-                  <AsyncFundList fundsPromise={funds} canViewFunds={canViewFunds} />
+                  <AsyncFundList 
+                    fundsPromise={funds} 
+                    canViewFunds={canViewFunds}
+                    ldaId={lda.id}
+                    ldaName={lda.name}
+                  />
                 </Suspense>
               </div>
             </div>

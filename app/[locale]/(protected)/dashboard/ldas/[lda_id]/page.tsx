@@ -18,10 +18,25 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 
 interface LDAPageProps {
   params: { lda_id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default async function Page({ params }: LDAPageProps) {
+export default async function Page({ params, searchParams }: LDAPageProps) {
   const { lda_id } = params
-  // Redirect to the overview tab by default
-  redirect(`/dashboard/ldas/${lda_id}/overview`)
+  
+  // Preserve query parameters (including referrer info) when redirecting
+  const queryString = new URLSearchParams(
+    Object.entries(searchParams).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = Array.isArray(value) ? value[0] : value
+      }
+      return acc
+    }, {} as Record<string, string>)
+  ).toString()
+  
+  const redirectUrl = queryString 
+    ? `/dashboard/ldas/${lda_id}/overview?${queryString}`
+    : `/dashboard/ldas/${lda_id}/overview`
+  
+  redirect(redirectUrl)
 }

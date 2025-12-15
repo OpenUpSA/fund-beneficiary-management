@@ -1,9 +1,9 @@
 import { getTranslations } from "next-intl/server"
+import { OperationsView } from "@/components/ldas/operations"
 import { fetchLocalDevelopmentAgency } from "@/lib/data"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 import { redirect } from "next/navigation"
-import { OperationsView } from "@/components/ldas/operations"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -32,7 +32,7 @@ export default async function OperationsPage({ params }: OperationsPageProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       <OperationsView lda={lda} />
     </div>
   )

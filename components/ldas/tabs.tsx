@@ -1,6 +1,8 @@
 "use client"
 
 import { TabNav, TabItem } from "@/components/navigation/tab-nav"
+import { useSearchParams } from "next/navigation"
+import { preserveReferrer } from "@/lib/breadcrumb-utils"
 
 interface LDATabsProps {
   ldaId: string
@@ -8,36 +10,37 @@ interface LDATabsProps {
 }
 
 export function LDATabs({ ldaId, className }: LDATabsProps) {
+  const searchParams = useSearchParams()
   const tabs: TabItem[] = [
     {
       label: "Overview",
       value: "overview",
-      href: `/dashboard/ldas/${ldaId}/overview`
+      href: preserveReferrer(`/dashboard/ldas/${ldaId}/overview`, searchParams)
     },
     {
       label: "Operations",
       value: "operations",
-      href: `/dashboard/ldas/${ldaId}/operations`
+      href: preserveReferrer(`/dashboard/ldas/${ldaId}/operations`, searchParams)
     },
     {
       label: "Funding & Reports",
       value: "funding-reports",
-      href: `/dashboard/ldas/${ldaId}/funding-reports`
+      href: preserveReferrer(`/dashboard/ldas/${ldaId}/funding-reports`, searchParams)
     },
     {
       label: "Contact List",
       value: "contact",
-      href: `/dashboard/ldas/${ldaId}/contact`
+      href: preserveReferrer(`/dashboard/ldas/${ldaId}/contact`, searchParams)
     },
     {
       label: "Documents",
       value: "documents",
-      href: `/dashboard/ldas/${ldaId}/documents`
+      href: preserveReferrer(`/dashboard/ldas/${ldaId}/documents`, searchParams)
     },
     {
       label: "Media",
       value: "media",
-      href: `/dashboard/ldas/${ldaId}/media`
+      href: preserveReferrer(`/dashboard/ldas/${ldaId}/media`, searchParams)
     }
   ]
   

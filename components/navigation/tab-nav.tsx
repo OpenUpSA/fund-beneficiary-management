@@ -26,8 +26,9 @@ export function TabNav({ tabs, className, baseUrl = "" }: TabNavProps) {
   const findActiveTab = () => {
     // Check if any tab value is present in the pathname
     for (const tab of tabs) {
-      // Extract the tab segment from the href
-      const tabSegment = tab.href.split('/').filter(Boolean).pop() || ''
+      // Extract the tab segment from the href (strip query params first)
+      const hrefPath = tab.href.split('?')[0] // Remove query parameters
+      const tabSegment = hrefPath.split('/').filter(Boolean).pop() || ''
       
       // Check if this segment exists in the pathname
       if (pathname.includes(`/${tabSegment}/`) || pathname.endsWith(`/${tabSegment}`)) {
