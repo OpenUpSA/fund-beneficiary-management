@@ -35,9 +35,12 @@ export default async function Page() {
     redirect('/404')
   }
 
-  const funders = await fetchFunders()
-  const focusAreas = await fetchFocusAreas()
-  const provinces = await fetchProvinces()
+  // Fetch all data in parallel for better performance
+  const [funders, focusAreas, provinces] = await Promise.all([
+    fetchFunders(),
+    fetchFocusAreas(),
+    fetchProvinces()
+  ])
 
   const dataChanged = async () => {
     "use server"

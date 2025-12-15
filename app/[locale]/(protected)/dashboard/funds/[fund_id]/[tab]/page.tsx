@@ -50,7 +50,31 @@ export default async function Page({ params }: FundTabPageProps) {
     redirect(`/dashboard/funds/${fund_id}/overview`)
   }
 
-  const fund = await fetchFund(fund_id);
+  // Fetch all data in parallel for better performance
+  const [
+    fund,
+    allFunders,
+    allLDAs,
+    ldaForms,
+    formTemplates,
+    formStatuses,
+    fundDocuments,
+    fundMedia,
+    mediaSourceTypes,
+    users
+  ] = await Promise.all([
+    fetchFund(fund_id),
+    fetchFunders(),
+    fetchLocalDevelopmentAgencies(),
+    fetchFundLDAForms(fund_id),
+    fetchFormTemplates(),
+    fetchFormStatuses(),
+    fetchFundDocuments(fund_id),
+    fetchFundMedia(fund_id),
+    fetchMediaSourceTypes(),
+    fetchUsers()
+  ])
+  
   const fundFunders = fund.fundFunders || [];
   const fundLocalDevelopmentAgencies = fund.fundLocalDevelopmentAgencies || [];
   
@@ -58,23 +82,6 @@ export default async function Page({ params }: FundTabPageProps) {
   const allocatedAmount = fundLocalDevelopmentAgencies.reduce((sum, lda) => {
     return sum + (lda.amount ? Number(lda.amount) : 0)
   }, 0)
-  
-  // Fetch all funders and LDAs for linking dialogs
-  const allFunders = await fetchFunders()
-  const allLDAs = await fetchLocalDevelopmentAgencies()
-  
-  // Fetch form-related data
-  const ldaForms = await fetchFundLDAForms(fund_id)
-  const formTemplates = await fetchFormTemplates()
-  const formStatuses = await fetchFormStatuses()
-  
-  // Fetch documents for this fund
-  const fundDocuments = await fetchFundDocuments(fund_id)
-  
-  // Fetch media for this fund
-  const fundMedia = await fetchFundMedia(fund_id)
-  const mediaSourceTypes = await fetchMediaSourceTypes()
-  const users = await fetchUsers()
 
   const dataChanged = async () => {
     "use server"

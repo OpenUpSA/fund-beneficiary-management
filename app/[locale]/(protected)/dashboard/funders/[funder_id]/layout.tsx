@@ -26,9 +26,13 @@ export default async function Layout({ children, params }: FunderLayoutProps) {
   }
 
   const { funder_id } = params
-  const funder = await fetchFunder(funder_id)
-  const focusAreas = await fetchFocusAreas()
-  const provinces = await fetchProvinces()
+  
+  // Fetch all data in parallel for better performance
+  const [funder, focusAreas, provinces] = await Promise.all([
+    fetchFunder(funder_id),
+    fetchFocusAreas(),
+    fetchProvinces()
+  ])
 
   const dataChanged = async () => {
     "use server"
