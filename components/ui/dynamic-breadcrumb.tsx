@@ -43,22 +43,29 @@ export function DynamicBreadcrumb({
       { label: referrerLabel, href: referrerBasePath },
       { label: decodeURIComponent(fromName), href: `${referrerBasePath}/${fromId}` }
     )
+    
+    // When coming from a referrer, skip the intermediate list page (e.g., "Funds")
+    // and go directly to: LDAs > LDA Name > Fund Name > Tab
+    links.push(
+      { label: entityName, href: entityPath },
+      { label: tabLabel, isCurrent: true }
+    )
+  } else {
+    // No referrer: show normal breadcrumbs: Funds > Fund Name > Tab
+    const pathSegment = basePath.split('/').pop() || ''
+    const baseLabelMap: Record<string, string> = {
+      'funds': 'Funds',
+      'funders': 'Funders',
+      'ldas': 'LDAs'
+    }
+    const baseLabel = baseLabelMap[pathSegment] || pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1)
+    
+    links.push(
+      { label: baseLabel, href: basePath },
+      { label: entityName, href: entityPath },
+      { label: tabLabel, isCurrent: true }
+    )
   }
-  
-  // Add current entity breadcrumbs
-  const pathSegment = basePath.split('/').pop() || ''
-  const baseLabelMap: Record<string, string> = {
-    'funds': 'Funds',
-    'funders': 'Funders',
-    'ldas': 'LDAs'
-  }
-  const baseLabel = baseLabelMap[pathSegment] || pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1)
-  
-  links.push(
-    { label: baseLabel, href: basePath },
-    { label: entityName, href: entityPath },
-    { label: tabLabel, isCurrent: true }
-  )
 
   return <BreadcrumbNav className="mb-4" links={links} />
 }

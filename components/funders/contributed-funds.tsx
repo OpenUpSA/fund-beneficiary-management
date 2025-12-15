@@ -12,6 +12,7 @@ import { format } from "date-fns"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { DynamicIcon } from "@/components/dynamicIcon"
+import { buildReferrerUrl } from "@/lib/breadcrumb-utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -260,7 +261,14 @@ export const ContributedFunds: React.FC<ContributedFundsProps> = ({
     return (
       <TableRow key={ff.id}>
         <TableCell className="p-3">
-          <Link href={`/dashboard/funds/${ff.fund.id}/overview`} className="font-medium hover:underline">
+          <Link 
+            href={buildReferrerUrl(`/dashboard/funds/${ff.fund.id}/overview`, {
+              type: 'funder',
+              id: funderId,
+              name: funderName
+            })}
+            className="font-medium hover:underline"
+          >
             {ff.fund.name}
           </Link>
         </TableCell>
@@ -340,7 +348,7 @@ export const ContributedFunds: React.FC<ContributedFundsProps> = ({
         </TableCell>
       </TableRow>
     )
-  }), [])
+  }), [funderId, funderName])
 
   return (
     <>
