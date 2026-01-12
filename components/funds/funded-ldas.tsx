@@ -33,6 +33,7 @@ import { AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { FundedLDAs } from "@/types/models"
 import { FundLDAStatus } from "@prisma/client"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'fund' | 'total' | 'status' | 'startDate' | 'endDate' | null
@@ -293,7 +294,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
 
   return (
     <>
-      <h2 className="text-xl font-semibold mt-4">LDAs receiving funds</h2>
+      <h2 className="text-xl font-semibold mt-4">{LDA_TERMINOLOGY.shortNamePlural} receiving funds</h2>
       
       <div className="space-y-4 mt-4">
         <div className="flex items-center justify-between">
@@ -302,7 +303,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
               <Input
                 type="search"
                 id="search"
-                placeholder="Filter funders..."
+                placeholder={`Filter ${LDA_TERMINOLOGY.shortNamePlural.toLowerCase()}...`}
                 className="pr-8 h-9"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -398,7 +399,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
                   {filteredAndSortedLDAs.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={funds && funds.length > 0 ? 7 : 6} className="h-24 text-center text-muted-foreground">
-                        No LDAs found
+                        No {LDA_TERMINOLOGY.shortNamePlural} found
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -472,7 +473,7 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
         </Card>
         
         <div className="text-sm text-muted-foreground">
-          Showing {filteredAndSortedLDAs.length} of {fundedLDAs.length} LDAs
+          Showing {filteredAndSortedLDAs.length} of {fundedLDAs.length} {LDA_TERMINOLOGY.shortNamePlural}
         </div>
       </div>
 

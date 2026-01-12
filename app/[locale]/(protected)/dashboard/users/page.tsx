@@ -19,6 +19,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -77,7 +78,7 @@ export default function Page() {
                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead className="w-[400px]">LDA</TableHead>
+                  <TableHead className="w-[400px]">{LDA_TERMINOLOGY.shortName}</TableHead>
                   <TableHead>Approved</TableHead>
                   <TableHead className="text-nowrap">Created At</TableHead>
                 </TableRow>
@@ -91,7 +92,7 @@ export default function Page() {
                       </Link>
                     </TableCell>
                     <TableCell className="text-nowrap">
-                      {tC(`roles.${user.role}`)}
+                      {user.role === 'USER' ? LDA_TERMINOLOGY.userRole : tC(`roles.${user.role}`)}
                     </TableCell>
                     <TableCell className="text-nowrap">
                       {user.email}

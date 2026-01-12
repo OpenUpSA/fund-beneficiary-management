@@ -16,6 +16,7 @@ import { FilterOption } from "../ui/filter-button"
 import { FormDialog } from "@/components/funds/form"
 import { Funder } from "@prisma/client"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FilteredFundsProps {
   funds: LimitedFundModel[]
@@ -356,7 +357,7 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
                       </div>
                     </TableHead>
                     <TableHead className="h-12 text-nowrap pl-3">
-                      <span className="font-medium">LDAs</span>
+                      <span className="font-medium">{LDA_TERMINOLOGY.shortNamePlural}</span>
                     </TableHead>
                     <TableHead className="h-12 pl-3">
                       <span className="font-medium">Funders</span>

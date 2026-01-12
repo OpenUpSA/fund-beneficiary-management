@@ -40,6 +40,7 @@ import { DocumentTypeEnum } from "@/types/formSchemas"
 import { format } from "date-fns"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Calendar } from "../ui/calendar"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 const getFormSchema = (document?: Document) => {
   return z.object({
@@ -192,7 +193,7 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
                 name="localDevelopmentAgencyId"
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full">
-                    <FormLabel>Local Development Agency</FormLabel>
+                    <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
                     <Select value={field.value?.toString()} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>

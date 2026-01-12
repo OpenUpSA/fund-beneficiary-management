@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useRouter } from 'next/navigation'
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface ManageTabProps {
   ldaId: number
@@ -30,7 +31,7 @@ export function ManageTab({ ldaId, ldaName, callback }: ManageTabProps) {
 
   const handleDeleteLDA = async () => {
     setIsDeleting(true)
-    const toastId = toast.loading('Deleting LDA...')
+    const toastId = toast.loading(`Deleting ${LDA_TERMINOLOGY.shortName}...`)
 
     try {
       const response = await fetch(`/api/lda/${ldaId}`, {
@@ -39,17 +40,17 @@ export function ManageTab({ ldaId, ldaName, callback }: ManageTabProps) {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to delete LDA')
+        throw new Error(errorData.message || `Failed to delete ${LDA_TERMINOLOGY.shortName}`)
       }
 
       toast.dismiss(toastId)
-      toast.success('LDA deleted successfully')
+      toast.success(`${LDA_TERMINOLOGY.shortName} deleted successfully`)
       callback()
       // Redirect to LDAs dashboard after successful deletion
       router.push('/dashboard/ldas')
     } catch (error) {
       toast.dismiss(toastId)
-      toast.error(error instanceof Error ? error.message : 'Failed to delete LDA')
+      toast.error(error instanceof Error ? error.message : `Failed to delete ${LDA_TERMINOLOGY.shortName}`)
     } finally {
       setIsDeleting(false)
     }
@@ -64,14 +65,14 @@ export function ManageTab({ ldaId, ldaName, callback }: ManageTabProps) {
             Danger Zone
           </CardTitle>
           <CardDescription>
-            Irreversible actions that will permanently affect this LDA. Please proceed with caution.
+            Irreversible actions that will permanently affect this {LDA_TERMINOLOGY.shortName}. Please proceed with caution.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="p-4 border border-red-200 rounded-lg bg-red-50">
-            <h4 className="font-semibold text-red-900 mb-2">Delete LDA</h4>
+            <h4 className="font-semibold text-red-900 mb-2">Delete {LDA_TERMINOLOGY.shortName}</h4>
             <p className="text-sm text-red-700 mb-4">
-              This action will permanently delete the LDA &quot;{ldaName}&quot; and all associated data including:
+              This action will permanently delete the {LDA_TERMINOLOGY.shortName} &quot;{ldaName}&quot; and all associated data including:
             </p>
             <ul className="text-sm text-red-700 list-disc list-inside mb-4 space-y-1">
               <li>All documents and media files</li>
@@ -92,7 +93,7 @@ export function ManageTab({ ldaId, ldaName, callback }: ManageTabProps) {
                   disabled={isDeleting}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete this LDA
+                  Delete this {LDA_TERMINOLOGY.shortName}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="max-w-md">
@@ -101,7 +102,7 @@ export function ManageTab({ ldaId, ldaName, callback }: ManageTabProps) {
                     Are you sure?
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-gray-600 mt-2">
-                    This action cannot be undone. This will permanently delete the LDA and all associated data from the system.
+                    This action cannot be undone. This will permanently delete the {LDA_TERMINOLOGY.shortName} and all associated data from the system.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex gap-3 mt-6">

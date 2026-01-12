@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog"
 import { PlusIcon, SettingsIcon } from "lucide-react"
 import { useState, useCallback } from "react"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 
 // Import tab components
@@ -171,7 +172,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
       registrationStatus: lda?.registrationStatus ?? 'not_registered', 
       registrationCode: lda?.registrationCode ?? '',
       registrationDate: lda?.registrationDate ? new Date(lda.registrationDate) : undefined,
-      focusAreas: lda ? lda.focusAreas.map(fa => fa.id) : [],
+      focusAreas: lda?.focusAreas?.map(fa => fa.id) ?? [],
       developmentStageId: lda?.developmentStageId?.toString() ?? undefined,
       programmeOfficerId: lda?.programmeOfficerId?.toString() ?? undefined,
       organisationStatus: lda?.organisationStatus ?? 'active',
@@ -205,7 +206,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
 
     try {
       if (lda) {
-        toastId = toast.loading('Updating LDA...')
+        toastId = toast.loading(LDA_TERMINOLOGY.updatingMessage)
         const response = await fetch(`/api/lda/${lda.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -214,14 +215,14 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         
         if (!response.ok) {
           const errorData = await response.json()
-          throw new Error(errorData.error || 'Failed to update LDA')
+          throw new Error(errorData.error || LDA_TERMINOLOGY.updateError)
         }
         
         toast.dismiss(toastId)
-        toast.success('LDA updated successfully')
+        toast.success(LDA_TERMINOLOGY.updatedSuccess)
         callback(lda.id)
       } else {
-        toastId = toast.loading('Creating new LDA...')
+        toastId = toast.loading(LDA_TERMINOLOGY.creatingMessage)
         const response = await fetch(`/api/lda`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -230,11 +231,11 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         
         if (!response.ok) {
           const errorData = await response.json()
-          throw new Error(errorData.error || 'Failed to create LDA')
+          throw new Error(errorData.error || LDA_TERMINOLOGY.createError)
         }
 
         toast.dismiss(toastId)
-        toast.success('LDA created successfully')
+        toast.success(LDA_TERMINOLOGY.createdSuccess)
         callback()
       }
       
@@ -262,17 +263,17 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         <Button className="gap-2 items-center" size="default">
           {lda ? <>
               <SettingsIcon className="h-4 w-4" />
-              <span>Manage LDA</span>
+              <span>{LDA_TERMINOLOGY.manageLabel}</span>
             </>
             : <>
               <PlusIcon className="h-4 w-4" />
-              <span>Add LDA</span>
+              <span>{LDA_TERMINOLOGY.addLabel}</span>
             </>}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
         <DialogHeader className="p-5 border-b">
-          <DialogTitle>{lda ? "Manage LDA" : "Create LDA"}</DialogTitle>
+          <DialogTitle>{lda ? LDA_TERMINOLOGY.manageLabel : LDA_TERMINOLOGY.createLabel}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
@@ -351,7 +352,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
             </div>
             <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
               <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
-              <Button type="submit" className="sm:order-2 order-1">{lda ? "Save and close" : "Create LDA"}</Button>
+              <Button type="submit" className="sm:order-2 order-1">{lda ? "Save and close" : LDA_TERMINOLOGY.createLabel}</Button>
             </DialogFooter>
           </form>
         </Form>

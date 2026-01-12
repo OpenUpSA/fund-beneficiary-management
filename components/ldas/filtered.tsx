@@ -15,6 +15,7 @@ import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "@/components/ldas/form"
 // import { usePermissions } from "@/hooks/use-permissions"
 import React, { useCallback, useMemo, useState, useDeferredValue, startTransition } from "react"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 const getInitials = (name: string) => name.split(" ").map(w => w[0]).join("")
 const getShortName = (name: string) => name.split(" ").map(w => w[0]).join("")
@@ -249,7 +250,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
               <Input
                 type="search"
                 id="search"
-                placeholder="Filter LDAs..."
+                placeholder={LDA_TERMINOLOGY.filterPlaceholder}
                 className="pr-8 h-9"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}

@@ -38,6 +38,7 @@ import { LocalDevelopmentAgency, Media } from "@prisma/client"
 import { useTranslations } from "next-intl"
 import { MediaTypeEnum } from "@/types/formSchemas"
 import { MediaSourceType } from "@prisma/client"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 const getFormSchema = (media?: Media, hasEntityContext?: boolean) => {
   return z.object({
@@ -208,7 +209,7 @@ export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, c
                     name="localDevelopmentAgencyId"
                     render={({ field }) => (
                       <FormItem className="flex-1 w-full">
-                        <FormLabel>Local Development Agency</FormLabel>
+                        <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
                         <Select value={field.value?.toString()} onValueChange={field.onChange}>
                           <FormControl>
                             <SelectTrigger>

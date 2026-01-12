@@ -30,6 +30,7 @@ import { format } from "date-fns"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { FundedLDAs } from "@/types/models"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface LDA {
   id: number
@@ -137,10 +138,10 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
       })
 
       if (!response.ok) {
-        throw new Error(isEditing ? "Failed to update funding" : "Failed to link LDA")
+        throw new Error(isEditing ? "Failed to update funding" : LDA_TERMINOLOGY.linkError)
       }
 
-      toast.success(isEditing ? "Funding updated successfully" : "LDA linked successfully")
+      toast.success(isEditing ? "Funding updated successfully" : LDA_TERMINOLOGY.linkedSuccess)
       setOpen(false)
       
       // Reset form
@@ -156,7 +157,7 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
         callback()
       }
     } catch {
-      toast.error(editingLDA ? "Failed to update funding" : "Failed to link LDA to fund")
+      toast.error(editingLDA ? "Failed to update funding" : LDA_TERMINOLOGY.linkError)
     } finally {
       setLoading(false)
     }
@@ -168,13 +169,13 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
         <DialogTrigger asChild>
           <Button size="sm" className="h-9 bg-gray-900 hover:bg-gray-800 text-white">
             <PlusIcon className="h-4 w-4 mr-1" />
-            Link LDA
+            {LDA_TERMINOLOGY.linkLabel}
           </Button>
         </DialogTrigger>
       )}
       <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
         <DialogHeader className="p-5 border-b">
-          <DialogTitle>Link LDA to fund</DialogTitle>
+          <DialogTitle>{LDA_TERMINOLOGY.linkToFundLabel}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="flex-grow contents">
@@ -194,7 +195,7 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
 
               {/* LDA Selection */}
               <div className="space-y-2">
-                <Label htmlFor="lda">LDA Name</Label>
+                <Label htmlFor="lda">{LDA_TERMINOLOGY.nameLabel}</Label>
                 {editingLDA ? (
                   <div className="flex items-center justify-between h-10 w-full rounded-md border border-input bg-gray-100 px-3 py-2 text-sm">
                     <span>{editingLDA.localDevelopmentAgency.name}</span>
@@ -203,7 +204,7 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
                 ) : (
                   <Select value={selectedLDA} onValueChange={setSelectedLDA}>
                     <SelectTrigger id="lda">
-                      <SelectValue placeholder="Select an LDA" />
+                      <SelectValue placeholder={LDA_TERMINOLOGY.selectPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
                       {availableLDAs.map((lda) => (
@@ -218,7 +219,7 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Why has this LDA has been selected to receive these funds?</Label>
+                <Label htmlFor="description">Why has this {LDA_TERMINOLOGY.shortName} been selected to receive these funds?</Label>
                 <Textarea
                   id="description"
                   placeholder="Enter details here"
@@ -331,7 +332,7 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="sm:order-2 order-1">
-              {loading ? (editingLDA ? "Updating..." : "Linking...") : (editingLDA ? "Update Funding" : "Link LDA to fund")}
+              {loading ? (editingLDA ? "Updating..." : "Linking...") : (editingLDA ? "Update Funding" : LDA_TERMINOLOGY.linkToFundLabel)}
             </Button>
           </DialogFooter>
         </form>

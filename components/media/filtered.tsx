@@ -23,6 +23,7 @@ type SortableColumn = 'title' | 'mediaType' | 'createdAt' | 'mediaSourceType' | 
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { CustomDateFilter } from "@/components/ui/date-range-picker"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent } from "@/components/ui/card"
@@ -112,7 +113,7 @@ export function FilteredMedia({ media, dataChanged, lda, fund, funder, navigated
   const sourceTypeOptions: FilterOption[] = mediaSourceTypes?.map(({ id, title }) => ({ id: String(id), label: title })) || []
 
   const filterConfigs = [
-    !lda && ldaOptions.length > 0 ? { type: 'lda', label: 'LDA', options: ldaOptions } : null,
+    !lda && ldaOptions.length > 0 ? { type: 'lda', label: LDA_TERMINOLOGY.shortName, options: ldaOptions } : null,
     { type: 'type', label: 'Type', options: mediaTypeOptions },
     sourceTypeOptions.length > 0 ? { type: 'sourceType', label: 'Source', options: sourceTypeOptions } : null,
     !lda && periodOptions.length > 0 ? { type: 'period', label: 'Funding period', options: periodOptions } : null,

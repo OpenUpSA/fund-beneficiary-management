@@ -3,6 +3,7 @@
 import { TabNav, TabItem } from "@/components/navigation/tab-nav"
 import { useSearchParams } from "next/navigation"
 import { preserveReferrer } from "@/lib/breadcrumb-utils"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FundsTabsProps {
   fundId: string
@@ -24,7 +25,7 @@ export function FundsTabs({ fundId, className }: FundsTabsProps) {
       href: preserveReferrer(`/dashboard/funds/${fundId}/funders`, searchParams)
     },
     {
-      label: "Funded LDAs",
+      label: LDA_TERMINOLOGY.fundedLabel,
       value: "ldas",
       href: preserveReferrer(`/dashboard/funds/${fundId}/ldas`, searchParams)
     },
