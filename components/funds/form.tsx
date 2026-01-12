@@ -45,6 +45,7 @@ import { toast } from "sonner"
 import { Switch } from "@/components/ui/switch"
 import { useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 // Dynamically import Map component
 const Map = dynamic(
@@ -455,7 +456,7 @@ export function FormDialog({ fund, focusAreas, provinces, callback }: FormDialog
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="total_funded_amount">Total funded amount</SelectItem>
-                                  <SelectItem value="lda_funding_per_month">LDA funding per month</SelectItem>
+                                  <SelectItem value="lda_funding_per_month">{LDA_TERMINOLOGY.fundingPerMonth}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </FormItem>
@@ -467,7 +468,7 @@ export function FormDialog({ fund, focusAreas, provinces, callback }: FormDialog
                           name="defaultAmount"
                           render={({ field }) => (
                             <FormItem className="flex-1">
-                              <FormLabel>Default amount (per LDA)</FormLabel>
+                              <FormLabel>{LDA_TERMINOLOGY.defaultAmountLabel}</FormLabel>
                               <FormControl>
                                 <Input type="number" placeholder="R 0.00" {...field} />
                               </FormControl>

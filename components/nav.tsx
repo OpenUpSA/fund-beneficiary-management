@@ -25,6 +25,7 @@ import {
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/routing"
 import { useSession } from "next-auth/react"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export function Nav() {
   const tN = useTranslations('navigation')
@@ -57,7 +58,7 @@ export function Nav() {
         url: user?.role === 'USER' && user?.ldaIds?.length === 1
           ? `/dashboard/ldas/${user.ldaIds[0]}`
           : '/dashboard/ldas',
-        title: 'LDAs',
+        title: LDA_TERMINOLOGY.shortNamePlural,
         icon: MapPinHouse,
         requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']
       },

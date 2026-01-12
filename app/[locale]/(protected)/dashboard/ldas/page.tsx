@@ -13,6 +13,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const LDAMap = dynamic(
@@ -74,11 +75,11 @@ export default async function Page() {
       <BreadcrumbNav
         className="mb-4"
         links={[
-          { label: "LDAs", isCurrent: true }
+          { label: LDA_TERMINOLOGY.shortNamePlural, isCurrent: true }
         ]}
       />
       <div className="flex flex-wrap items-center justify-between mb-4">
-        <h1 className="text-xl md:text-2xl font-semibold">Local Development Agencies</h1>
+        <h1 className="text-xl md:text-2xl font-semibold">{LDA_TERMINOLOGY.fullNamePlural}</h1>
       </div>
       
       {/* Map Card */}

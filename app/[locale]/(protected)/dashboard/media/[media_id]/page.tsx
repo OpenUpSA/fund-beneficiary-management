@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { DownloadIcon } from "lucide-react"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -98,7 +99,7 @@ export default async function Page({ params, searchParams }: Props) {
                 <span>{media.mediaType}</span>
               </div>
               {media?.localDevelopmentAgency && <div className="flex justify-between">
-                <span className="font-medium">Local Development Agency:</span>
+                <span className="font-medium">{LDA_TERMINOLOGY.fullName}:</span>
                 <span>{media?.localDevelopmentAgency?.name}</span>
               </div>}
               <div className="flex justify-between">

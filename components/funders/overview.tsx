@@ -7,6 +7,7 @@ import { FocusArea } from "@prisma/client"
 import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import dynamic from "next/dynamic"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const FunderMap = dynamic(
@@ -86,7 +87,7 @@ export const Overview: React.FC<Props> = ({ funder, ldaCount = 0 }: Props) => {
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-slate-900">LDAs funded:</span>
+              <span className="text-slate-900">{LDA_TERMINOLOGY.shortNamePlural} funded:</span>
               <span>{ldaCount}</span>
             </div>
             
@@ -220,7 +221,7 @@ export const Overview: React.FC<Props> = ({ funder, ldaCount = 0 }: Props) => {
           <Card>
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
-                <p className="text-sm text-gray-500">LDAs funded</p>
+                <p className="text-sm text-gray-500">{LDA_TERMINOLOGY.shortNamePlural} funded</p>
                 <h3 className="text-2xl font-bold">{ldaCount}</h3>
                 <p className="text-sm text-gray-500">Active partnerships</p>
               </div>

@@ -2,6 +2,7 @@
 
 import { usePathname, useSearchParams } from "next/navigation"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface DynamicBreadcrumbProps {
   basePath: string // e.g., "/dashboard/funds"
@@ -37,7 +38,7 @@ export function DynamicBreadcrumb({
   // Add referrer breadcrumbs if present
   if (fromType && fromId && fromName) {
     const referrerBasePath = `/dashboard/${fromType}s`
-    const referrerLabel = fromType === 'lda' ? 'LDAs' : fromType === 'fund' ? 'Funds' : 'Funders'
+    const referrerLabel = fromType === 'lda' ? LDA_TERMINOLOGY.shortNamePlural : fromType === 'fund' ? 'Funds' : 'Funders'
     
     links.push(
       { label: referrerLabel, href: referrerBasePath },
@@ -56,7 +57,7 @@ export function DynamicBreadcrumb({
     const baseLabelMap: Record<string, string> = {
       'funds': 'Funds',
       'funders': 'Funders',
-      'ldas': 'LDAs'
+      'ldas': LDA_TERMINOLOGY.shortNamePlural
     }
     const baseLabel = baseLabelMap[pathSegment] || pathSegment.charAt(0).toUpperCase() + pathSegment.slice(1)
     

@@ -10,13 +10,14 @@ import {
 import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
   const t = await getTranslations({ locale, namespace: 'FunderPage' })
 
   return {
-    title: `${t('page title')} - Funded LDAs - ${tM('title')}`,
+    title: `${t('page title')} - ${LDA_TERMINOLOGY.fundedLabel} - ${tM('title')}`,
     description: tM('description'),
     other: {
       ...Sentry.getTraceData(),

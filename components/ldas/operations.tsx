@@ -1,6 +1,7 @@
 "use client"
 
 import { LocalDevelopmentAgencyFull } from "@/types/models"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 
 interface OperationsViewProps {
@@ -132,7 +133,7 @@ export function OperationsView({ lda }: OperationsViewProps) {
               </div>
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium text-[14px] mb-2 text-slate-900">What are the local and other fundraising strategies the LDA is implementing to raise funding?</h4>
+                  <h4 className="font-medium text-[14px] mb-2 text-slate-900">What are the local and other fundraising strategies the {LDA_TERMINOLOGY.shortName} is implementing to raise funding?</h4>
                   <p className="font-normal text-[14px] text-slate-500">
                   {lda.operations?.fundraisingStrategies || "Information not provided."}
                   </p>

@@ -1,4 +1,5 @@
 import { Role } from '@prisma/client'
+import { LDA_TERMINOLOGY } from '@/constants/lda'
 
 export interface User {
   id: string | number
@@ -281,7 +282,7 @@ export const getRoleDisplayName = (role: Role): string => {
     case 'PROGRAMME_OFFICER':
       return 'Programme Officer'
     case 'USER':
-      return 'LDA User'
+      return LDA_TERMINOLOGY.userRole
     default:
       return 'Unknown'
   }

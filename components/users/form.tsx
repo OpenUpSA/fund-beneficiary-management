@@ -33,6 +33,7 @@ import { useTranslations } from "next-intl"
 import { UserFull } from "@/types/models"
 import { usePermissions } from "@/hooks/use-permissions"
 import { getAvailableRolesForCreation } from "@/lib/permissions"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FormDialogProps {
   user?: UserFull
@@ -231,7 +232,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
                           key={role}
                           value={role}
                         >
-                          {tC(`roles.${role}`)}
+                          {role === 'USER' ? LDA_TERMINOLOGY.userRole : tC(`roles.${role}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -245,7 +246,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
                 name="ldaId"
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full">
-                    <FormLabel>Local Development Agency</FormLabel>
+                    <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
                     <Select 
                       value={field.value?.toString() || ''} 
                       onValueChange={(value) => field.onChange(value)}

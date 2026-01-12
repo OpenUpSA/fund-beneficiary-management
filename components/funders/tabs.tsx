@@ -3,6 +3,7 @@
 import { TabNav, TabItem } from "@/components/navigation/tab-nav"
 import { useSearchParams } from "next/navigation"
 import { preserveReferrer } from "@/lib/breadcrumb-utils"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FunderTabsProps {
   funderId: string
@@ -23,7 +24,7 @@ export function FunderTabs({ funderId, className }: FunderTabsProps) {
       href: preserveReferrer(`/dashboard/funders/${funderId}/funds`, searchParams)
     },
     {
-      label: "Funded LDAs",
+      label: LDA_TERMINOLOGY.fundedLabel,
       value: "funded",
       href: preserveReferrer(`/dashboard/funders/${funderId}/funded`, searchParams)
     },

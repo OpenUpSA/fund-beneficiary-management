@@ -37,6 +37,7 @@ import { useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { format } from "date-fns"
 import { Calendar } from "../ui/calendar";
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FormDialogProps {
   formTemplates: FormTemplateWithRelations[]
@@ -149,7 +150,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                 name="localDevelopmentAgencyId"
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full">
-                    <FormLabel>Local Development Agency</FormLabel>
+                    <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
                     <Select value={field.value?.toString()} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>

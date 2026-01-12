@@ -7,6 +7,7 @@ import { FocusArea } from "@prisma/client"
 import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import dynamic from "next/dynamic"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const FundMap = dynamic(
@@ -86,12 +87,12 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-slate-900">LDAs funded (current):</span>
+              <span className="text-slate-900">{LDA_TERMINOLOGY.shortNamePlural} funded (current):</span>
               <span>{fund.fundLocalDevelopmentAgencies.filter(lda => lda.fundingStatus === 'Active').length || 0}</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-slate-900">Total LDAs funded:</span>
+              <span className="text-slate-900">Total {LDA_TERMINOLOGY.shortNamePlural} funded:</span>
               <span>{fund.fundLocalDevelopmentAgencies?.length || 0}</span>
             </div>
             
@@ -216,7 +217,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Current allocation</p>
                 <h3 className="text-2xl font-bold">R {totalAllocated.toLocaleString()}</h3>
-                <p className="text-sm text-gray-500">Allocated to LDAs</p>
+                <p className="text-sm text-gray-500">Allocated to {LDA_TERMINOLOGY.shortNamePlural}</p>
               </div>
             </CardContent>
           </Card>
@@ -225,7 +226,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
           <Card>
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
-                <p className="text-sm text-gray-500">LDAs funded</p>
+                <p className="text-sm text-gray-500">{LDA_TERMINOLOGY.shortNamePlural} funded</p>
                 <h3 className="text-2xl font-bold">{fund.fundLocalDevelopmentAgencies.length || 0}</h3>
                 <p className="text-sm text-gray-500">Active partnerships</p>
               </div>

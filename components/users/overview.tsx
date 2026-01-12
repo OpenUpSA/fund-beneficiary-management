@@ -5,6 +5,7 @@ import { Badge } from "../ui/badge"
 import { Card, CardContent } from "../ui/card"
 import { UserFull } from "@/types/models"
 import { useTranslations } from "next-intl"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface Props {
   user: UserFull
@@ -32,12 +33,14 @@ export const Overview: React.FC<Props> = ({ user }: Props) => {
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Role:</span>
-              <Badge variant="outline">{tC(`roles.${user.role}`)}</Badge>
+              <Badge variant="outline">{user.role === 'USER' ? LDA_TERMINOLOGY.userRole : tC(`roles.${user.role}`)}</Badge>
             </div>
-            <div className="flex justify-between">
-              <span className="font-medium">LDA:</span>
-              <Badge variant="outline">{user.localDevelopmentAgencies?.map((lda) => lda.name).join(', ')}</Badge>
-            </div>
+            {user.localDevelopmentAgencies && user.localDevelopmentAgencies.length > 0 && (
+              <div className="flex justify-between">
+                <span className="font-medium">{LDA_TERMINOLOGY.shortName}:</span>
+                <Badge variant="outline">{user.localDevelopmentAgencies?.map((lda) => lda.name).join(', ')}</Badge>
+              </div>
+            )}
           </CardContent>
         </Card>
         <Card className="w-full">

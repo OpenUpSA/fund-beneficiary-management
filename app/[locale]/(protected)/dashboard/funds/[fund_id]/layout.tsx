@@ -11,6 +11,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { canViewFunds } from "@/lib/permissions"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FundLayoutProps {
   children: React.ReactNode
@@ -43,7 +44,7 @@ export default async function Layout({ children, params }: FundLayoutProps) {
   const tabLabels = {
     'overview': 'Overview',
     'funders': 'Funders',
-    'ldas': 'Funded LDAs',
+    'ldas': LDA_TERMINOLOGY.fundedLabel,
     'applications': 'Applications & Reports',
     'documents': 'Documents',
     'media': 'Media'

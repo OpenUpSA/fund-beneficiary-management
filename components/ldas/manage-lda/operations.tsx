@@ -1,6 +1,7 @@
 "use client"
 
 import { InlineEditableField } from "@/components/ui/inline-editable-field";
+import { LDA_TERMINOLOGY } from "@/constants/lda";
 
 // Define a type for the operations data to ensure consistency
 // All fields are optional to handle cases where they might be null or undefined initially.
@@ -107,7 +108,7 @@ export function OperationsTab({ operationsData, onSave, onChange }: OperationsTa
       <div className="space-y-4 border-t py-4"> 
       <h2 className="text-sm font-medium mb-2">Sustainability</h2>
           <InlineEditableField
-            label="What are the local and other fundraising strategies the LDA is implementing to raise funding?"
+            label={`What are the local and other fundraising strategies the ${LDA_TERMINOLOGY.shortName} is implementing to raise funding?`}
             value={operationsData.fundraisingStrategies?.value || ""}
             originalValue={operationsData.fundraisingStrategies?.originalValue || ""}
             edited={operationsData.fundraisingStrategies?.edited || false}

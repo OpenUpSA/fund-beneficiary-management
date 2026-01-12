@@ -14,6 +14,7 @@ import { Link } from "@/i18n/routing"
 import { NotebookPenIcon } from "lucide-react"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface FormTemplatePageProps {
   params: { lda_form_id: string, locale: string }
@@ -107,7 +108,7 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
                 <span>{ldaForm.formTemplate.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium"><abbr title="Local Development Agency">LDA</abbr>:</span>
+                <span className="font-medium"><abbr title={LDA_TERMINOLOGY.fullName}>{LDA_TERMINOLOGY.shortName}</abbr>:</span>
                 <span>{ldaForm.localDevelopmentAgency.name}</span>
               </div>
               <div className="flex justify-between">
