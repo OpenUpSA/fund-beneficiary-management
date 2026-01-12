@@ -3,15 +3,15 @@ import { FilteredDocuments } from "@/components/documents/filtered"
 import { fetchLocalDevelopmentAgency, fetchLDADocuments } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
-  const t = await getTranslations({ locale, namespace: 'LDAsPage' })
 
   return {
-    title: `${t('page title')} - ${tM('title')}`,
+    title: `${LDA_TERMINOLOGY.shortNamePlural} - Documents - ${tM('title')}`,
     description: tM('description'),
     other: {
       ...Sentry.getTraceData(),
@@ -33,7 +33,7 @@ export default async function Page({ params }: LDADocumentsPageProps) {
   ])
   
   if (!lda) {
-    return redirect('/dashboard/ldas')
+    return redirect(LDA_TERMINOLOGY.dashboardPath)
   }
 
   const dataChanged = async () => {

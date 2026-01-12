@@ -11,6 +11,7 @@ import { getTranslations } from "next-intl/server"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -27,7 +28,7 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 
 export default async function Page() {
 
-  redirect('/dashboard/ldas')
+  redirect(LDA_TERMINOLOGY.dashboardPath)
 
   // const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
   // const ldaForms: LocalDevelopmentAgencyFormFull[] = await fetchAllLocalDevelopmentAgencyForms()

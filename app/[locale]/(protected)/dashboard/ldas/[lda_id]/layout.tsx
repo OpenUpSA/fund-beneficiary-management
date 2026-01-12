@@ -11,6 +11,7 @@ import {
   fetchProvinces
 } from "@/lib/data"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface LDALayoutProps {
   children: React.ReactNode
@@ -30,7 +31,7 @@ export default async function Layout({ children, params }: LDALayoutProps) {
   ])
   
   if (!lda) {
-    return redirect('/dashboard/ldas')
+    return redirect(LDA_TERMINOLOGY.dashboardPath)
   }
 
   const dataChanged = async (ldaId?: number) => {
@@ -59,9 +60,9 @@ export default async function Layout({ children, params }: LDALayoutProps) {
   return (
     <div>
       <DynamicBreadcrumb
-        basePath="/dashboard/ldas"
+        basePath={LDA_TERMINOLOGY.dashboardPath}
         entityName={lda.name}
-        entityPath={`/dashboard/ldas/${lda_id}`}
+        entityPath={`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}`}
         tabLabels={tabLabels}
       />
       

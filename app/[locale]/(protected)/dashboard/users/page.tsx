@@ -44,7 +44,7 @@ export default function Page() {
   
   // Redirect non-admin/non-superuser users to LDAs dashboard
   if (!canAccessUsers) {
-    redirect('/dashboard/ldas')
+    redirect(LDA_TERMINOLOGY.dashboardPath)
   }
   
   const users: UserWithLDAsBasic[] = use(fetchUsers())

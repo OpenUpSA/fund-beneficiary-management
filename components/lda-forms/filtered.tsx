@@ -23,6 +23,7 @@ import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "./form"
 import Link from "next/link"
 import { FormStatus } from "@prisma/client"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { usePermissions } from "@/hooks/use-permissions"
 import {
   DropdownMenu,
@@ -373,7 +374,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-between">
-                      <Link href={`/dashboard/ldas/${lda?.id}/funding-reports/${ldaForm.id}`}>
+                      <Link href={`${LDA_TERMINOLOGY.dashboardPath}/${lda?.id}/funding-reports/${ldaForm.id}`}>
                         <Button
                           variant="ghost"
                           size="sm"

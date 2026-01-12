@@ -23,10 +23,9 @@ const LDAMap = dynamic(
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
-  const t = await getTranslations({ locale, namespace: 'LDAsPage' })
 
   return {
-    title: `${t('page title')} - ${tM('title')}`,
+    title: `${LDA_TERMINOLOGY.shortNamePlural} - ${tM('title')}`,
     description: tM('description'),
     other: {
       ...Sentry.getTraceData(),
@@ -40,7 +39,7 @@ export default async function Page() {
   const user = session?.user;
   
   if (user && permissions.isLDAUser(user) && user.ldaIds && user.ldaIds.length === 1) {
-    redirect(`/dashboard/ldas/${user.ldaIds[0]}`);
+    redirect(`${LDA_TERMINOLOGY.dashboardPath}/${user.ldaIds[0]}`);
   }
 
   const [

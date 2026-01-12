@@ -63,7 +63,7 @@ export default async function Page({ params, searchParams }: Props) {
       if (media?.localDevelopmentAgency?.id) {
         breadcrumbLinks = [{
           label: media?.localDevelopmentAgency.name,
-          href: `/dashboard/ldas/${media?.localDevelopmentAgency.id}`
+          href: `${LDA_TERMINOLOGY.dashboardPath}/${media?.localDevelopmentAgency.id}`
         }, ...breadcrumbLinks]
       }
     }

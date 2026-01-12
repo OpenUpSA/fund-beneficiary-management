@@ -56,8 +56,8 @@ export function Nav() {
       // },
       {
         url: user?.role === 'USER' && user?.ldaIds?.length === 1
-          ? `/dashboard/ldas/${user.ldaIds[0]}`
-          : '/dashboard/ldas',
+          ? `${LDA_TERMINOLOGY.dashboardPath}/${user.ldaIds[0]}`
+          : LDA_TERMINOLOGY.dashboardPath,
         title: LDA_TERMINOLOGY.shortNamePlural,
         icon: MapPinHouse,
         requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']

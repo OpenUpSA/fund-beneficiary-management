@@ -1,14 +1,14 @@
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
-  const t = await getTranslations({ locale, namespace: 'LDAsPage' })
 
   return {
-    title: `${t('page title')} - ${tM('title')}`,
+    title: `${LDA_TERMINOLOGY.shortNamePlural} - ${tM('title')}`,
     description: tM('description'),
     other: {
       ...Sentry.getTraceData(),
@@ -35,8 +35,8 @@ export default async function Page({ params, searchParams }: LDAPageProps) {
   ).toString()
   
   const redirectUrl = queryString 
-    ? `/dashboard/ldas/${lda_id}/overview?${queryString}`
-    : `/dashboard/ldas/${lda_id}/overview`
+    ? `${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/overview?${queryString}`
+    : `${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/overview`
   
   redirect(redirectUrl)
 }

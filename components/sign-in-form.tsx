@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react"
 import { signIn } from "next-auth/react";
 import { toast } from "@/hooks/use-toast"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export function SignInForm({
   className,
@@ -48,7 +49,7 @@ export function SignInForm({
                     title: "You are signed in",
                     variant: "success"
                   })
-                  router.push("/dashboard/ldas")
+                  router.push(LDA_TERMINOLOGY.dashboardPath)
                 } else {
                   toast({
                     title: "Problem signing in",

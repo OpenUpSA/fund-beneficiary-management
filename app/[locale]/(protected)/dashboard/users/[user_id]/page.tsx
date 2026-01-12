@@ -14,6 +14,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -46,7 +47,7 @@ export default function Page({ params }: UserPageProps) {
   
   // Redirect non-admin/non-superuser users to LDAs dashboard
   if (!canAccessUsers) {
-    redirect('/dashboard/ldas')
+    redirect(LDA_TERMINOLOGY.dashboardPath)
   }
   
   const user = use(fetchUser(user_id))

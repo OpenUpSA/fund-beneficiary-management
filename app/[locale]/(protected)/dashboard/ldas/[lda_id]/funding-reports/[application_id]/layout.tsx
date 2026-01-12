@@ -2,6 +2,7 @@ import { fetchFormTemplates, fetchLocalDevelopmentAgency, fetchLDAForm } from "@
 import { revalidateTag } from "next/cache"
 import { FormTemplateWithRelations } from "@/types/models"
 import { redirect } from "next/navigation"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -18,13 +19,13 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
   // Fetch the application data
   const lda = await fetchLocalDevelopmentAgency(lda_id) // Fetch LDA to ensure it exists
   if (!lda) {
-    redirect('/dashboard/ldas')
+    redirect(LDA_TERMINOLOGY.dashboardPath)
   }
   
   const ldaForm = await fetchLDAForm(application_id)
   
   if (!ldaForm) {
-    redirect(`/dashboard/ldas/${lda_id}/funding-reports`)
+    redirect(`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/funding-reports`)
   }
 
   const amount = ldaForm.amount ? Number(ldaForm.amount) : 0
@@ -34,7 +35,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
   const formTemplate = formTemplates.find(t => t.id === ldaForm.formTemplateId)
   
   if (!formTemplate || !formTemplate.form) {
-    redirect(`/dashboard/ldas/${lda_id}/funding-reports`)
+    redirect(`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/funding-reports`)
   }
 
   // Server action for data revalidation
@@ -54,7 +55,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
         <div className="flex justify-between items-center">
           <div className="flex gap-2 items-center">
             <Button variant="ghost" size="icon" asChild>
-              <Link href={`/dashboard/ldas/${lda_id}/funding-reports`}>
+              <Link href={`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/funding-reports`}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
@@ -63,7 +64,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
             </h1>
           </div>
           {/* <Button variant="outline" size="sm" asChild>
-            <Link href={`/dashboard/ldas/${lda_id}/funding-reports/${application_id}/edit`}>
+            <Link href={`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/funding-reports/${application_id}/edit`}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Link>

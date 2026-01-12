@@ -2,25 +2,20 @@ import { fetchLocalDevelopmentAgency, fetchContacts } from "@/lib/data"
 import { FilteredContacts } from "@/components/contacts/filtered"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
-import * as Sentry from '@sentry/nextjs'
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import type { Metadata } from 'next'
+import { getTranslations } from "next-intl/server"
 
 interface LDAContactPageProps {
-  params: { lda_id: string }
+  params: { lda_id: string, locale: string }
 }
 
-export async function generateMetadata({ params }: LDAContactPageProps): Promise<Metadata> {
-  // Fetch LDA for metadata (Next.js will deduplicate with page fetch)
-  try {
-    const lda = await fetchLocalDevelopmentAgency(params.lda_id)
-    return {
-      title: `${lda?.name} | Contact List`,
-    }
-  } catch (error) {
-    Sentry.captureException(error)
-    return {
-      title: 'Contact List',
-    }
+export async function generateMetadata({ params: { locale } }: LDAContactPageProps): Promise<Metadata> {
+  const tM = await getTranslations({ locale, namespace: 'metadata' })
+
+  return {
+    title: `${LDA_TERMINOLOGY.shortNamePlural} - Contact List - ${tM('title')}`,
+    description: tM('description'),
   }
 }
 
@@ -34,7 +29,7 @@ export default async function Page({ params }: LDAContactPageProps) {
   ])
   
   if (!lda) {
-    return redirect('/dashboard/ldas')
+    return redirect(LDA_TERMINOLOGY.dashboardPath)
   }
 
   const dataChanged = async () => {
