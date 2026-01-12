@@ -122,8 +122,8 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
 
   const getLDAlink = useCallback((ldaid: number) => {
     return navigatedFrom
-      ? `/dashboard/ldas/${ldaid}?from=${navigatedFrom}`
-      : `/dashboard/ldas/${ldaid}`
+      ? `${LDA_TERMINOLOGY.dashboardPath}/${ldaid}?from=${navigatedFrom}`
+      : `${LDA_TERMINOLOGY.dashboardPath}/${ldaid}`
   }, [navigatedFrom])
 
   // Precompute lowercase names for search once per LDA array

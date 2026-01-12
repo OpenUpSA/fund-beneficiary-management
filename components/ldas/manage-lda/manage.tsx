@@ -47,7 +47,7 @@ export function ManageTab({ ldaId, ldaName, callback }: ManageTabProps) {
       toast.success(`${LDA_TERMINOLOGY.shortName} deleted successfully`)
       callback()
       // Redirect to LDAs dashboard after successful deletion
-      router.push('/dashboard/ldas')
+      router.push(LDA_TERMINOLOGY.dashboardPath)
     } catch (error) {
       toast.dismiss(toastId)
       toast.error(error instanceof Error ? error.message : `Failed to delete ${LDA_TERMINOLOGY.shortName}`)

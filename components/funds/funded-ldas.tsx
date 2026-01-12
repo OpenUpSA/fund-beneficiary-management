@@ -409,12 +409,12 @@ export const FilteredFundLDAs: React.FC<FilteredFundLDAsProps> = ({
                           <Link 
                             href={
                               fundId && fundName
-                                ? buildReferrerUrl(`/dashboard/ldas/${fundedLDA.localDevelopmentAgency.id}/overview`, {
+                                ? buildReferrerUrl(`${LDA_TERMINOLOGY.dashboardPath}/${fundedLDA.localDevelopmentAgency.id}/overview`, {
                                     type: referrerType,
                                     id: fundId,
                                     name: fundName
                                   })
-                                : `/dashboard/ldas/${fundedLDA.localDevelopmentAgency.id}/overview`
+                                : `${LDA_TERMINOLOGY.dashboardPath}/${fundedLDA.localDevelopmentAgency.id}/overview`
                             }
                             className="hover:underline"
                           >

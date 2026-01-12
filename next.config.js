@@ -2,12 +2,42 @@
 
 const withNextIntl = require('next-intl/plugin')()
 
+// Get the custom URL path for LDA pages (defaults to 'ldas')
+const ldaUrlPath = process.env.NEXT_PUBLIC_LDA_URL_PATH || 'ldas'
+
 /** @type {import('next').NextConfig} */
 const config = {
   logging: {
     fetches: {
       fullUrl: true,
     },
+  },
+  async rewrites() {
+    // Only add rewrites if the URL path is different from the default
+    if (ldaUrlPath === 'ldas') {
+      return []
+    }
+    
+    return [
+      // Rewrite custom path to internal ldas routes
+      {
+        source: `/dashboard/${ldaUrlPath}`,
+        destination: '/dashboard/ldas',
+      },
+      {
+        source: `/dashboard/${ldaUrlPath}/:path*`,
+        destination: '/dashboard/ldas/:path*',
+      },
+      // Also handle locale prefix
+      {
+        source: `/:locale/dashboard/${ldaUrlPath}`,
+        destination: '/:locale/dashboard/ldas',
+      },
+      {
+        source: `/:locale/dashboard/${ldaUrlPath}/:path*`,
+        destination: '/:locale/dashboard/ldas/:path*',
+      },
+    ]
   },
 }
 

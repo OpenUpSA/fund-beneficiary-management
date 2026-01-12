@@ -26,6 +26,9 @@ export const LDA_TERMINOLOGY = {
   get createdSuccess() { return `${this.shortName} created successfully` },
   get updateError() { return `Failed to update ${this.shortName}` },
   get createError() { return `Failed to create ${this.shortName}` },
+  // URL path for LDA pages (used in links)
+  urlPath: process.env.NEXT_PUBLIC_LDA_URL_PATH || "ldas",
+  get dashboardPath() { return `/dashboard/${this.urlPath}` },
 } as const
 
 export const RegistrationStatus = {
