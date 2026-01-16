@@ -23,6 +23,23 @@ model User {
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
   documents                   Document[]
   Media                       Media[]
+  passwordResetTokens         PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        Int                   @id @default(autoincrement())
+  token     String                @unique
+  userId    Int
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      PasswordResetType     @default(RESET)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime              @default(now())
+}
+
+enum PasswordResetType {
+  RESET
+  SET_PASSWORD
 }
 
 model FundingStatus {

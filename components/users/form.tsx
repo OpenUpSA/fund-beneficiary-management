@@ -24,10 +24,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { PencilIcon, PlusIcon } from "lucide-react"
-import { useState } from "react"
+import { PencilIcon, PlusIcon, Mail, KeyRound } from "lucide-react"
+import { useState, useEffect } from "react"
 import { UserFormSchema } from "@/types/formSchemas"
 import { Checkbox } from "../ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
+import { Label } from "../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { useTranslations } from "next-intl"
 import { UserFull } from "@/types/models"
@@ -43,7 +45,7 @@ interface FormDialogProps {
 
 export function FormDialog({ user, callback, ldas }: FormDialogProps) {
   const [open, setOpen] = useState(false)
-  const formSchema = UserFormSchema(user ? false : true)
+  const [passwordMethod, setPasswordMethod] = useState<'manual' | 'email'>('manual')
   const tC = useTranslations('common')
   const { currentUser, canEditUser } = usePermissions()
   
@@ -53,8 +55,13 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
   // Check if current user can edit this user (for edit mode)
   const canEdit = user ? canEditUser(user) : true // Always allow creation if user has create permissions
 
+  const isNewUser = !user
+  const sendSetPasswordEmail = passwordMethod === 'email'
+  const formSchema = UserFormSchema(isNewUser, sendSetPasswordEmail)
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: 'onSubmit',
     defaultValues: {
       name: user ? user.name : '',
       email: user ? user.email : '',
@@ -65,6 +72,13 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
       passwordConfirm: '',
     },
   })
+
+  // Clear password validation errors when switching to email method
+  useEffect(() => {
+    if (isNewUser && passwordMethod === 'email') {
+      form.clearErrors(['password', 'passwordConfirm'])
+    }
+  }, [passwordMethod, isNewUser, form])
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     try {
@@ -119,7 +133,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
           approved: data.approved,
           role: data.role,
           ...(shouldIncludeLda ? { ldaId: data.ldaId } : {}),
-          password: data.password
+          ...(sendSetPasswordEmail ? { sendSetPasswordEmail: true } : { password: data.password })
         }
 
         const response = await fetch(`/api/user/`, {
@@ -289,33 +303,101 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
               )}
             />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input autoComplete="new-password" type="password" {...field} />
-                    </FormControl>
+            {isNewUser && (
+              <div className="rounded-md border p-4 space-y-4">
+                <Label className="text-sm font-medium">Password Setup</Label>
+                <RadioGroup 
+                  value={passwordMethod} 
+                  onValueChange={(value) => setPasswordMethod(value as 'manual' | 'email')}
+                  className="space-y-3"
+                >
+                  <div className="flex items-start space-x-3">
+                    <RadioGroupItem value="manual" id="password-manual" className="mt-1" />
+                    <div className="space-y-1">
+                      <Label htmlFor="password-manual" className="flex items-center gap-2 cursor-pointer">
+                        <KeyRound className="h-4 w-4" />
+                        Set password manually
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Enter a password for the user now.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <RadioGroupItem value="email" id="password-email" className="mt-1" />
+                    <div className="space-y-1">
+                      <Label htmlFor="password-email" className="flex items-center gap-2 cursor-pointer">
+                        <Mail className="h-4 w-4" />
+                        Send set password email
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        User will receive an email to set their own password.
+                      </p>
+                    </div>
+                  </div>
+                </RadioGroup>
 
-                  </FormItem>
+                {passwordMethod === 'manual' && (
+                  <div className="space-y-4 pt-2 border-t">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input autoComplete="new-password" type="password" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="passwordConfirm"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input autoComplete="new-password" type="password" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
-              />
+              </div>
+            )}
 
-              <FormField
-                control={form.control}
-                name="passwordConfirm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input autoComplete="new-password" type="password" {...field} />
-                    </FormControl>
+            {!isNewUser && (
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password (leave blank to keep current)</FormLabel>
+                      <FormControl>
+                        <Input autoComplete="new-password" type="password" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="passwordConfirm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input autoComplete="new-password" type="password" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
 
           </form>
         </Form>
