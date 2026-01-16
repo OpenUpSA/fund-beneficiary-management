@@ -4,6 +4,8 @@ import { createHash } from '@/lib/hash'
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { createPasswordResetToken } from "@/lib/token"
+import { sendSetPasswordEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -62,7 +64,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const hashedPassword = await createHash(data.password)
+    // If sendSetPasswordEmail is true, generate a temporary password
+    // The user will set their own password via email link
+    const tempPassword = data.sendSetPasswordEmail ? 'temp_' + Math.random().toString(36).slice(2) : data.password
+    const hashedPassword = await createHash(tempPassword)
+    
     const query = {
       data: {
         name: data.name,
@@ -81,6 +87,17 @@ export async function POST(req: NextRequest) {
       }
     }
     const record = await prisma.user.create(query)
+
+    // If requested, send set password email to the new user
+    if (data.sendSetPasswordEmail) {
+      try {
+        const token = await createPasswordResetToken(record.id, 'SET_PASSWORD')
+        await sendSetPasswordEmail(record.email, token, record.name)
+      } catch (emailError) {
+        console.error('Failed to send set password email:', emailError)
+        // Don't fail the user creation, just log the error
+      }
+    }
 
     return NextResponse.json(record)
   } catch (error) {
