@@ -5,7 +5,7 @@ import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/
 import { CircleSmall, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { FormField } from "@/components/form-templates/form-field"
-import { Section, Field, FormData } from "@/types/forms"
+import { Section, Field, FormData, DependsOnRule } from "@/types/forms"
 
 interface FormAccordionItemProps {
   sectionIndex: number
@@ -80,6 +80,21 @@ export default function FormAccordionItem({
         isValid: field.required ? false : true,
         isLast: fieldIndex === sectionData.fields.length - 1
       };
+
+      // If field has depends_on, compute initial options based on defaultValues
+      if (field.depends_on && defaultValues) {
+        const dependentFieldValue = defaultValues[field.depends_on.field];
+        if (dependentFieldValue) {
+          const matchingRule = field.depends_on.rules?.find(
+            (rule: DependsOnRule) => rule.when === String(dependentFieldValue)
+          );
+          if (matchingRule?.options) {
+            fieldObj = { ...fieldObj, options: matchingRule.options };
+          } else if (field.depends_on.default_options) {
+            fieldObj = { ...fieldObj, options: field.depends_on.default_options };
+          }
+        }
+      }
 
       // Check if default value exists for this field
       if (defaultValues && field.name in defaultValues) {
@@ -357,6 +372,24 @@ export default function FormAccordionItem({
           }
         }
 
+        // If the field has depends_on and depends on the changed field, update options and clear value
+        if (f?.depends_on && f.depends_on.field === field.name) {
+          // Find matching rule for the new value
+          const matchingRule = f.depends_on.rules?.find((rule: DependsOnRule) => rule.when === value);
+          const newOptions = matchingRule?.options || f.depends_on.default_options || f.options;
+          
+          // Clear the field value and update options
+          f = { ...f, options: newOptions, value: "", isValid: f.required ? false : true };
+          console.log("f", f);
+          // Save the cleared value to API after a delay to not interfere with the original field save
+          const dependentFieldName = f.name;
+          setTimeout(() => {
+            if (debouncedSaveRef.current) {
+              debouncedSaveRef.current(dependentFieldName, "");
+            }
+          }, 600);
+        }
+
         if (f.fields) {
           f.fields = f.fields.map((subfield: Field) => {
             if (subfield.name === field.name) {
@@ -371,6 +404,21 @@ export default function FormAccordionItem({
                 subfield = { ...subfield, show: value === subfield?.show_if?.value };
               }
             }
+
+            // If the subfield has depends_on and depends on the changed field, update options and clear value
+            if (subfield?.depends_on && subfield.depends_on.field === field.name) {
+              const matchingRule = subfield.depends_on.rules?.find((rule: DependsOnRule) => rule.when === value);
+              const newOptions = matchingRule?.options || subfield.depends_on.default_options || subfield.options;
+              subfield = { ...subfield, options: newOptions, value: "", isValid: subfield.required ? false : true };
+              
+              // Save the cleared value to API after a delay to not interfere with the original field save
+              const dependentSubfieldName = subfield.name;
+              setTimeout(() => {
+                if (debouncedSaveRef.current) {
+                  debouncedSaveRef.current(dependentSubfieldName, "");
+                }
+              }, 600);
+            }
             return subfield;
           }) as Field[];
         }
@@ -383,6 +431,8 @@ export default function FormAccordionItem({
         if (f.fields) {
           isFieldValid = f.fields.every((subfield: Field) => subfield.show && subfield.required ? subfield.isValid : true);
         }
+
+        
         return { ...f, isValid: isFieldValid };
       }) as Field[];
       
@@ -454,6 +504,7 @@ export default function FormAccordionItem({
                 key={field.name}
                 field={field}
                 lda_id={lda_id}
+                lda_form_id={formId}
                 isEditing={isEditing && isSectionEditable}
                 onValueChange={onChange}
               />

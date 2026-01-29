@@ -21,6 +21,7 @@ interface FormFieldProps {
   errors?: Record<string, FieldError | undefined>
   isEditing?: boolean,
   lda_id?: number,
+  lda_form_id?: number | string,
   dataChanged?: () => Promise<void>
   onValueChange?: (field: Field, value: string) => void
 }
@@ -59,7 +60,7 @@ function FieldDescription({description}: {description: string}) {
 }
 
 
-function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id }: { inputField: Field; isEditing: boolean; parentField?: Field; onValueChange?: (field: Field, value: string) => void; lda_id?: number }) {
+function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id, lda_form_id }: { inputField: Field; isEditing: boolean; parentField?: Field; onValueChange?: (field: Field, value: string) => void; lda_id?: number; lda_form_id?: number | string }) {
   // Create the input element based on field type
   const renderInput = () => {
     switch (inputField.type) {
@@ -78,7 +79,7 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
     case "group":
       return <GroupField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "fileUpload":
-      return <FileUpload field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>
+      return <FileUpload field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>
     case "text":
       return <TextField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
@@ -107,7 +108,7 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
 import { DataTableLayout } from "./custom-layouts/data-table"
 import { RepeatableLayout } from "./custom-layouts/repeatable"
 
-function FormLayout({ inputField, isEditing = false, onValueChange, lda_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number }) {
+function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_form_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number; lda_form_id?: number | string }) {
   switch (inputField.layout) {
     case "data-table":
       return <DataTableLayout inputField={inputField} />
@@ -120,7 +121,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id }: { 
         <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />
         {inputField.description && <FieldDescription description={inputField.description} />}
         <div className="text-sm mt-1 p-2 text-slate-700">
-          {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>}
+          {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>}
           {inputField.fields && inputField.fields.length > 0 && inputField.show && (
             <div className="flex flex-wrap -mr-2">
               {inputField.fields.map((subfield) => (
@@ -131,6 +132,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id }: { 
                   parentField={inputField}
                   onValueChange={onValueChange}
                   lda_id={lda_id}
+                  lda_form_id={lda_form_id}
                 />
               ))}
             </div>
@@ -142,10 +144,10 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id }: { 
   }
 }
 
-export function FormField({ field, isEditing = false, onValueChange, lda_id }: FormFieldProps) {
+export function FormField({ field, isEditing = false, onValueChange, lda_id, lda_form_id }: FormFieldProps) {
   return (
     <div key={field.name}>
-      <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id}/>
+      <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>
     </div>
   )
 }

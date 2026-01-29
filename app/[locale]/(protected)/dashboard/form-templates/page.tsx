@@ -28,6 +28,7 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 export default async function Page() {
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
 
+  console.log("formTemplates", formTemplates)
   return (
     <div>
       <BreadcrumbNav
@@ -39,7 +40,7 @@ export default async function Page() {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Form Templates</h1>
         <div className="space-x-2">
-          <FormDialog />
+          <FormDialog allTemplates={formTemplates}/>
         </div>
       </div>
       <div className="sm:flex sm:space-x-4 mt-4">

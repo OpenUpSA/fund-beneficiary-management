@@ -9,6 +9,7 @@ interface FileUploadProps {
   field: Field
   isEditing?: boolean
   lda_id?: number
+  lda_form_id?: number | string
   onValueChange?: (field: Field, value: string) => void
 }
 
@@ -22,7 +23,42 @@ interface UploadedFile {
   dbId?: number
 }
 
-export function FileUpload({ field, isEditing = false, onValueChange, lda_id }: FileUploadProps) {
+// Default accepted file types for different destinations
+const DEFAULT_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+const DEFAULT_DOCUMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+
+// Helper to get accept string for input
+const getAcceptString = (types: string[]): string => {
+  return types.join(',')
+}
+
+// Map MIME types to human-readable extensions
+const MIME_TO_EXTENSION: Record<string, string> = {
+  'image/png': 'PNG',
+  'image/jpeg': 'JPEG',
+  'image/jpg': 'JPG',
+  'image/webp': 'WEBP',
+  'image/gif': 'GIF',
+  'application/pdf': 'PDF',
+  'application/msword': 'DOC',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+  'application/vnd.ms-excel': 'XLS',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+}
+
+// Helper to get display text for accepted types
+const getAcceptedTypesDisplay = (types: string[]): string => {
+  const extensions = types.map(type => MIME_TO_EXTENSION[type] || type.split('/')[1]?.toUpperCase() || type)
+  // Remove duplicates and join
+  return [...new Set(extensions)].join(', ')
+}
+
+export function FileUpload({ field, isEditing = false, onValueChange, lda_id, lda_form_id }: FileUploadProps) {
+  // Get config from field
+  const destination = (field.config?.destination as 'media' | 'document') || 'media'
+  const configAcceptedTypes = field.config?.accepted_file_types as string[] | undefined
+  const acceptedTypes = configAcceptedTypes || (destination === 'document' ? DEFAULT_DOCUMENT_TYPES : DEFAULT_MEDIA_TYPES)
+
   const [files, setFiles] = useState<UploadedFile[]>(() => {
     if (field.value) {
       try {
@@ -71,6 +107,12 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id }: 
 
   const uploadFile = async (file: File): Promise<UploadedFile | null> => {
     try {
+      // Validate file type
+      if (!acceptedTypes.includes(file.type)) {
+        toast.error(`File type not allowed: ${file.type}`)
+        return null
+      }
+
       // Create form data for upload
       const formData = new FormData()
       formData.append('file', file)
@@ -79,17 +121,31 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id }: 
       
       // Add LDA ID if available
       if (lda_id) {
-        formData.append('localDevelopmentAgencyId', String(lda_id))
+        formData.append('ldaId', String(lda_id))
       } else {
         // If no LDA ID, we can't upload - this is required by the API
         toast.error('Missing LDA ID for file upload')
         return null
       }
+
+      // Add LDA Form ID if available
+      if (lda_form_id) {
+        formData.append('ldaFormId', String(lda_form_id))
+      }
+
+      // Add destination-specific fields
+      if (destination === 'document') {
+        // Document API requires these fields
+        formData.append('validFromDate', new Date().toISOString())
+        // Don't send validUntilDate if empty - Prisma expects valid ISO date or null
+        formData.append('uploadedBy', 'LDA')
+      }
       
       setUploadingFile(file.name)
       
-      // Upload to media API
-      const response = await fetch('/api/media', {
+      // Upload to appropriate API based on destination
+      const apiUrl = destination === 'document' ? '/api/document' : '/api/media'
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       })
@@ -190,6 +246,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id }: 
           ref={fileInputRef}
           className="hidden"
           multiple
+          accept={getAcceptString(acceptedTypes)}
           onChange={handleFileChange}
           disabled={!isEditing || isUploading}
         />
@@ -205,7 +262,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id }: 
             <>
               <span className="font-medium text-primary">Click to upload</span> or drag and drop
               <br />
-              <span className="text-xs text-gray-500">PNG, JPG, JPEG, WEBP, GIF</span>
+              <span className="text-xs text-gray-500">{getAcceptedTypesDisplay(acceptedTypes)}</span>
             </>
           )}
         </p>

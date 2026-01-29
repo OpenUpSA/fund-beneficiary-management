@@ -178,26 +178,21 @@ export async function POST(req: NextRequest) {
   })
 
   // Build document data with appropriate entity links
-  const data: {
-    title: string;
-    description: string;
-    filePath: string;
-    validFromDate: string;
-    validUntilDate: string;
-    uploadedBy: DocumentUploadType;
-    createdBy: { connect: { id: number } };
-    localDevelopmentAgency?: { connect: { id: number } };
-    localDevelopmentAgencyForm?: { connect: { id: number } };
-    fund?: { connect: { id: number } };
-    funder?: { connect: { id: number } };
-  } = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {
     title: title,
     description: description,
     filePath: uploadResponse.filePath,
-    validFromDate: validFromDate,
-    validUntilDate: validUntilDate,
     uploadedBy: uploadedBy,
     createdBy: { connect: { id: parseInt(user.id as string) } }
+  }
+
+  // Add dates only if provided
+  if (validFromDate) {
+    data.validFromDate = validFromDate
+  }
+  if (validUntilDate) {
+    data.validUntilDate = validUntilDate
   }
 
   // Add entity connections
