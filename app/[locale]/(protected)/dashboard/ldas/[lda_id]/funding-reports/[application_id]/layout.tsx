@@ -80,7 +80,9 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
             formTemplate: {
               ...formTemplate,
               // Cast the JSON form data to our Form type
-              form: formTemplate.form as unknown as import("@/types/forms").Form
+              form: formTemplate.form as unknown as import("@/types/forms").Form,
+              // Cast sidebarConfig from JsonValue to the expected type
+              sidebarConfig: formTemplate.sidebarConfig as { amount?: boolean; status?: boolean; startDate?: boolean; endDate?: boolean; dueDate?: boolean } | undefined,
             },
 
             formData: ldaForm.formData as Record<string, string | number | boolean | null | undefined>

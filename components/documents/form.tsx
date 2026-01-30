@@ -108,8 +108,8 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
       description: document ? document?.description : "",
       localDevelopmentAgencyId: document?.localDevelopmentAgencyId ?? lda?.id ?? 0,
       documentType: document ? document.documentType : undefined,
-      validFromDate: document ? new Date(document.validFromDate) : new Date(),
-      validUntilDate: document ? new Date(document.validUntilDate) : new Date()
+      validFromDate: document && document.validFromDate ? new Date(document.validFromDate) : new Date(),
+      validUntilDate: document && document.validUntilDate ? new Date(document.validUntilDate) : new Date()
     },
   })
 

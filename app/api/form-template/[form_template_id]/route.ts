@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { form_templat
         include: {
           localDevelopmentAgency: true,
         },
-      },
+      }
     }
   });
 
@@ -63,6 +63,21 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
     }
 
     const data = await req.json()
+
+    // Validate linkedFormTemplateId if provided
+    if (data.linkedFormTemplateId) {
+      if (data.linkedFormTemplateId === id) {
+        return NextResponse.json({ error: "Cannot link a template to itself" }, { status: 400 });
+      }
+
+      const linkedTemplate = await prisma.formTemplate.findUnique({
+        where: { id: data.linkedFormTemplateId }
+      });
+
+      if (!linkedTemplate) {
+        return NextResponse.json({ error: "Linked form template not found" }, { status: 404 });
+      }
+    }
 
     const updated = await prisma.formTemplate.update({
       where: { id: id },

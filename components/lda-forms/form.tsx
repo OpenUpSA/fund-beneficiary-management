@@ -51,15 +51,9 @@ const FormSchema = z.object({
   // title: z.string().optional(),
   localDevelopmentAgencyId: z.coerce.number({ required_error: "Please select a local development agency." }),
   formTemplateId: z.coerce.number({ required_error: "Please select a form templte." }),
-  dueDate: z.date({ required_error: "Please select a due date." }).refine(date => date !== undefined, {
-    message: "Due date is required."
-  }),
-  fundingStart: z.date({ required_error: "Please select a funding start." }).refine(date => date !== undefined, {
-    message: "Funding start is required."
-  }),
-  fundingEnd: z.date({ required_error: "Please select a funding end." }).refine(date => date !== undefined, {
-    message: "Funding end is required."
-  }),
+  dueDate: z.date().optional().nullable(),
+  fundingStart: z.date().optional().nullable(),
+  fundingEnd: z.date().optional().nullable(),
   formData: z.object({})
 })
 
@@ -72,12 +66,17 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
       // title: ldaForm ? ldaForm.title : "",
       localDevelopmentAgencyId: ldaForm ? ldaForm.localDevelopmentAgencyId : lda ? lda.id : 0,
       formTemplateId: ldaForm ? ldaForm.formTemplateId : 0,
-      dueDate: ldaForm ? new Date(ldaForm.dueDate) : new Date(),
-      fundingStart: ldaForm ? new Date(ldaForm.fundingStart) : new Date(),
-      fundingEnd: ldaForm ? new Date(ldaForm.fundingEnd) : new Date(),
+      dueDate: ldaForm?.dueDate ? new Date(ldaForm.dueDate) : undefined,
+      fundingStart: ldaForm?.fundingStart ? new Date(ldaForm.fundingStart) : undefined,
+      fundingEnd: ldaForm?.fundingEnd ? new Date(ldaForm.fundingEnd) : undefined,
       formData: ldaForm?.formData ? ldaForm.formData : {},
     },
   })
+
+  // Watch formTemplateId to get selected template's sidebarConfig
+  const selectedTemplateId = form.watch('formTemplateId')
+  const selectedTemplate = formTemplates.find(t => t.id === Number(selectedTemplateId))
+  const sidebarConfig = selectedTemplate?.sidebarConfig as { startDate?: boolean; endDate?: boolean; dueDate?: boolean } | null
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setOpen(false)
@@ -201,103 +200,108 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                 </FormItem>
               )} />}
 
-            <div className="flex flex-col gap-4 md:flex-row">
-              <FormField
-                control={form.control}
-                name="fundingStart"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Funding Start</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
+            {(sidebarConfig?.startDate || sidebarConfig?.endDate || sidebarConfig?.dueDate) && (
+              <div className="flex flex-col gap-4 md:flex-row">
+                {sidebarConfig?.startDate && (
+                  <FormField
+                    control={form.control}
+                    name="fundingStart"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 w-full">
+                        <FormLabel>Funding Start</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className="w-full pl-3 text-left font-normal"
+                              >
+                                {field.value ? format(field.value, "PPP") : "Pick a date"}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ?? undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
 
-              <FormField
-                control={form.control}
-                name="fundingEnd"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Funding End</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
+                {sidebarConfig?.endDate && (
+                  <FormField
+                    control={form.control}
+                    name="fundingEnd"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 w-full">
+                        <FormLabel>Funding End</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className="w-full pl-3 text-left font-normal"
+                              >
+                                {field.value ? format(field.value, "PPP") : "Pick a date"}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ?? undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
 
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Due</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
+                {sidebarConfig?.dueDate && (
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem className="flex-1 w-full">
+                        <FormLabel>Due</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className="w-full pl-3 text-left font-normal"
+                              >
+                                {field.value ? format(field.value, "PPP") : "Pick a date"}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ?? undefined}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-            </div>
+              </div>
+            )}
 
             </div>
 

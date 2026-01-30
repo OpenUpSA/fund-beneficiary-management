@@ -2,97 +2,253 @@
   "title": "DFT Application",
   "sections": [
     {
-      "title": "Provide an overview of the training",
+      "title": "Activity information",
       "fields": [
         {
-          "name": "who_will_attend",
-          "type": "textarea",
-          "label": "Who will the attend the training?",
+          "name": "activity_name",
+          "type": "text",
+          "label": "Name of activity",
+          "required": true,
+          "placeholder": "Enter the name of the activity"
+        },
+        {
+          "name": "activity_date",
+          "type": "date",
+          "label": "Date of activity",
           "required": true
         },
         {
-          "name": "why_training_needed",
-          "type": "textarea",
-          "label": "Why is the training needed?",
+          "name": "activity_type",
+          "type": "select",
+          "label": "Type of activity",
+          "options": [
+            {
+              "label": "Training",
+              "value": "training"
+            },
+            {
+              "label": "Workshop",
+              "value": "workshop"
+            },
+            {
+              "label": "Campaign",
+              "value": "campaign"
+            },
+            {
+              "label": "Meeting",
+              "value": "meeting"
+            },
+            {
+              "label": "Other",
+              "value": "other"
+            }
+          ],
           "required": true
         },
         {
-          "name": "how_many_participants",
-          "type": "textarea",
-          "label": "How many participants will attend?",
+          "name": "training_type",
+          "type": "multiselect",
+          "label": "Type of training to be given",
+          "options": [],
+          "required": true,
+          "depends_on": {
+            "field": "activity_type",
+            "rules": [
+              {
+                "when": "training",
+                "options": [
+                  {
+                    "label": "Digital skills",
+                    "value": "digital_skills"
+                  },
+                  {
+                    "label": "Leadership",
+                    "value": "leadership"
+                  },
+                  {
+                    "label": "Financial Management",
+                    "value": "financial_management"
+                  },
+                  {
+                    "label": "Project Management",
+                    "value": "project_management"
+                  },
+                  {
+                    "label": "Advocacy",
+                    "value": "advocacy"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "workshop",
+                "options": [
+                  {
+                    "label": "Team Building",
+                    "value": "team_building"
+                  },
+                  {
+                    "label": "Strategy Planning",
+                    "value": "strategy"
+                  },
+                  {
+                    "label": "Communication Skills",
+                    "value": "communication"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "campaign",
+                "options": [
+                  {
+                    "label": "Awareness",
+                    "value": "awareness"
+                  },
+                  {
+                    "label": "Advocacy",
+                    "value": "advocacy"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "meeting",
+                "options": [
+                  {
+                    "label": "Planning",
+                    "value": "planning"
+                  },
+                  {
+                    "label": "Review",
+                    "value": "review"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "other",
+                "options": [
+                  {
+                    "label": "Planning",
+                    "value": "planning"
+                  },
+                  {
+                    "label": "Review",
+                    "value": "review"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              }
+            ],
+            "enabled_when": [
+              "training",
+              "workshop",
+              "campaign",
+              "meeting",
+              "other"
+            ],
+            "default_disabled": true
+          }
+        },
+        {
+          "name": "focus_areas",
+          "type": "multiselect",
+          "label": "Which of your focus areas does this activity relate to?",
+          "options": [
+            {
+              "label": "Youth",
+              "value": "youth"
+            },
+            {
+              "label": "Justice",
+              "value": "justice"
+            },
+            {
+              "label": "Gender",
+              "value": "gender"
+            }
+          ],
           "required": true
+        },
+        {
+          "name": "expected_participants",
+          "type": "number",
+          "label": "Expected number of participants",
+          "required": true,
+          "placeholder": "Enter the expected number of participants"
+        },
+        {
+          "name": "why_activity_needed",
+          "type": "textarea",
+          "label": "Why is the activity needed?",
+          "required": true,
+          "description": "Describe the need or opportunity sparked the organising of this event",
+          "placeholder": "Enter details here"
         },
         {
           "name": "who_will_facilitate",
           "type": "textarea",
-          "label": "Who will facilitate the training?",
-          "required": true
+          "label": "Who will facilitate this activity?",
+          "required": true,
+          "description": "Provide the names of any individuals or organisations that assisted with this activity",
+          "placeholder": "Enter details here"
         },
         {
-          "name": "when_and_where",
+          "name": "activity_venue",
           "type": "textarea",
-          "label": "When and where will the training be held?",
-          "required": true
+          "label": "Where will the activity be held?",
+          "required": true,
+          "description": "What venue will you be using and where is that venue situated?",
+          "placeholder": "Enter details here"
         }
       ]
     },
     {
-      "title": "Create the budget",
+      "title": "Proposed budget",
       "fields": [
         {
-          "name": "line_item_1",
-          "type": "input",
-          "label": "Line Item #1",
-          "required": true
+          "name": "planned_total_cost",
+          "type": "currency",
+          "label": "Planned total cost to deliver the training",
+          "required": true,
+          "placeholder": "0.00"
         },
         {
-          "name": "line_item_2",
-          "type": "input",
-          "label": "Line Item #2",
-          "required": false
+          "name": "funding_amount_requested",
+          "type": "currency",
+          "label": "Funding amount being requested from SCAT",
+          "required": true,
+          "placeholder": "0.00"
         },
         {
-          "name": "line_item_3",
-          "type": "input",
-          "label": "Line Item #3",
-          "required": false
-        },
-        {
-          "name": "line_item_4",
-          "type": "input",
-          "label": "Line Item #4",
-          "required": false
-        },
-        {
-          "name": "line_item_5",
-          "type": "input",
-          "label": "Line Item #5",
-          "required": false
-        },
-        {
-          "name": "line_item_6",
-          "type": "input",
-          "label": "Line Item #6",
-          "required": false
+          "name": "budget_upload",
+          "type": "fileUpload",
+          "label": "Upload a copy of your budget",
+          "multiple": false,
+          "required": true,
+          "config": {
+            "destination": "document",
+            "accepted_file_types": ["application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "image/png", "image/jpeg", "image/jpg"]
+          }
         }
-      ]
-    },
-    {
-      "title": "Sign the Applications Form",
-      "fields": [
-        {
-          "name": "signature",
-          "type": "input",
-          "label": "Digital Signature: Please type your full name as your digital signature",
-          "required": true
-        },
-        {
-          "name": "signature_date",
-          "type": "input",
-          "label": "Date of signature",
-          "required": true
-        }
-      ]
+      ],
+      "notice": "Please use our budget template. To ensure you are reporting correctly, please use the template created by SCAT: Download budget template."
     }
   ]
 }

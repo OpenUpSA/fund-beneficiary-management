@@ -5,6 +5,21 @@ export interface Form {
   sections: Section[];
 }
 
+export interface DependsOnRule {
+  when: string;
+  options?: { value: string; label: string }[];
+  enabled?: boolean;
+}
+
+export interface DependsOn {
+  field: string;
+  rules?: DependsOnRule[];
+  enabled_when?: string | string[];
+  disabled_when?: string | string[];
+  default_disabled?: boolean;
+  default_options?: { value: string; label: string }[];
+}
+
 export interface Field {
   name: string;
   type: FieldType;
@@ -16,6 +31,7 @@ export interface Field {
   min?: number;
   max?: number;
   show_if?: { field: string; value: string };
+  depends_on?: DependsOn;
   value?: string;
   fields?: Field[];
   template?: Field[];

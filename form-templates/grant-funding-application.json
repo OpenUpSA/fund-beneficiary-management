@@ -6,7 +6,7 @@
       "fields": [
         {
           "name": "progress_9_months",
-          "type": "textarea",
+          "type": "text",
           "label": "Progress made on your plans for the nine (9) month period",
           "required": true,
           "placeholder": "Share the key accomplishments and milestones achieved during this period."

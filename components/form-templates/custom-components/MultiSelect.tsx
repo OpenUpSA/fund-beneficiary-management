@@ -20,6 +20,16 @@ interface Option {
 export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSelectProps) {
   const [options, setOptions] = useState<Option[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
+  const prevValueRef = React.useRef<string | undefined>(field.value)
+
+  // Track when value changes from non-empty to empty (cleared by depends_on)
+  useEffect(() => {
+    if (prevValueRef.current && prevValueRef.current !== '' && field.value === '') {
+      setResetKey(prev => prev + 1)
+    }
+    prevValueRef.current = field.value
+  }, [field.value])
 
   useEffect(() => {
     // If options are already provided, use them
@@ -87,9 +97,13 @@ export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSe
     }
   }, [field.options, field.config?.dynamicOptionTable, lda_id])
 
+  // Use resetKey to force re-mount only when value changes from non-empty to empty
+  const selectKey = `${field.name}-${resetKey}`;
+
   return (
     <div className="flex flex-col gap-1">
       <InputMultiSelect
+        key={selectKey}
         options={options}
         value={field.value?.split(',').filter(Boolean) || []}
         onValueChange={(values) => {
