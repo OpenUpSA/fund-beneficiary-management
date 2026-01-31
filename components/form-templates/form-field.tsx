@@ -13,7 +13,8 @@ import {
   DefaultField,
   CurrencyField,
   MultiSelect,
-  FileUpload
+  FileUpload,
+  ToggleField
 } from "@/components/form-templates/custom-components"
 
 interface FormFieldProps {
@@ -82,6 +83,8 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
       return <FileUpload field={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>
     case "text":
       return <TextField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "toggle":
+      return <ToggleField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
       return <DefaultField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     }
@@ -107,6 +110,8 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
 // Import the OrganisationManagementLayout component
 import { DataTableLayout } from "./custom-layouts/data-table"
 import { RepeatableLayout } from "./custom-layouts/repeatable"
+import { LabelValueListLayout } from "./custom-layouts/label-value-list"
+import { ToggleLayout } from "./custom-layouts/toggle-layout"
 
 function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_form_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number; lda_form_id?: number | string }) {
   switch (inputField.layout) {
@@ -114,6 +119,10 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
       return <DataTableLayout inputField={inputField} />
     case "repeatable":
       return <RepeatableLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "label-value-list":
+      return <LabelValueListLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "toggle":
+      return <ToggleLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
       return (
       <>
@@ -125,6 +134,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
           {inputField.fields && inputField.fields.length > 0 && inputField.show && (
             <div className="flex flex-wrap -mr-2">
               {inputField.fields.map((subfield) => (
+                <div key={subfield.name} className="pt-2 w-full">
                 <FieldRender
                   key={subfield.name}
                   inputField={subfield}
@@ -134,6 +144,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
                   lda_id={lda_id}
                   lda_form_id={lda_form_id}
                 />
+                </div>
               ))}
             </div>
           )}

@@ -1,4 +1,4 @@
-export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable" | "multiselect" | "fileUpload";
+export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable" | "multiselect" | "fileUpload" | "toggle";
 
 export interface Form {
   title: string;
@@ -9,6 +9,7 @@ export interface DependsOnRule {
   when: string;
   options?: { value: string; label: string }[];
   enabled?: boolean;
+  label?: string;
 }
 
 export interface DependsOn {
@@ -18,6 +19,7 @@ export interface DependsOn {
   disabled_when?: string | string[];
   default_disabled?: boolean;
   default_options?: { value: string; label: string }[];
+  label?: string;
 }
 
 export interface Field {
@@ -41,6 +43,7 @@ export interface Field {
   prefill?: { source: string; path: string };
   options?: { value: string; label: string }[];
   placeholder?: string;
+  icon?: string;
   show?: boolean;
   groupIndex?: number;
   isLast?: boolean;

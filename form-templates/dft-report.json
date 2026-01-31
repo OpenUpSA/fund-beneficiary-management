@@ -1,126 +1,448 @@
 {
-  "title": "DFT Report | SCAT Data Process Form",
+  "title": "DFT Report",
   "sections": [
     {
-      "title": "Overview",
+      "title": "Activity information",
+      "editable_by": [],
       "fields": [
         {
-          "name": "description",
-          "type": "textarea",
-          "label": "Provide an overview of the training or campaign activities that took place",
-          "required": false
+          "name": "activity_name",
+          "type": "text",
+          "label": "Name of activity",
+          "required": true,
+          "disabled": true,
+          "prefill": {
+            "path": "activity_name",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "what_training_about",
-          "type": "textarea",
-          "label": "What was the training or campaign about?",
-          "required": true
+          "name": "activity_date",
+          "type": "date",
+          "label": "Date of activity",
+          "required": true,
+          "disabled": true,
+          "prefill": {
+            "path": "activity_date",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "why_training_needed",
-          "type": "textarea",
-          "label": "Why was the training needed?",
-          "required": true
+          "name": "activity_type",
+          "type": "select",
+          "label": "Type of activity",
+          "required": true,
+          "disabled": true,
+          "options": [
+            { "label": "Training", "value": "training" },
+            { "label": "Workshop", "value": "workshop" },
+            { "label": "Campaign", "value": "campaign" },
+            { "label": "Meeting", "value": "meeting" },
+            { "label": "Other", "value": "other" }
+          ],
+          "prefill": {
+            "path": "activity_type",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "intended_outcome",
-          "type": "textarea",
-          "label": "What was the intended outcome/ or purpose of the training or campaign?",
-          "required": true
+          "name": "training_type",
+          "type": "multiselect",
+          "label": "Type of training to be given",
+          "options": [],
+          "required": true,
+          "prefill": {
+            "path": "training_type",
+            "source": "linkedForm"
+          },
+          "depends_on": {
+            "field": "activity_type",
+            "rules": [
+              {
+                "when": "training",
+                "label": "Type of training to be given",
+                "options": [
+                  {
+                    "label": "Digital skills",
+                    "value": "digital_skills"
+                  },
+                  {
+                    "label": "Leadership",
+                    "value": "leadership"
+                  },
+                  {
+                    "label": "Financial Management",
+                    "value": "financial_management"
+                  },
+                  {
+                    "label": "Project Management",
+                    "value": "project_management"
+                  },
+                  {
+                    "label": "Advocacy",
+                    "value": "advocacy"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "workshop",
+                "label": "Type of workshop to be given",
+                "options": [
+                  {
+                    "label": "Team Building",
+                    "value": "team_building"
+                  },
+                  {
+                    "label": "Strategy Planning",
+                    "value": "strategy"
+                  },
+                  {
+                    "label": "Communication Skills",
+                    "value": "communication"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "campaign",
+                "label": "Type of campaign to be given",
+                "options": [
+                  {
+                    "label": "Awareness",
+                    "value": "awareness"
+                  },
+                  {
+                    "label": "Advocacy",
+                    "value": "advocacy"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "meeting",
+                "label": "Type of meeting to be given",
+                "options": [
+                  {
+                    "label": "Planning",
+                    "value": "planning"
+                  },
+                  {
+                    "label": "Review",
+                    "value": "review"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "other",
+                "label": "Type of other activity to be given",
+                "options": [
+                  {
+                    "label": "Planning",
+                    "value": "planning"
+                  },
+                  {
+                    "label": "Review",
+                    "value": "review"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              }
+            ],
+            "enabled_when": [
+              "training",
+              "workshop",
+              "campaign",
+              "meeting",
+              "other"
+            ],
+            "default_disabled": true
+          }
         },
         {
-          "name": "total_participants",
-          "type": "textarea",
-          "label": "What was the total number of participants who attended the training or campaign?",
-          "required": true
+          "name": "focus_areas",
+          "type": "multiselect",
+          "label": "Which of your focus areas does this activity relate to?",
+          "required": true,
+          "disabled": true,
+          "options": [
+            { "label": "Youth", "value": "youth" },
+            { "label": "Justice", "value": "justice" },
+            { "label": "Gender", "value": "gender" }
+          ],
+          "prefill": {
+            "path": "focus_areas",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "who_attended",
-          "type": "textarea",
-          "label": "Who attended the training?",
-          "required": true
+          "name": "expected_participants",
+          "type": "number",
+          "label": "Expected number of participants",
+          "required": true,
+          "disabled": true,
+          "prefill": {
+            "path": "expected_participants",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "who_facilitated",
+          "name": "why_activity_needed",
           "type": "textarea",
-          "label": "Who facilitated the training?",
-          "required": true
+          "label": "Why is the activity needed?",
+          "description": "Describe the need or opportunity sparked the organising of this event",
+          "required": true,
+          "disabled": true,
+          "prefill": {
+            "path": "why_activity_needed",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "partnership",
+          "name": "who_will_facilitate",
           "type": "textarea",
-          "label": "Was the training or campaign conducted in partnership with other external partners/stakeholders? If yes, please name them and the role they played.",
-          "required": true
+          "label": "Who will facilitate this activity?",
+          "description": "Provide the names of any individuals or organisations that assisted with this activity",
+          "required": true,
+          "disabled": true,
+          "prefill": {
+            "path": "who_will_facilitate",
+            "source": "linkedForm"
+          }
         },
         {
-          "name": "date_took_place",
+          "name": "activity_venue",
           "type": "textarea",
-          "label": "What date did the training or campaign take place?",
-          "required": true
+          "label": "Where will the activity be held?",
+          "description": "What venue will you be using and where is that venue situated?",
+          "required": true,
+          "disabled": true,
+          "prefill": {
+            "path": "activity_venue",
+            "source": "linkedForm"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Attendance",
+      "fields": [
+        {
+          "name": "did_not_take_attendance",
+          "type": "toggle",
+          "layout": "toggle",
+          "label": "We did not take attendance for this activity",
+          "required": false,
+          "prefill": {
+            "path": "false",
+            "source": "defaultValue"
+          }
         },
         {
-          "name": "venue",
+          "name": "attendance_register",
+          "type": "fileUpload",
+          "label": "Upload an image of your attendance register",
+          "required": true,
+          "multiple": true,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+          },
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "false"
+          }
+        },
+        {
+          "name": "overall_attendance",
+          "type": "group",
+          "layout": "label-value-list",
+          "label": "Overall attendance for this activity",
+          "required": true,
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "false"
+          },
+          "config": {
+            "showTotal": true,
+            "totalLabel": "Total attendees"
+          },
+          "fields": [
+            {
+              "name": "non_lda_attendees",
+              "type": "number",
+              "label": "Non-LDA attendees",
+              "placeholder": "Value",
+              "required": true
+            },
+            {
+              "name": "lda_staff_attendees",
+              "type": "number",
+              "label": "LDA staff attendees",
+              "placeholder": "Value",
+              "required": true
+            },
+            {
+              "name": "lda_board_member_attendees",
+              "type": "number",
+              "label": "LDA board member attendees",
+              "placeholder": "Value",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "demographics_of_attendees",
+          "type": "group",
+          "layout": "label-value-list",
+          "label": "Demographics of attendees",
+          "required": true,
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "false"
+          },
+          "config": {
+            "showTotal": false
+          },
+          "fields": [
+            {
+              "name": "youth_aged_attendees",
+              "type": "number",
+              "label": "Youth aged attendees (below 35)",
+              "placeholder": "Value",
+              "icon": "PersonStanding",
+              "required": true
+            },
+            {
+              "name": "male_attendees",
+              "type": "number",
+              "label": "Male attendees",
+              "placeholder": "Value",
+              "icon": "Venus",
+              "required": true
+            },
+            {
+              "name": "female_attendees",
+              "type": "number",
+              "label": "Female attendees",
+              "placeholder": "Value",
+              "icon": "Venus",
+              "required": true
+            },
+            {
+              "name": "other_attendees",
+              "type": "number",
+              "label": "\"Other\" attendees",
+              "placeholder": "Value",
+              "icon": "Venus",
+              "required": true
+            }
+          ]
+        },
+        {
+          "name": "attendance_not_taken",
           "type": "textarea",
-          "label": "At what venue did the training or campaign take place.",
+          "label": "Please provide a reason for attendance not taken ?",
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "true"
+          },
           "required": true
         }
       ]
     },
     {
-      "title": "Review the budget",
+      "title": "Activity outcomes",
       "fields": [
         {
-          "name": "line_item_1",
-          "type": "input",
-          "label": "Line Item #1",
+          "name": "activity_impact",
+          "type": "textarea",
+          "label": "Describe the impact of this activity",
+          "description": "Did participants find the training valuable and how will this training help improve their lives",
+          "placeholder": "Enter details here",
           "required": true
         },
         {
-          "name": "line_item_2",
-          "type": "input",
-          "label": "Line Item #2",
-          "required": false
+          "name": "activity_learnings",
+          "type": "textarea",
+          "label": "Describe any learnings from this activity",
+          "description": "What worked well and what would you change or do differently?",
+          "placeholder": "Enter details here",
+          "required": true
         },
         {
-          "name": "line_item_3",
-          "type": "input",
-          "label": "Line Item #3",
-          "required": false
+          "name": "major_deviations",
+          "type": "radio",
+          "label": "Where there any major deviations from what was planned in your application?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
         },
         {
-          "name": "line_item_4",
-          "type": "input",
-          "label": "Line Item #4",
-          "required": false
+          "name": "deviations_description",
+          "type": "textarea",
+          "label": "Please describe these deviations and how they were managed",
+          "placeholder": "Enter details here",
+          "show_if": {
+            "field": "major_deviations",
+            "value": "yes"
+          },
+          "required": true
         },
         {
-          "name": "line_item_5",
-          "type": "input",
-          "label": "Line Item #5",
-          "required": false
-        },
-        {
-          "name": "line_item_6",
-          "type": "input",
-          "label": "Line Item #6",
-          "required": false
+          "name": "activity_photos",
+          "type": "fileUpload",
+          "label": "Upload photos from this activity",
+          "required": false,
+          "multiple": true,
+          "show_if": {
+            "field": "major_deviations",
+            "value": "yes"
+          },
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+          }
         }
       ]
     },
     {
-      "title": "Sign the Applications Form",
+      "title": "Budget review",
       "fields": [
         {
-          "name": "signature",
-          "type": "input",
-          "label": "Digital Signature: Please type your full name as your digital signature",
+          "name": "total_cost",
+          "type": "currency",
+          "label": "What was the total cost of running this activity?",
           "required": true
         },
         {
-          "name": "signature_date",
-          "type": "input",
-          "label": "Date of signature",
-          "required": true
+          "name": "cost_slips",
+          "type": "fileUpload",
+          "label": "Please attach all slips for costs incurred",
+          "required": false,
+          "multiple": true,
+          "config": {
+            "destination": "document",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+          }
         }
       ]
     }

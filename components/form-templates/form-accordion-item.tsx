@@ -59,6 +59,7 @@ export default function FormAccordionItem({
 
   // Prepare fields with default values
   const fieldsWithDefaults = useMemo(() => {
+    console.log("defaultValues", defaultValues);
     return sectionData.fields.map((field, fieldIndex) => {
       // Check if field should be shown based on show_if condition
       let show = true;
@@ -92,6 +93,9 @@ export default function FormAccordionItem({
             fieldObj = { ...fieldObj, options: matchingRule.options };
           } else if (field.depends_on.default_options) {
             fieldObj = { ...fieldObj, options: field.depends_on.default_options };
+          }
+          if (matchingRule?.label) {
+            fieldObj = { ...fieldObj, label: matchingRule.label };
           }
         }
       }
@@ -377,10 +381,9 @@ export default function FormAccordionItem({
           // Find matching rule for the new value
           const matchingRule = f.depends_on.rules?.find((rule: DependsOnRule) => rule.when === value);
           const newOptions = matchingRule?.options || f.depends_on.default_options || f.options;
-          
+          const matchingRuleLabel = matchingRule?.label || f.label;
           // Clear the field value and update options
-          f = { ...f, options: newOptions, value: "", isValid: f.required ? false : true };
-          console.log("f", f);
+          f = { ...f, options: newOptions, value: "", isValid: f.required ? false : true, label: matchingRuleLabel };
           // Save the cleared value to API after a delay to not interfere with the original field save
           const dependentFieldName = f.name;
           setTimeout(() => {
