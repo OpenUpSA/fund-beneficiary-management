@@ -102,7 +102,7 @@ export function Nav() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard" className="flex items-center justify-center rounded-lg bg-white dark:bg-white">
-                <img src="/images/logo.webp" className="block h-8" alt={tN('logo alt')} />
+                <img src={process.env.NEXT_PUBLIC_LOGO_PATH || "/images/logo.webp"} className="block h-8" alt={tN('logo alt')} />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
