@@ -56,6 +56,7 @@
             "rules": [
               {
                 "when": "training",
+                "label": "Type of training to be given",
                 "options": [
                   {
                     "label": "Digital skills",
@@ -85,6 +86,7 @@
               },
               {
                 "when": "workshop",
+                "label": "Type of workshop to be given",
                 "options": [
                   {
                     "label": "Team Building",
@@ -106,6 +108,7 @@
               },
               {
                 "when": "campaign",
+                "label": "Type of campaign to be given",
                 "options": [
                   {
                     "label": "Awareness",
@@ -123,6 +126,7 @@
               },
               {
                 "when": "meeting",
+                "label": "Type of meeting to be given",
                 "options": [
                   {
                     "label": "Planning",
@@ -140,6 +144,7 @@
               },
               {
                 "when": "other",
+                "label": "Type of other activity to be given",
                 "options": [
                   {
                     "label": "Planning",

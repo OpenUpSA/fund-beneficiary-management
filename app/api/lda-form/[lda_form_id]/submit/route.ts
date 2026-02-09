@@ -4,7 +4,7 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import prisma from "@/db";
 import { permissions } from "@/lib/permissions";
 
-export async function PUT(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_form_id: string }> }) {
   try {
     // Check authentication
     const session = await getServerSession(NEXT_AUTH_OPTIONS);
@@ -12,7 +12,8 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const ldaFormId = parseInt(params.lda_form_id, 10);
+    const { lda_form_id } = await params;
+    const ldaFormId = parseInt(lda_form_id, 10);
     await req.json(); // Read request body but not using it
     
     // First, get the form to check LDA access
@@ -41,6 +42,7 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     });
     
     if (!underReviewStatus) {
+      console.log("Form status 'UnderReview' not found");
       return NextResponse.json({ error: "Form status 'UnderReview' not found" }, { status: 500 });
     }
     
@@ -58,7 +60,10 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     
     return NextResponse.json(updatedForm);
   } catch (error) {
-    console.error("Error submitting form:", error);
-    return NextResponse.json({ error: "Failed to submit form" }, { status: 500 });
+    console.log("Error submitting form:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error submitting form:", { message: errorMessage, stack: errorStack, error });
+    return NextResponse.json({ error: "Failed to submit form", details: errorMessage }, { status: 500 });
   }
 }

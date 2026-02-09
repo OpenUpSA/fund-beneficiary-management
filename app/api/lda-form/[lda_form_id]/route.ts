@@ -33,7 +33,7 @@ type OrganisationWithDetails = {
   staffMembers: StaffMember[];
 };
 
-const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source: string; path: string}) => {
+const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source: string; path: string}, linkedFormData?: Record<string, unknown> | null) => {
   switch (prefill.source) {
     case 'organisation':
       // Direct properties of the organisation
@@ -82,6 +82,22 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
         }
       }
       break;
+
+    case 'linkedForm':
+      // Properties from the linked form's formData
+      if (linkedFormData && prefill.path) {
+        const linkedValue = linkedFormData[prefill.path]
+        if (linkedValue !== undefined && linkedValue !== null) {
+          return linkedValue
+        }
+      }
+      break;
+
+    case 'defaultValue':
+      if (prefill.path) {
+        return prefill.path
+      }
+      break;
   }
   
 }
@@ -108,7 +124,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
       },
       formTemplate: true,
       formStatus: true,
-      createdBy: true
+      createdBy: true,
+      linkedForm: true,
     },
   })
 
@@ -127,6 +144,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     const formData = record.formData as Prisma.JsonObject || {}
     const formTemplate = record.formTemplate.form as unknown as Form
     const organisation = record.localDevelopmentAgency
+    const linkedFormData = record.linkedForm?.formData as Record<string, unknown> | null
     
     // Now you can safely access formTemplate.sections
     const sections = formTemplate.sections
@@ -138,7 +156,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
             if (field?.prefill) {
               const prefill = field?.prefill as { source: string; path: string }
               // Handle prefill based on the source
-              const value = getPrefillData(organisation, prefill)
+              const value = getPrefillData(organisation, prefill, linkedFormData)
               if (value && !(field.name in formData)) {
                 formData[field.name] = value
               }
@@ -147,7 +165,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
               field.fields.forEach((subfield: Field) => {
                 if (subfield?.prefill) {
                   const subprefill = subfield?.prefill as { source: string; path: string }
-                  const subvalue = getPrefillData(organisation, subprefill);
+                  const subvalue = getPrefillData(organisation, subprefill, linkedFormData);
                   if (subvalue && !(field.name + '_' + subfield.name in formData)) {
                     formData[field.name + '_' + subfield.name] = subvalue
                   }
@@ -348,14 +366,101 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
         amount: true,
         fundingStart: true,
         fundingEnd: true,
+        localDevelopmentAgencyId: true,
+        formTemplateId: true,
+        formData: true,
+        dueDate: true,
         formStatus: {
           select: {
             id: true,
             label: true
           }
+        },
+        formTemplate: {
+          select: {
+            linkedFormTemplateId: true,
+            linkedFormTemplate: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
         }
       }
     });
+
+    // Handle linked form based on status changes
+    if (updatedRecord.formTemplate?.linkedFormTemplateId) {
+      // Check if a linked form already exists for this form
+      const existingLinkedForm = await prisma.localDevelopmentAgencyForm.findFirst({
+        where: { linkedFormId: ldaFormId }
+      });
+
+      if (data.formStatusLabel === "Approved") {
+        if (!existingLinkedForm) {
+          // Get Draft status for the new form
+          const draftStatus = await prisma.formStatus.findFirst({
+            where: { label: "Draft" }
+          });
+
+          if (draftStatus) {
+            // Create the linked form (e.g., Report form linked to Application)
+            const linkedForm = await prisma.localDevelopmentAgencyForm.create({
+              data: {
+                localDevelopmentAgencyId: updatedRecord.localDevelopmentAgencyId,
+                formTemplateId: updatedRecord.formTemplate.linkedFormTemplateId,
+                formStatusId: draftStatus.id,
+                formData: {},
+                title: `${updatedRecord.formTemplate.linkedFormTemplate?.name || 'Linked Form'} - ${new Date().getFullYear()}`,
+                linkedFormId: ldaFormId,
+                dueDate: updatedRecord.dueDate,
+                fundingStart: updatedRecord.fundingStart,
+                fundingEnd: updatedRecord.fundingEnd,
+              }
+            });
+
+            return NextResponse.json({ ...updatedRecord, createdLinkedForm: linkedForm });
+          }
+        } else {
+          // Linked form exists, move it to Draft
+          const draftStatus = await prisma.formStatus.findFirst({
+            where: { label: "Draft" }
+          });
+
+          if (draftStatus) {
+            await prisma.localDevelopmentAgencyForm.update({
+              where: { id: existingLinkedForm.id },
+              data: { formStatusId: draftStatus.id }
+            });
+          }
+        }
+      } else if (data.formStatusLabel === "Rejected" && existingLinkedForm) {
+        // Move linked form to Rejected
+        const rejectedStatus = await prisma.formStatus.findFirst({
+          where: { label: "Rejected" }
+        });
+
+        if (rejectedStatus) {
+          await prisma.localDevelopmentAgencyForm.update({
+            where: { id: existingLinkedForm.id },
+            data: { formStatusId: rejectedStatus.id }
+          });
+        }
+      } else if (existingLinkedForm) {
+        // Move linked form to Paused
+        const pausedStatus = await prisma.formStatus.findFirst({
+          where: { label: "Paused" }
+        });
+
+        if (pausedStatus) {
+          await prisma.localDevelopmentAgencyForm.update({
+            where: { id: existingLinkedForm.id },
+            data: { formStatusId: pausedStatus.id }
+          });
+        }
+      }
+    }
     
     return NextResponse.json(updatedRecord);
   } catch (error) {

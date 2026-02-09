@@ -117,6 +117,18 @@ async function main() {
     }
   )
 
+  await prisma.formStatus.create(
+    {
+      data: { label: 'Draft', icon: 'FileEdit' }
+    }
+  )
+
+  await prisma.formStatus.create(
+    {
+      data: { label: 'UnderReview', icon: 'Eye' }
+    }
+  )
+
   const formTemplateGrantFundingApplication = await prisma.formTemplate.create(
     {
       data: {

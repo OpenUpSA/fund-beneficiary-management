@@ -185,7 +185,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                     </FormControl>
                     <SelectContent>
                       {formTemplates
-                        .filter(template => template.active === true)
+                        .filter(template => template.active === true && template.templateType !== 'REPORT')
                         .map((template) => (
                         <SelectItem
                           key={template.id}

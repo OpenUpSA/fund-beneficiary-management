@@ -216,25 +216,29 @@ model FormTemplate {
 }
 
 model LocalDevelopmentAgencyForm {
-  id                       Int                    @id @default(autoincrement())
+  id                       Int                          @id @default(autoincrement())
   localDevelopmentAgencyId Int
   formStatusId             Int
   formTemplateId           Int
   formData                 Json
   title                    String
   createdById              Int?
-  amount                   Decimal                @default(0) @db.Money
-  dueDate                  DateTime               @default(now())
-  fundingStart             DateTime               @default(now())
-  fundingEnd               DateTime               @default(now())
+  amount                   Decimal                      @default(0) @db.Money
+  dueDate                  DateTime                     @default(now())
+  fundingStart             DateTime                     @default(now())
+  fundingEnd               DateTime                     @default(now())
   submitted                DateTime?
   approved                 DateTime?
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
-  formStatus               FormStatus             @relation(fields: [formStatusId], references: [id])
-  formTemplate             FormTemplate           @relation(fields: [formTemplateId], references: [id])
-  localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
-  createdBy                User?                  @relation(fields: [createdById], references: [id])
+  linkedFormId             Int?
+  linkedForm               LocalDevelopmentAgencyForm?  @relation("LinkedForm", fields: [linkedFormId], references: [id])
+  linkedForms              LocalDevelopmentAgencyForm[] @relation("LinkedForm")
+  adminFeedback            String?
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  formStatus               FormStatus                   @relation(fields: [formStatusId], references: [id])
+  formTemplate             FormTemplate                 @relation(fields: [formTemplateId], references: [id])
+  localDevelopmentAgency   LocalDevelopmentAgency       @relation(fields: [localDevelopmentAgencyId], references: [id])
+  createdBy                User?                        @relation(fields: [createdById], references: [id])
   documents                Document[]
   media                    Media[]
 }

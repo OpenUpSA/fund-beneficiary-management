@@ -133,6 +133,13 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
     // reporting currently not computed in data model
 
     let result = ldaForms.filter((ldaForm) => {
+      // Hide REPORT type forms that are Paused
+      const isReportType = ldaForm.formTemplate?.templateType === 'REPORT'
+      const isPaused = ldaForm.formStatus?.label === 'Paused'
+      if (isReportType && isPaused) {
+        return false
+      }
+
       const searchMatch =
         searchTerm === "" ||
         ldaForm.title.toLowerCase().includes(searchTerm.toLowerCase())
