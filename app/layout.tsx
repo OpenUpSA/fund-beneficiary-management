@@ -19,7 +19,7 @@ const geistMono = localFont({
 export function generateMetadata(): Metadata {
   return {
     icons: {
-      icon: process.env.NEXT_PUBLIC_FAVICON_PATH || '/images/favicon/favicon.ico',
+      icon: process.env.NEXT_PUBLIC_FAVICON_PATH || '/images/favicon/favicon.png',
     },
     other: {
       ...Sentry.getTraceData()
