@@ -1,0 +1,297 @@
+{
+  "title": "FRIS Claim",
+  "sections": [
+    {
+      "title": "Activity information",
+      "fields": [
+        {
+          "name": "activity_name",
+          "type": "text",
+          "label": "Name of activity",
+          "required": true,
+          "placeholder": "Enter activity name"
+        },
+        {
+          "name": "activity_date",
+          "type": "date",
+          "label": "Date of activity",
+          "required": true
+        },
+        {
+          "name": "activity_type",
+          "type": "multiselect",
+          "label": "Type of activity",
+          "required": true,
+          "options": [
+            { "value": "sports_tournament", "label": "Sports tournament" },
+            { "value": "craft_market", "label": "Craft market" },
+            { "value": "cultural_event", "label": "Cultural event" },
+            { "value": "auction", "label": "Auction" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "name": "fund_raising_sources",
+          "type": "multiselect",
+          "label": "Fund raising sources",
+          "required": true,
+          "options": [
+            { "value": "ticket_sales", "label": "Ticket sales" },
+            { "value": "raffle", "label": "Raffle" },
+            { "value": "livestock_sales", "label": "Livestock sales" },
+            { "value": "food_beverage", "label": "Food & beverage" },
+            { "value": "clothing_crafts", "label": "Clothing & crafts" },
+            { "value": "auction_proceeds", "label": "Auction proceeds" },
+            { "value": "other", "label": "Other" }
+          ]
+        },
+        {
+          "name": "focus_areas",
+          "type": "multiselect",
+          "label": "Which of your focus areas does this activity relate to?",
+          "required": true,
+          "options": [
+            { "value": "youth", "label": "Youth" },
+            { "value": "justice", "label": "Justice" },
+            { "value": "gender", "label": "Gender" }
+          ]
+        },
+        {
+          "name": "activity_description",
+          "type": "textarea",
+          "label": "Briefly describe this activity",
+          "description": "Who was the event for, why was it held and what were the desired outcomes?",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "facilitators",
+          "type": "textarea",
+          "label": "Did anyone help facilitate or organise this activity?",
+          "description": "Provide the names of any individuals or organisations that assisted with this activity",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "activity_venue",
+          "type": "textarea",
+          "label": "Where was the activity held?",
+          "description": "What venue did you use and where is this venue situated?",
+          "required": true,
+          "placeholder": "Enter details here"
+        }
+      ]
+    },
+    {
+      "title": "Attendance",
+      "fields": [
+        {
+          "name": "did_not_take_attendance",
+          "type": "toggle",
+          "layout": "toggle",
+          "label": "We did not take attendance for this activity",
+          "required": false
+        },
+        {
+          "name": "attendance_register",
+          "type": "fileUpload",
+          "label": "Upload an image of your attendance register",
+          "required": true,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+          },
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "false"
+          }
+        },
+        {
+          "name": "overall_attendance",
+          "type": "group",
+          "label": "Overall attendance for this activity",
+          "layout": "label-value-list",
+          "required": true,
+          "fields": [
+            {
+              "name": "non_lda_attendees",
+              "type": "number",
+              "label": "Non-LDA attendees",
+              "placeholder": "Value"
+            },
+            {
+              "name": "lda_staff_attendees",
+              "type": "number",
+              "label": "LDA staff attendees",
+              "placeholder": "Value"
+            },
+            {
+              "name": "lda_board_member_attendees",
+              "type": "number",
+              "label": "LDA board member attendees",
+              "placeholder": "Value"
+            }
+          ],
+          "config": {
+            "showTotal": true,
+            "totalLabel": "Total attendees"
+          }
+        },
+        {
+          "name": "demographics_of_attendees",
+          "type": "group",
+          "label": "Demographics of attendees",
+          "layout": "label-value-list",
+          "required": true,
+          "fields": [
+            {
+              "name": "youth_attendees",
+              "type": "number",
+              "label": "Youth aged attendees (below 35)",
+              "placeholder": "Value",
+              "icon": "Sparkles"
+            },
+            {
+              "name": "male_attendees",
+              "type": "number",
+              "label": "Male attendees",
+              "placeholder": "Value",
+              "icon": "Venus"
+            },
+            {
+              "name": "female_attendees",
+              "type": "number",
+              "label": "Female attendees",
+              "placeholder": "Value",
+              "icon": "Venus"
+            },
+            {
+              "name": "other_attendees",
+              "type": "number",
+              "label": "\"Other\" attendees",
+              "placeholder": "Value",
+              "icon": "Venus"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Outcomes",
+      "fields": [
+        {
+          "name": "activity_impact",
+          "type": "textarea",
+          "label": "Describe the impact of this activity",
+          "description": "What impacts did this activity have on your organisation, your community or individuals?",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "activity_learnings",
+          "type": "textarea",
+          "label": "Learnings from this activity",
+          "description": "Will you change processes, partnerships or approaches based on how this activity went?",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "activity_photos",
+          "type": "fileUpload",
+          "label": "Upload photos from this activity",
+          "required": false,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Budget",
+      "fields": [
+        {
+          "name": "planned_total_cost",
+          "type": "currency",
+          "label": "Planned total cost to deliver this activity",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "budget_notice",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>Please use our budget template.</strong> To ensure you are reporting correctly, please use the template created by SCAT. <a href='/templates/budget.pdf' class='text-slate-500'>Download budget (.pdf)</a> or <a href='/templates/budget.xls' class='text-slate-500'>Download budget (.xls)</a>."
+        },
+        {
+          "name": "budget_upload",
+          "type": "fileUpload",
+          "label": "Upload a copy of your budget",
+          "required": true,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["application/pdf", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Activity costs",
+      "fields": [
+        {
+          "name": "total_cost",
+          "type": "currency",
+          "label": "What was the total cost of running this activity?",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "money_raised",
+          "type": "currency",
+          "label": "How much money was raised?",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "fris_funding_claimed",
+          "type": "currency",
+          "label": "FRIS funding amount being claimed from SCAT",
+          "required": true,
+          "placeholder": "R 0.00"
+        },
+        {
+          "name": "cost_slips",
+          "type": "fileUpload",
+          "label": "Please attach all slips for costs incurred",
+          "required": false,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Board approval",
+      "description": "In order to receive funding for this activity, we require signed approval from at least two board members.",
+      "fields": [
+        {
+          "name": "board_approval_notice",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>Download a board approval form.</strong> <a href='/templates/board-approval-form.pdf'>Download form</a>."
+        },
+        {
+          "name": "board_approval_form",
+          "type": "fileUpload",
+          "label": "Upload a signed board approval form",
+          "required": true,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+          }
+        }
+      ]
+    }
+  ]
+}

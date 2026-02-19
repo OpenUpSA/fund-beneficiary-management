@@ -85,17 +85,13 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
 
     case 'linkedForm':
       // Properties from the linked form's formData
+      console.log("linkedFormData", linkedFormData);
+      console.log(prefill.path);
       if (linkedFormData && prefill.path) {
         const linkedValue = linkedFormData[prefill.path]
         if (linkedValue !== undefined && linkedValue !== null) {
           return linkedValue
         }
-      }
-      break;
-
-    case 'defaultValue':
-      if (prefill.path) {
-        return prefill.path
       }
       break;
   }
@@ -288,7 +284,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
     const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
-      select: { localDevelopmentAgencyId: true }
+      select: { 
+        localDevelopmentAgencyId: true,
+        formData: true,
+        formTemplate: {
+          select: {
+            form: true
+          }
+        }
+      }
     });
 
     if (!existingForm) {
@@ -303,6 +307,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     }
 
     const data = await req.json();
+
+    // Validate admin feedback sections are complete before allowing Approved/Rejected status
+    if (data.formStatusLabel === "Approved" || data.formStatusLabel === "Rejected") {
+      const formTemplate = existingForm.formTemplate?.form as { sections?: Array<{ admin_feedback?: boolean; fields: Array<{ name: string; required?: boolean }> }> } | null;
+      const formData = existingForm.formData as Record<string, unknown> | null;
+      
+      if (formTemplate?.sections) {
+        const adminFeedbackSections = formTemplate.sections.filter(section => section.admin_feedback);
+        
+        for (const section of adminFeedbackSections) {
+          for (const field of section.fields) {
+            if (field.required) {
+              const value = formData?.[field.name];
+              if (!value || (typeof value === 'string' && value.trim() === '')) {
+                return NextResponse.json({ 
+                  error: "Please complete all required fields in the admin feedback section before setting status to Approved or Rejected" 
+                }, { status: 400 });
+              }
+            }
+          }
+        }
+      }
+    }
     
     // Prepare update data
     const updateData: {

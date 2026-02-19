@@ -38,7 +38,6 @@ const FormSchema = z.object({
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   templateType: z.enum(['APPLICATION', 'REPORT']),
   linkedFormTemplateId: z.number().nullable().optional(),
-  includeAdminFeedback: z.boolean(),
   sidebarConfig: z.object({
     amount: z.boolean(),
     status: z.boolean(),
@@ -71,7 +70,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       description: formTemplate ? formTemplate.description : "",
       templateType: formTemplate?.templateType || 'APPLICATION',
       linkedFormTemplateId: formTemplate?.linkedFormTemplateId || null,
-      includeAdminFeedback: formTemplate?.includeAdminFeedback || false,
       sidebarConfig: parsedSidebarConfig,
     },
   })
@@ -221,18 +219,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                   <Switch checked={field.value} onCheckedChange={field.onChange}/>
                 </FormControl>
                 <FormLabel className="font-normal">Active</FormLabel>
-              </FormItem>
-            )} />
-
-            <FormField
-              control={form.control}
-              name="includeAdminFeedback"
-              render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange}/>
-                </FormControl>
-                <FormLabel className="font-normal">Include Admin Feedback</FormLabel>
               </FormItem>
             )} />
 

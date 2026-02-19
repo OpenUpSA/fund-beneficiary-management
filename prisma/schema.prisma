@@ -208,7 +208,6 @@ model FormTemplate {
   linkedFormTemplateId        Int?
   linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
   linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
-  includeAdminFeedback        Boolean                      @default(false)
   sidebarConfig               Json                         @default("{\"amount\": true, \"status\": true, \"startDate\": true, \"endDate\": true, \"dueDate\": true}")
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @updatedAt
@@ -232,7 +231,6 @@ model LocalDevelopmentAgencyForm {
   linkedFormId             Int?
   linkedForm               LocalDevelopmentAgencyForm?  @relation("LinkedForm", fields: [linkedFormId], references: [id])
   linkedForms              LocalDevelopmentAgencyForm[] @relation("LinkedForm")
-  adminFeedback            String?
   createdAt                DateTime                     @default(now())
   updatedAt                DateTime                     @updatedAt
   formStatus               FormStatus                   @relation(fields: [formStatusId], references: [id])

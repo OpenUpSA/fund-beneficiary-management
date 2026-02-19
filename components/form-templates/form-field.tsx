@@ -14,7 +14,8 @@ import {
   CurrencyField,
   MultiSelect,
   FileUpload,
-  ToggleField
+  ToggleField,
+  InfoField
 } from "@/components/form-templates/custom-components"
 
 interface FormFieldProps {
@@ -85,6 +86,8 @@ function FieldRender({ inputField, isEditing, parentField, onValueChange, lda_id
       return <TextField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "toggle":
       return <ToggleField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "info":
+      return <InfoField field={inputField} />
     default:
       return <DefaultField field={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     }
@@ -127,7 +130,7 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
       return (
       <>
         {inputField.show && <>
-        <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />
+        {inputField.type !== "info" && <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />}
         {inputField.description && <FieldDescription description={inputField.description} />}
         <div className="text-sm mt-1 p-2 text-slate-700">
           {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>}

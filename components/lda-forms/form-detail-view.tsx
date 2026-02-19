@@ -88,8 +88,8 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
 
   const canEditAmountAndStatus = session?.user?.role === 'ADMIN' || session?.user?.role === 'PROGRAMME_OFFICER' || session?.user?.role === 'SUPER_USER'
 
-  const updateField = async (field: string, value: string | Date | number | undefined) => {
-    if (value === undefined) return; // Don't update if value is undefined
+  const updateField = async (field: string, value: string | Date | number | undefined): Promise<boolean> => {
+    if (value === undefined) return false; // Don't update if value is undefined
     try {
       // Prepare data based on field type
       const data: Record<string, string | Date | number> = {}
@@ -113,11 +113,15 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
       if (response.ok) {
         toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`)
         dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
+        return true
       } else {
-        toast.error('Failed to update field')
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Failed to update field')
+        return false
       }
     } catch {
       toast.error('An unexpected error occurred')
+      return false
     }
   }
 
@@ -214,6 +218,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 formId={ldaForm.id}
                 lda_id={ldaForm?.localDevelopmentAgencyId}
                 userRole={session?.user?.role}
+                formStatus={ldaForm.formStatus?.label}
                 setIsFormValid={setIsFormValid}
                 setCompletionStatus={setCompletionStatus}
                 dataChanged={dataChanged}
@@ -284,10 +289,15 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                     render={({ field }) => (
                       <Select 
                         value={field.value}
-                        onValueChange={(value) => {
+                        onValueChange={async (value) => {
+                          const previousValue = field.value
                           field.onChange(value)
                           if (canEditAmountAndStatus) {
-                            updateField('formStatusLabel', value)
+                            const success = await updateField('formStatusLabel', value)
+                            if (!success) {
+                              // Revert to previous value on failure
+                              field.onChange(previousValue)
+                            }
                           }
                         }}
                         disabled={!canEditAmountAndStatus}

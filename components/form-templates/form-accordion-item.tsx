@@ -15,6 +15,7 @@ interface FormAccordionItemProps {
   formId?: number | string
   lda_id?: number
   userRole?: string
+  formStatus?: string
   dataChanged?: (ldaId?: number, applicationId?: string | number) => Promise<void>
   onSectionStatusChange?: (status: { isValid: boolean; completed: number; required: number }) => void
 }
@@ -28,9 +29,25 @@ export default function FormAccordionItem({
   formId,
   lda_id,
   userRole,
+  formStatus,
   dataChanged,
   onSectionStatusChange,
 }: FormAccordionItemProps) {
+
+  // Check if section is visible to current user role
+  const isSectionVisible = useMemo(() => {
+    // If visible_to doesn't exist, section is visible to everyone
+    if (!sectionData.visible_to) return true;
+    
+    // If visible_to is an empty array, section is visible to no one
+    if (sectionData.visible_to.length === 0) return false;
+    
+    // If user has no role, hide restricted sections
+    if (!userRole) return false;
+    
+    // Check if user's role is in the visible_to array
+    return sectionData.visible_to.includes(userRole);
+  }, [sectionData.visible_to, userRole]);
 
   const isValueValid = (value: string, field: Field) => {
     if (field.type === "fileUpload") {
@@ -228,6 +245,16 @@ export default function FormAccordionItem({
     // Check if user's role is in the editable_by array
     return sectionData.editable_by.includes(userRole);
   }, [sectionData.editable_by, userRole]);
+
+  // Check if this section should always be editable for the current user
+  // (sections with editable_by that includes the user's role should be editable when form is UnderReview)
+  const isAlwaysEditableForUser = useMemo(() => {
+    if (!sectionData.editable_by || sectionData.editable_by.length === 0) return false;
+    if (!userRole) return false;
+    // Only allow editing when form is UnderReview
+    if (formStatus !== 'UnderReview') return false;
+    return sectionData.editable_by.includes(userRole);
+  }, [sectionData.editable_by, userRole, formStatus]);
 
   // Track section completion status
   const [section, setSection] = useState(() => {
@@ -454,6 +481,9 @@ export default function FormAccordionItem({
     }
   }, [calculateCompletionStatus, formId, isSectionEditable])
 
+  // Don't render section if not visible to current user
+  if (!isSectionVisible) return null;
+
   return (
     <AccordionItem 
       value={`section-${sectionIndex}`}
@@ -462,7 +492,7 @@ export default function FormAccordionItem({
       <AccordionTrigger 
         className={cn(
           "px-4 hover:no-underline",
-          section?.isValid ? "bg-green-50 dark:bg-green-950" : 
+          section?.isValid ? "bg-green-50 dark:bg-green-950" :
           !section?.isValid ? "bg-red-50 dark:bg-red-950" :
           "bg-white dark:bg-gray-900"
         )}
@@ -488,7 +518,7 @@ export default function FormAccordionItem({
       </AccordionTrigger>
       <AccordionContent className="px-2 pt-4 pb-4 bg-white dark:bg-gray-950">
         {section?.description && (
-          <p className="text-sm text-gray-500 mb-4">{section?.description}</p>
+          <p className="text-sm text-gray-500 mb-4 px-4">{section?.description}</p>
         )}
         {section?.notice && (
           <div className="mb-4 px-2">
@@ -508,7 +538,7 @@ export default function FormAccordionItem({
                 field={field}
                 lda_id={lda_id}
                 lda_form_id={formId}
-                isEditing={isEditing && isSectionEditable}
+                isEditing={(isEditing && isSectionEditable) || isAlwaysEditableForUser}
                 onValueChange={onChange}
               />
             ))}

@@ -242,6 +242,12 @@
           "placeholder": "0.00"
         },
         {
+          "name": "budget_notice",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>Please use our budget template.</strong> To ensure you are reporting correctly, please use the template created by SCAT. <a href='/templates/budget.pdf'>Download budget (.pdf)</a> or <a href='/templates/budget.xls'>Download budget (.xls)</a>."
+        },
+        {
           "name": "budget_upload",
           "type": "fileUpload",
           "label": "Upload a copy of your budget",
@@ -252,8 +258,29 @@
             "accepted_file_types": ["application/pdf", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel", "image/png", "image/jpeg", "image/jpg"]
           }
         }
-      ],
-      "notice": "Please use our budget template. To ensure you are reporting correctly, please use the template created by SCAT: Download budget template."
+      ]
+    },
+    {
+      "title": "Board approval",
+      "description": "In order to receive funding for this activity, we require signed approval from at least two board members.",
+      "fields": [
+        {
+          "name": "board_approval_notice",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>Download a board approval form.</strong> <a href='/templates/board-approval-form.pdf'>Download form</a>."
+        },
+        {
+          "name": "board_approval_form",
+          "type": "fileUpload",
+          "label": "Upload a signed board approval form",
+          "required": true,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+          }
+        }
+      ]
     }
   ]
 }

@@ -23,6 +23,7 @@ export function DynamicForm({
   formId,
   lda_id,
   userRole,
+  formStatus,
   setIsFormValid,
   setCompletionStatus,
   dataChanged,
@@ -35,6 +36,7 @@ export function DynamicForm({
   formId?: number | string
   lda_id?: number
   userRole?: string
+  formStatus?: string
   setIsFormValid?: (isValid: boolean) => void
   setCompletionStatus?: (status: { completed: number; required: number }) => void
   dataChanged?: (
@@ -71,12 +73,24 @@ export function DynamicForm({
   const prevFormValidRef = useRef<boolean | null>(null);
   const prevCompletionRef = useRef<{ completed: number; required: number } | null>(null);
 
+  // Calculate number of visible sections based on user role
+  const visibleSectionsCount = form.sections.filter(section => {
+    // If visible_to doesn't exist, section is visible to everyone
+    if (!section.visible_to) return true;
+    // If visible_to is an empty array, section is visible to no one
+    if (section.visible_to.length === 0) return false;
+    // If user has no role, hide restricted sections
+    if (!userRole) return false;
+    // Check if user's role is in the visible_to array
+    return section.visible_to.includes(userRole);
+  }).length;
+
   // Update form validity whenever section status changes
   useEffect(() => {
     // Calculate form validity
     if (setIsFormValid) {
       const allSectionsValid = Object.values(sectionStatusMap).every(status => status.isValid);
-      const allSectionsTracked = Object.keys(sectionStatusMap).length === form.sections.length;
+      const allSectionsTracked = Object.keys(sectionStatusMap).length === visibleSectionsCount;
       const isCurrentlyValid = allSectionsValid && allSectionsTracked;
 
       // Only update if validity changed
@@ -105,7 +119,7 @@ export function DynamicForm({
         setCompletionStatus(currentCompletion);
       }
     }
-  }, [sectionStatusMap, form.sections.length, setIsFormValid, setCompletionStatus]);
+  }, [sectionStatusMap, visibleSectionsCount, setIsFormValid, setCompletionStatus]);
 
   // Callback to update section status
   const handleSectionStatusChange = useCallback((sectionIndex: number, status: {
@@ -132,6 +146,7 @@ export function DynamicForm({
               defaultValues={formData}
               formId={formId}
               userRole={userRole}
+              formStatus={formStatus}
               lda_id={lda_id}
               dataChanged={dataChanged}
               onSectionStatusChange={(status: { isValid: boolean; completed: number; required: number }) => handleSectionStatusChange(index, status)}
