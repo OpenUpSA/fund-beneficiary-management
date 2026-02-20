@@ -76,7 +76,6 @@ export default function FormAccordionItem({
 
   // Prepare fields with default values
   const fieldsWithDefaults = useMemo(() => {
-    console.log("defaultValues", defaultValues);
     return sectionData.fields.map((field, fieldIndex) => {
       // Check if field should be shown based on show_if condition
       let show = true;

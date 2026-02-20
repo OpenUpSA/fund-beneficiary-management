@@ -28,7 +28,6 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 export default async function Page() {
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
 
-  console.log("formTemplates", formTemplates)
   return (
     <div>
       <BreadcrumbNav

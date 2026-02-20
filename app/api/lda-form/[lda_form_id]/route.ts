@@ -85,8 +85,6 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
 
     case 'linkedForm':
       // Properties from the linked form's formData
-      console.log("linkedFormData", linkedFormData);
-      console.log(prefill.path);
       if (linkedFormData && prefill.path) {
         const linkedValue = linkedFormData[prefill.path]
         if (linkedValue !== undefined && linkedValue !== null) {
