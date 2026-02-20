@@ -1,4 +1,4 @@
-export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable" | "multiselect" | "fileUpload" | "toggle";
+export type FieldType = "string" | "number" | "textarea" | "email" | "text" | "radio" | "group" | "select" | "date" | "currency" | "repeatable" | "multiselect" | "fileUpload" | "toggle" | "info";
 
 export interface Form {
   title: string;
@@ -56,6 +56,8 @@ export interface Section {
   notice?: string;
   fields: Field[];
   editable_by?: string[];
+  visible_to?: string[];
+  admin_feedback?: boolean;
 }
 
 export type FormData = Record<string, string | number | boolean | null | undefined>

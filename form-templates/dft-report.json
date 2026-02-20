@@ -445,6 +445,21 @@
           }
         }
       ]
+    },
+    {
+      "title": "SCAT Admin",
+      "visible_to": ["PROGRAMME_OFFICER", "ADMIN", "SUPER_USER"],
+      "editable_by": ["PROGRAMME_OFFICER", "ADMIN", "SUPER_USER"],
+      "admin_feedback": true,
+      "fields": [
+        {
+          "name": "po_monitoring_indicators",
+          "type": "textarea",
+          "label": "What development or learning indicators will the PO monitor after the event",
+          "required": true,
+          "placeholder": "Enter details here"
+        }
+      ]
     }
   ]
 }
