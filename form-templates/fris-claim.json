@@ -49,12 +49,8 @@
           "name": "focus_areas",
           "type": "multiselect",
           "label": "Which of your focus areas does this activity relate to?",
-          "required": true,
-          "options": [
-            { "value": "youth", "label": "Youth" },
-            { "value": "justice", "label": "Justice" },
-            { "value": "gender", "label": "Gender" }
-          ]
+          "config": { "dynamicOptionTable": "focus_areas" },
+          "required": true
         },
         {
           "name": "activity_description",

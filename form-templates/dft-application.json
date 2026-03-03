@@ -23,24 +23,20 @@
           "label": "Type of activity",
           "options": [
             {
-              "label": "Training",
-              "value": "training"
+              "label": "Campaigns",
+              "value": "campaigns"
             },
             {
               "label": "Workshop",
               "value": "workshop"
             },
             {
-              "label": "Campaign",
-              "value": "campaign"
+              "label": "Organisational capacity building",
+              "value": "organisational_capacity_building"
             },
             {
-              "label": "Meeting",
-              "value": "meeting"
-            },
-            {
-              "label": "Other",
-              "value": "other"
+              "label": "Community meetings",
+              "value": "community_meetings"
             }
           ],
           "required": true
@@ -55,28 +51,28 @@
             "field": "activity_type",
             "rules": [
               {
-                "when": "training",
-                "label": "Type of training to be given",
+                "when": "campaigns",
+                "label": "Type of campaigns to be given",
                 "options": [
                   {
-                    "label": "Digital skills",
-                    "value": "digital_skills"
+                    "label": "GBV prevention campaign",
+                    "value": "gbv_prevention_campaign"
                   },
                   {
-                    "label": "Leadership",
-                    "value": "leadership"
+                    "label": "Youth Campaign",
+                    "value": "youth_campaign"
                   },
                   {
-                    "label": "Financial Management",
-                    "value": "financial_management"
+                    "label": "Substance abuse campaign",
+                    "value": "substance_abuse_campaign"
                   },
                   {
-                    "label": "Project Management",
-                    "value": "project_management"
+                    "label": "Service delivery campaign",
+                    "value": "service_delivery_campaign"
                   },
                   {
-                    "label": "Advocacy",
-                    "value": "advocacy"
+                    "label": "Human rights campaign",
+                    "value": "human_rights_campaign"
                   },
                   {
                     "label": "Other",
@@ -89,52 +85,36 @@
                 "label": "Type of workshop to be given",
                 "options": [
                   {
-                    "label": "Team Building",
-                    "value": "team_building"
+                    "label": "Climate change workshop",
+                    "value": "climate_change_workshop"
                   },
                   {
-                    "label": "Strategy Planning",
-                    "value": "strategy"
+                    "label": "Gender related workshop",
+                    "value": "gender_related_workshop"
                   },
                   {
-                    "label": "Communication Skills",
-                    "value": "communication"
+                    "label": "Youth employment workshop",
+                    "value": "youth_employment_workshop"
                   },
                   {
-                    "label": "Other",
-                    "value": "other"
-                  }
-                ]
-              },
-              {
-                "when": "campaign",
-                "label": "Type of campaign to be given",
-                "options": [
-                  {
-                    "label": "Awareness",
-                    "value": "awareness"
+                    "label": "Youth development workshop",
+                    "value": "youth_development_workshop"
                   },
                   {
-                    "label": "Advocacy",
-                    "value": "advocacy"
+                    "label": "IDP workshop",
+                    "value": "idp_workshop"
                   },
                   {
-                    "label": "Other",
-                    "value": "other"
-                  }
-                ]
-              },
-              {
-                "when": "meeting",
-                "label": "Type of meeting to be given",
-                "options": [
-                  {
-                    "label": "Planning",
-                    "value": "planning"
+                    "label": "Human rights workshop",
+                    "value": "human_rights_workshop"
                   },
                   {
-                    "label": "Review",
-                    "value": "review"
+                    "label": "Food garden workshop",
+                    "value": "food_garden_workshop"
+                  },
+                  {
+                    "label": "Permaculture workshop",
+                    "value": "permaculture_workshop"
                   },
                   {
                     "label": "Other",
@@ -143,16 +123,42 @@
                 ]
               },
               {
-                "when": "other",
-                "label": "Type of other activity to be given",
+                "when": "organisational_capacity_building",
+                "label": "Type of Organisational capacity building to be given",
                 "options": [
                   {
-                    "label": "Planning",
-                    "value": "planning"
+                    "label": "Staff training",
+                    "value": "staff_training"
                   },
                   {
-                    "label": "Review",
-                    "value": "review"
+                    "label": "Board member training",
+                    "value": "board_member_training"
+                  },
+                  {
+                    "label": "Volunteer training",
+                    "value": "volunteer_training"
+                  },
+                  {
+                    "label": "Other",
+                    "value": "other"
+                  }
+                ]
+              },
+              {
+                "when": "community_meetings",
+                "label": "Type of community meeting to be given",
+                "options": [
+                  {
+                    "label": "Service delivery",
+                    "value": "service_delivery"
+                  },
+                  {
+                    "label": "Annual General meeting",
+                    "value": "annual_general_meeting"
+                  },
+                  {
+                    "label": "Community safety meetings",
+                    "value": "community_safety_meetings"
                   },
                   {
                     "label": "Other",
@@ -162,11 +168,10 @@
               }
             ],
             "enabled_when": [
-              "training",
+              "campaigns",
               "workshop",
-              "campaign",
-              "meeting",
-              "other"
+              "organisational_capacity_building",
+              "community_meetings"
             ],
             "default_disabled": true
           }
@@ -175,20 +180,7 @@
           "name": "focus_areas",
           "type": "multiselect",
           "label": "Which of your focus areas does this activity relate to?",
-          "options": [
-            {
-              "label": "Youth",
-              "value": "youth"
-            },
-            {
-              "label": "Justice",
-              "value": "justice"
-            },
-            {
-              "label": "Gender",
-              "value": "gender"
-            }
-          ],
+          "config": { "dynamicOptionTable": "focus_areas" },
           "required": true
         },
         {
