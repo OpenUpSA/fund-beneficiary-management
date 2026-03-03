@@ -4,6 +4,7 @@ import { Field } from "@/types/forms"
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
+import * as LucideIcons from "lucide-react"
 
 interface MultiSelectProps {
   field: Field
@@ -15,6 +16,7 @@ interface MultiSelectProps {
 interface Option {
   value: string
   label: string
+  icon?: React.ComponentType<{ className?: string }>
 }
 
 export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSelectProps) {
@@ -55,6 +57,9 @@ export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSe
         case 'committee_members':
           apiUrl = `/api/lda/${lda_id}/staff?is_committee=true`
           break
+        case 'focus_areas':
+          apiUrl = '/api/focus-area'
+          break
         // Add more cases as needed
         default:
           setOptions([])
@@ -75,6 +80,16 @@ export function MultiSelect({ field, isEditing, onValueChange, lda_id }: MultiSe
               value: item.id.toString(),
               label: `${item.firstName} ${item.lastName}`
             }))
+            setOptions(fetchedOptions)
+          } else if (field.config?.dynamicOptionTable === 'focus_areas') {
+            const fetchedOptions = data.map((item: { id: string | number, label: string, icon: string }) => {
+              const IconComponent = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[item.icon]
+              return {
+                value: item.id.toString(),
+                label: item.label,
+                icon: IconComponent ?? undefined,
+              }
+            })
             setOptions(fetchedOptions)
           } else {
             const fetchedOptions = data.map((item: { id: string | number, name: string }) => ({
