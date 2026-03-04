@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
-import { CalendarIcon, PlusIcon, SettingsIcon, Trash2Icon } from "lucide-react"
+import { PlusIcon, SettingsIcon, Trash2Icon } from "lucide-react"
 import { FormTemplate } from "@prisma/client"
 import {
   Table,
@@ -182,7 +182,7 @@ export function ReportScheduleConfigDialog({
         const error = await res.json()
         toast({ title: error.error || "Failed to create", variant: "destructive" })
       }
-    } catch (error) {
+    } catch {
       toast({ title: "Failed to create config", variant: "destructive" })
     }
   }
@@ -201,7 +201,7 @@ export function ReportScheduleConfigDialog({
       } else {
         toast({ title: "Failed to delete", variant: "destructive" })
       }
-    } catch (error) {
+    } catch {
       toast({ title: "Failed to delete", variant: "destructive" })
     }
   }
@@ -228,7 +228,7 @@ export function ReportScheduleConfigDialog({
       } else {
         toast({ title: "Failed to update", variant: "destructive" })
       }
-    } catch (error) {
+    } catch {
       toast({ title: "Failed to update", variant: "destructive" })
     }
   }
@@ -250,7 +250,7 @@ export function ReportScheduleConfigDialog({
         const error = await res.json()
         toast({ title: error.error || "Failed to generate", variant: "destructive" })
       }
-    } catch (error) {
+    } catch {
       toast({ title: "Failed to generate schedules", variant: "destructive" })
     }
   }
