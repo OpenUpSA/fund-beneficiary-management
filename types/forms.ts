@@ -32,7 +32,7 @@ export interface Field {
   isValid?: boolean;
   min?: number;
   max?: number;
-  show_if?: { field: string; value: string };
+  show_if?: { field: string; value: string; show_by_default?: boolean };
   depends_on?: DependsOn;
   value?: string;
   fields?: Field[];

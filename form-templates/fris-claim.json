@@ -23,10 +23,12 @@
           "label": "Type of activity",
           "required": true,
           "options": [
-            { "value": "sports_tournament", "label": "Sports tournament" },
-            { "value": "craft_market", "label": "Craft market" },
-            { "value": "cultural_event", "label": "Cultural event" },
-            { "value": "auction", "label": "Auction" },
+            { "value": "sport_tournament", "label": "Sport tournament" },
+            { "value": "cultural_day_event", "label": "Cultural day event" },
+            { "value": "heritage_day_event", "label": "Heritage Day event" },
+            { "value": "youth_day_event", "label": "Youth day event" },
+            { "value": "raffle", "label": "Raffle" },
+            { "value": "sale", "label": "Sale" },
             { "value": "other", "label": "Other" }
           ]
         },
@@ -34,16 +36,80 @@
           "name": "fund_raising_sources",
           "type": "multiselect",
           "label": "Fund raising sources",
+          "options": [],
           "required": true,
-          "options": [
-            { "value": "ticket_sales", "label": "Ticket sales" },
-            { "value": "raffle", "label": "Raffle" },
-            { "value": "livestock_sales", "label": "Livestock sales" },
-            { "value": "food_beverage", "label": "Food & beverage" },
-            { "value": "clothing_crafts", "label": "Clothing & crafts" },
-            { "value": "auction_proceeds", "label": "Auction proceeds" },
-            { "value": "other", "label": "Other" }
-          ]
+          "depends_on": {
+            "field": "activity_type",
+            "rules": [
+              {
+                "when": "sport_tournament",
+                "options": [
+                  { "label": "Ticket sale", "value": "ticket_sale" },
+                  { "label": "Food sale", "value": "food_sale" },
+                  { "label": "Other", "value": "other" }
+                ]
+              },
+              {
+                "when": "cultural_day_event",
+                "options": [
+                  { "label": "Ticket sale", "value": "ticket_sale" },
+                  { "label": "Food sale", "value": "food_sale" },
+                  { "label": "Jewelry sale", "value": "jewelry_sale" },
+                  { "label": "Other", "value": "other" }
+                ]
+              },
+              {
+                "when": "heritage_day_event",
+                "options": [
+                  { "label": "Ticket sale", "value": "ticket_sale" },
+                  { "label": "Food sale", "value": "food_sale" },
+                  { "label": "Jewelry sale", "value": "jewelry_sale" },
+                  { "label": "Traditional attire sale", "value": "traditional_attire_sale" },
+                  { "label": "Other", "value": "other" }
+                ]
+              },
+              {
+                "when": "youth_day_event",
+                "options": [
+                  { "label": "Ticket sale", "value": "ticket_sale" },
+                  { "label": "Food sale", "value": "food_sale" },
+                  { "label": "Other", "value": "other" }
+                ]
+              },
+              {
+                "when": "raffle",
+                "options": [
+                  { "label": "Ticket sale for raffle item", "value": "ticket_sale_raffle" }
+                ]
+              },
+              {
+                "when": "sale",
+                "options": [
+                  { "label": "Food", "value": "food" },
+                  { "label": "Bead work", "value": "bead_work" },
+                  { "label": "Traditional attire", "value": "traditional_attire" },
+                  { "label": "Livestock", "value": "livestock" },
+                  { "label": "Other", "value": "other" }
+                ]
+              },
+              {
+                "when": "other",
+                "options": [
+                  { "label": "Other", "value": "other" }
+                ]
+              }
+            ],
+            "enabled_when": [
+              "sport_tournament",
+              "cultural_day_event",
+              "heritage_day_event",
+              "youth_day_event",
+              "raffle",
+              "sale",
+              "other"
+            ],
+            "default_disabled": true
+          }
         },
         {
           "name": "focus_areas",
@@ -99,7 +165,8 @@
           },
           "show_if": {
             "field": "did_not_take_attendance",
-            "value": "false"
+            "value": "false",
+            "show_by_default": true
           }
         },
         {
@@ -113,24 +180,32 @@
               "name": "non_lda_attendees",
               "type": "number",
               "label": "Non-LDA attendees",
-              "placeholder": "Value"
+              "placeholder": "Value",
+              "required": true
             },
             {
               "name": "lda_staff_attendees",
               "type": "number",
               "label": "LDA staff attendees",
-              "placeholder": "Value"
+              "placeholder": "Value",
+              "required": true
             },
             {
               "name": "lda_board_member_attendees",
               "type": "number",
               "label": "LDA board member attendees",
-              "placeholder": "Value"
+              "placeholder": "Value",
+              "required": true
             }
           ],
           "config": {
             "showTotal": true,
             "totalLabel": "Total attendees"
+          },
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "true",
+            "show_by_default": false
           }
         },
         {
@@ -145,30 +220,39 @@
               "type": "number",
               "label": "Youth aged attendees (below 35)",
               "placeholder": "Value",
-              "icon": "Sparkles"
+              "icon": "PersonStanding",
+              "required": true
             },
             {
               "name": "male_attendees",
               "type": "number",
               "label": "Male attendees",
               "placeholder": "Value",
-              "icon": "Venus"
+              "icon": "Venus",
+              "required": true
             },
             {
               "name": "female_attendees",
               "type": "number",
               "label": "Female attendees",
               "placeholder": "Value",
-              "icon": "Venus"
+              "icon": "Venus",
+              "required": true
             },
             {
               "name": "other_attendees",
               "type": "number",
               "label": "\"Other\" attendees",
               "placeholder": "Value",
-              "icon": "Venus"
+              "icon": "Venus",
+              "required": true
             }
-          ]
+          ],
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "true",
+            "show_by_default": false
+          }
         }
       ]
     },
