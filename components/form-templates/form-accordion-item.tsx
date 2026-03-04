@@ -80,12 +80,14 @@ export default function FormAccordionItem({
       // Check if field should be shown based on show_if condition
       let show = true;
       if (field.show_if) {
-        const { field: conditionField, value: conditionValue } = field.show_if;
-        // Skip this field if the condition is not met
-        if (!defaultValues ||
-            !(conditionField in defaultValues) ||
-            String(defaultValues[conditionField]) !== conditionValue) {
-          show = false;
+        const { field: conditionField, value: conditionValue, show_by_default } = field.show_if;
+        const hasValue = defaultValues && (conditionField in defaultValues);
+        if (hasValue) {
+          // If the condition field has a saved value, evaluate normally
+          show = String(defaultValues![conditionField]) === conditionValue;
+        } else {
+          // No saved value yet: hide unless show_by_default is true
+          show = show_by_default === true;
         }
       }
 
@@ -148,12 +150,12 @@ export default function FormAccordionItem({
 
           let show_subfield = true;
           if (subfield.show_if) {
-            const { field: conditionField, value: conditionValue } = subfield.show_if;
-            // Skip this field if the condition is not met
-            if (!defaultValues ||
-                !(conditionField in defaultValues) ||
-                String(defaultValues[conditionField]) !== conditionValue) {
-              show_subfield = false;
+            const { field: conditionField, value: conditionValue, show_by_default } = subfield.show_if;
+            const hasValue = defaultValues && (conditionField in defaultValues);
+            if (hasValue) {
+              show_subfield = String(defaultValues![conditionField]) === conditionValue;
+            } else {
+              show_subfield = show_by_default === true;
             }
           }
           let subFieldObj = {
