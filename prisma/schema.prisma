@@ -212,6 +212,10 @@ model FormTemplate {
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @updatedAt
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
+  
+  // Report scheduling relations
+  reportConfigs               ReportScheduleConfig[]       @relation("ApplicationReportConfigs")
+  linkedAsReportIn            ReportScheduleConfig[]       @relation("ReportTemplateConfigs")
 }
 
 model LocalDevelopmentAgencyForm {
@@ -465,4 +469,66 @@ enum FundAmountType {
 enum FormTemplateType {
   APPLICATION
   REPORT
+}
+
+enum ReportFrequency {
+  MONTHLY
+  QUARTERLY
+  BIANNUALLY
+  ANNUALLY
+}
+
+// Configuration for linking report templates to application templates with scheduling
+model ReportScheduleConfig {
+  id                      Int              @id @default(autoincrement())
+  
+  // The APPLICATION form template this config belongs to
+  applicationTemplateId   Int
+  applicationTemplate     FormTemplate     @relation("ApplicationReportConfigs", fields: [applicationTemplateId], references: [id], onDelete: Cascade)
+  
+  // The REPORT form template to generate
+  reportTemplateId        Int
+  reportTemplate          FormTemplate     @relation("ReportTemplateConfigs", fields: [reportTemplateId], references: [id], onDelete: Cascade)
+  
+  // Scheduling configuration
+  frequency               ReportFrequency  @default(QUARTERLY)
+  availableDaysBefore     Int              @default(14)  // Days before period end when report becomes available
+  dueDaysAfterPeriodEnd   Int              @default(0)   // Days after period end for due date (negative = before)
+  
+  active                  Boolean          @default(true)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  
+  // Generated schedules for this config
+  periodSchedules         ReportPeriodSchedule[]
+  
+  @@unique([applicationTemplateId, reportTemplateId, frequency])
+}
+
+// Pre-generated schedule for each period (allows manual date adjustments)
+model ReportPeriodSchedule {
+  id                      Int                    @id @default(autoincrement())
+  
+  reportConfigId          Int
+  reportConfig            ReportScheduleConfig   @relation(fields: [reportConfigId], references: [id], onDelete: Cascade)
+  
+  year                    Int                    // e.g., 2026
+  period                  Int                    // 1-12 for monthly, 1-4 for quarterly, 1-2 for biannually, 1 for annually
+  
+  // Period boundaries
+  periodStart             DateTime
+  periodEnd               DateTime
+  
+  // Calculated dates (editable by user)
+  availableDate           DateTime
+  dueDate                 DateTime
+  
+  // Track if user has customized dates
+  isCustomized            Boolean                @default(false)
+  note                    String?                // e.g., "Holiday adjustment"
+  
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  
+  @@unique([reportConfigId, year, period])
 }

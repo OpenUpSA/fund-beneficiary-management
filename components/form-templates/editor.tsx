@@ -8,6 +8,7 @@ import { EyeIcon, SaveIcon } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
+import { ReportScheduleConfigDialog } from "@/components/form-templates/report-schedule-config"
 import { Form, FormData } from "@/types/forms"
 
 export default function Editor({ formTemplate, allTemplates = [] }: { 
@@ -70,6 +71,12 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
             <SaveIcon />
           </Button>
           <FormDialog formTemplate={formTemplate} allTemplates={allTemplates} />
+          {formTemplate.templateType === "APPLICATION" && (
+            <ReportScheduleConfigDialog 
+              applicationTemplate={formTemplate} 
+              reportTemplates={allTemplates.filter(t => t.templateType === "REPORT")} 
+            />
+          )}
           <DeleteDialog formTemplate={formTemplate} />
         </div>
       </div>
