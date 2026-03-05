@@ -23,9 +23,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
-import { PencilIcon, PlusIcon } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDownIcon, CopyIcon, PencilIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { FormTemplate } from "@prisma/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -52,6 +57,7 @@ interface FormDialogProps {
   allTemplates?: FormTemplate[]
 }
 
+// Edit Form Template Dialog (used when editing existing template)
 export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps) {
   const [open, setOpen] = useState(false)
 
@@ -74,7 +80,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
     },
   })
 
-  // Filter templates for linking (exclude self)
   const availableTemplatesForLinking = allTemplates.filter(t => 
     t.id !== formTemplate?.id
   )
@@ -83,50 +88,32 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
     setOpen(false)
 
     if (formTemplate) {
-      toast({
-        title: 'Updating form template...',
-        variant: 'processing'
-      })
+      toast({ title: 'Updating form template...', variant: 'processing' })
       await fetch(`/api/form-template/${formTemplate?.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast({
-        title: 'Form template updated',
-        variant: 'success'
-      })
+      toast({ title: 'Form template updated', variant: 'success' })
     } else {
-      toast({
-        title: 'Creating form template...',
-        variant: 'processing'
-      })
+      toast({ title: 'Creating form template...', variant: 'processing' })
       await fetch(`/api/form-template/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast({
-        title: 'Form template created',
-        variant: 'success'
-      })
+      toast({ title: 'Form template created', variant: 'success' })
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          {formTemplate ? <>
-            <span className="hidden md:inline">Edit details</span>
-            <PencilIcon />
-          </>
-            : <>
-              <span className="hidden md:inline">Create form template</span>
-              <PlusIcon />
-            </>}
+      {formTemplate && (
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          <span className="hidden md:inline">Edit details</span>
+          <PencilIcon />
         </Button>
-      </DialogTrigger>
+      )}
       <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
         <DialogHeader className="p-5 border-b">
           <DialogTitle>{formTemplate ? "Edit" : "Create"} form template</DialogTitle>
@@ -134,6 +121,350 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
             <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>About</FormLabel>
+                    <FormControl>
+                      <Textarea rows={5} className="resize-none" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="templateType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Template Type</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="APPLICATION">Application</SelectItem>
+                        <SelectItem value="REPORT">Report</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="linkedFormTemplateId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Linked Form Template</FormLabel>
+                    <Select 
+                      value={field.value?.toString() || 'none'} 
+                      onValueChange={(val) => field.onChange(val === 'none' ? null : parseInt(val))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select form template" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {availableTemplatesForLinking.map((t) => (
+                          <SelectItem key={t.id} value={t.id.toString()}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="active"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange}/>
+                    </FormControl>
+                    <FormLabel className="font-normal">Active</FormLabel>
+                  </FormItem>
+                )}
+              />
+
+              <div className="rounded-md border p-4 space-y-3">
+                <Label className="text-sm font-medium">Sidebar Configs</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="sidebarConfig.amount"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">Amount</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sidebarConfig.status"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">Status</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sidebarConfig.startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">Start Date</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sidebarConfig.endDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">End Date</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="sidebarConfig.dueDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel className="font-normal">Due Date</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
+              <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+              <Button type="submit" className="sm:order-2 order-1">{formTemplate ? "Save changes" : "Create Form Template"}</Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Clone Form Template Dialog
+interface CloneDialogProps {
+  allTemplates: FormTemplate[]
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+  const [cloneName, setCloneName] = useState("")
+
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplate(templateId)
+    const template = allTemplates.find(t => t.id.toString() === templateId)
+    if (template) {
+      setCloneName(`${template.name} - Copy`)
+    }
+  }
+
+  const handleClone = async () => {
+    if (!selectedTemplate || !cloneName.trim()) {
+      toast({ title: "Please select a template and enter a name", variant: "destructive" })
+      return
+    }
+
+    onOpenChange(false)
+    toast({ title: 'Cloning form template...', variant: 'processing' })
+
+    const res = await fetch(`/api/form-template/${selectedTemplate}/clone`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: cloneName.trim() }),
+    })
+
+    if (res.ok) {
+      toast({ title: 'Form template cloned', variant: 'success' })
+      setSelectedTemplate("")
+      setCloneName("")
+    } else {
+      const error = await res.json()
+      toast({ title: error.error || 'Failed to clone template', variant: 'destructive' })
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Clone Form Template</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Select Template to Clone</Label>
+            <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a template" />
+              </SelectTrigger>
+              <SelectContent>
+                {allTemplates.map((t) => (
+                  <SelectItem key={t.id} value={t.id.toString()}>
+                    {t.name} ({t.templateType})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedTemplate && (
+            <div className="space-y-2">
+              <Label>New Template Name</Label>
+              <Input 
+                value={cloneName} 
+                onChange={(e) => setCloneName(e.target.value)}
+                placeholder="Enter name for cloned template"
+              />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleClone} disabled={!selectedTemplate || !cloneName.trim()}>
+            <CopyIcon className="h-4 w-4 mr-2" />
+            Clone Template
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Create Template Dropdown Button with options for New and Clone
+interface CreateTemplateButtonProps {
+  allTemplates: FormTemplate[]
+}
+
+export function CreateTemplateButton({ allTemplates }: CreateTemplateButtonProps) {
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false)
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline">
+            <span className="hidden md:inline">Create template</span>
+            <ChevronDownIcon className="h-4 w-4 ml-1" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setCreateDialogOpen(true)}>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Create new template
+          </DropdownMenuItem>
+          {allTemplates.length > 0 && (
+            <DropdownMenuItem onClick={() => setCloneDialogOpen(true)}>
+              <CopyIcon className="h-4 w-4 mr-2" />
+              Clone existing template
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Create New Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
+          <CreateNewTemplateForm onClose={() => setCreateDialogOpen(false)} allTemplates={allTemplates} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Clone Dialog */}
+      <CloneDialog 
+        allTemplates={allTemplates} 
+        open={cloneDialogOpen} 
+        onOpenChange={setCloneDialogOpen} 
+      />
+    </>
+  )
+}
+
+// Create New Template Form (extracted for use in dialog)
+interface CreateNewTemplateFormProps {
+  onClose: () => void
+  allTemplates: FormTemplate[]
+}
+
+function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormProps) {
+  const defaultSidebarConfig = { amount: true, status: true, startDate: true, endDate: true, dueDate: true }
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      name: "",
+      active: true,
+      description: "",
+      templateType: 'APPLICATION',
+      linkedFormTemplateId: null,
+      sidebarConfig: defaultSidebarConfig,
+    },
+  })
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    onClose()
+    toast({ title: 'Creating form template...', variant: 'processing' })
+    await fetch(`/api/form-template/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+    toast({ title: 'Form template created', variant: 'success' })
+  }
+
+  return (
+    <>
+      <DialogHeader className="p-5 border-b">
+        <DialogTitle>Create form template</DialogTitle>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
+          <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -143,10 +474,10 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
-
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="description"
@@ -156,7 +487,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                   <FormControl>
                     <Textarea rows={5} className="resize-none" {...field} />
                   </FormControl>
-
                 </FormItem>
               )}
             />
@@ -199,7 +529,7 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {availableTemplatesForLinking.map((t) => (
+                      {allTemplates.map((t) => (
                         <SelectItem key={t.id} value={t.id.toString()}>
                           {t.name}
                         </SelectItem>
@@ -214,13 +544,14 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
               control={form.control}
               name="active"
               render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-2 space-y-0">
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange}/>
-                </FormControl>
-                <FormLabel className="font-normal">Active</FormLabel>
-              </FormItem>
-            )} />
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange}/>
+                  </FormControl>
+                  <FormLabel className="font-normal">Active</FormLabel>
+                </FormItem>
+              )}
+            />
 
             <div className="rounded-md border p-4 space-y-3">
               <Label className="text-sm font-medium">Sidebar Configs</Label>
@@ -287,14 +618,13 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                 />
               </div>
             </div>
-            </div>
-            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
-              <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
-              <Button type="submit" className="sm:order-2 order-1">{formTemplate ? "Save changes" : "Create Form Template"}</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </div>
+          <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
+            <Button type="button" onClick={onClose} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+            <Button type="submit" className="sm:order-2 order-1">Create Form Template</Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </>
   )
 }

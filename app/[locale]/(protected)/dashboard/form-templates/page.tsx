@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Link } from "@/i18n/routing"
 
 import { FormTemplateWithRelations } from "@/types/models"
-import { FormDialog } from "@/components/form-templates/form"
+import { CreateTemplateButton } from "@/components/form-templates/form"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -39,7 +39,7 @@ export default async function Page() {
       <div className="flex flex-wrap items-center justify-between">
         <h1 className="text-xl md:text-2xl font-semibold">Form Templates</h1>
         <div className="space-x-2">
-          <FormDialog allTemplates={formTemplates}/>
+          <CreateTemplateButton allTemplates={formTemplates}/>
         </div>
       </div>
       <div className="sm:flex sm:space-x-4 mt-4">
