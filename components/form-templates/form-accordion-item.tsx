@@ -33,7 +33,6 @@ export default function FormAccordionItem({
   dataChanged,
   onSectionStatusChange,
 }: FormAccordionItemProps) {
-
   // Check if section is visible to current user role
   const isSectionVisible = useMemo(() => {
     // If visible_to doesn't exist, section is visible to everyone
@@ -78,7 +77,8 @@ export default function FormAccordionItem({
   const fieldsWithDefaults = useMemo(() => {
     return sectionData.fields.map((field, fieldIndex) => {
       // Check if field should be shown based on show_if condition
-      let show = true;
+      // Preserve explicit show: false from JSON config
+      let show = field.show !== false;
       if (field.show_if) {
         const { field: conditionField, value: conditionValue, show_by_default } = field.show_if;
         const hasValue = defaultValues && (conditionField in defaultValues);
@@ -132,24 +132,66 @@ export default function FormAccordionItem({
         fieldObj = { ...fieldObj, value, isValid };
       }
 
-      if (field.layout === "repeatable") {
-        const repeatableCounter = fieldObj.value ? JSON.parse(fieldObj.value) : 1;
-        // loop over counter to copy over template list to field.fields
-        const repeatableFields: Field[] = [];
-        for (let i = 0; i < repeatableCounter; i++) {
-          repeatableFields.push(...createFieldFromTemplate(field, i));
+      if (field.layout === "repeatable" || field.layout === "narrative-repeatable" || field.layout === "challenges" || field.layout === "partnerships") {
+        // Parse indices - handle both array format [1,3,4] and old count format (number)
+        let indices: number[] = [];
+        try {
+          const parsed = fieldObj.value ? JSON.parse(fieldObj.value) : [];
+          if (Array.isArray(parsed)) {
+            indices = parsed;
+          } else if (typeof parsed === "number") {
+            // Convert old count format to indices array [1, 2, 3, ...]
+            indices = parsed > 0 ? Array.from({ length: parsed }, (_, i) => i + 1) : [];
+          }
+        } catch {
+          indices = []; // Default to empty
         }
+        
+        // Create fields for each index
+        const repeatableFields: Field[] = [];
+        indices.forEach((idx) => {
+          repeatableFields.push(...createFieldFromTemplate(field, idx - 1)); // idx-1 because createFieldFromTemplate adds 1
+        });
         field.fields = repeatableFields.flat();
-        fieldObj = { ...fieldObj, value: JSON.stringify(repeatableCounter) };
+        fieldObj = { ...fieldObj, value: JSON.stringify(indices) };
+      }
+
+      // For casework-categories, data-grid, finalised-cases, garden-beneficiaries, and garden-yields layouts, populate fields from defaultValues
+      if ((field.layout === "casework-categories" || field.layout === "data-grid" || field.layout === "finalised-cases" || field.layout === "garden-beneficiaries" || field.layout === "garden-yields") && defaultValues) {
+        const fieldPrefix = field.name + '_';
+        const dynamicFields: Field[] = [];
+        
+        // Get source field prefix if this layout links to another field (e.g., garden-beneficiaries links to community_gardens)
+        const sourceFieldPrefix = field.config?.sourceField ? String(field.config.sourceField) + '_' : null;
+        
+        Object.keys(defaultValues).forEach(key => {
+          // Include fields that match this field's prefix OR the source field's prefix
+          if (key.startsWith(fieldPrefix) || (sourceFieldPrefix && key.startsWith(sourceFieldPrefix))) {
+            dynamicFields.push({
+              name: key,
+              type: 'text',
+              label: '',
+              value: String(defaultValues[key]),
+              show: true,
+              isValid: true
+            });
+          }
+        });
+        
+        if (dynamicFields.length > 0) {
+          field.fields = dynamicFields;
+          fieldObj = { ...fieldObj, fields: dynamicFields };
+        }
+        // Skip normal subfield processing for these layouts - fields already have correct names
+        return fieldObj;
       }
 
       // Process subfields if they exist
       if (field.fields) {
         const subFields = field.fields.map((subfield) => {
           const subfieldName = field.name + '_' + subfield.name;
-
-          let show_subfield = true;
-          if (subfield.show_if) {
+          let show_subfield = subfield.show !== false;
+          if (subfield.show_if !== undefined) {
             const { field: conditionField, value: conditionValue, show_by_default } = subfield.show_if;
             const hasValue = defaultValues && (conditionField in defaultValues);
             if (hasValue) {
@@ -186,20 +228,28 @@ export default function FormAccordionItem({
           isValid: field.required ? allRequiredSubfieldsValid : true
         };
       }
-      
       return fieldObj;
     }) as Field[];
   }, [sectionData.fields, defaultValues]);
 
   const flattenVisibleRepeatableFields = (fields: Field[]): Field[] =>
-    fields.flatMap(field =>
-      field.type === "repeatable" && field.show
-        ? [
-            field,
-            ...(field.fields?.filter(f => f.show) ?? [])
-          ]
-      : field.show ? field: []
-  )
+    fields.flatMap(field => {
+      // Handle repeatable fields
+      if (field.type === "repeatable" && field.show) {
+        return [
+          field,
+          ...(field.fields?.filter(f => f.show) ?? [])
+        ]
+      }
+      // Handle custom layout fields (casework-categories, finalised-cases, garden-beneficiaries, garden-yields, data-grid)
+      if (field.layout && ['casework-categories', 'finalised-cases', 'garden-beneficiaries', 'garden-yields', 'data-grid'].includes(field.layout) && field.show) {
+        return [
+          field,
+          ...(field.fields?.filter(f => f.show) ?? [])
+        ]
+      }
+      return field.show ? [field] : []
+    })
 
   // Calculate initial completion status
   const calculateCompletionStatus = useCallback((fields: Field[]) => {
@@ -269,6 +319,25 @@ export default function FormAccordionItem({
     };
   });
 
+  // Check if section has any status fields and get their completion state
+  // Use section.fields to react to updates from custom layouts
+  const statusFieldsState = useMemo(() => {
+    const fields = section?.fields || fieldsWithDefaults;
+    // Find all fields that end with _status and check their values
+    const statusFields = fields.filter((f: Field) => f.name.endsWith('_status'));
+    if (statusFields.length === 0) return null;
+    
+    const hasIncomplete = statusFields.some((f: Field) => f.value === 'incomplete');
+    const hasComplete = statusFields.some((f: Field) => f.value === 'complete');
+    
+    // If we have status fields, use them to determine completion
+    return {
+      hasStatusFields: true,
+      isComplete: !hasIncomplete && hasComplete,
+      isIncomplete: hasIncomplete
+    };
+  }, [section?.fields, fieldsWithDefaults]);
+
   // Use ref to track previous state to prevent unnecessary updates
   const prevSectionRef = useRef<{
     isValid: boolean;
@@ -281,35 +350,41 @@ export default function FormAccordionItem({
 
     if (!onSectionStatusChange || !section) return;
 
+    // Determine effective isValid - use status fields if available
+    const effectiveIsValid = statusFieldsState?.hasStatusFields 
+      ? statusFieldsState.isComplete 
+      : section.isValid;
+
     // Only update if values have changed
     const prevSection = prevSectionRef.current;
     if (
       !prevSection ||
-      prevSection.isValid !== section.isValid ||
+      prevSection.isValid !== effectiveIsValid ||
       prevSection.completed !== section.completed ||
       prevSection.required !== section.required
     ) {
       // Update the ref with current values
       prevSectionRef.current = {
-        isValid: section.isValid,
+        isValid: effectiveIsValid,
         completed: section.completed,
         required: section.required
       };
       
-      // Notify parent
+      // Notify parent with effective validity
       onSectionStatusChange({
-        isValid: section.isValid,
+        isValid: effectiveIsValid,
         completed: section.completed,
         required: section.required
       });
     }
-  }, [section?.isValid, section?.completed, section?.required, onSectionStatusChange, section]);
+  }, [section?.isValid, section?.completed, section?.required, onSectionStatusChange, section, statusFieldsState]);
 
-  // Create a ref to store the debounced function to prevent recreation on every render
+  // Create a ref to store per-field timeouts to prevent rapid edits from canceling each other
   type SaveFieldFunction = (fieldName: string, fieldValue: string) => Promise<void>;
   const debouncedSaveRef = useRef<SaveFieldFunction | null>(null);
+  const fieldTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   
-  // Initialize the debounced save function
+  // Initialize the debounced save function with per-field debouncing
   useEffect(() => {
     // Define the function that will actually save the data
     const saveFieldData = async (fieldName: string, fieldValue: string): Promise<void> => {
@@ -332,22 +407,27 @@ export default function FormAccordionItem({
       }
     };
     
-    // Debounce function to limit how often the API calls are made
-    function debounce(func: SaveFieldFunction, delay: number): SaveFieldFunction {
-      let timeoutId: NodeJS.Timeout;
-      return (fieldName: string, fieldValue: string) => {
-        clearTimeout(timeoutId);
-        return new Promise<void>((resolve) => {
-          timeoutId = setTimeout(async () => {
-            await func(fieldName, fieldValue);
-            resolve();
-          }, delay);
-        });
-      };
-    }
+    // Per-field debounce function - each field has its own timeout
+    const debouncedSave: SaveFieldFunction = (fieldName: string, fieldValue: string) => {
+      // Clear existing timeout for this specific field
+      const existingTimeout = fieldTimeoutsRef.current.get(fieldName);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+      
+      return new Promise<void>((resolve) => {
+        const timeoutId = setTimeout(async () => {
+          fieldTimeoutsRef.current.delete(fieldName);
+          await saveFieldData(fieldName, fieldValue);
+          resolve();
+        }, 500);
+        
+        fieldTimeoutsRef.current.set(fieldName, timeoutId);
+      });
+    };
 
     // Store the debounced function in the ref
-    debouncedSaveRef.current = debounce(saveFieldData, 500);
+    debouncedSaveRef.current = debouncedSave;
   }, [formId, dataChanged, lda_id]);
 
   const onChange = useCallback((field: Field, value: string) => {
@@ -361,44 +441,104 @@ export default function FormAccordionItem({
       // Update the field with new value and validate it
       updatedSection.fields = updatedSection.fields.map((f: Field) => {
 
-        // if field type repeatable, add or remove fields based on the value index
-        if (f.type === "repeatable" && f.name === field.name) {
-          const newCounter = JSON.parse(value);
-          const oldCounter = JSON.parse(f?.value || "1");
-
-          if (newCounter > oldCounter) {
-            const to_add = newCounter - oldCounter;
-            const newFields = [] as Field[];
-            for (let i = 0; i < to_add; i++) {
-              newFields.push(...createFieldFromTemplate(f, oldCounter + i));
+        // if field type repeatable or has repeatable layout, add or remove fields based on the value index
+        if ((f.type === "repeatable" || f.layout === "partnerships") && f.name === field.name) {
+          // Helper to safely get current counter from f.value
+          const getCurrentCounter = (): number => {
+            if (!f?.value) return 1;
+            // If value is corrupted (e.g., "delete:X"), get count from existing fields
+            if (f.value.startsWith("delete:") || isNaN(parseInt(f.value))) {
+              const existingIndices = new Set((f?.fields || []).map(field => field.groupIndex).filter(Boolean));
+              return existingIndices.size;
             }
-            const subFields = newFields.flat().map((subfield) => {
-              const subfieldName = f.name + '_' + subfield.name;
-    
-              const subFieldObj = {
-                ...subfield,
-                name: subfieldName,
-                show: subfield.show_if ? false : true,
-                isValid: subfield.required ? false : true
-              };
-              return subFieldObj;
-            });
-            f.fields = [...(f.fields || []), ...subFields];
-          } else {
-            const removedFields = (f?.fields || []).filter((field) => field?.groupIndex && field?.groupIndex > newCounter);
-            // loop over fields that are removed and update their value to ""
+            try {
+              return JSON.parse(f.value);
+            } catch {
+              const existingIndices = new Set((f?.fields || []).map(field => field.groupIndex).filter(Boolean));
+              return existingIndices.size;
+            }
+          };
+          
+          // Check if this is a delete specific index command (format: "delete:INDEX")
+          if (value.startsWith("delete:")) {
+            const deleteIndex = parseInt(value.split(":")[1]);
+            
+            // Clear values for deleted fields in DB
+            const removedFields = (f?.fields || []).filter((field) => field?.groupIndex === deleteIndex);
             removedFields.forEach((field) => {
-              field.value = "";
               if (debouncedSaveRef.current) {
                 debouncedSaveRef.current(field.name, "");
               }
             });
-            f.fields = (f?.fields || []).filter((field) => field?.groupIndex && field?.groupIndex <= newCounter);
+            
+            // Filter out deleted fields - keep original indices (no reindexing needed)
+            const remainingFields = (f?.fields || []).filter((field) => field?.groupIndex !== deleteIndex);
+            
+            // Get remaining indices as sorted array (e.g., [1, 3, 4] if we deleted 2)
+            const remainingIndices = Array.from(
+              new Set(remainingFields.map(field => field.groupIndex).filter(Boolean))
+            ).sort((a, b) => (a as number) - (b as number));
+            
+            f.fields = remainingFields;
+            // Store indices array instead of count (e.g., "[1,3,4]" instead of "3")
+            f = { ...f, value: JSON.stringify(remainingIndices) };
+            
+            // Save the indices array to DB
+            if (debouncedSaveRef.current) {
+              debouncedSaveRef.current(f.name, JSON.stringify(remainingIndices));
+            }
+          } else {
+            // Adding new item - parse current indices array or convert from old count format
+            let currentIndices: number[] = [];
+            try {
+              const parsed = JSON.parse(f?.value || "[]");
+              if (Array.isArray(parsed)) {
+                currentIndices = parsed;
+              } else if (typeof parsed === "number") {
+                // Convert old count format to indices array
+                currentIndices = Array.from({ length: parsed }, (_, i) => i + 1);
+              }
+            } catch {
+              // Get indices from existing fields
+              currentIndices = Array.from(
+                new Set((f?.fields || []).map(field => field.groupIndex).filter(Boolean))
+              ) as number[];
+            }
+            
+            // Find the next available index (max + 1)
+            const maxIndex = currentIndices.length > 0 ? Math.max(...currentIndices) : 0;
+            const newIndex = maxIndex + 1;
+            
+            // Create new fields from template
+            const newFields = createFieldFromTemplate(f, newIndex - 1); // -1 because createFieldFromTemplate adds 1
+            const subFields = newFields.flat().map((subfield) => {
+              const subfieldName = f.name + '_' + subfield.name;
+    
+              // Respect show: false from template, otherwise check show_if
+              const showField = subfield.show === false ? false : (subfield.show_if ? false : true);
+              const subFieldObj = {
+                ...subfield,
+                name: subfieldName,
+                show: showField,
+                isValid: subfield.required ? false : true
+              };
+              return subFieldObj;
+            });
+            
+            // Add new index to array and update fields
+            const newIndices = [...currentIndices, newIndex].sort((a, b) => a - b);
+            f.fields = [...(f.fields || []), ...subFields];
+            f = { ...f, value: JSON.stringify(newIndices) };
+            
+            // Save the new indices array to DB
+            if (debouncedSaveRef.current) {
+              debouncedSaveRef.current(f.name, JSON.stringify(newIndices));
+            }
           }
         }
 
         // If the field is a show_if field, update its visibility according to current field response
-        if (f?.show_if) {
+        if (f?.show_if !== undefined) {
           if (f.show_if.field === field.name) {
             f = { ...f, show: value === f?.show_if?.value };
           }
@@ -430,7 +570,7 @@ export default function FormAccordionItem({
             }
 
             // If the subfield is a show_if field, update its visibility according to current field response
-            if (subfield?.show_if) {
+            if (subfield?.show_if !== undefined) {
               if (subfield.show_if.field === field.name) {
                 subfield = { ...subfield, show: value === subfield?.show_if?.value };
               }
@@ -493,21 +633,33 @@ export default function FormAccordionItem({
       <AccordionTrigger 
         className={cn(
           "px-4 hover:no-underline",
-          section?.isValid ? "bg-green-50 dark:bg-green-950" :
-          !section?.isValid ? "bg-red-50 dark:bg-red-950" :
-          "bg-white dark:bg-gray-900"
+          // Use status fields if available, otherwise use standard isValid
+          statusFieldsState?.hasStatusFields
+            ? (statusFieldsState.isComplete ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950")
+            : (section?.isValid ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950")
         )}
       >
         <div className="flex justify-between items-center w-full">
+          <div className="flex items-center gap-2">
+            {section.tag && (
+              <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-xs font-medium">
+                {section.tag}
+              </span>
+            )}
             <span className="text-md font-semibold text-slate-900">{section.title}</span>
+          </div>
           <div className="flex items-center space-x-2 px-2">
             <CircleSmall 
               className="h-4 w-4 mr-1" 
-              fill={section?.isValid ? "#22C55E" : "#EF4444"} 
+              fill={statusFieldsState?.hasStatusFields
+                ? (statusFieldsState.isComplete ? "#22C55E" : "#EF4444")
+                : (section?.isValid ? "#22C55E" : "#EF4444")} 
               strokeWidth={0}
             />
             <span className="flex items-center text-slate-700 text-xs">
-              {section?.completed}/{section?.required} Required
+              {statusFieldsState?.hasStatusFields
+                ? (statusFieldsState.isComplete ? "Complete" : "Incomplete")
+                : `${section?.completed}/${section?.required} Required`}
             </span>
             {!isSectionEditable && (
               <span className="flex items-center text-slate-700">
@@ -533,7 +685,7 @@ export default function FormAccordionItem({
           </div>
         )}
             <div className="space-y-4">
-            {section.fields.map((field) => (
+            {section.fields.filter((field) => field.show !== false).map((field) => (
               <FormField
                 key={field.name}
                 field={field}

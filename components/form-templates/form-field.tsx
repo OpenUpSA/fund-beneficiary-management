@@ -115,6 +115,15 @@ import { DataTableLayout } from "./custom-layouts/data-table"
 import { RepeatableLayout } from "./custom-layouts/repeatable"
 import { LabelValueListLayout } from "./custom-layouts/label-value-list"
 import { ToggleLayout } from "./custom-layouts/toggle-layout"
+import { ActivitiesFundedList } from "./custom-layouts/activities-funded-list"
+import { NarrativeRepeatableLayout } from "./custom-layouts/narrative-repeatable"
+import { CaseworkCategoriesLayout } from "./custom-layouts/casework-categories"
+import { DataGridLayout } from "./custom-layouts/data-grid"
+import { FinalisedCasesLayout } from "./custom-layouts/finalised-cases"
+import { GardenBeneficiariesLayout } from "./custom-layouts/garden-beneficiaries"
+import { GardenYieldsLayout } from "./custom-layouts/garden-yields"
+import { ChallengesLayout } from "./custom-layouts/challenges"
+import { PartnershipsLayout } from "./custom-layouts/partnerships"
 
 function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_form_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number; lda_form_id?: number | string }) {
   switch (inputField.layout) {
@@ -126,6 +135,24 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
       return <LabelValueListLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     case "toggle":
       return <ToggleLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "activities-funded-list":
+      return <ActivitiesFundedList inputField={inputField} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "narrative-repeatable":
+      return <NarrativeRepeatableLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "casework-categories":
+      return <CaseworkCategoriesLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "data-grid":
+      return <DataGridLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "finalised-cases":
+      return <FinalisedCasesLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "garden-beneficiaries":
+      return <GardenBeneficiariesLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "garden-yields":
+      return <GardenYieldsLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "challenges":
+      return <ChallengesLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "partnerships":
+      return <PartnershipsLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
     default:
       return (
       <>
@@ -159,6 +186,10 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
 }
 
 export function FormField({ field, isEditing = false, onValueChange, lda_id, lda_form_id }: FormFieldProps) {
+  // Don't render fields with show: false
+
+  if (field.show === false) return null;
+  
   return (
     <div key={field.name}>
       <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>

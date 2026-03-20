@@ -37,11 +37,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
+const formCategoryOptions = [
+  { value: 'dft_application', label: 'DFT Application' },
+  { value: 'dft_report', label: 'DFT Report' },
+  { value: 'fris_application', label: 'FRIS Application' },
+  { value: 'fris_claim', label: 'FRIS Claim' },
+  { value: 'grant_funding', label: 'Grant Funding' },
+  { value: 'narrative_report', label: 'Narrative Report' },
+]
+
 const FormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   active: z.boolean(),
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   templateType: z.enum(['APPLICATION', 'REPORT']),
+  formCategory: z.string().nullable().optional(),
   linkedFormTemplateId: z.number().nullable().optional(),
   sidebarConfig: z.object({
     amount: z.boolean(),
@@ -75,6 +85,7 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       active: formTemplate ? formTemplate.active : true,
       description: formTemplate ? formTemplate.description : "",
       templateType: formTemplate?.templateType || 'APPLICATION',
+      formCategory: formTemplate?.formCategory || null,
       linkedFormTemplateId: formTemplate?.linkedFormTemplateId || null,
       sidebarConfig: parsedSidebarConfig,
     },
@@ -162,6 +173,34 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                       <SelectContent>
                         <SelectItem value="APPLICATION">Application</SelectItem>
                         <SelectItem value="REPORT">Report</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="formCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Form Category</FormLabel>
+                    <Select 
+                      value={field.value || 'none'} 
+                      onValueChange={(val) => field.onChange(val === 'none' ? null : val)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {formCategoryOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -441,6 +480,7 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
       active: true,
       description: "",
       templateType: 'APPLICATION',
+      formCategory: null,
       linkedFormTemplateId: null,
       sidebarConfig: defaultSidebarConfig,
     },
@@ -506,6 +546,34 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
                     <SelectContent>
                       <SelectItem value="APPLICATION">Application</SelectItem>
                       <SelectItem value="REPORT">Report</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="formCategory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Form Category</FormLabel>
+                  <Select 
+                    value={field.value || 'none'} 
+                    onValueChange={(val) => field.onChange(val === 'none' ? null : val)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {formCategoryOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </FormItem>

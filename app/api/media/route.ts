@@ -134,7 +134,13 @@ export async function POST(req: NextRequest) {
   const title = form.get("title") as string
   const description = form.get("description") as string
   const mediaSourceTypeId = form.get("mediaSourceTypeId") as string
-  const mediaType = form.get("mediaType") as MediaType
+  const mediaTypeFromForm = form.get("mediaType") as string | null
+  
+  // Determine mediaType - use provided value or default based on file type
+  let mediaType: MediaType = MediaType.PHOTOGRAPH
+  if (mediaTypeFromForm && Object.values(MediaType).includes(mediaTypeFromForm as MediaType)) {
+    mediaType = mediaTypeFromForm as MediaType
+  }
 
   // Get entity IDs from form data
   const ldaIdStr = form.get("ldaId") as string

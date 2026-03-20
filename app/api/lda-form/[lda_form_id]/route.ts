@@ -92,6 +92,12 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
         }
       }
       break;
+
+    case 'defaultValue':
+      if (prefill.path) {
+        return prefill.path
+      }
+      break;
   }
   
 }

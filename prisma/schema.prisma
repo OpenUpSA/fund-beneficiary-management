@@ -205,6 +205,7 @@ model FormTemplate {
   form                        Json                         @default("{}")
   active                      Boolean                      @default(true)
   templateType                FormTemplateType             @default(APPLICATION)
+  formCategory                String?
   linkedFormTemplateId        Int?
   linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
   linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
