@@ -52,22 +52,16 @@ export function DataGridLayout({
   const [fieldValues, setFieldValues] = useState<FieldValues>({})
   const [skippedCategories, setSkippedCategories] = useState<Record<string, boolean>>({})
 
-  // Only hide if explicitly set to false
-  if (inputField.show === false) return <></>
-
-  // Get categories from config
-  const categories: CategoryConfig[] = (inputField.config?.categories as unknown as CategoryConfig[]) || []
+  // Get categories from config - memoize to prevent dependency issues
+  const categories: CategoryConfig[] = useMemo(() => 
+    (inputField.config?.categories as unknown as CategoryConfig[]) || [],
+    [inputField.config?.categories]
+  )
   const showGrandTotal = inputField.config?.showGrandTotal !== false
   const grandTotalLabel = (inputField.config?.grandTotalLabel as string) || "Total"
 
   // Initialize expanded state - first category expanded by default
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {}
-    if (categories.length > 0) {
-      initial[categories[0].name] = true
-    }
-    return initial
-  })
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
 
   // Initialize field values from existing fields - only on mount
   const initializedRef = useRef(false)
@@ -90,7 +84,12 @@ export function DataGridLayout({
     })
     setFieldValues(values)
     setSkippedCategories(skipped)
-  }, [inputField.fields, inputField.name])
+    
+    // Set first category as expanded
+    if (categories.length > 0) {
+      setExpandedCategories({ [categories[0].name]: true })
+    }
+  }, [inputField.fields, inputField.name, categories])
 
   // Generate field key
   const getFieldKey = (categoryName: string, rowName: string, columnName: string) => {
@@ -135,7 +134,9 @@ export function DataGridLayout({
       category.columns.forEach(column => {
         let columnSum = 0
         category.rows.forEach(row => {
-          const value = parseInt(getFieldValue(category.name, row.name, column.name) || '0') || 0
+          const fieldKey = `${inputField.name}_${category.name}_${row.name}_${column.name}`
+          const fieldValue = fieldValues[fieldKey] || inputField.fields?.find(f => f.name === fieldKey)?.value || ''
+          const value = parseInt(fieldValue || '0') || 0
           columnSum += value
         })
         columnTotals[column.name] = columnSum
@@ -146,7 +147,8 @@ export function DataGridLayout({
     })
     
     return totals
-  }, [fieldValues, categories, inputField.fields])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldValues, categories, inputField.fields, inputField.name])
 
   // Calculate overall grand total
   const overallGrandTotal = useMemo(() => {
@@ -170,6 +172,9 @@ export function DataGridLayout({
     
     return errors
   }, [categoryTotals, categories])
+
+  // Early return moved after all hooks
+  if (inputField.show === false) return <></>
 
   const toggleCategory = (categoryName: string) => {
     setExpandedCategories(prev => {
@@ -208,11 +213,6 @@ export function DataGridLayout({
       const field = getFieldObject(fieldKey)
       onValueChange(field, numericValue)
     }
-  }
-
-  // Calculate grid columns based on max columns in any category
-  const getGridCols = (columnCount: number) => {
-    return `grid-cols-${columnCount + 1}` // +1 for row label column
   }
 
   return (

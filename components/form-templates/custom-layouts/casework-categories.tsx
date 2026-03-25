@@ -46,20 +46,25 @@ export function CaseworkCategoriesLayout({
 }: CaseworkCategoriesLayoutProps) {
   const [fieldValues, setFieldValues] = useState<FieldValues>({})
 
-  // Only hide if explicitly set to false
-  if (inputField.show === false) return <></>
-
-  // Get config from JSON
+  // Get config from JSON (must be before hooks that depend on them)
   const categories: Category[] = (inputField.config?.categories as unknown as Category[]) || []
   const columns: Column[] = (inputField.config?.columns as unknown as Column[]) || [
     { name: 'client', label: 'Opened (by client)' },
     { name: 'thirdparty', label: 'Opened (by third party)' }
   ]
   const headerLabel = (inputField.config?.headerLabel as string) || 'New cases opened during this reporting period'
+  const statusFieldName = (inputField.config?.statusField as string) || null
 
   // Generate field key for a specific case type input
   const getFieldKey = (categoryName: string, caseTypeName: string, columnName: string) => {
     return `${inputField.name}_${categoryName}_${caseTypeName}_${columnName}`
+  }
+
+  // Get field value by key
+  const getFieldValueByKey = (fieldKey: string): string => {
+    if (fieldValues[fieldKey]) return fieldValues[fieldKey]
+    const existingField = inputField.fields?.find(f => f.name === fieldKey)
+    return existingField?.value || ''
   }
 
   // Get or create a field object for onChange
@@ -78,11 +83,18 @@ export function CaseworkCategoriesLayout({
     }
   }
 
-  // Get field value by key
-  const getFieldValueByKey = (fieldKey: string): string => {
-    if (fieldValues[fieldKey]) return fieldValues[fieldKey]
-    const existingField = inputField.fields?.find(f => f.name === fieldKey)
-    return existingField?.value || ''
+  // Check if a category row is complete (all columns have values)
+  const isRowComplete = (categoryName: string, caseTypeName: string): boolean => {
+    return columns.every(col => {
+      const fieldKey = getFieldKey(categoryName, caseTypeName, col.name)
+      const value = getFieldValueByKey(fieldKey)
+      return value !== '' && value !== undefined
+    })
+  }
+
+  // Check if entire category is complete
+  const isCategoryComplete = (category: Category): boolean => {
+    return category.caseTypes.every(caseType => isRowComplete(category.name, caseType.name))
   }
 
   // Calculate totals for each category (dynamic columns)
@@ -107,34 +119,14 @@ export function CaseworkCategoriesLayout({
     })
     
     return totals
-  }, [fieldValues, categories, columns, inputField.fields])
-
-  // Calculate grand total
-  const grandTotal = useMemo(() => {
-    return Object.values(categoryTotals).reduce((sum, cat) => sum + cat.total, 0)
-  }, [categoryTotals])
-
-  // Check if a category row is complete (all columns have values)
-  const isRowComplete = (categoryName: string, caseTypeName: string): boolean => {
-    return columns.every(col => {
-      const fieldKey = getFieldKey(categoryName, caseTypeName, col.name)
-      const value = getFieldValueByKey(fieldKey)
-      return value !== '' && value !== undefined
-    })
-  }
-
-  // Check if entire category is complete
-  const isCategoryComplete = (category: Category): boolean => {
-    return category.caseTypes.every(caseType => isRowComplete(category.name, caseType.name))
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldValues, categories, columns, inputField.fields, inputField.name])
 
   // Calculate overall completion status
   const isComplete = useMemo(() => {
     return categories.every(category => isCategoryComplete(category))
-  }, [categories, fieldValues, inputField.fields])
-
-  // Get status field name from config
-  const statusFieldName = (inputField.config?.statusField as string) || null
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories, fieldValues, inputField.fields, columns, inputField.name])
 
   // Track previous status to avoid unnecessary saves
   const prevStatusRef = useRef<boolean | null>(null)
@@ -167,6 +159,9 @@ export function CaseworkCategoriesLayout({
       onValueChange(field, numericValue)
     }
   }
+
+  // Only hide if explicitly set to false - moved after all hooks
+  if (inputField.show === false) return <></>
 
   return (
     <div className="space-y-4 p-4">

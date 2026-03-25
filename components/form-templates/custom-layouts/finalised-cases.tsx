@@ -61,17 +61,25 @@ export function FinalisedCasesLayout({
   const [fieldValues, setFieldValues] = useState<FieldValues>({})
   const [skippedDemographics, setSkippedDemographics] = useState<Record<string, boolean>>({})
 
-  if (inputField.show === false) return <></>
-
-  // Get config from JSON
-  const categories: Category[] = (inputField.config?.categories as unknown as Category[]) || []
-  const casesColumns: CasesColumnsConfig[] = (inputField.config?.casesColumns as unknown as CasesColumnsConfig[]) || [
-    { name: 'referred', label: 'Referred' },
-    { name: 'closed', label: 'Closed' }
-  ]
-  const demographics: DemographicConfig[] = (inputField.config?.demographics as unknown as DemographicConfig[]) || []
+  // Get config from JSON - memoize to prevent dependency issues
+  const categories: Category[] = useMemo(() => 
+    (inputField.config?.categories as unknown as Category[]) || [],
+    [inputField.config?.categories]
+  )
+  const casesColumns: CasesColumnsConfig[] = useMemo(() => 
+    (inputField.config?.casesColumns as unknown as CasesColumnsConfig[]) || [
+      { name: 'referred', label: 'Referred' },
+      { name: 'closed', label: 'Closed' }
+    ],
+    [inputField.config?.casesColumns]
+  )
+  const demographics: DemographicConfig[] = useMemo(() => 
+    (inputField.config?.demographics as unknown as DemographicConfig[]) || [],
+    [inputField.config?.demographics]
+  )
   const casesLabel = (inputField.config?.casesLabel as string) || 'Cases finalised during this reporting period'
   const casesNotice = (inputField.config?.casesNotice as string) || ''
+  const statusFieldName = (inputField.config?.statusField as string) || null
 
   // Field key generators
   const getCasesFieldKey = (categoryName: string, caseTypeName: string, columnName: string) => {
@@ -110,6 +118,20 @@ export function FinalisedCasesLayout({
     }
   }
 
+  // Check if demographic is skipped
+  const isSkipped = (demographic: string, categoryName: string): boolean => {
+    const skipKey = `${demographic}_${categoryName}`
+    if (skippedDemographics[skipKey] !== undefined) return skippedDemographics[skipKey]
+    const fieldKey = getSkipFieldKey(demographic, categoryName)
+    return getFieldValue(fieldKey) === 'true'
+  }
+
+  // Get skip reason
+  const getSkipReason = (demographic: string, categoryName: string): string => {
+    const fieldKey = getSkipReasonFieldKey(demographic, categoryName)
+    return getFieldValue(fieldKey)
+  }
+
   // Calculate totals for cases (dynamic columns)
   const caseTotals = useMemo(() => {
     const totals: Record<string, { columnTotals: Record<string, number>; total: number }> = {}
@@ -121,8 +143,9 @@ export function FinalisedCasesLayout({
       casesColumns.forEach(col => {
         let colSum = 0
         category.caseTypes.forEach(caseType => {
-          const key = getCasesFieldKey(category.name, caseType.name, col.name)
-          colSum += parseInt(getFieldValue(key) || '0') || 0
+          const key = `${inputField.name}_cases_${category.name}_${caseType.name}_${col.name}`
+          const fieldValue = fieldValues[key] || inputField.fields?.find(f => f.name === key)?.value || ''
+          colSum += parseInt(fieldValue || '0') || 0
         })
         columnTotals[col.name] = colSum
         total += colSum
@@ -132,12 +155,13 @@ export function FinalisedCasesLayout({
     })
     
     return totals
-  }, [fieldValues, categories, casesColumns, inputField.fields])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldValues, categories, casesColumns, inputField.fields, inputField.name])
 
-  // Grand total for cases
-  const grandTotal = useMemo(() => {
-    return Object.values(caseTotals).reduce((sum, cat) => sum + cat.total, 0)
-  }, [caseTotals])
+  // Categories with cases (total > 0)
+  const categoriesWithCases = useMemo(() => {
+    return categories.filter(cat => (caseTotals[cat.name]?.total || 0) > 0)
+  }, [categories, caseTotals])
 
   // Calculate demographic totals per category
   const getDemographicTotals = (demographic: string, categoryName: string) => {
@@ -162,11 +186,6 @@ export function FinalisedCasesLayout({
     
     return { columnTotals, grandTotal }
   }
-
-  // Categories with cases (total > 0)
-  const categoriesWithCases = useMemo(() => {
-    return categories.filter(cat => (caseTotals[cat.name]?.total || 0) > 0)
-  }, [categories, caseTotals])
 
   // Check if a case row is complete (all columns have values)
   const isCaseRowComplete = (categoryName: string, caseTypeName: string): boolean => {
@@ -203,6 +222,41 @@ export function FinalisedCasesLayout({
     )
   }
 
+  // Calculate overall completion status
+  const isComplete = useMemo(() => {
+    // Check cases section
+    const casesComplete = categories.every(category => isCategoryComplete(category))
+    if (!casesComplete) return false
+    
+    // Check demographics sections
+    for (const demographic of demographics) {
+      for (const category of categoriesWithCases) {
+        if (!isDemoCategoryComplete(demographic, category)) {
+          return false
+        }
+      }
+    }
+    return true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categories, demographics, categoriesWithCases, fieldValues, skippedDemographics, inputField.fields])
+
+  // Track previous status to avoid unnecessary saves
+  const prevStatusRef = useRef<boolean | null>(null)
+
+  // Save status to the status field whenever completion changes
+  useEffect(() => {
+    if (statusFieldName && onValueChange && prevStatusRef.current !== isComplete) {
+      prevStatusRef.current = isComplete
+      const statusField: Field = {
+        name: statusFieldName,
+        type: 'text',
+        label: '',
+        show: false
+      }
+      onValueChange(statusField, isComplete ? 'complete' : 'incomplete')
+    }
+  }, [isComplete, statusFieldName, onValueChange])
+
   // Input change handler
   const handleInputChange = (fieldKey: string, value: string, isNumeric: boolean = true) => {
     const finalValue = isNumeric ? value.replace(/[^0-9]/g, '') : value
@@ -230,56 +284,8 @@ export function FinalisedCasesLayout({
     handleInputChange(fieldKey, checked ? 'true' : 'false', false)
   }
 
-  // Check if demographic is skipped
-  const isSkipped = (demographic: string, categoryName: string): boolean => {
-    const skipKey = `${demographic}_${categoryName}`
-    if (skippedDemographics[skipKey] !== undefined) return skippedDemographics[skipKey]
-    const fieldKey = getSkipFieldKey(demographic, categoryName)
-    return getFieldValue(fieldKey) === 'true'
-  }
-
-  // Get skip reason
-  const getSkipReason = (demographic: string, categoryName: string): string => {
-    const fieldKey = getSkipReasonFieldKey(demographic, categoryName)
-    return getFieldValue(fieldKey)
-  }
-
-  // Calculate overall completion status
-  const isComplete = useMemo(() => {
-    // Check cases section
-    const casesComplete = categories.every(category => isCategoryComplete(category))
-    if (!casesComplete) return false
-    
-    // Check demographics sections
-    for (const demographic of demographics) {
-      for (const category of categoriesWithCases) {
-        if (!isDemoCategoryComplete(demographic, category)) {
-          return false
-        }
-      }
-    }
-    return true
-  }, [categories, demographics, categoriesWithCases, fieldValues, skippedDemographics, inputField.fields])
-
-  // Get status field name from config
-  const statusFieldName = (inputField.config?.statusField as string) || null
-
-  // Track previous status to avoid unnecessary saves
-  const prevStatusRef = useRef<boolean | null>(null)
-
-  // Save status to the status field whenever completion changes
-  useEffect(() => {
-    if (statusFieldName && onValueChange && prevStatusRef.current !== isComplete) {
-      prevStatusRef.current = isComplete
-      const statusField: Field = {
-        name: statusFieldName,
-        type: 'text',
-        label: '',
-        show: false
-      }
-      onValueChange(statusField, isComplete ? 'complete' : 'incomplete')
-    }
-  }, [isComplete, statusFieldName, onValueChange])
+  // Early return moved after all hooks
+  if (inputField.show === false) return <></>
 
   return (
     <div className="space-y-2 p-4">

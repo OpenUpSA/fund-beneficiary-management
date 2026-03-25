@@ -23,8 +23,6 @@ interface PartnershipsLayoutProps {
 export function PartnershipsLayout({ inputField, isEditing, onValueChange, lda_id, lda_form_id }: PartnershipsLayoutProps) {
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(undefined)
 
-  if (!inputField.show) return <></>
-
   // Group fields by groupIndex
   const groupedFields = inputField.fields?.reduce((acc, field) => {
     if (!field.groupIndex) return acc
@@ -110,7 +108,8 @@ export function PartnershipsLayout({ inputField, isEditing, onValueChange, lda_i
       }
     }
     return true
-  }, [groupedFields, inputField.fields])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupedFields])
 
   // Get status field name from config
   const statusFieldName = (inputField.config?.statusField as string) || null
@@ -131,6 +130,9 @@ export function PartnershipsLayout({ inputField, isEditing, onValueChange, lda_i
       onValueChange(statusField, isComplete ? 'complete' : 'incomplete')
     }
   }, [isComplete, statusFieldName, onValueChange])
+
+  // Early return moved after all hooks
+  if (!inputField.show) return <></>
 
   // Helper to get field value by name pattern
   const getFieldValue = (groupItems: Field[], pattern: string): string => {

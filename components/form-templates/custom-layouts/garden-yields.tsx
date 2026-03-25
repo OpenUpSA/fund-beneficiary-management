@@ -190,17 +190,23 @@ export function GardenYieldsLayout({
     reason: string
   }>({ open: false, gardenId: '', itemIndex: -1, itemName: '', reason: '' })
 
-  // Get config from JSON
+  // Get config from JSON - memoize arrays to prevent dependency issues
   const sourceField = (inputField.config?.sourceField as string) || 'community_gardens'
   const gardenNameField = (inputField.config?.gardenNameField as string) || 'garden_name'
-  const requiredFields: string[] = (inputField.config?.requiredFields as unknown as string[]) || [
-    'garden_name', 'garden_size', 'garden_address', 'contact_person', 'contact_number', 'external_support'
-  ]
-  const columns: Column[] = (inputField.config?.columns as unknown as Column[]) || [
-    { name: 'units_planted', label: 'Units planted', type: 'number', tooltip: 'Number of units planted' },
-    { name: 'harvested_kg', label: 'Harvested (kg)', type: 'number', tooltip: 'Weight harvested in kg' },
-    { name: 'sold_kg', label: 'Sold (kg)', type: 'number', tooltip: 'Weight sold in kg' }
-  ]
+  const requiredFields: string[] = useMemo(() => 
+    (inputField.config?.requiredFields as unknown as string[]) || [
+      'garden_name', 'garden_size', 'garden_address', 'contact_person', 'contact_number', 'external_support'
+    ],
+    [inputField.config?.requiredFields]
+  )
+  const columns: Column[] = useMemo(() => 
+    (inputField.config?.columns as unknown as Column[]) || [
+      { name: 'units_planted', label: 'Units planted', type: 'number', tooltip: 'Number of units planted' },
+      { name: 'harvested_kg', label: 'Harvested (kg)', type: 'number', tooltip: 'Weight harvested in kg' },
+      { name: 'sold_kg', label: 'Sold (kg)', type: 'number', tooltip: 'Weight sold in kg' }
+    ],
+    [inputField.config?.columns]
+  )
   const farmedItemOptions: string[] = (inputField.config?.farmedItemOptions as unknown as string[]) || DEFAULT_FARMED_ITEMS
   const addButtonLabel = (inputField.config?.addButtonLabel as string) || 'Add farmed item'
   

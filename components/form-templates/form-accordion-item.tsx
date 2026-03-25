@@ -443,22 +443,6 @@ export default function FormAccordionItem({
 
         // if field type repeatable or has repeatable layout, add or remove fields based on the value index
         if ((f.type === "repeatable" || f.layout === "partnerships") && f.name === field.name) {
-          // Helper to safely get current counter from f.value
-          const getCurrentCounter = (): number => {
-            if (!f?.value) return 1;
-            // If value is corrupted (e.g., "delete:X"), get count from existing fields
-            if (f.value.startsWith("delete:") || isNaN(parseInt(f.value))) {
-              const existingIndices = new Set((f?.fields || []).map(field => field.groupIndex).filter(Boolean));
-              return existingIndices.size;
-            }
-            try {
-              return JSON.parse(f.value);
-            } catch {
-              const existingIndices = new Set((f?.fields || []).map(field => field.groupIndex).filter(Boolean));
-              return existingIndices.size;
-            }
-          };
-          
           // Check if this is a delete specific index command (format: "delete:INDEX")
           if (value.startsWith("delete:")) {
             const deleteIndex = parseInt(value.split(":")[1]);

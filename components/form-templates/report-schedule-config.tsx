@@ -122,13 +122,6 @@ export function ReportScheduleConfigDialog({
     dueDaysAfterPeriodEnd: 0,
   })
 
-  // Fetch existing configs when dialog opens
-  useEffect(() => {
-    if (open) {
-      fetchConfigs()
-    }
-  }, [open])
-
   const fetchConfigs = async () => {
     setLoading(true)
     try {
@@ -145,6 +138,14 @@ export function ReportScheduleConfigDialog({
       setLoading(false)
     }
   }
+
+  // Fetch existing configs when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchConfigs()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const handleAddConfig = async () => {
     if (!newConfig.reportTemplateId) {

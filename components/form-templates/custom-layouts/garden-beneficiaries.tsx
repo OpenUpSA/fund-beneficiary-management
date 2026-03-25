@@ -68,15 +68,21 @@ export function GardenBeneficiariesLayout({
   const [error, setError] = useState<string | null>(null)
   const initializedRef = useRef(false)
 
-  // Get config from JSON
+  // Get config from JSON - memoize arrays to prevent dependency issues
   const sourceField = (inputField.config?.sourceField as string) || 'community_gardens'
   const gardenNameField = (inputField.config?.gardenNameField as string) || 'garden_name'
   const employeesLabel = (inputField.config?.employeesLabel as string) || 'Employees paid by SCAT funds'
   const employeesDescription = (inputField.config?.employeesDescription as string) || ''
-  const employeesColumns: Column[] = (inputField.config?.employeesColumns as unknown as Column[]) || [
-    { name: 'paid_employees', label: 'Paid employees' }
-  ]
-  const demographics: DemographicConfig[] = (inputField.config?.demographics as unknown as DemographicConfig[]) || []
+  const employeesColumns: Column[] = useMemo(() => 
+    (inputField.config?.employeesColumns as unknown as Column[]) || [
+      { name: 'paid_employees', label: 'Paid employees' }
+    ],
+    [inputField.config?.employeesColumns]
+  )
+  const demographics: DemographicConfig[] = useMemo(() => 
+    (inputField.config?.demographics as unknown as DemographicConfig[]) || [],
+    [inputField.config?.demographics]
+  )
   const demographicsLabel = (inputField.config?.demographicsLabel as string) || 'Demographics of employees paid by SCAT'
   const beneficiariesLabel = (inputField.config?.beneficiariesLabel as string) || 'Beneficiaries supported'
   const beneficiariesDescription = (inputField.config?.beneficiariesDescription as string) || ''
@@ -86,9 +92,12 @@ export function GardenBeneficiariesLayout({
   ]
 
   // Get required fields from config (fields that must be filled for a garden to be complete)
-  const requiredFields: string[] = (inputField.config?.requiredFields as unknown as string[]) || [
-    'garden_name', 'garden_size', 'garden_address', 'contact_person', 'contact_number', 'external_support'
-  ]
+  const requiredFields: string[] = useMemo(() => 
+    (inputField.config?.requiredFields as unknown as string[]) || [
+      'garden_name', 'garden_size', 'garden_address', 'contact_person', 'contact_number', 'external_support'
+    ],
+    [inputField.config?.requiredFields]
+  )
 
   // Fetch gardens from API
   const fetchGardens = useCallback(async () => {
@@ -202,29 +211,12 @@ export function GardenBeneficiariesLayout({
     return `${inputField.name}_${demographic}_${gardenId}_${columnName}`
   }, [inputField.name])
 
-  const getBeneficiariesFieldKey = useCallback((gardenId: string) => {
-    return `${inputField.name}_${gardenId}_beneficiaries`
-  }, [inputField.name])
-
   // Get field value
   const getFieldValue = useCallback((fieldKey: string): string => {
     if (fieldValues[fieldKey]) return fieldValues[fieldKey]
     const existingField = inputField.fields?.find(f => f.name === fieldKey)
     return existingField?.value || ''
   }, [fieldValues, inputField.fields])
-
-  // Get field object
-  const getFieldObject = useCallback((fieldName: string): Field => {
-    const existingField = inputField.fields?.find(f => f.name === fieldName)
-    if (existingField) return existingField
-    return {
-      name: fieldName,
-      type: 'text',
-      label: '',
-      value: fieldValues[fieldName] || '',
-      show: true
-    }
-  }, [inputField.fields, fieldValues])
 
   // Handle input change
   const handleInputChange = useCallback((fieldKey: string, value: string, isNumeric: boolean = true) => {

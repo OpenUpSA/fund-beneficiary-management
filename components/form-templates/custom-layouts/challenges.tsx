@@ -23,8 +23,6 @@ interface ChallengesLayoutProps {
 export function ChallengesLayout({ inputField, isEditing, onValueChange, lda_id, lda_form_id }: ChallengesLayoutProps) {
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(undefined)
 
-  if (!inputField.show) return <></>
-
   // Group fields by groupIndex
   const groupedFields = inputField.fields?.reduce((acc, field) => {
     if (!field.groupIndex) return acc
@@ -110,7 +108,8 @@ export function ChallengesLayout({ inputField, isEditing, onValueChange, lda_id,
       }
     }
     return true
-  }, [groupedFields, inputField.fields])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupedFields])
 
   // Get status field name from config
   const statusFieldName = (inputField.config?.statusField as string) || null
@@ -131,6 +130,9 @@ export function ChallengesLayout({ inputField, isEditing, onValueChange, lda_id,
       onValueChange(statusField, isComplete ? 'complete' : 'incomplete')
     }
   }, [isComplete, statusFieldName, onValueChange])
+
+  // Early return moved after all hooks
+  if (!inputField.show) return <></>
 
   // Helper to get field value by name pattern
   const getFieldValue = (groupItems: Field[], pattern: string): string => {
