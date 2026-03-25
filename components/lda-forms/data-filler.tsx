@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useCallback } from "react"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { Form } from "@/types/forms"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
@@ -13,10 +14,26 @@ type Props = {
 }
 
 export default function Filler({ ldaForm }: Props) {
+  const [formData, setFormData] = useState<Record<string, string>>(ldaForm.formData as Record<string, string>)
 
   const submitForm = async () => {
     window.dispatchEvent(new Event("submit-dynamic-form"))
   }
+
+  // Re-fetch form data when changes are made
+  const dataChanged = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/lda-form/${ldaForm.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.formData) {
+          setFormData(data.formData)
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing form data:', error)
+    }
+  }, [ldaForm.id])
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -37,7 +54,10 @@ export default function Filler({ ldaForm }: Props) {
             <CardContent className="p-5">
               {ldaForm.formTemplate.form && <DynamicForm
                 form={ldaForm.formTemplate.form as unknown as Form}
-                defaultValues={ldaForm.formData as Record<string, string>}
+                defaultValues={formData}
+                formId={ldaForm.id}
+                lda_id={ldaForm.localDevelopmentAgencyId}
+                dataChanged={dataChanged}
               />}
             </CardContent>
           </Card>

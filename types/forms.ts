@@ -27,6 +27,7 @@ export interface Field {
   type: FieldType;
   notice?: string;
   label: string;
+  subtitle?: string;
   required?: boolean;
   description?: string;
   isValid?: boolean;
@@ -52,6 +53,7 @@ export interface Field {
 
 export interface Section {
   title: string;
+  tag?: string;
   description?: string;
   notice?: string;
   fields: Field[];

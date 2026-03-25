@@ -1,1943 +1,1506 @@
 {
-    "title": "Narrative Report",
-    "sections": [
-      {
-        "title": "Activities, Programmes & Projects",
-        "fields": [
-          {
-            "name": "access_to_justice",
-            "type": "textarea",
-            "label": "Access to Justice",
-            "placeholder": "Enter details here",
-            "description": "Describe your case work, access to human rights work, workshops, campaigns etc.",
-            "required": true
-          },
-          {
-            "name": "gender",
-            "type": "textarea",
-            "label": "Gender",
-            "placeholder": "Enter details here",
-            "description": "Describe your GBV awareness campaigns and workshops, safe house, LGBTQIA, cases related to gender violation, etc.",
-            "required": true
-          },
-          {
-            "name": "youth_empowerment",
-            "type": "textarea",
-            "label": "Youth Empowerment",
-            "placeholder": "Enter details here",
-            "description": "Describe your work with youth employment, youth and access to education, youth led initiatives, workshops, campaign directed and youth development, etc.",
-            "required": true
-          },
-          {
-            "name": "food_security",
-            "type": "textarea",
-            "label": "Food Security",
-            "placeholder": "Enter details here",
-            "description": "Describe your work with food gardens, community kitchens, food parcels, seed distribution, etc.",
-            "required": true
+  "title": "Narrative Report",
+  "sections": [
+    {
+      "title": "Activities held",
+      "fields": [
+        {
+          "name": "activities_intro",
+          "type": "info",
+          "label": "Activities held",
+          "notice": "What activities has your organisation organised or assisted with that have furthered it's goals or objectives during this reporting period? These events should have had a measurable impact on your organisation or the community members you work with."
+        },
+        {
+          "name": "activities_guidance",
+          "type": "info",
+          "label": "How should I answer this question?",
+          "notice": "<strong>How should I answer this question?</strong> Please list all the various activities your organisation has undertaken for this reporting period. These can include workshops, training, marches, community meetings, door-to-door campaigns, awareness campaigns, fundraising events etc. If you feel the event you ran does not fit within the groupings provided, please select \"Other\"."
+        },
+        {
+          "name": "scat_funded_activities",
+          "type": "text",
+          "label": "Activities funded by SCAT funds",
+          "layout": "activities-funded-list",
+          "config": {
+            "formCategories": ["dft_report", "fris_claim"]
           }
-        ]
-      },
-      {
-        "title": "Partnerships & Collaborations",
-        "fields": [
-          {
-            "name": "partnerships",
-            "type": "textarea",
-            "label": "What partnerships were you able to create/develop during this reporting period?",
-            "placeholder": "Enter details here",
-            "description": "Other organisations, government departments, universities etc.",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Challenges & Successes",
-        "fields": [
-          {
-            "name": "faced_challenges",
-            "type": "radio",
-            "label": "Did you face new or unique challenges during this reporting period?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
+        },
+        {
+          "name": "other_activities",
+          "type": "repeatable",
+          "label": "Other activities",
+          "layout": "narrative-repeatable",
+          "value": "[]",
+          "config": {
+            "cardLabel": "Activity",
+            "add_button_label": "Add new activity",
+            "removeLable": "Delete activity"
+          },
+          "template": [
+            {
+              "name": "other_activity_name",
+              "type": "text",
+              "label": "Name of activity",
+              "required": true,
+              "placeholder": "Activity name"
+            },
+            {
+              "name": "other_activity_date",
+              "type": "date",
+              "label": "Date of activity",
+              "required": true
+            },
+            {
+              "name": "other_activity_type",
+              "type": "multiselect",
+              "label": "Type of activity",
+              "required": true,
+              "options": [
+                { "value": "fundraiser", "label": "Fundraiser" },
+                { "value": "workshop", "label": "Workshop" },
+                { "value": "training", "label": "Training" },
+                { "value": "march", "label": "March" },
+                { "value": "community_meeting", "label": "Community Meeting" },
+                { "value": "campaign", "label": "Campaign" },
+                { "value": "other", "label": "Other" }
+              ]
+            },
+            {
+              "name": "other_activity_focus_areas",
+              "type": "multiselect",
+              "label": "Focus areas that apply to this activity",
+              "required": true,
+              "config": {
+                "dynamicOptionTable": "focus_areas"
               }
-            ]
-          },
-          {
-            "name": "challenge",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of challenges",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "faced_challenges",
-              "value": "yes"
             },
-            "default": 0,
-            "item_label": "Challenge",
-            "config": {
-              "add_button_label": "Add a challenge",
-              "cardLabel": "Challenge",
-              "removeLable": "Remove challenge"
+            {
+              "name": "other_activity_impact",
+              "type": "textarea",
+              "label": "Describe this activity in terms of the impact you feel it had",
+              "required": true,
+              "placeholder": "Enter details here"
             },
-            "template": [
-              {
-                "name": "description",
-                "type": "textarea",
-                "label": "Briefly describe the challenge",
-                "required": true,
-                "placeholder": "Enter details here"
+            {
+              "name": "other_activity_scat_funds",
+              "type": "radio",
+              "label": "Did you use SCAT core funds for this event?",
+              "description": "Did you use core funding for this.",
+              "options": [
+                { "value": "no", "label": "No" },
+                { "value": "yes", "label": "Yes" }
+              ]
+            },
+            {
+              "name": "other_activity_community_led",
+              "type": "radio",
+              "label": "Was this a community-led activity?",
+              "description": "Did members of your community initiate or take the lead organising this activity?",
+              "options": [
+                { "value": "no", "label": "No" },
+                { "value": "yes", "label": "Yes" }
+              ]
+            },
+            {
+              "name": "other_activity_youth_led",
+              "type": "radio",
+              "label": "Was this a youth-led activity?",
+              "description": "Where the team or community members leading this activity below the age of 35?",
+              "options": [
+                { "value": "no", "label": "No" },
+                { "value": "yes", "label": "Yes" }
+              ]
+            },
+            {
+              "name": "did_not_take_attendance",
+              "type": "toggle",
+              "layout": "toggle",
+              "label": "We did not take attendance for this activity",
+              "required": false,
+              "prefill": {
+                "path": "false",
+                "source": "defaultValue"
+              }
+            },
+            {
+              "name": "attendance_register",
+              "type": "fileUpload",
+              "label": "Upload an image of your attendance register",
+              "required": true,
+              "multiple": true,
+              "config": {
+                "destination": "media",
+                "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
               },
-              {
-                "name": "resolved",
-                "type": "radio",
-                "label": "Were you able to overcome or find a solution to this challenge?",
-                "required": true,
-                "options": [
-                  {
-                    "label": "No",
-                    "value": "no"
-                  },
-                  {
-                    "label": "Yes",
-                    "value": "yes"
-                  }
-                ]
+              "show_if": {
+                "field": "did_not_take_attendance",
+                "value": "false"
+              }
+            },
+            {
+              "name": "overall_attendance",
+              "type": "group",
+              "layout": "label-value-list",
+              "label": "Overall attendance for this activity",
+              "required": true,
+              "show_if": {
+                "field": "did_not_take_attendance",
+                "value": "false"
               },
-              {
-                "name": "resolution_details",
-                "type": "textarea",
-                "label": "Briefly describe how you manage to overcome this challenge",
-                "required": true,
-                "show_if": {
-                  "field": "resolved",
-                  "value": "yes"
+              "config": {
+                "showTotal": true,
+                "totalLabel": "Total attendees"
+              },
+              "fields": [
+                {
+                  "name": "non_lda_attendees",
+                  "type": "number",
+                  "label": "Non-LDA attendees",
+                  "placeholder": "Value",
+                  "required": true
                 },
-                "placeholder": "Enter details here"
-              }
-            ]
-          },
-          {
-            "name": "faced_successes",
-            "type": "radio",
-            "label": "Did you achieve any major successes during this reporting period?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "success",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of successes",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "faced_successes",
-              "value": "yes"
+                {
+                  "name": "lda_staff_attendees",
+                  "type": "number",
+                  "label": "LDA staff attendees",
+                  "placeholder": "Value",
+                  "required": true
+                },
+                {
+                  "name": "lda_board_member_attendees",
+                  "type": "number",
+                  "label": "LDA board member attendees",
+                  "placeholder": "Value",
+                  "required": true
+                }
+              ]
             },
-            "default": 0,
-            "item_label": "Success",
-            "config": {
-              "add_button_label": "Add a success",
-              "cardLabel": "Success",
-              "removeLable": "Remove success"
+            {
+              "name": "demographics_of_attendees",
+              "type": "group",
+              "layout": "label-value-list",
+              "label": "Demographics of attendees",
+              "required": true,
+              "show_if": {
+                "field": "did_not_take_attendance",
+                "value": "false"
+              },
+              "config": {
+                "showTotal": false
+              },
+              "fields": [
+                {
+                  "name": "youth_aged_attendees",
+                  "type": "number",
+                  "label": "Youth aged attendees (below 35)",
+                  "placeholder": "Value",
+                  "icon": "PersonStanding",
+                  "required": true
+                },
+                {
+                  "name": "male_attendees",
+                  "type": "number",
+                  "label": "Male attendees",
+                  "placeholder": "Value",
+                  "icon": "Venus",
+                  "required": true
+                },
+                {
+                  "name": "female_attendees",
+                  "type": "number",
+                  "label": "Female attendees",
+                  "placeholder": "Value",
+                  "icon": "Venus",
+                  "required": true
+                },
+                {
+                  "name": "other_attendees",
+                  "type": "number",
+                  "label": "\"Other\" attendees",
+                  "placeholder": "Value",
+                  "icon": "Venus",
+                  "required": true
+                }
+              ]
             },
-            "template": [
-              {
-                "name": "description",
-                "type": "textarea",
-                "label": "Briefly describe the success",
-                "required": true,
-                "placeholder": "Enter details here"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "Staff Development & Training",
-        "fields": [
-          {
-            "name": "held_staff_training",
-            "type": "radio",
-            "label": "Did you hold any workshops or training events for staff?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
+            {
+              "name": "attendance_not_taken",
+              "type": "textarea",
+              "label": "Please provide a reason for attendance not taken ?",
+              "show_if": {
+                "field": "did_not_take_attendance",
+                "value": "true"
               },
+              "required": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "Casework",
+      "title": "New cases",
+      "fields": [
+        {
+          "name": "casework_intro",
+          "type": "info",
+          "label": "How many new cases did your organisation handle during this reporting period and how many of these cases were brought in by third-parties?"
+        },
+        {
+          "name": "casework_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>How should I answer this question?</strong> Please provide a count of all new cases broken down by the different categories and case types listed. If possible, please separate your cases into those opened by the client themselves (the person effected directly by the case) and those opened by third parties on behalf of the client (eg. a concerned colleague or family member)."
+        },
+        {
+          "name": "new_cases",
+          "type": "group",
+          "label": "New cases opened",
+          "layout": "casework-categories",
+          "config": {
+            "statusField": "new_cases_status",
+            "headerLabel": "New cases opened during this reporting period",
+            "columns": [
+              { "name": "client", "label": "Opened (by client)" },
+              { "name": "thirdparty", "label": "Opened (by third party)" }
+            ],
+            "categories": [
               {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "staff_development_events",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of staff development events",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "held_staff_training",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "Staff Development Event",
-            "config": {
-              "add_button_label": "Add staff event",
-              "cardLabel": "Staff Development Event",
-              "removeLable": "Remove event"
-            },
-            "template": [
-              {
-                "name": "workshop_name",
-                "type": "text",
-                "label": "What was the name of the workshop/training?",
-                "required": true,
-                "placeholder": "Enter details here"
-              },
-              {
-                "name": "attendees_count",
-                "type": "number",
-                "label": "How many staff/committee members attended the workshop?",
-                "required": true,
-                "min": 0
-              },
-              {
-                "name": "provider_name",
-                "type": "text",
-                "label": "What was the name of the workshop/training service provider?",
-                "required": true,
-                "placeholder": "Enter details here"
-              },
-              {
-                "name": "additional_details",
-                "type": "textarea",
-                "label": "Are there any other details about the workshop/training you would like to share?",
-                "required": false,
-                "placeholder": "Enter details here"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "FRIS Events",
-        "fields": [
-          {
-            "name": "held_fris_event",
-            "type": "radio",
-            "label": "Did you hold fundraising events that required FRIS during this period?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "fris_events",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of FRIS events",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "held_fris_event",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "FRIS Event",
-            "config": {
-              "add_button_label": "Add FRIS event",
-              "cardLabel": "FRIS Event",
-              "removeLable": "Remove event"
-            },
-            "template": [
-              {
-                "name": "description",
-                "type": "textarea",
-                "label": "Describe this event",
-                "placeholder": "Enter details here",
-                "required": false
-              },
-              {
-                "name": "amount_raised",
-                "type": "currency",
-                "label": "How much were you able to raise?",
-                "currency": "ZAR",
-                "required": true
-              },
-              {
-                "name": "fund_usage",
-                "type": "textarea",
-                "label": "What were the funds used for?",
-                "placeholder": "Enter details here",
-                "required": true
-              }
-            ]
-          },
-          {
-            "name": "received_outside_funding",
-            "type": "radio",
-            "label": "Did your organisation receive any funding during this reporting period, other than the funds from SCAT?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "outside_funding",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of outside funding",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "received_outside_funding",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "Outside Funding",
-            "config": {
-              "add_button_label": "Add outside funder",
-              "cardLabel": "Outside Funding",
-              "removeLable": "Remove funder"
-            },
-            "template": [
-              {
-                "name": "funder_name",
-                "type": "text",
-                "label": "Who was the funding from?",
-                "required": true,
-                "placeholder": "Enter details here"
-              },
-              {
-                "name": "amount_received",
-                "type": "currency",
-                "label": "How much funding was received?",
-                "currency": "ZAR",
-                "required": true
-              },
-              {
-                "name": "funding_use",
-                "type": "textarea",
-                "label": "What was the extra funding used for?",
-                "required": true,
-                "placeholder": "Enter details here"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "DFT Training",
-        "fields": [
-          {
-            "name": "claimed_dft",
-            "type": "radio",
-            "label": "Have you claimed any DFT claim during this reporting period?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "dft_claims",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of DFT claims",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "claimed_dft",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "DFT Claim",
-            "config": {
-              "add_button_label": "Add DFT claim",
-              "cardLabel": "DFT Claim",
-              "removeLable": "Remove claim"
-            },
-            "template": [
-              {
-                "name": "amount_claimed",
-                "type": "currency",
-                "label": "How much did you claim?",
-                "currency": "ZAR",
-                "required": true
-              },
-              {
-                "name": "training_description",
-                "type": "textarea",
-                "label": "What was the DFT training?",
-                "placeholder": "Enter details here",
-                "required": true
-              },
-              {
-                "name": "attendee_count",
-                "type": "number",
-                "label": "How many people attended this training?",
-                "required": true,
-                "min": 0
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "Impact of Work",
-        "fields": [
-          {
-            "name": "noticed_impact",
-            "type": "radio",
-            "label": "Did you notice any changes or improvements in the community or to individuals as a result of your work?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "impact_stories",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of impact stories",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "noticed_impact",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "Impact Story",
-            "config": {
-              "add_button_label": "Add impact story",
-              "cardLabel": "Impact Story",
-              "removeLable": "Remove impact story"
-            },
-            "template": [
-              {
-                "name": "funder",
-                "type": "text",
-                "label": "Who was the funding from?",
-                "placeholder": "Enter details here",
-                "required": true
-              },
-              {
-                "name": "improvement_description",
-                "type": "textarea",
-                "label": "Describe the improvement you saw",
-                "placeholder": "Enter details here",
-                "required": true
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "Learnings, Lessons & Experiences",
-        "fields": [
-          {
-            "name": "organisational_learnings",
-            "type": "textarea",
-            "label": "What you have learned or noticed as an organisation as a result of the work that you did in your community during this period?",
-            "description": "Did you learn anything new or have a particular experience you can share as a result of your work during this reporting period? Please write a detailed response.",
-            "placeholder": "Enter details here",
-            "required": true
-          },
-          {
-            "name": "has_case_study",
-            "type": "radio",
-            "label": "Do you have a compelling case study to share from this reporting period?",
-            "required": false,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "case_studies",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of case studies",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "has_case_study",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "Case Study",
-            "config": {
-              "add_button_label": "Add case study",
-              "cardLabel": "Case Study",
-              "removeLable": "Remove case study"
-            },
-            "template": [
-              {
-                "name": "case_description",
-                "type": "textarea",
-                "label": "Briefly describe the case and what made it challenging or interesting",
-                "placeholder": "Enter details here",
-                "required": true
-              },
-              {
-                "name": "case_outcome",
-                "type": "textarea",
-                "label": "What was the outcome of the case? Why was it difficult or successful?",
-                "placeholder": "Enter details here",
-                "required": true
-              },
-              {
-                "name": "case_lessons",
-                "type": "textarea",
-                "label": "What were the lessons learned from this case?",
-                "placeholder": "Enter details here",
-                "required": true
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "Future Activities",
-        "fields": [
-          {
-            "name": "planning_fris",
-            "type": "radio",
-            "label": "Are you planning a fundraising event that requires FRIS?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "upcoming_fris_events",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of upcoming FRIS events",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "planning_fris",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "FRIS event",
-            "config": {
-              "add_button_label": "Add FRIS event",
-              "cardLabel": "FRIS event",
-              "removeLable": "Remove event"
-            },
-            "template": [
-              {
-                "name": "description",
-                "type": "textarea",
-                "label": "Briefly describe this event",
-                "placeholder": "Enter details here",
-                "required": true
-              }
-            ]
-          },
-          {
-            "name": "planning_dft",
-            "type": "radio",
-            "label": "Are you planning on hosting a training that will require DFT?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "upcoming_dft_events",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of upcoming DFT events",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "planning_dft",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "DFT event",
-            "config": {
-              "add_button_label": "Add DFT event",
-              "cardLabel": "DFT event",
-              "removeLable": "Remove event"
-            },
-            "template": [
-              {
-                "name": "description",
-                "type": "textarea",
-                "label": "Briefly describe this event",
-                "placeholder": "Enter details here",
-                "required": true
-              }
-            ]
-          },
-          {
-            "name": "planning_activities",
-            "type": "radio",
-            "label": "Are you planning any activities, programs, or services for the next reporting period?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "planned_undertakings",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "List of planned undertakings",
-            "notice": "Important: Use the list below to add details. You can select “No” to remove the list.",
-            "show_if": {
-              "field": "planning_activities",
-              "value": "yes"
-            },
-            "default": 0,
-            "item_label": "Planned undertaking",
-            "config": {
-              "add_button_label": "Add undertaking",
-              "cardLabel": "Planned undertaking",
-              "removeLable": "Remove undertaking"
-            },
-            "template": [
-              {
-                "name": "undertaking_type",
-                "type": "select",
-                "label": "What type of undertaking is being planned",
-                "placeholder": "Choose an undertaking type",
-                "required": true,
-                "options": [
-                  {
-                    "label": "Activity",
-                    "value": "Activity"
-                  },
-                  {
-                    "label": "Programme",
-                    "value": "Programme"
-                  },
-                  {
-                    "label": "Service",
-                    "value": "Service"
-                  }
+                "name": "gender",
+                "label": "Gender cases",
+                "caseTypes": [
+                  { "name": "gbv", "label": "Gender based violence" },
+                  { "name": "ipv", "label": "Intimate partner violence" },
+                  { "name": "sexual", "label": "Sexual violence" },
+                  { "name": "physical", "label": "Physical violence" },
+                  { "name": "psychological", "label": "Psychological violence" }
                 ]
               },
               {
-                "name": "undertaking_description",
-                "type": "textarea",
-                "label": "Briefly describe this planned undertaking",
-                "placeholder": "Enter details here",
-                "required": true
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "Organisational & Governance Matters",
-        "fields": [
-          {
-            "name": "staff_changes",
-            "type": "radio",
-            "label": "Has there been any staff development or changes?",
-            "description": "New staff employed, resigned, disciplinary action etc.",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
+                "name": "social",
+                "label": "Social welfare cases",
+                "caseTypes": [
+                  { "name": "grants", "label": "Social grants" },
+                  { "name": "housing", "label": "Housing" },
+                  { "name": "food", "label": "Food security" },
+                  { "name": "childcare", "label": "Child care" }
+                ]
               },
               {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "staff_changes_description",
-            "type": "textarea",
-            "label": "What were the changes relating to staff development?",
-            "placeholder": "Enter details here",
-            "required": true,
-            "show_if": {
-              "field": "staff_changes",
-              "value": "yes"
-            }
-          },
-          {
-            "name": "committee_changes",
-            "type": "radio",
-            "label": "Has there been any changes or developments with the management committee?",
-            "description": "AGMs, New committee members, resignation etc.",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
+                "name": "homeaffairs",
+                "label": "Home affairs cases",
+                "caseTypes": [
+                  { "name": "id", "label": "ID documents" },
+                  { "name": "birth", "label": "Birth certificates" },
+                  { "name": "passport", "label": "Passports" }
+                ]
               },
               {
-                "label": "Yes",
-                "value": "yes"
+                "name": "labour",
+                "label": "Labour cases",
+                "caseTypes": [
+                  { "name": "unfair", "label": "Unfair dismissal" },
+                  { "name": "wages", "label": "Unpaid wages" },
+                  { "name": "conditions", "label": "Working conditions" }
+                ]
+              },
+              {
+                "name": "farmworker",
+                "label": "Farm worker cases",
+                "caseTypes": [
+                  { "name": "eviction", "label": "Eviction" },
+                  { "name": "tenure", "label": "Tenure security" },
+                  { "name": "rights", "label": "Worker rights" }
+                ]
+              },
+              {
+                "name": "corruption",
+                "label": "Corruption cases",
+                "caseTypes": [
+                  { "name": "bribery", "label": "Bribery" },
+                  { "name": "fraud", "label": "Fraud" },
+                  { "name": "misconduct", "label": "Official misconduct" }
+                ]
+              },
+              {
+                "name": "other",
+                "label": "Other cases",
+                "caseTypes": [
+                  { "name": "other", "label": "Other" }
+                ]
               }
             ]
           },
-          {
-            "name": "committee_changes_description",
-            "type": "textarea",
-            "label": "What were the changes relating to the management committee?",
-            "placeholder": "Enter details here",
-            "required": true,
-            "show_if": {
-              "field": "committee_changes",
-              "value": "yes"
-            }
-          }
-        ]
-      },
-      {
-        "title": "Advocacy Work",
-        "fields": [
-          {
-            "name": "did_advocacy_work",
-            "type": "radio",
-            "label": "Has the organisation/advice office done any advocacy work during this reporting period?",
-            "description": "e.g., Holding government accountable, commented or interrogated local, provincial or national policy, educate the community about legislative processes and policies, engaged government on community related issues, etc.",
-            "required": true,
-            "options": [
+          "fields": []
+        },
+        {
+          "name": "new_cases_status",
+          "type": "text",
+          "label": "",
+          "show": false
+        }
+      ]
+    },
+    {
+      "tag": "Casework",
+      "title": "Finalised cases",
+      "fields": [
+        {
+          "name": "finalised_intro",
+          "type": "info",
+          "label": "How many cases did your organisation finalise during this reporting period and what were the demographic details (gender, age and race) of the clients in those cases?"
+        },
+        {
+          "name": "finalised_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>How should I answer this question?</strong> Please provide a count of all finalised cases broken down by the different categories and case types listed. Please separate your cases into those that were referred, and those that were closed in any other manner."
+        },
+        {
+          "name": "finalised_cases",
+          "type": "group",
+          "label": "Cases finalised",
+          "layout": "finalised-cases",
+          "config": {
+            "statusField": "finalised_cases_status",
+            "casesLabel": "Cases finalised",
+            "casesNotice": "Any new categories that are not filled in here, will not appear in any subsequent reporting data. Please fill in this year of the form before proceeding to the next.",
+            "casesColumns": [
+              { "name": "referred", "label": "Referred" },
+              { "name": "closed", "label": "Closed" }
+            ],
+            "demographics": [
               {
-                "label": "No",
-                "value": "no"
+                "name": "gender",
+                "label": "Gender of clients",
+                "skipLabel": "We did not gather detailed gender information for this category",
+                "columns": [
+                  { "name": "female", "label": "Female" },
+                  { "name": "male", "label": "Male" },
+                  { "name": "other", "label": "Other" }
+                ]
               },
               {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "advocacy_description",
-            "type": "textarea",
-            "label": "Describe the work advocacy work done",
-            "placeholder": "Enter details here",
-            "required": true,
-            "show_if": {
-              "field": "did_advocacy_work",
-              "value": "yes"
-            }
-          }
-        ]
-      },
-      {
-        "title": "Additional Information",
-        "fields": [
-          {
-            "name": "has_additional_info",
-            "type": "radio",
-            "label": "Do you have any additional information or comments you would like to add, or any other work that your organisation did that is not reported in the questions already asked?",
-            "required": true,
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
+                "name": "race",
+                "label": "Race of clients",
+                "skipLabel": "We did not gather detailed race information for this category",
+                "columns": [
+                  { "name": "black", "label": "Black" },
+                  { "name": "white", "label": "White" },
+                  { "name": "coloured", "label": "Coloured" },
+                  { "name": "other", "label": "Other" }
+                ]
               },
               {
-                "label": "Yes",
-                "value": "yes"
-              }
-            ]
-          },
-          {
-            "name": "additional_info",
-            "type": "textarea",
-            "label": "Please provide this information or commentary",
-            "placeholder": "Enter details here",
-            "required": true,
-            "show_if": {
-              "field": "has_additional_info",
-              "value": "yes"
-            }
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Direct Beneficiaries)",
-        "notice": "Note: The questions below are for DIRECT BENEFICIARIES only.",
-        "fields": [
-          {
-            "name": "direct_total",
-            "type": "number",
-            "label": "How many direct beneficiaries were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_female",
-            "type": "number",
-            "label": "How many direct beneficiaries were female?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_male",
-            "type": "number",
-            "label": "How many direct beneficiaries were male?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_other_gender",
-            "type": "number",
-            "label": "How many direct beneficiaries were other?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_youth",
-            "type": "number",
-            "label": "How many direct beneficiaries were youth?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_adults",
-            "type": "number",
-            "label": "How many direct beneficiaries were adults?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_african",
-            "type": "number",
-            "label": "How many direct beneficiaries were african?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_asian",
-            "type": "number",
-            "label": "How many direct beneficiaries were asian?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_coloured",
-            "type": "number",
-            "label": "How many direct beneficiaries were coloured?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_white",
-            "type": "number",
-            "label": "How many direct beneficiaries were white?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "direct_disabled",
-            "type": "number",
-            "label": "How many direct beneficiaries were disabled?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Indirect Beneficiaries)",
-        "notice": "Note: The questions below are for INDIRECT BENEFICIARIES only.",
-        "fields": [
-          {
-            "name": "total",
-            "type": "number",
-            "label": "How many indirect beneficiaries were there in total?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "female",
-            "type": "number",
-            "label": "How many indirect beneficiaries were female?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "male",
-            "type": "number",
-            "label": "How many indirect beneficiaries were male?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "other_gender",
-            "type": "number",
-            "label": "How many indirect beneficiaries were other?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "youth",
-            "type": "number",
-            "label": "How many indirect beneficiaries were youth?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "adults",
-            "type": "number",
-            "label": "How many indirect beneficiaries were adults?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "african",
-            "type": "number",
-            "label": "How many indirect beneficiaries were african?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "asian",
-            "type": "number",
-            "label": "How many indirect beneficiaries were asian?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "coloured",
-            "type": "number",
-            "label": "How many indirect beneficiaries were coloured?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "white",
-            "type": "number",
-            "label": "How many indirect beneficiaries were white?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          },
-          {
-            "name": "disabled",
-            "type": "number",
-            "label": "How many indirect beneficiaries were disabled?",
-            "required": true,
-            "min": 0,
-            "placeholder": "-"
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Consumer Cases)",
-        "notice": "Note: The questions below are for CONSUMER CASES only.",
-        "fields": [
-          {
-            "name": "consumer_total",
-            "type": "number",
-            "label": "How many consumer cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_female",
-            "type": "number",
-            "label": "How many consumer cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_male",
-            "type": "number",
-            "label": "How many consumer cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_new",
-            "type": "number",
-            "label": "How many consumer cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_old",
-            "type": "number",
-            "label": "How many consumer cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_closed",
-            "type": "number",
-            "label": "How many consumer cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_referred",
-            "type": "number",
-            "label": "How many consumer cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_pending",
-            "type": "number",
-            "label": "How many consumer cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_advice",
-            "type": "number",
-            "label": "How many consumer cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_other_status",
-            "type": "number",
-            "label": "How many consumer cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "consumer_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from consumer cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Domestic Violence)",
-        "notice": "Note: The questions below are for DOMESTIC VIOLENCE CASES only.",
-        "fields": [
-          {
-            "name": "dv_total",
-            "type": "number",
-            "label": "How many domestic violence cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_female",
-            "type": "number",
-            "label": "How many domestic violence cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_male",
-            "type": "number",
-            "label": "How many domestic violence cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_new",
-            "type": "number",
-            "label": "How many domestic violence cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_old",
-            "type": "number",
-            "label": "How many domestic violence cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_closed",
-            "type": "number",
-            "label": "How many domestic violence cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_referred",
-            "type": "number",
-            "label": "How many domestic violence cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_pending",
-            "type": "number",
-            "label": "How many domestic violence cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_advice",
-            "type": "number",
-            "label": "How many domestic violence cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_other_status",
-            "type": "number",
-            "label": "How many domestic violence cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "dv_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from domestic violence cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Farm Worker)",
-        "notice": "Note: The questions below are for FARM WORKER CASES only.",
-        "fields": [
-          {
-            "name": "fw_total",
-            "type": "number",
-            "label": "How many farm worker cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_female",
-            "type": "number",
-            "label": "How many farm worker cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_male",
-            "type": "number",
-            "label": "How many farm worker cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_new",
-            "type": "number",
-            "label": "How many farm worker cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_old",
-            "type": "number",
-            "label": "How many farm worker cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_closed",
-            "type": "number",
-            "label": "How many farm worker cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_referred",
-            "type": "number",
-            "label": "How many farm worker cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_pending",
-            "type": "number",
-            "label": "How many farm worker cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_advice",
-            "type": "number",
-            "label": "How many farm worker cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_other_status",
-            "type": "number",
-            "label": "How many farm worker cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "fw_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from farm worker cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Gender-Based Violence)",
-        "notice": "Note: The questions below are for GENDER-BASED VIOLENCE CASES only.",
-        "fields": [
-          {
-            "name": "gbv_total",
-            "type": "number",
-            "label": "How many gender-based violence cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_female",
-            "type": "number",
-            "label": "How many gender-based violence cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_male",
-            "type": "number",
-            "label": "How many gender-based violence cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_new",
-            "type": "number",
-            "label": "How many gender-based violence cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_old",
-            "type": "number",
-            "label": "How many gender-based violence cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_closed",
-            "type": "number",
-            "label": "How many gender-based violence cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_referred",
-            "type": "number",
-            "label": "How many gender-based violence cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_pending",
-            "type": "number",
-            "label": "How many gender-based violence cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_advice",
-            "type": "number",
-            "label": "How many gender-based violence cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_other_status",
-            "type": "number",
-            "label": "How many gender-based violence cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "gbv_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from gender-based violence cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Home Affairs)",
-        "notice": "Note: The questions below are for HOME AFFAIRS CASES only.",
-        "fields": [
-          {
-            "name": "home_total",
-            "type": "number",
-            "label": "How many home affairs cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_female",
-            "type": "number",
-            "label": "How many home affairs cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_male",
-            "type": "number",
-            "label": "How many home affairs cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_new",
-            "type": "number",
-            "label": "How many home affairs cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_old",
-            "type": "number",
-            "label": "How many home affairs cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_closed",
-            "type": "number",
-            "label": "How many home affairs cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_referred",
-            "type": "number",
-            "label": "How many home affairs cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_pending",
-            "type": "number",
-            "label": "How many home affairs cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_advice",
-            "type": "number",
-            "label": "How many home affairs cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_other_status",
-            "type": "number",
-            "label": "How many home affairs cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "home_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from home affairs cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Labour)",
-        "notice": "Note: The questions below are for LABOUR CASES only.",
-        "fields": [
-          {
-            "name": "labour_total",
-            "type": "number",
-            "label": "How many labour cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_female",
-            "type": "number",
-            "label": "How many labour cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_male",
-            "type": "number",
-            "label": "How many labour cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_new",
-            "type": "number",
-            "label": "How many labour cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_old",
-            "type": "number",
-            "label": "How many labour cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_closed",
-            "type": "number",
-            "label": "How many labour cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_referred",
-            "type": "number",
-            "label": "How many labour cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_pending",
-            "type": "number",
-            "label": "How many labour cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_advice",
-            "type": "number",
-            "label": "How many labour cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_other_status",
-            "type": "number",
-            "label": "How many labour cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "labour_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from labour cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Case Statistics (Social Welfare)",
-        "notice": "Note: The questions below are for SOCIAL WELFARE only.",
-        "fields": [
-          {
-            "name": "social_welfare_total",
-            "type": "number",
-            "label": "How many social welfare cases were there in total?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_female",
-            "type": "number",
-            "label": "How many social welfare cases involved female persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_male",
-            "type": "number",
-            "label": "How many social welfare cases involved male persons?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_new",
-            "type": "number",
-            "label": "How many social welfare cases were new cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_old",
-            "type": "number",
-            "label": "How many social welfare cases were old cases?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_closed",
-            "type": "number",
-            "label": "How many social welfare cases were closed?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_referred",
-            "type": "number",
-            "label": "How many social welfare cases were referred?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_pending",
-            "type": "number",
-            "label": "How many social welfare cases are pending?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_advice",
-            "type": "number",
-            "label": "How many social welfare cases provided advice?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_other_status",
-            "type": "number",
-            "label": "How many social welfare cases have an other status?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "social_welfare_savings",
-            "type": "currency",
-            "label": "How much money was saved for clients from social welfare cases?",
-            "currency": "ZAR",
-            "required": true
-          }
-        ]
-      },
-      {
-        "title": "Other Case Types",
-        "fields": [
-          {
-            "name": "has_other_case_types",
-            "type": "radio",
-            "label": "Do you deal with case types that were not mentioned above?",
-            "options": [
-              {
-                "label": "No",
-                "value": "no"
-              },
-              {
-                "label": "Yes",
-                "value": "yes"
+                "name": "age",
+                "label": "Age of clients",
+                "skipLabel": "We did not gather detailed age information for this category",
+                "columns": [
+                  { "name": "0_18", "label": "0-18" },
+                  { "name": "19_35", "label": "19-35" },
+                  { "name": "36_60", "label": "36-60" },
+                  { "name": "60_plus", "label": "60+" }
+                ]
               }
             ],
-            "required": false
-          },
-          {
-            "name": "other_case_types",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "Case type",
-            "default": 0,
-            "show_if": {
-              "field": "has_other_case_types",
-              "value": "yes"
-            },
-            "config": {
-              "add_button_label": "Add case type",
-              "removeLabel": "Remove case type",
-              "cardLabel": "Type"
-            },
-            "template": [
+            "categories": [
               {
-                "name": "case_type_description",
-                "type": "text",
-                "label": "Describe this case type",
-                "placeholder": "Enter details here",
-                "required": true
+                "name": "gender",
+                "label": "Gender cases",
+                "caseTypes": [
+                  { "name": "gbv", "label": "Gender based violence" },
+                  { "name": "ipv", "label": "Intimate partner violence" },
+                  { "name": "sexual", "label": "Sexual violence" },
+                  { "name": "physical", "label": "Physical violence" },
+                  { "name": "psychological", "label": "Psychological violence" }
+                ]
               },
               {
-                "name": "total",
-                "type": "number",
-                "label": "How many of this case type were there in total?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
+                "name": "social",
+                "label": "Social welfare cases",
+                "caseTypes": [
+                  { "name": "grants", "label": "Social grants" },
+                  { "name": "housing", "label": "Housing" },
+                  { "name": "food", "label": "Food security" },
+                  { "name": "childcare", "label": "Child care" }
+                ]
               },
               {
-                "name": "female",
-                "type": "number",
-                "label": "How many of this case type involved female persons?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
+                "name": "homeaffairs",
+                "label": "Home affairs cases",
+                "caseTypes": [
+                  { "name": "id", "label": "ID documents" },
+                  { "name": "birth", "label": "Birth certificates" },
+                  { "name": "passport", "label": "Passports" }
+                ]
               },
               {
-                "name": "male",
-                "type": "number",
-                "label": "How many of this case type involved male persons?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
+                "name": "labour",
+                "label": "Labour cases",
+                "caseTypes": [
+                  { "name": "unfair", "label": "Unfair dismissal" },
+                  { "name": "wages", "label": "Unpaid wages" },
+                  { "name": "conditions", "label": "Working conditions" }
+                ]
               },
               {
-                "name": "new",
-                "type": "number",
-                "label": "How many of this case type were new cases?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
+                "name": "farmworker",
+                "label": "Farm worker cases",
+                "caseTypes": [
+                  { "name": "eviction", "label": "Eviction" },
+                  { "name": "tenure", "label": "Tenure security" },
+                  { "name": "rights", "label": "Worker rights" }
+                ]
               },
               {
-                "name": "old",
-                "type": "number",
-                "label": "How many of this case type were old cases?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
+                "name": "corruption",
+                "label": "Corruption cases",
+                "caseTypes": [
+                  { "name": "bribery", "label": "Bribery" },
+                  { "name": "fraud", "label": "Fraud" },
+                  { "name": "misconduct", "label": "Official misconduct" }
+                ]
               },
               {
-                "name": "closed",
-                "type": "number",
-                "label": "How many of this case type were closed?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
-              },
-              {
-                "name": "referred",
-                "type": "number",
-                "label": "How many of this case type were referred?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
-              },
-              {
-                "name": "pending",
-                "type": "number",
-                "label": "How many of this case type are pending?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
-              },
-              {
-                "name": "advice",
-                "type": "number",
-                "label": "How many of this case type provided advice?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
-              },
-              {
-                "name": "other_status",
-                "type": "number",
-                "label": "How many of this case type have an other status?",
-                "required": true,
-                "placeholder": "-",
-                "min": 0
-              },
-              {
-                "name": "savings",
-                "type": "currency",
-                "label": "How much money was saved for clients from this case type?",
-                "currency": "ZAR",
-                "required": true
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "title": "Food Security Statistics",
-        "fields": [
-          {
-            "name": "gardens_owned",
-            "type": "number",
-            "label": "Number of food gardens owned by LDA",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "communal_garden_size",
-            "type": "unit_input",
-            "label": "Total size of communal food garden(s) belonging to the LDA?",
-            "required": true,
-            "unit_options": [
-              "m²",
-              "km²",
-              "hectares"
-            ],
-            "default_unit": "km²"
-          },
-          {
-            "name": "staff_in_communal_garden",
-            "type": "number",
-            "label": "Number of LDA staff working in the LDA communal food garden?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "community_gardens_supported",
-            "type": "number",
-            "label": "Number of community food gardens supported by the organisation?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "volunteers_employed",
-            "type": "number",
-            "label": "Number of people employed (volunteering) in the LDA-supported food garden projects?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "members_trained",
-            "type": "number",
-            "label": "Number of community members trained in food gardening?",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
-          },
-          {
-            "name": "harvested_items",
-            "type": "repeatable",
-            "layout": "repeatable",
-            "label": "How much was harvested from the communal food garden?",
-            "default": 0,
-            "config": {
-              "add_button_label": "Add harvested item",
-              "removeLable": "Remove harvested item",
-              "cardLabel": "Harvested Item"
-            },
-            "fields": [],
-            "template": [
-              {
-                "name": "item_name",
-                "type": "text",
-                "label": "Harvested item name",
-                "placeholder": "eg. tomato, strawberry, lettuce",
-                "required": true
-              },
-              {
-                "name": "unit",
-                "type": "text",
-                "label": "Unit for measuring quantities of this item",
-                "placeholder": "eg. boxes, punnets, bunches",
-                "required": true
-              },
-              {
-                "name": "quantity",
-                "type": "number",
-                "label": "Number of these units harvested",
-                "required": true,
-                "min": 0
+                "name": "other",
+                "label": "Other cases",
+                "caseTypes": [
+                  { "name": "other", "label": "Other" }
+                ]
               }
             ]
           },
-          {
-            "name": "percentage_shared",
-            "type": "unit_input",
-            "label": "How much of the harvested crop was sold or shared in the community?",
-            "placeholder": "Please provide this as a percentage (%) of the crops harvested",
-            "unit_options": [
-              "%"
+          "fields": []
+        },
+        {
+          "name": "finalised_cases_status",
+          "type": "text",
+          "label": "",
+          "show": false
+        }
+      ]
+    },
+    {
+      "tag": "Food gardening",
+      "title": "Household food gardens",
+      "fields": [
+        {
+          "name": "household_gardens_count",
+          "type": "text",
+          "label": "New household food gardens you helped establish",
+          "description": "During this reporting period (April 1, 2025 - July 31, 2025), how many new household food gardens (you must be able to verify that this garden exists) did you support in establishing through direct labour, seeds, equipment or other resources, or training/advice?",
+          "required": true,
+          "placeholder": "Enter value"
+        }
+      ]
+    },
+    {
+      "tag": "Food gardening",
+      "title": "Community gardens owned or managed",
+      "fields": [
+        {
+          "name": "community_gardens_intro",
+          "type": "info",
+          "label": "How many community food gardens does your organisation own or manage?"
+        },
+        {
+          "name": "community_gardens_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<b>How should I answer this question?</b> The list of gardens that were present in your previous narrative report have been added below. Please check and update the list to ensure all gardens are accounted for and all data is up-to-date and accurate."
+        },
+        {
+          "name": "community_gardens",
+          "type": "repeatable",
+          "label": "Name and details",
+          "subtitle": "of each community garden",
+          "layout": "narrative-repeatable",
+          "value": "[]",
+          "notice": "<strong>Please note!</strong> Community gardens that are not in this list, will not appear in any subsequent reporting lists. If you delete a garden from this list, it will be deleted from all other reporting lists.",
+          "config": {
+            "cardLabel": "Garden",
+            "add_button_label": "Add new garden",
+            "removeLable": "Delete garden"
+          },
+          "template": [
+            {
+              "name": "garden_name",
+              "type": "text",
+              "label": "Garden name",
+              "required": true,
+              "placeholder": "Enter garden name"
+            },
+            {
+              "name": "garden_size",
+              "type": "text",
+              "label": "Size of community garden (m²)",
+              "required": true,
+              "placeholder": "Enter size"
+            },
+            {
+              "name": "garden_address",
+              "type": "text",
+              "label": "Address",
+              "required": true,
+              "placeholder": "Enter address"
+            },
+            {
+              "name": "garden_no_address",
+              "type": "toggle",
+              "layout": "toggle",
+              "label": "This community garden does not have a street address",
+              "required": false
+            },
+            {
+              "name": "contact_person",
+              "type": "text",
+              "label": "Contact person (full name)",
+              "required": true,
+              "placeholder": "Enter contact person name"
+            },
+            {
+              "name": "contact_number",
+              "type": "text",
+              "label": "Contact number",
+              "required": true,
+              "placeholder": "Enter contact number"
+            },
+            {
+              "name": "external_support",
+              "type": "radio",
+              "label": "Does this garden receive support outside of SCAT funds?",
+              "required": true,
+              "options": [
+                { "label": "No", "value": "no" },
+                { "label": "Yes", "value": "yes" }
+              ]
+            },
+            {
+              "name": "external_support_description",
+              "type": "textarea",
+              "label": "Please describe the support it receives",
+              "required": true,
+              "placeholder": "Enter details here",
+              "show_if": {
+                "field": "external_support",
+                "value": "yes"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "Food gardening",
+      "title": "Community garden beneficiaries",
+      "fields": [
+        {
+          "name": "beneficiaries_intro",
+          "type": "info",
+          "label": "How many organisations and individuals benefit from your community gardening?"
+        },
+        {
+          "name": "beneficiaries_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<b>How should I answer this question?</b> Where possible, the beneficiaries and values that were present in your previous narrative report have been added below. Please check and update the list to ensure all employees and beneficiaries are accounted for and all related data is up-to-date and accurate."
+        },
+        {
+          "name": "garden_beneficiaries",
+          "type": "group",
+          "label": "",
+          "layout": "garden-beneficiaries",
+          "config": {
+            "statusField": "garden_beneficiaries_status",
+            "sourceField": "community_gardens",
+            "gardenNameField": "garden_name",
+            "requiredFields": ["garden_name", "garden_size", "garden_address", "contact_person", "contact_number", "external_support"],
+            "employeesLabel": "Employees paid by SCAT funds",
+            "employeesDescription": "Please only list employees whose regular salary or stipend from the work they perform for your community gardens is paid for using SCAT funding.",
+            "employeesColumns": [
+              { "name": "paid_employees", "label": "Paid employees" }
             ],
-            "default_unit": "%",
-            "required": true
+            "demographics": [
+              {
+                "name": "gender",
+                "label": "Gender of employees paid from SCAT funds",
+                "columns": [
+                  { "name": "female", "label": "Female" },
+                  { "name": "male", "label": "Male" },
+                  { "name": "other", "label": "Other" }
+                ]
+              },
+              {
+                "name": "age",
+                "label": "Age of employees paid from SCAT funds",
+                "columns": [
+                  { "name": "0_18", "label": "0-18" },
+                  { "name": "19_35", "label": "19-35" },
+                  { "name": "36_59", "label": "36-59" },
+                  { "name": "60_plus", "label": "60+" }
+                ]
+              },
+              {
+                "name": "race",
+                "label": "Race of employees paid from SCAT funds",
+                "columns": [
+                  { "name": "black", "label": "Black" },
+                  { "name": "white", "label": "White" },
+                  { "name": "coloured", "label": "Coloured" },
+                  { "name": "other", "label": "Other" }
+                ]
+              }
+            ],
+            "demographicsLabel": "Demographics of employees paid by SCAT",
+            "beneficiariesLabel": "Beneficiaries supported",
+            "beneficiariesDescription": "A beneficiary is any organisation or group that benefits from the harvested outputs of your community garden.",
+            "beneficiariesColumns": [
+              { "name": "individuals", "label": "Individuals" },
+              { "name": "food_provided", "label": "Food provided (kg)" }
+            ]
           },
-          {
-            "name": "orgs_supported",
-            "type": "number",
-            "label": "Number of organisations supported by the harvested crops",
-            "placeholder": "e.g., clinics, community kitchens, schools, etc.",
-            "required": true,
-            "min": 0
+          "fields": []
+        },
+        {
+          "name": "garden_beneficiaries_status",
+          "type": "text",
+          "label": "",
+          "show": false
+        }
+      ]
+    },
+    {
+      "title": "Community garden yields",
+      "tag": "Food gardening",
+      "fields": [
+        {
+          "name": "yields_intro",
+          "type": "info",
+          "label": "During this reporting period (1 April, 2025 - 31 July 2025), what food items did you plant and/or harvest in your community gardens?"
+        },
+        {
+          "name": "yields_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<b>How should I answer this question?</b> Where possible, we have populated each farm with the items that were planted or harvest in the last reporting period. Please add or remove items from this list until it reflects accurately. If an item was planted in the last reporting period, please do not include that planted amount in your totals. However, please include any harvested amount in your harvested total."
+        },
+        {
+          "name": "garden_yields",
+          "type": "group",
+          "label": "",
+          "layout": "garden-yields",
+          "config": {
+            "statusField": "garden_yields_status",
+            "sourceField": "community_gardens",
+            "gardenNameField": "garden_name",
+            "requiredFields": ["garden_name", "garden_size", "garden_address", "contact_person", "contact_number", "external_support"],
+            "columns": [
+              { "name": "units_planted", "label": "Units planted", "type": "number", "tooltip": "Number of units planted" },
+              { "name": "harvested_kg", "label": "Harvested (kg)", "type": "number", "tooltip": "Weight harvested in kilograms" },
+              { "name": "sold_kg", "label": "Sold (kg)", "type": "number", "tooltip": "Weight sold in kilograms" }
+            ],
+            "farmedItemOptions": [
+              "Carrots", "Lettuces", "Potatoes", "Maize", "Wildflowers",
+              "Honey (Beehives)", "Tomato", "Spinach", "Cabbage", "Onions",
+              "Beans", "Peas", "Peppers", "Squash", "Herbs", "Beetroot",
+              "Broccoli", "Cauliflower", "Cucumber", "Garlic", "Kale"
+            ],
+            "addButtonLabel": "Add farmed item"
           },
-          {
-            "name": "stipend_paid",
-            "type": "currency",
-            "label": "Amount of stipend paid to gardeners",
-            "currency": "ZAR",
-            "required": true
+          "fields": []
+        },
+        {
+          "name": "garden_yields_status",
+          "type": "text",
+          "label": "",
+          "show": false
+        }
+      ]
+    },
+    {
+      "title": "Challenges",
+      "fields": [
+        {
+          "name": "challenges_intro",
+          "type": "info",
+          "label": "During the last reporting period, across all your activities, operations and in the communities you work in, what existing or new challenges have been preventing growth, prosperity or impact?"
+        },
+        {
+          "name": "challenges_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>How should I answer this question?</strong> We have added the past challenges from your previous narrative reports below. Please provide updates on past challenges or add new challenges that arose during this reporting period."
+        },
+        {
+          "name": "challenges",
+          "type": "repeatable",
+          "label": "",
+          "layout": "challenges",
+          "config": {
+            "existingChallenges": [],
+            "categories": [
+              { "label": "Crime and security", "value": "crime_and_security" },
+              { "label": "Economic factors", "value": "economic_factors" },
+              { "label": "Environmental issues", "value": "environmental_issues" },
+              { "label": "Funding and resources", "value": "funding_and_resources" },
+              { "label": "Government and policy", "value": "government_and_policy" },
+              { "label": "Health and wellbeing", "value": "health_and_wellbeing" },
+              { "label": "Infrastructure", "value": "infrastructure" },
+              { "label": "Skills and training", "value": "skills_and_training" },
+              { "label": "Social issues", "value": "social_issues" },
+              { "label": "Technology", "value": "technology" },
+              { "label": "Other", "value": "other" }
+            ],
+            "rootCauseOptions": [
+              { "label": "Within your organisation", "value": "within_your_organisation" },
+              { "label": "External", "value": "external" }
+            ],
+            "impactOptions": [
+              { "label": "Organisation", "value": "organisation" },
+              { "label": "Community", "value": "community" },
+              { "label": "Organisation and community", "value": "organisation_and_community" }
+            ],
+            "add_button_label": "Add new challenge",
+            "cardLabel": "Challenge"
           },
-          {
-            "name": "community_kitchens",
-            "type": "number",
-            "label": "Number of community kitchens",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
+          "template": [
+            {
+              "name": "challenge_type",
+              "type": "text",
+              "label": "",
+              "show": false,
+              "prefill": {
+                "path": "new",
+                "source": "defaultValue"
+              }
+            },
+            {
+              "name": "title",
+              "type": "text",
+              "label": "Short title for this challenge",
+              "required": true,
+              "maxLength": 100,
+              "show_if": {
+                "field": "challenge_type",
+                "value": "new"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "root_cause",
+              "type": "select",
+              "label": "Is the root cause of your challenge from within your organisation or external?",
+              "required": true,
+              "options": [
+                { "label": "Within your organisation", "value": "within_your_organisation" },
+                { "label": "External", "value": "external" }
+              ],
+              "show_if": {
+                "field": "challenge_type",
+                "value": "new"
+              }
+            },
+            {
+              "name": "impact_scope",
+              "type": "select",
+              "label": "Does this challenge impact your organisation, your community, or both?",
+              "required": true,
+              "options": [
+                { "label": "Organisation", "value": "organisation" },
+                { "label": "Community", "value": "community" },
+                { "label": "Organisation and community", "value": "organisation_and_community" }
+              ],
+              "show_if": {
+                "field": "challenge_type",
+                "value": "new"
+              }
+            },
+            {
+              "name": "focus_areas",
+              "type": "multiselect",
+              "label": "Select the focus areas this challenge affects",
+              "required": true,
+              "config": { "dynamicOptionTable": "focus_areas" },
+              "show_if": {
+                "field": "challenge_type",
+                "value": "new"
+              }
+            },
+            {
+              "name": "categories",
+              "type": "multiselect",
+              "label": "Which categories best describe this challenge?",
+              "required": true,
+              "options": [
+                { "label": "Crime and security", "value": "crime_and_security" },
+                { "label": "Economic factors", "value": "economic_factors" },
+                { "label": "Environmental issues", "value": "environmental_issues" },
+                { "label": "Funding and resources", "value": "funding_and_resources" },
+                { "label": "Government and policy", "value": "government_and_policy" },
+                { "label": "Health and wellbeing", "value": "health_and_wellbeing" },
+                { "label": "Infrastructure", "value": "infrastructure" },
+                { "label": "Skills and training", "value": "skills_and_training" },
+                { "label": "Social issues", "value": "social_issues" },
+                { "label": "Technology", "value": "technology" },
+                { "label": "Other", "value": "other" }
+              ],
+              "show_if": {
+                "field": "challenge_type",
+                "value": "new"
+              }
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "label": "Briefly describe this challenge",
+              "required": true,
+              "maxLength": 500,
+              "show_if": {
+                "field": "challenge_type",
+                "value": "new"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "resolved",
+              "type": "toggle",
+              "layout": "toggle",
+              "label": "This challenge was resolved during this reporting period",
+              "required": false,
+              "prefill": {
+                "path": "false",
+                "source": "defaultValue"
+              }
+            },
+            {
+              "name": "has_updates",
+              "type": "radio",
+              "label": "Do you have any updates to give regarding this challenge?",
+              "required": true,
+              "options": [
+                { "label": "No", "value": "no" },
+                { "label": "Yes", "value": "yes" }
+              ],
+              "show_if": {
+                "field": "resolved",
+                "value": "false"
+              }
+            },
+            {
+              "name": "updates",
+              "type": "textarea",
+              "label": "What updates do you have regarding this ongoing challenge",
+              "required": true,
+              "show_if": {
+                "field": "has_updates",
+                "value": "yes"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "how_resolved",
+              "type": "textarea",
+              "label": "How was this challenge resolved?",
+              "required": true,
+              "show_if": {
+                "field": "resolved",
+                "value": "true"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "scat_assisted",
+              "type": "radio",
+              "label": "Did SCAT funding or support contribute solving this challenge?",
+              "required": true,
+              "options": [
+                { "label": "No", "value": "no" },
+                { "label": "Yes", "value": "yes" }
+              ],
+              "show_if": {
+                "field": "resolved",
+                "value": "true"
+              }
+            },
+            {
+              "name": "scat_impact",
+              "type": "textarea",
+              "label": "Describe the impact of SCAT funding or support",
+              "required": true,
+              "show_if": {
+                "field": "scat_assisted",
+                "value": "yes"
+              },
+              "placeholder": "Enter details here"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Successes",
+      "fields": [
+        {
+          "name": "successes_intro",
+          "type": "info",
+          "label": "During the last reporting period (1 April, 2025 - 31 July, 2025), across all your activities, operations and in the communities you work in, what successes did you have that helped your organisation or you community achieve growth, prosperity or impact?"
+        },
+        {
+          "name": "successes_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>How should I answer this question?</strong> Please add any successes to the list below and describe them in no more than 50 words. If you have a noteworthy success that your organisation is particularly proud of, please rather add it to the \"High impact case studies\" section, as we would love to know more about these noteworthy successes."
+        },
+        {
+          "name": "successes",
+          "type": "repeatable",
+          "label": "Successes",
+          "subtitle": "during the last reporting period",
+          "layout": "narrative-repeatable",
+          "value": "[]",
+          "config": {
+            "cardLabel": "Success",
+            "add_button_label": "Add new success",
+            "removeLable": "Delete success"
           },
-          {
-            "name": "beneficiaries_served",
-            "type": "number",
-            "label": "Number of beneficiaries served through the community kitchen",
-            "required": true,
-            "placeholder": "-",
-            "min": 0
+          "template": [
+            {
+              "name": "title",
+              "type": "text",
+              "label": "Short summary of this success",
+              "required": true,
+              "maxLength": 100,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "impact_scope",
+              "type": "select",
+              "label": "Were the impacts of this success felt in the organisation, the community or both?",
+              "required": true,
+              "options": [
+                { "label": "Organisation", "value": "organisation" },
+                { "label": "Community", "value": "community" },
+                { "label": "Organisation and community", "value": "organisation_and_community" }
+              ]
+            },
+            {
+              "name": "focus_areas",
+              "type": "multiselect",
+              "label": "Select the focus areas this success effects",
+              "required": true,
+              "config": { "dynamicOptionTable": "focus_areas" }
+            },
+            {
+              "name": "categories",
+              "type": "multiselect",
+              "label": "Which categories best describe this challenge?",
+              "required": true,
+              "options": [
+                { "label": "Crime and security", "value": "crime_and_security" },
+                { "label": "Economic factors", "value": "economic_factors" },
+                { "label": "Environmental issues", "value": "environmental_issues" },
+                { "label": "Funding and resources", "value": "funding_and_resources" },
+                { "label": "Government and policy", "value": "government_and_policy" },
+                { "label": "Health and wellbeing", "value": "health_and_wellbeing" },
+                { "label": "Infrastructure", "value": "infrastructure" },
+                { "label": "Skills and training", "value": "skills_and_training" },
+                { "label": "Social issues", "value": "social_issues" },
+                { "label": "Technology", "value": "technology" },
+                { "label": "Other", "value": "other" }
+              ]
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "label": "Please provide more details about what enabled this success and the impact that it had on your organisation or community.",
+              "required": true,
+              "maxLength": 500,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "scat_assisted",
+              "type": "radio",
+              "label": "Did SCAT funding or support contribute to this success?",
+              "required": false,
+              "options": [
+                { "label": "No", "value": "no" },
+                { "label": "Yes", "value": "yes" }
+              ]
+            },
+            {
+              "name": "scat_impact",
+              "type": "textarea",
+              "label": "Describe the impact of SCAT funding or support",
+              "required": true,
+              "show_if": {
+                "field": "scat_assisted",
+                "value": "yes"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "images",
+              "type": "fileUpload",
+              "label": "Do you have images relating to this success?",
+              "required": false,
+              "show_if": {
+                "field": "scat_assisted",
+                "value": "yes"
+              },
+              "config": {
+                "accept": "image/*",
+                "multiple": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Partnerships and collaborations",
+      "fields": [
+        {
+          "name": "partnerships_intro",
+          "type": "info",
+          "label": "During this reporting period, did you have any new partnerships or collaborations that helped your organisation or your community with growth, prosperity or impact?"
+        },
+        {
+          "name": "partnerships_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>How should I answer this question?</strong> We have added all partnerships and successes from previous narrative reports below. Please check that the nature of these relationships is still correct, or add new partnerships."
+        },
+        {
+          "name": "partnerships",
+          "type": "repeatable",
+          "label": "",
+          "layout": "partnerships",
+          "config": {
+            "existingPartnerships": [],
+            "partnerTypes": [
+              { "label": "Local government entity", "value": "local_government_entity" },
+              { "label": "Traditional leader", "value": "traditional_leader" },
+              { "label": "CBO", "value": "cbo" },
+              { "label": "Local business", "value": "local_business" },
+              { "label": "Court", "value": "court" },
+              { "label": "Clinic", "value": "clinic" },
+              { "label": "Church or faith group", "value": "church_or_faith_group" },
+              { "label": "Support facility", "value": "support_facility" },
+              { "label": "Other", "value": "other" }
+            ],
+            "partnershipCategories": [
+              { "label": "Organisational assistance", "value": "organisational_assistance" },
+              { "label": "Community support", "value": "community_support" },
+              { "label": "Funding", "value": "funding" },
+              { "label": "Training", "value": "training" },
+              { "label": "Advocacy", "value": "advocacy" },
+              { "label": "Other", "value": "other" }
+            ],
+            "add_button_label": "Add partnership or collaboration",
+            "cardLabel": "Partnership"
           },
-          {
-            "name": "other_support",
-            "type": "textarea",
-            "label": "What other support do you receive for your food garden or community kitchen?",
-            "placeholder": "Enter details here",
-            "required": true
-          }
-        ]
-      }
-    ]
-  }
+          "template": [
+            {
+              "name": "partnership_type",
+              "type": "text",
+              "label": "",
+              "show": false,
+              "prefill": {
+                "path": "new",
+                "source": "defaultValue"
+              }
+            },
+            {
+              "name": "name",
+              "type": "text",
+              "label": "Name of organisation or individual",
+              "required": true,
+              "maxLength": 100,
+              "show_if": {
+                "field": "partnership_type",
+                "value": "new"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "partner_type",
+              "type": "multiselect",
+              "label": "Which of these best describes the type of organisation or individual?",
+              "required": true,
+              "options": [
+                { "label": "Local government entity", "value": "local_government_entity" },
+                { "label": "Traditional leader", "value": "traditional_leader" },
+                { "label": "CBO", "value": "cbo" },
+                { "label": "Local business", "value": "local_business" },
+                { "label": "Court", "value": "court" },
+                { "label": "Clinic", "value": "clinic" },
+                { "label": "Church or faith group", "value": "church_or_faith_group" },
+                { "label": "Support facility", "value": "support_facility" },
+                { "label": "Other", "value": "other" }
+              ],
+              "show_if": {
+                "field": "partnership_type",
+                "value": "new"
+              }
+            },
+            {
+              "name": "category",
+              "type": "select",
+              "label": "What category best describes your partnership?",
+              "required": true,
+              "options": [
+                { "label": "Organisational assistance", "value": "organisational_assistance" },
+                { "label": "Community support", "value": "community_support" },
+                { "label": "Funding", "value": "funding" },
+                { "label": "Training", "value": "training" },
+                { "label": "Advocacy", "value": "advocacy" },
+                { "label": "Other", "value": "other" }
+              ],
+              "show_if": {
+                "field": "partnership_type",
+                "value": "new"
+              }
+            },
+            {
+              "name": "address",
+              "type": "text",
+              "label": "Address of partner or collaborator (if possible)",
+              "required": false,
+              "show_if": {
+                "field": "partnership_type",
+                "value": "new"
+              },
+              "placeholder": "Enter address here"
+            },
+            {
+              "name": "contact_number",
+              "type": "text",
+              "label": "Contact number for partner or collaborator",
+              "required": false,
+              "show_if": {
+                "field": "partnership_type",
+                "value": "new"
+              },
+              "placeholder": "Enter contact number"
+            },
+            {
+              "name": "reason",
+              "type": "textarea",
+              "label": "Briefly describe the reason for this partnership or collaboration",
+              "required": true,
+              "maxLength": 500,
+              "show_if": {
+                "field": "partnership_type",
+                "value": "new"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "worked_together",
+              "type": "radio",
+              "label": "Did you work with this partner or collaborator during this reporting period?",
+              "required": true,
+              "options": [
+                { "label": "No", "value": "no" },
+                { "label": "Yes", "value": "yes" }
+              ],
+              "show_if": {
+                "field": "partnership_type",
+                "value": "existing"
+              }
+            },
+            {
+              "name": "outcomes",
+              "type": "textarea",
+              "label": "What have been the outcomes of this partnership or collaboration in your organisation and/or community?",
+              "required": true,
+              "maxLength": 500,
+              "show_if": {
+                "field": "worked_together",
+                "value": "yes"
+              },
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "recommend",
+              "type": "radio",
+              "label": "Would you recommend this partner or collaborator to others?",
+              "required": true,
+              "options": [
+                { "label": "Yes", "value": "yes" },
+                { "label": "No", "value": "no" },
+                { "label": "Not sure yet", "value": "not_sure_yet" }
+              ]
+            },
+            {
+              "name": "remove_partner",
+              "type": "toggle",
+              "layout": "toggle",
+              "label": "Please remove this organisation or individual from our partners list in future",
+              "required": false,
+              "show_if": {
+                "field": "partnership_type",
+                "value": "existing"
+              },
+              "prefill": {
+                "path": "false",
+                "source": "defaultValue"
+              }
+            },
+            {
+              "name": "remove_reason",
+              "type": "textarea",
+              "label": "Briefly explain why you are ending or have ended your partnership",
+              "required": true,
+              "show_if": {
+                "field": "remove_partner",
+                "value": "true"
+              },
+              "placeholder": "Enter details here"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "SCAT requested case studies (stories)",
+      "description": "Being able to tell stories (case studies) of highly impactful work being done by the organisations that receive funding and support from SCAT is what enables us to secure new funding and opportunities for the organisations we work with. If you have any stories that align with those SCAT is looking to be able to present to funders, please tell us about them!",
+      "fields": [
+        {
+          "name": "case_studies_guidance",
+          "type": "info",
+          "label": "",
+          "notice": "<strong>How should I answer this question?</strong> Please examine all the areas that SCAT is requesting case studies for. If a story you have matches that area, please provide it there. If you have a story that does not fit in any of those areas, please add it to the \"General case studies\" section."
+        },
+        {
+          "name": "lda_change_case_studies",
+          "type": "repeatable",
+          "label": "LDA level change",
+          "subtitle": "resulting from SCAT funding or support",
+          "description": "<strong>For this reporting period</strong>, please describe any impactful LDA level change that has been enabled by funding or support from SCAT.",
+          "layout": "narrative-repeatable",
+          "config": {
+            "add_button_label": "Add a case study",
+            "removeLable": "Delete case study",
+            "cardLabel": "Case study"
+          },
+          "template": [
+            {
+              "name": "title",
+              "type": "text",
+              "label": "Short title describing this change",
+              "required": true,
+              "maxLength": 100,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "support_types",
+              "type": "multiselect",
+              "label": "Please select the types of support which enabled this change",
+              "required": true,
+              "options": [
+                { "label": "SCAT Funding", "value": "scat_funding" },
+                { "label": "SCAT Capacity Building", "value": "scat_capacity_building" },
+                { "label": "SCAT Technical Support", "value": "scat_technical_support" },
+                { "label": "SCAT Networking", "value": "scat_networking" },
+                { "label": "Other", "value": "other" }
+              ]
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "label": "Describe this change in more detail and the impact it has had",
+              "required": true,
+              "maxLength": 1000,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "images",
+              "type": "fileUpload",
+              "label": "Do you have any images to share relating to this case study?",
+              "required": false,
+              "config": {
+                "accept": "image/*",
+                "multiple": true
+              }
+            }
+          ]
+        },
+        {
+          "name": "systemic_change_case_studies",
+          "type": "repeatable",
+          "label": "Systemic, network or community level change",
+          "subtitle": "brought about by your work",
+          "description": "<strong>For this reporting period</strong>, please describe any impactful community level change that has been enabled by funding or support from SCAT. What evidence is there of behavioural or systemic changes (e.g., improved access to services, stronger local networks, reduced stigma, greater community dialogue), increased accountability in local government have resulted from your work and activities as an organisation?",
+          "layout": "narrative-repeatable",
+          "config": {
+            "add_button_label": "Add a case study",
+            "removeLable": "Delete case study",
+            "cardLabel": "Case study"
+          },
+          "template": [
+            {
+              "name": "title",
+              "type": "text",
+              "label": "Short title describing this change",
+              "required": true,
+              "maxLength": 100,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "support_types",
+              "type": "multiselect",
+              "label": "Please select the types of support which enabled this change",
+              "required": true,
+              "options": [
+                { "label": "SCAT Funding", "value": "scat_funding" },
+                { "label": "SCAT Capacity Building", "value": "scat_capacity_building" },
+                { "label": "SCAT Technical Support", "value": "scat_technical_support" },
+                { "label": "SCAT Networking", "value": "scat_networking" },
+                { "label": "Other", "value": "other" }
+              ]
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "label": "Describe this change in more detail and the impact it has had",
+              "required": true,
+              "maxLength": 1000,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "images",
+              "type": "fileUpload",
+              "label": "Do you have any images to share relating to this case study?",
+              "required": false,
+              "config": {
+                "accept": "image/*",
+                "multiple": true
+              }
+            }
+          ]
+        },
+        {
+          "name": "awareness_advocacy_case_studies",
+          "type": "repeatable",
+          "label": "Awareness, advocacy, or policy influence",
+          "subtitle": "brought about by your work",
+          "description": "<strong>For this reporting period</strong>, what evidence is there that the work your organisation does lead to notable changes in community awareness, advocacy for, or policy influence relating to the focus areas you receive funding for from SCAT.",
+          "layout": "narrative-repeatable",
+          "config": {
+            "add_button_label": "Add a case study",
+            "cardLabel": "Case study",
+            "removeLable": "Delete case study"
+          },
+          "template": [
+            {
+              "name": "title",
+              "type": "text",
+              "label": "Short title describing this change",
+              "required": true,
+              "maxLength": 100,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "category",
+              "type": "select",
+              "label": "What category best describes this change",
+              "required": true,
+              "options": [
+                { "label": "Community awareness", "value": "community_awareness" },
+                { "label": "Advocacy", "value": "advocacy" },
+                { "label": "Policy influence", "value": "policy_influence" },
+                { "label": "Other", "value": "other" }
+              ]
+            },
+            {
+              "name": "focus_areas",
+              "type": "multiselect",
+              "label": "Focus areas this change relates to",
+              "required": true,
+              "config": { "dynamicOptionTable": "focus_areas" }
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "label": "Describe this change in more detail and the impact it has had",
+              "required": true,
+              "maxLength": 1000,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "images",
+              "type": "fileUpload",
+              "label": "Do you have any images to share relating to this case study?",
+              "required": false,
+              "config": {
+                "accept": "image/*",
+                "multiple": true
+              }
+            }
+          ]
+        },
+        {
+          "name": "focus_area_advocacy_case_studies",
+          "type": "repeatable",
+          "label": "Awareness, advocacy, or policy influence",
+          "subtitle": "relating to SCAT focus areas",
+          "description": "<span class='text-slate-600'><strong>For this reporting period</strong>, please describe any notable improvements</span>",
+          "layout": "narrative-repeatable",
+          "config": {
+            "add_button_label": "Add a case study",
+            "removeLable": "Delete case study",
+            "cardLabel": "Case study"
+          },
+          "template": [
+            {
+              "name": "title",
+              "type": "text",
+              "label": "Short title describing this change",
+              "required": true,
+              "maxLength": 100,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "category",
+              "type": "select",
+              "label": "What category best describes this change",
+              "required": true,
+              "options": [
+                { "label": "Community awareness", "value": "community_awareness" },
+                { "label": "Advocacy", "value": "advocacy" },
+                { "label": "Policy influence", "value": "policy_influence" },
+                { "label": "Other", "value": "other" }
+              ]
+            },
+            {
+              "name": "focus_areas",
+              "type": "multiselect",
+              "label": "Focus areas this change relates to",
+              "required": true,
+              "config": { "dynamicOptionTable": "focus_areas" }
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "label": "Describe this change in more detail and the impact it has had",
+              "required": true,
+              "maxLength": 1000,
+              "placeholder": "Enter details here"
+            },
+            {
+              "name": "images",
+              "type": "fileUpload",
+              "label": "Do you have any images to share relating to this case study?",
+              "required": false,
+              "config": {
+                "accept": "image/*",
+                "multiple": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
