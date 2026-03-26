@@ -538,7 +538,7 @@ export function GardenBeneficiariesLayout({
                           onChange={(e) => handleInputChange(fieldKey, e.target.value)}
                           disabled={!isEditing}
                           className="h-9 text-slate-700"
-                          placeholder="0"
+                          placeholder="-"
                         />
                       </div>
                     )
@@ -655,7 +655,7 @@ export function GardenBeneficiariesLayout({
                                   onChange={(e) => handleInputChange(fieldKey, e.target.value)}
                                   disabled={!isEditing}
                                   className="h-9 text-slate-700"
-                                  placeholder="0"
+                                  placeholder="-"
                                 />
                               </div>
                             )

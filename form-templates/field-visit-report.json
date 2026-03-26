@@ -5,9 +5,9 @@
       "title": "Details of site visit",
       "fields": [
         {
-          "name": "Funder",
+          "name": "funders",
           "type": "multiselect",
-          "label": "Funder",
+          "label": "Funders",
           "config": {
             "dynamicOptionTable": "funders"
           },
@@ -29,6 +29,22 @@
           "placeholder": "Enter details here"
         },
         {
+          "name": "met_staff_representatives",
+          "type": "radio",
+          "label": "Did you meet with any staff representatives?",
+          "options": [
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
+          ],
+          "required": true
+        },
+        {
           "name": "staff_representatives_met",
           "type": "multiselect",
           "label": "Staff representatives met",
@@ -36,7 +52,27 @@
             "dynamicOptionTable": "staff_members"
           },
           "required": true,
-          "placeholder": "Select staff representatives met"
+          "placeholder": "Select staff representatives met",
+          "show_if": {
+            "field": "met_staff_representatives",
+            "value": "yes"
+          }
+        },
+        {
+          "name": "met_committee_representatives",
+          "type": "radio",
+          "label": "Did you meet with any committee representatives?",
+          "options": [
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
+          ],
+          "required": true
         },
         {
           "name": "committee_representatives_met",
@@ -46,7 +82,11 @@
             "dynamicOptionTable": "committee_members"
           },
           "required": true,
-          "placeholder": "Select committee representatives met"
+          "placeholder": "Select committee representatives met",
+          "show_if": {
+            "field": "met_committee_representatives",
+            "value": "yes"
+          }
         }
       ]
     },
