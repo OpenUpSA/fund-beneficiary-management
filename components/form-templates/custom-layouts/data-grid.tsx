@@ -304,7 +304,7 @@ export function DataGridLayout({
                                 onChange={(e) => handleInputChange(category.name, row.name, col.name, e.target.value)}
                                 disabled={!isEditing}
                                 className="h-9"
-                                placeholder="0"
+                                placeholder="-"
                               />
                             </div>
                           ))}

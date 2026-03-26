@@ -760,7 +760,7 @@ export function GardenYieldsLayout({
                                   onBlur={() => saveExistingOnBlur(garden.id)}
                                   disabled={!isEditing}
                                   className="h-9 text-slate-700"
-                                  placeholder="0"
+                                  placeholder="-"
                                 />
                               </div>
                             ))}
@@ -826,7 +826,7 @@ export function GardenYieldsLayout({
                                     }}
                                     disabled={!isEditing}
                                     className="h-9 text-slate-700"
-                                    placeholder="0"
+                                    placeholder="-"
                                   />
                                 </div>
                               ))}

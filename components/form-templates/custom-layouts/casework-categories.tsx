@@ -238,7 +238,7 @@ export function CaseworkCategoriesLayout({
                               onChange={(e) => handleInputChange(category.name, caseType.name, col.name, e.target.value)}
                               disabled={!isEditing}
                               className="h-9 text-slate-700"
-                              placeholder="0"
+                              placeholder="-"
                             />
                           </div>
                         )
