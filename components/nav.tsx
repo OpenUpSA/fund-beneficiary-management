@@ -8,6 +8,7 @@ import {
   // LayoutDashboard,
   LayoutTemplate,
   MapPinHouse,
+  Settings,
   Users,
 } from "lucide-react"
 
@@ -45,6 +46,12 @@ export function Nav() {
         url: "/dashboard/users",
         icon: Users,
         requiredRoles: ['ADMIN', 'SUPER_USER']
+      },
+      {
+        title: "Admin Tools",
+        url: "/dashboard/admin",
+        icon: Settings,
+        requiredRoles: ['SUPER_USER']
       }
     ],
     navMain: [
