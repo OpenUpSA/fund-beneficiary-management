@@ -3,6 +3,7 @@ import prisma from "@/db"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { permissions } from "@/lib/permissions";
+import { triggerFormEvent } from "@/lib/form-events";
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -86,7 +87,15 @@ export async function POST(req: NextRequest) {
     }
     const record = await prisma.localDevelopmentAgencyForm.create(query)
 
-    return NextResponse.json(record)
+    // Trigger form created event (handles data copying, notifications, etc.)
+    await triggerFormEvent('created', record, parseInt(session.user.id, 10))
+
+    // Fetch the updated record in case event handlers modified it
+    const updatedRecord = await prisma.localDevelopmentAgencyForm.findUnique({
+      where: { id: record.id }
+    })
+
+    return NextResponse.json(updatedRecord || record)
   } catch (error) {
     console.error("Error creating LDA form:", error)
     return NextResponse.json({ error: "Failed to create" }, { status: 500 })
