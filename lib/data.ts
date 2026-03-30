@@ -77,7 +77,10 @@ export async function fetchFunds(lda_id?: string): Promise<FundFull[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags } 
+    next: { 
+      tags,
+      revalidate: 300 // Cache for 5 minutes
+    } 
   })
   return res.json()
 }
@@ -157,7 +160,10 @@ export async function fetchLocalDevelopmentAgency(lda_id: string): Promise<Local
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['ldas:list', `lda:detail:${lda_id}`] } 
+    next: { 
+      tags: ['ldas:list', `lda:detail:${lda_id}`],
+      revalidate: 300 // Cache for 5 minutes
+    } 
   })
 
   if (res.status === 403) {
@@ -232,7 +238,10 @@ export async function fetchLDAMedia(lda_id: string): Promise<MediaFull[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['media:list', `media:lda:${lda_id}`] } 
+    next: { 
+      tags: ['media:list', `media:lda:${lda_id}`],
+      revalidate: 300 // Cache for 5 minutes
+    } 
   })
   return res.json()
 }
@@ -288,7 +297,10 @@ export async function fetchLDADocuments(lda_id: string): Promise<DocumentFull[]>
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['documents:list', `documents:lda:${lda_id}`] } 
+    next: { 
+      tags: ['documents:list', `documents:lda:${lda_id}`],
+      revalidate: 300 // Cache for 5 minutes
+    } 
   })
   return res.json()
 }
@@ -332,7 +344,10 @@ export async function fetchLocalDevelopmentAgencyFormsForLDA(lda_id: string): Pr
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['lda-forms:list', `lda-forms:lda:${lda_id}:list`] } 
+    next: { 
+      tags: ['lda-forms:list', `lda-forms:lda:${lda_id}:list`],
+      revalidate: 300 // Cache for 5 minutes
+    } 
   })
   return res.json()
 }
@@ -399,7 +414,8 @@ export async function fetchContacts(lda_id: string): Promise<Contact[]> {
       cookie: headers().get('cookie') ?? ''
     },
     next: { 
-      tags: ['contacts:list', `contacts:lda:${lda_id}`] 
+      tags: ['contacts:list', `contacts:lda:${lda_id}`],
+      revalidate: 300 // Cache for 5 minutes
     } 
   })
 
