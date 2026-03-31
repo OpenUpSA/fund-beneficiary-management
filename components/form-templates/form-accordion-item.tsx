@@ -50,7 +50,12 @@ export default function FormAccordionItem({
 
   const isValueValid = (value: string, field: Field) => {
     if (field.type === "fileUpload") {
-      return JSON.parse(value).length > 0;
+      if (!value || value.trim() === "") return false;
+      try {
+        return JSON.parse(value).length > 0;
+      } catch {
+        return false;
+      }
     }
     return value.trim() !== "";
   }
@@ -66,7 +71,7 @@ export default function FormAccordionItem({
 
       return {
         ...templateField,
-        name: `${templateField.name}_${index+1}`,
+        name: `${field.name}_${templateField.name}_${index+1}`,
         groupIndex: index + 1,
         show_if
       };
@@ -188,8 +193,10 @@ export default function FormAccordionItem({
 
       // Process subfields if they exist
       if (field.fields) {
+        const isRepeatableLayout = field.layout === "repeatable" || field.layout === "narrative-repeatable" || field.layout === "challenges" || field.layout === "partnerships";
         const subFields = field.fields.map((subfield) => {
-          const subfieldName = field.name + '_' + subfield.name;
+          // Repeatable fields already have full prefixed names from createFieldFromTemplate
+          const subfieldName = isRepeatableLayout ? subfield.name : field.name + '_' + subfield.name;
           let show_subfield = subfield.show !== false;
           if (subfield.show_if !== undefined) {
             const { field: conditionField, value: conditionValue, show_by_default } = subfield.show_if;
@@ -379,54 +386,58 @@ export default function FormAccordionItem({
     }
   }, [section?.isValid, section?.completed, section?.required, onSectionStatusChange, section, statusFieldsState]);
 
-  // Create a ref to store per-field timeouts to prevent rapid edits from canceling each other
+  // Batch save: accumulate pending field changes and flush them in a single API call
   type SaveFieldFunction = (fieldName: string, fieldValue: string) => Promise<void>;
   const debouncedSaveRef = useRef<SaveFieldFunction | null>(null);
-  const fieldTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const pendingFieldsRef = useRef<Record<string, string>>({});
+  const flushTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Initialize the debounced save function with per-field debouncing
+  // Initialize the batched save function
   useEffect(() => {
-    // Define the function that will actually save the data
-    const saveFieldData = async (fieldName: string, fieldValue: string): Promise<void> => {
-      if (formId) {
-        try {
-          const response = await fetch(`/api/lda-form/${formId}/field`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fieldName, fieldValue })
-          });
-          
-          if (!response.ok) {
-            console.error('Failed to save field:', await response.json());
-          }
-          // Use the latest dataChanged and lda_id from the closure
-          dataChanged?.(lda_id, formId);
-        } catch (error) {
-          console.error('Error saving field:', error);
+    // Flush all pending fields to the API in a single request
+    const flushPendingFields = async (): Promise<void> => {
+      if (!formId) return;
+      
+      const fieldsToSave = { ...pendingFieldsRef.current };
+      pendingFieldsRef.current = {};
+      
+      if (Object.keys(fieldsToSave).length === 0) return;
+      
+      try {
+        const response = await fetch(`/api/lda-form/${formId}/field`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: fieldsToSave })
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to save fields:', await response.json());
         }
+        dataChanged?.(lda_id, formId);
+      } catch (error) {
+        console.error('Error saving fields:', error);
       }
     };
     
-    // Per-field debounce function - each field has its own timeout
+    // Queue a field change and schedule a flush
     const debouncedSave: SaveFieldFunction = (fieldName: string, fieldValue: string) => {
-      // Clear existing timeout for this specific field
-      const existingTimeout = fieldTimeoutsRef.current.get(fieldName);
-      if (existingTimeout) {
-        clearTimeout(existingTimeout);
+      // Add/update this field in the pending batch
+      pendingFieldsRef.current[fieldName] = fieldValue;
+      
+      // Reset the flush timer — all changes within 500ms get batched together
+      if (flushTimeoutRef.current) {
+        clearTimeout(flushTimeoutRef.current);
       }
       
       return new Promise<void>((resolve) => {
-        const timeoutId = setTimeout(async () => {
-          fieldTimeoutsRef.current.delete(fieldName);
-          await saveFieldData(fieldName, fieldValue);
+        flushTimeoutRef.current = setTimeout(async () => {
+          flushTimeoutRef.current = null;
+          await flushPendingFields();
           resolve();
         }, 500);
-        
-        fieldTimeoutsRef.current.set(fieldName, timeoutId);
       });
     };
 
-    // Store the debounced function in the ref
     debouncedSaveRef.current = debouncedSave;
   }, [formId, dataChanged, lda_id]);
 
@@ -493,16 +504,13 @@ export default function FormAccordionItem({
             const maxIndex = currentIndices.length > 0 ? Math.max(...currentIndices) : 0;
             const newIndex = maxIndex + 1;
             
-            // Create new fields from template
+            // Create new fields from template (already includes parent prefix in name)
             const newFields = createFieldFromTemplate(f, newIndex - 1); // -1 because createFieldFromTemplate adds 1
             const subFields = newFields.flat().map((subfield) => {
-              const subfieldName = f.name + '_' + subfield.name;
-    
               // Respect show: false from template, otherwise check show_if
               const showField = subfield.show === false ? false : (subfield.show_if ? false : true);
               const subFieldObj = {
                 ...subfield,
-                name: subfieldName,
                 show: showField,
                 isValid: subfield.required ? false : true
               };

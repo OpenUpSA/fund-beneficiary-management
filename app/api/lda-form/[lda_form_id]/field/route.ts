@@ -25,21 +25,29 @@ export async function PATCH(
   }
 
   try {
-    // Get the field name and value from the request body
-    const { fieldName, fieldValue } = await req.json()
-
-    if (!fieldName) {
+    // Support both single field and batch fields
+    const body = await req.json()
+    
+    // Build the fields object to merge
+    let fieldsToMerge: Record<string, unknown> = {}
+    
+    if (body.fields && typeof body.fields === 'object') {
+      // Batch mode: { fields: { fieldName1: value1, fieldName2: value2, ... } }
+      fieldsToMerge = body.fields
+    } else if (body.fieldName) {
+      // Single field mode (backwards compatible): { fieldName: "...", fieldValue: "..." }
+      fieldsToMerge = { [body.fieldName]: body.fieldValue }
+    } else {
       return NextResponse.json(
-        { error: "Field name is required" },
+        { error: "Field name or fields object is required" },
         { status: 400 }
       )
     }
 
-    // First, get the current form data and LDA ID for permission check
+    // Permission check: get LDA ID
     const currentForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
       select: { 
-        formData: true,
         localDevelopmentAgencyId: true
       }
     })
@@ -51,39 +59,22 @@ export async function PATCH(
       )
     }
 
-    // Permission check: Can view LDA
     if (!permissions.canViewLDA(user, currentForm.localDevelopmentAgencyId)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
-    // Update only the specific field in the form data
-    // Ensure formData is treated as an object for spreading
-    const currentFormData = (typeof currentForm.formData === 'object' && currentForm.formData !== null) 
-      ? currentForm.formData 
-      : {};
-      
-    const updatedFormData = {
-      ...currentFormData as Record<string, unknown>,
-      [fieldName]: fieldValue
-    }
-
-    // Update the form with the modified form data
-    const updated = await prisma.localDevelopmentAgencyForm.update({
-      where: { id: ldaFormId },
-      data: {
-        formData: updatedFormData
-      },
-      select: {
-        id: true,
-        formData: true,
-        updatedAt: true
-      }
-    })
+    // Use PostgreSQL's atomic jsonb concatenation to avoid read-modify-write race conditions.
+    // The || operator merges the new fields into existing formData atomically in a single query.
+    await prisma.$executeRaw`
+      UPDATE "LocalDevelopmentAgencyForm"
+      SET "formData" = COALESCE("formData", '{}'::jsonb) || ${JSON.stringify(fieldsToMerge)}::jsonb,
+          "updatedAt" = NOW()
+      WHERE id = ${ldaFormId}
+    `
 
     return NextResponse.json({
       success: true,
-      message: `Field '${fieldName}' updated successfully`,
-      data: updated
+      message: `${Object.keys(fieldsToMerge).length} field(s) updated successfully`
     })
   } catch (error) {
     console.error("Error updating field:", error)
