@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { Prisma, Gender } from "@prisma/client"
 import { Form } from "@/types/forms"
-import { Section } from "@/types/forms"
-import { Field } from "@/types/forms"
 
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
@@ -33,7 +31,18 @@ type OrganisationWithDetails = {
   staffMembers: StaffMember[];
 };
 
-const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source: string; path: string}, linkedFormData?: Record<string, unknown> | null) => {
+// Context needed for funding-related prefill sources
+type FundingContext = {
+  ldaId: number;
+  fundingStart: Date;
+};
+
+const getPrefillData = async (
+  organisation: OrganisationWithDetails, 
+  prefill: {source: string; path: string}, 
+  linkedFormData?: Record<string, unknown> | null,
+  fundingContext?: FundingContext
+) => {
   switch (prefill.source) {
     case 'organisation':
       // Direct properties of the organisation
@@ -98,6 +107,62 @@ const getPrefillData = (organisation: OrganisationWithDetails, prefill: {source:
         return prefill.path
       }
       break;
+
+    case 'core_grant_funding': {
+      // Find approved grant funding form where finance report's start date is within the grant period
+      // Amount is divided by 4 (quarterly)
+      if (!fundingContext) break;
+      const grantForm = await prisma.localDevelopmentAgencyForm.findFirst({
+        where: {
+          localDevelopmentAgencyId: fundingContext.ldaId,
+          approved: { not: null },
+          formTemplate: { formCategory: 'grant_funding' },
+          fundingStart: { lte: fundingContext.fundingStart },
+          fundingEnd: { gte: fundingContext.fundingStart },
+        },
+        orderBy: { approved: 'desc' },
+        select: { amount: true },
+      });
+      if (grantForm?.amount) {
+        const quarterlyAmount = Number(grantForm.amount) / 4;
+        return String(quarterlyAmount);
+      }
+      return "0";
+    }
+
+    case 'fris_funding': {
+      // Sum approved FRIS claim amounts where finance report's start date falls within the claim period
+      if (!fundingContext) break;
+      const frisClaims = await prisma.localDevelopmentAgencyForm.findMany({
+        where: {
+          localDevelopmentAgencyId: fundingContext.ldaId,
+          approved: { not: null },
+          formTemplate: { formCategory: 'fris_claim' },
+          fundingStart: { lte: fundingContext.fundingStart },
+          fundingEnd: { gte: fundingContext.fundingStart },
+        },
+        select: { amount: true },
+      });
+      const totalFris = frisClaims.reduce((sum, claim) => sum + Number(claim.amount), 0);
+      return String(totalFris);
+    }
+
+    case 'dft_funding': {
+      // Sum approved DFT application amounts where finance report's start date falls within the DFT period
+      if (!fundingContext) break;
+      const dftApps = await prisma.localDevelopmentAgencyForm.findMany({
+        where: {
+          localDevelopmentAgencyId: fundingContext.ldaId,
+          approved: { not: null },
+          formTemplate: { formCategory: 'dft_application' },
+          fundingStart: { lte: fundingContext.fundingStart },
+          fundingEnd: { gte: fundingContext.fundingStart },
+        },
+        select: { amount: true },
+      });
+      const totalDft = dftApps.reduce((sum, app) => sum + Number(app.amount), 0);
+      return String(totalDft);
+    }
   }
   
 }
@@ -149,32 +214,38 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     // Now you can safely access formTemplate.sections
     const sections = formTemplate.sections
 
+    // Build funding context for funding-related prefill sources
+    const fundingContext: FundingContext = {
+      ldaId: record.localDevelopmentAgencyId,
+      fundingStart: record.fundingStart,
+    };
+
     if (organisation && sections) {
-      sections.forEach((section: Section) => {
+      for (const section of sections) {
         if (section.fields) {
-          section.fields.forEach((field: Field) => {
+          for (const field of section.fields) {
             if (field?.prefill) {
               const prefill = field?.prefill as { source: string; path: string }
               // Handle prefill based on the source
-              const value = getPrefillData(organisation, prefill, linkedFormData)
+              const value = await getPrefillData(organisation, prefill, linkedFormData, fundingContext)
               if (value && !(field.name in formData)) {
                 formData[field.name] = value
               }
             }
             if (field.fields) {
-              field.fields.forEach((subfield: Field) => {
+              for (const subfield of field.fields) {
                 if (subfield?.prefill) {
                   const subprefill = subfield?.prefill as { source: string; path: string }
-                  const subvalue = getPrefillData(organisation, subprefill, linkedFormData);
+                  const subvalue = await getPrefillData(organisation, subprefill, linkedFormData, fundingContext);
                   if (subvalue && !(field.name + '_' + subfield.name in formData)) {
                     formData[field.name + '_' + subfield.name] = subvalue
                   }
                 }
-              })
+              }
             }
-          })
+          }
         }
-      })
+      }
     }
     record.formData = formData as Prisma.JsonValue
   }

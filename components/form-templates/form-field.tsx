@@ -124,6 +124,7 @@ import { GardenBeneficiariesLayout } from "./custom-layouts/garden-beneficiaries
 import { GardenYieldsLayout } from "./custom-layouts/garden-yields"
 import { ChallengesLayout } from "./custom-layouts/challenges"
 import { PartnershipsLayout } from "./custom-layouts/partnerships"
+import { FinanceTotalsLayout } from "./custom-layouts/finance-totals"
 
 function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_form_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number; lda_form_id?: number | string }) {
   switch (inputField.layout) {
@@ -153,6 +154,8 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
       return <ChallengesLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
     case "partnerships":
       return <PartnershipsLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
+    case "finance-totals":
+      return <FinanceTotalsLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
     default:
       return (
       <>
