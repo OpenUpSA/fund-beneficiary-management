@@ -2,6 +2,7 @@
 
 import { Field } from "@/types/forms"
 import { Input } from "@/components/ui/input"
+import { Lock } from "lucide-react"
 import { useState, useEffect } from "react"
 
 interface CurrencyFieldProps {
@@ -12,6 +13,7 @@ interface CurrencyFieldProps {
 
 export function CurrencyField({ field, isEditing, onValueChange }: CurrencyFieldProps) {
   const [displayValue, setDisplayValue] = useState("")
+  const isLocked = field.config?.locked === true;
   
   // Initialize display value from field value
   useEffect(() => {
@@ -21,6 +23,14 @@ export function CurrencyField({ field, isEditing, onValueChange }: CurrencyField
       setDisplayValue(numericValue)
     }
   }, [field.value])
+
+  // Format number with commas for display when locked
+  const formatCurrency = (value: string) => {
+    if (!value) return "0.00";
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    return num.toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
   
   // Handle value change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,14 +62,19 @@ export function CurrencyField({ field, isEditing, onValueChange }: CurrencyField
       <Input
         type="text"
         name={field.name}
-        disabled={!isEditing}
-        value={displayValue}
+        disabled={!isEditing || isLocked}
+        value={isLocked ? formatCurrency(displayValue) : displayValue}
         placeholder={field?.placeholder || "0.00"}
-        className="pl-8"
+        className={`pl-8 ${isLocked ? "pr-10 bg-slate-50 text-slate-700" : ""}`}
         min={0}
         onChange={handleChange}
         inputMode="decimal"
       />
+      {isLocked && (
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          <Lock className="h-4 w-4 text-slate-400" />
+        </div>
+      )}
     </div>
   )
 }

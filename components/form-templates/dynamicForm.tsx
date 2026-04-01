@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormData } from "@/types/forms"
 import { Accordion } from "@/components/ui/accordion"
 import FormAccordionItem from "@/components/form-templates/form-accordion-item"
+import { FormValuesProvider } from "@/components/form-templates/form-values-context"
 
 
 type FormTemplate = {
@@ -136,23 +137,25 @@ export function DynamicForm({
   return (
     <div className="w-full flex flex-col h-full relative">
       <div className="flex-grow overflow-y-auto max-h-[calc(80vh-200px)]">
-        <Accordion type="single" collapsible>
-          {form.sections.map((section, index) => (
-            <FormAccordionItem
-              key={index}
-              sectionIndex={index}
-              sectionData={section}
-              isEditing={editingState}
-              defaultValues={formData}
-              formId={formId}
-              userRole={userRole}
-              formStatus={formStatus}
-              lda_id={lda_id}
-              dataChanged={dataChanged}
-              onSectionStatusChange={(status: { isValid: boolean; completed: number; required: number }) => handleSectionStatusChange(index, status)}
-            />
-          ))}
-        </Accordion>
+        <FormValuesProvider defaultValues={formData}>
+          <Accordion type="single" collapsible>
+            {form.sections.map((section, index) => (
+              <FormAccordionItem
+                key={index}
+                sectionIndex={index}
+                sectionData={section}
+                isEditing={editingState}
+                defaultValues={formData}
+                formId={formId}
+                userRole={userRole}
+                formStatus={formStatus}
+                lda_id={lda_id}
+                dataChanged={dataChanged}
+                onSectionStatusChange={(status: { isValid: boolean; completed: number; required: number }) => handleSectionStatusChange(index, status)}
+              />
+            ))}
+          </Accordion>
+        </FormValuesProvider>
       </div>
     {editingState && (
       <div className="sticky bottom-0 left-0 right-0 flex justify-end p-2 bg-white border-t z-10">

@@ -6,6 +6,7 @@ import { CircleSmall, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { FormField } from "@/components/form-templates/form-field"
 import { Section, Field, FormData, DependsOnRule } from "@/types/forms"
+import { useFormValuesStore } from "@/components/form-templates/form-values-context"
 
 interface FormAccordionItemProps {
   sectionIndex: number
@@ -33,6 +34,8 @@ export default function FormAccordionItem({
   dataChanged,
   onSectionStatusChange,
 }: FormAccordionItemProps) {
+  const formValuesStore = useFormValuesStore();
+
   // Check if section is visible to current user role
   const isSectionVisible = useMemo(() => {
     // If visible_to doesn't exist, section is visible to everyone
@@ -249,7 +252,7 @@ export default function FormAccordionItem({
         ]
       }
       // Handle custom layout fields (casework-categories, finalised-cases, garden-beneficiaries, garden-yields, data-grid)
-      if (field.layout && ['casework-categories', 'finalised-cases', 'garden-beneficiaries', 'garden-yields', 'data-grid'].includes(field.layout) && field.show) {
+      if (field.layout && ['casework-categories', 'finalised-cases', 'garden-beneficiaries', 'garden-yields', 'data-grid', 'finance-totals'].includes(field.layout) && field.show) {
         return [
           field,
           ...(field.fields?.filter(f => f.show) ?? [])
@@ -608,11 +611,16 @@ export default function FormAccordionItem({
       return updatedSection;
     });
     
+    // Update shared form values store for cross-section reactivity
+    if (formValuesStore) {
+      formValuesStore.set(field.name, value);
+    }
+
     // Save the field value to the API with debouncing
     if (debouncedSaveRef.current && formId) {
       debouncedSaveRef.current(field.name, value);
     }
-  }, [calculateCompletionStatus, formId, isSectionEditable])
+  }, [calculateCompletionStatus, formId, isSectionEditable, formValuesStore])
 
   // Don't render section if not visible to current user
   if (!isSectionVisible) return null;

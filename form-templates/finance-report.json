@@ -1,0 +1,231 @@
+{
+  "title": "Financial Reporting Form",
+  "sections": [
+    {
+      "title": "SCAT Funding",
+      "description": "These amounts are automatically calculated based on the data and information we have in our system. If you feel these amounts are not correct, please contact your SCAT representative.",
+      "fields": [
+        {
+          "name": "scat_core_grant_funding",
+          "type": "currency",
+          "label": "SCAT Core Grant funding for this period",
+          "required": true,
+          "config": {
+            "locked": true
+          },
+          "prefill": {
+            "source": "core_grant_funding",
+            "path": "quarterly_amount"
+          }
+        },
+        {
+          "name": "scat_fris_funding",
+          "type": "currency",
+          "label": "SCAT FRIS funding for this period",
+          "required": true,
+          "config": {
+            "locked": true
+          },
+          "prefill": {
+            "source": "fris_funding",
+            "path": "period_amount"
+          }
+        },
+        {
+          "name": "scat_dft_funding",
+          "type": "currency",
+          "label": "SCAT DFT funding for this period",
+          "required": true,
+          "config": {
+            "locked": true
+          },
+          "prefill": {
+            "source": "dft_funding",
+            "path": "period_amount"
+          }
+        },
+        {
+          "name": "scat_funding_confirmation",
+          "type": "radio",
+          "label": "I confirm that these amounts match what our organisation has on record for this period.",
+          "required": true,
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Other Funding Secured",
+      "description": "Please only provide values for funding that was secured during this period.",
+      "fields": [
+        {
+          "name": "grant_funding_secured",
+          "type": "currency",
+          "label": "Grant funding secured during this period",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "donations_sponsorships_secured",
+          "type": "currency",
+          "label": "Donations and sponsorships secured during this period",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "other_funding_secured",
+          "type": "currency",
+          "label": "Other funding secured during this reporting period",
+          "required": true,
+          "placeholder": "0.00"
+        }
+      ]
+    },
+    {
+      "title": "Expenditure",
+      "description": "Please only provide expenditure values from this period.",
+      "fields": [
+        {
+          "name": "salaries_and_stipends",
+          "type": "currency",
+          "label": "Salaries and stipends",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "volunteer_stipends",
+          "type": "currency",
+          "label": "Volunteer stipends",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "transportation",
+          "type": "currency",
+          "label": "Transportation",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "telephone",
+          "type": "currency",
+          "label": "Telephone",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "internet",
+          "type": "currency",
+          "label": "Internet (email, data, etc.)",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "stationary_and_printing",
+          "type": "currency",
+          "label": "Stationary and printing",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "office_equipment",
+          "type": "currency",
+          "label": "Office equipment",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "bank_charges",
+          "type": "currency",
+          "label": "Bank charges",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "workshops",
+          "type": "currency",
+          "label": "Workshops",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "projects",
+          "type": "currency",
+          "label": "Projects",
+          "required": true,
+          "placeholder": "0.00"
+        },
+        {
+          "name": "other_expenditure",
+          "type": "currency",
+          "label": "Other",
+          "required": true,
+          "placeholder": "0.00"
+        }
+      ]
+    },
+    {
+      "title": "Totals",
+      "fields": [
+        {
+          "name": "finance_totals",
+          "type": "group",
+          "label": "",
+          "layout": "finance-totals",
+          "required": true,
+          "fields": [
+            {
+              "name": "total_income",
+              "type": "currency",
+              "label": "Total income",
+              "required": true,
+              "config": {
+                "locked": true,
+                "computed": "sum",
+                "sourceFields": [
+                  "scat_core_grant_funding",
+                  "scat_fris_funding",
+                  "scat_dft_funding",
+                  "grant_funding_secured",
+                  "donations_sponsorships_secured",
+                  "other_funding_secured"
+                ]
+              }
+            },
+            {
+              "name": "total_expenditure",
+              "type": "currency",
+              "label": "Total expenditure for this period",
+              "required": true,
+              "config": {
+                "locked": true,
+                "computed": "sum",
+                "sourceFields": [
+                  "salaries_and_stipends",
+                  "volunteer_stipends",
+                  "transportation",
+                  "telephone",
+                  "internet",
+                  "stationary_and_printing",
+                  "office_equipment",
+                  "bank_charges",
+                  "workshops",
+                  "projects",
+                  "other_expenditure"
+                ]
+              }
+            },
+            {
+              "name": "totals_confirmation",
+              "type": "checkbox",
+              "label": "I confirm that the amounts provided are correct and accurately represent our organisations finances for the period in question.",
+              "required": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

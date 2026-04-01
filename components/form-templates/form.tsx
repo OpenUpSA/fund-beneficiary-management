@@ -44,6 +44,7 @@ const formCategoryOptions = [
   { value: 'fris_claim', label: 'FRIS Claim' },
   { value: 'grant_funding', label: 'Grant Funding' },
   { value: 'narrative_report', label: 'Narrative Report' },
+  { value: 'finance_report', label: 'Finance Report' },
 ]
 
 const FormSchema = z.object({
