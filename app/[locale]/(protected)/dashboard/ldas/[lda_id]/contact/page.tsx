@@ -22,7 +22,7 @@ export async function generateMetadata({ params: { locale } }: LDAContactPagePro
 export default async function Page({ params }: LDAContactPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA and contacts in parallel (LDA fetch will be deduplicated with layout)
+  // Fetch LDA from layout cache and contacts (LDA fetch will be deduplicated with layout)
   const [lda, contacts] = await Promise.all([
     fetchLocalDevelopmentAgency(lda_id),
     fetchContacts(lda_id)

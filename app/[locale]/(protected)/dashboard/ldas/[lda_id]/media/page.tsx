@@ -26,7 +26,7 @@ interface LDAMediaPageProps {
 export default async function Page({ params }: LDAMediaPageProps) {
   const { lda_id } = params
   
-  // Fetch all data in parallel (LDA fetch will be deduplicated with layout)
+  // Fetch LDA from layout cache and media-related data (LDA fetch will be deduplicated with layout)
   const [lda, media, mediaSourceTypes, users] = await Promise.all([
     fetchLocalDevelopmentAgency(lda_id),
     fetchLDAMedia(lda_id),

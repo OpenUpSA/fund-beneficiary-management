@@ -13,6 +13,9 @@ import {
 import { redirect } from "next/navigation"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
+// Configure route segment for optimal caching
+export const revalidate = 300 // Revalidate every 5 minutes
+
 interface LDALayoutProps {
   children: React.ReactNode
   params: { lda_id: string }

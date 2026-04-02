@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { useEffect, useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { Contact } from "@prisma/client"
 import { FormDialog as ContactFormDialog } from "@/components/contacts/form"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -103,10 +103,9 @@ export function FilteredContacts({ contacts, dataChanged, ldaId }: Props) {
     }
   }
 
-  const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts)
-
-  useEffect(() => {
-    const filtered = contacts.filter((item) => {
+  // Use useMemo to filter contacts - only recalculates when dependencies actually change
+  const filteredContacts = useMemo(() => {
+    return contacts.filter((item) => {
       const selectedPositions = (activeFilters['position'] || []).map(o => o.id)
 
       const positionMatch = selectedPositions.length === 0 || 
@@ -122,8 +121,6 @@ export function FilteredContacts({ contacts, dataChanged, ldaId }: Props) {
 
       return positionMatch && searchMatch
     })
-
-    setFilteredContacts(filtered)
   }, [activeFilters, searchTerm, contacts])
 
   return (

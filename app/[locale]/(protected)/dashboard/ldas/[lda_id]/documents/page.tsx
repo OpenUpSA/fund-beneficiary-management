@@ -26,7 +26,7 @@ interface LDADocumentsPageProps {
 export default async function Page({ params }: LDADocumentsPageProps) {
   const { lda_id } = params
   
-  // Fetch LDA and documents in parallel (LDA fetch will be deduplicated with layout)
+  // Fetch LDA from layout cache and documents (LDA fetch will be deduplicated with layout)
   const [lda, documents] = await Promise.all([
     fetchLocalDevelopmentAgency(lda_id),
     fetchLDADocuments(lda_id)

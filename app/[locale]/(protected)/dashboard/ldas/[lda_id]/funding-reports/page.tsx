@@ -31,7 +31,7 @@ interface LDAApplicationsPageProps {
 export default async function Page({ params }: LDAApplicationsPageProps) {
   const { lda_id } = params
   
-  // Fetch all data in parallel (LDA fetch will be deduplicated with layout)
+  // Fetch LDA from layout cache and forms data (LDA fetch will be deduplicated with layout)
   const [lda, formTemplates, ldaForms, formStatuses] = await Promise.all([
     fetchLocalDevelopmentAgency(lda_id),
     fetchFormTemplates(),
