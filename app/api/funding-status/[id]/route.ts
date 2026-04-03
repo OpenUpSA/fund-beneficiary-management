@@ -3,6 +3,7 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -43,6 +44,7 @@ export async function PUT(
         description: data.description || '',
       }
     })
+    revalidateTag('funding-statuses')
     return NextResponse.json(record)
   } catch (error) {
     console.error('Error updating funding status:', error)
@@ -76,6 +78,7 @@ export async function DELETE(
     await prisma.fundingStatus.delete({
       where: { id }
     })
+    revalidateTag('funding-statuses')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting funding status:', error)

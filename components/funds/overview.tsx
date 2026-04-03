@@ -2,7 +2,7 @@
 
 import { Badge } from "../ui/badge"
 import { Card, CardContent, CardHeader } from "../ui/card"
-import { LimitedFundModel } from "@/types/models"
+import { FundFull } from "@/types/models"
 import { FocusArea } from "@prisma/client"
 import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
@@ -16,7 +16,7 @@ const FundMap = dynamic(
 );
 
 interface Props {
-  fund: LimitedFundModel
+  fund: FundFull
 }
 
 export const Overview: React.FC<Props> = ({ fund }: Props) => {

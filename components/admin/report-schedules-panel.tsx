@@ -41,11 +41,11 @@ import { ArrowLeft, Calendar as CalendarIcon, Check, ChevronsUpDown, Edit, Loade
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { LocalDevelopmentAgencyFull } from "@/types/models"
+import { LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 interface ReportSchedulesPanelProps {
-  ldas: LocalDevelopmentAgencyFull[]
+  ldas: LocalDevelopmentAgencyListItem[]
   onBack: () => void
 }
 

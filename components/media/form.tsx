@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog"
 import { Loader2, PencilIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
-import { LocalDevelopmentAgency, Media } from "@prisma/client"
+import { Media } from "@prisma/client"
 import { useTranslations } from "next-intl"
 import { MediaTypeEnum } from "@/types/formSchemas"
 import { MediaSourceType } from "@prisma/client"
@@ -79,8 +79,8 @@ const getFormSchema = (media?: Media, hasEntityContext?: boolean) => {
 
 interface FormDialogProps {
   media?: Media,
-  lda?: LocalDevelopmentAgency,
-  ldas?: LocalDevelopmentAgency[],
+  lda?: { id: number; name: string },
+  ldas?: { id: number; name: string }[],
   fund?: { id: number, name: string },
   funder?: { id: number, name: string },
   mediaSourceTypes?: MediaSourceType[],

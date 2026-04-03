@@ -7,7 +7,7 @@ import { ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react
 import { Badge } from "../ui/badge"
 import Link from "next/link"
 import { availableReportingStatuses } from "@/app/data"
-import { LocalDevelopmentAgencyFull, UserWithLDAsBasic } from "@/types/models"
+import { LocalDevelopmentAgencyListItem, UserWithLDAsBasic } from "@/types/models"
 import { FocusArea, FundingStatus, Province, DevelopmentStage } from "@prisma/client"
 import { DynamicIcon } from "../dynamicIcon"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -24,7 +24,7 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'status' | 'stage' | 'province' | 'po' | 'focusArea' | null
 
 interface FilteredLDAsProps {
-  ldas: LocalDevelopmentAgencyFull[]
+  ldas: LocalDevelopmentAgencyListItem[]
   navigatedFrom?: string
   focusAreas: FocusArea[]
   developmentStages: DevelopmentStage[]
@@ -198,7 +198,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     return <Badge variant="outline" title={info.label}>{info.shortName}</Badge>
   }, [provinceMap])
 
-  const LdaRow = useMemo(() => React.memo(function LdaRow({ lda }: { lda: LocalDevelopmentAgencyFull }) {
+  const LdaRow = useMemo(() => React.memo(function LdaRow({ lda }: { lda: LocalDevelopmentAgencyListItem }) {
     return (
       <TableRow key={lda.id}>
         <TableCell className="p-2">

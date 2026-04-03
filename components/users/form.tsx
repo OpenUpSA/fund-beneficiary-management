@@ -14,7 +14,6 @@ import {
   FormLabel,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { LocalDevelopmentAgency } from '@prisma/client'
 
 import {
   Dialog,
@@ -40,7 +39,7 @@ import { LDA_TERMINOLOGY } from "@/constants/lda"
 interface FormDialogProps {
   user?: UserFull
   callback: () => void
-  ldas: LocalDevelopmentAgency[]
+  ldas: { id: number; name: string }[]
 }
 
 export function FormDialog({ user, callback, ldas }: FormDialogProps) {

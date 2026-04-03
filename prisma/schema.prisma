@@ -35,6 +35,8 @@ model PasswordResetToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime              @default(now())
+
+  @@index([userId])
 }
 
 enum PasswordResetType {
@@ -125,6 +127,7 @@ model FundFunder {
   funder       Funder   @relation(fields: [funderId], references: [id])
 
   @@unique([fundId, funderId])
+  @@index([funderId])
 }
 
 model FundLocalDevelopmentAgency {
@@ -143,6 +146,7 @@ model FundLocalDevelopmentAgency {
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
 
   @@unique([fundId, localDevelopmentAgencyId])
+  @@index([localDevelopmentAgencyId])
 }
 
 model DevelopmentStage {
@@ -187,6 +191,11 @@ model LocalDevelopmentAgency {
   staffMembers               StaffMember[]
   userAccess                 UserAccess[]
   fundLocalDevelopmentAgencies FundLocalDevelopmentAgency[]
+
+  @@index([developmentStageId])
+  @@index([fundingStatusId])
+  @@index([locationId])
+  @@index([programmeOfficerId])
 }
 
 model FormStatus {
@@ -244,6 +253,11 @@ model LocalDevelopmentAgencyForm {
   createdBy                User?                        @relation(fields: [createdById], references: [id])
   documents                Document[]
   media                    Media[]
+
+  @@index([localDevelopmentAgencyId])
+  @@index([formStatusId])
+  @@index([formTemplateId])
+  @@index([linkedFormId])
 }
 
 model OrganisationDetail {
@@ -306,6 +320,8 @@ model StaffMember {
 
   localDevelopmentAgencyId Int
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+
+  @@index([localDevelopmentAgencyId])
 }
 
 model UserAccess {
@@ -316,6 +332,8 @@ model UserAccess {
 
   localDevelopmentAgencyId Int
   localDevelopmentAgency   LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id])
+
+  @@index([localDevelopmentAgencyId])
 }
 
 model Contact {
@@ -329,6 +347,8 @@ model Contact {
   info                     String                   @default("")
   localDevelopmentAgencyId Int
   localDevelopmentAgency   LocalDevelopmentAgency   @relation("ContactToLDA", fields: [localDevelopmentAgencyId], references: [id])
+
+  @@index([localDevelopmentAgencyId])
 }
 
 model MediaSourceType {
@@ -359,6 +379,11 @@ model Media {
   mediaSourceType               MediaSourceType?            @relation(fields: [mediaSourceTypeId], references: [id])
   createdById                   Int?
   createdBy                     User?                       @relation(fields: [createdById], references: [id])
+
+  @@index([localDevelopmentAgencyId])
+  @@index([localDevelopmentAgencyFormId])
+  @@index([fundId])
+  @@index([funderId])
 }
 
 model Document {
@@ -382,6 +407,11 @@ model Document {
   uploadedBy                    DocumentUploadType          @default(SCAT)
   createdById                   Int?
   createdBy                     User?                       @relation(fields: [createdById], references: [id])
+
+  @@index([localDevelopmentAgencyId])
+  @@index([localDevelopmentAgencyFormId])
+  @@index([fundId])
+  @@index([funderId])
 }
 
 model Province {

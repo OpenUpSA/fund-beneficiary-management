@@ -65,31 +65,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid fund or funder ID" }, { status: 400 })
     }
 
-    // Check if fund exists
-    const fund = await prisma.fund.findUnique({
-      where: { id: parsedFundId }
-    })
+    // Check fund, funder, and existing link in parallel
+    const [fund, funder, existingLink] = await Promise.all([
+      prisma.fund.findUnique({ where: { id: parsedFundId } }),
+      prisma.funder.findUnique({ where: { id: parsedFunderId } }),
+      prisma.fundFunder.findFirst({ where: { fundId: parsedFundId, funderId: parsedFunderId } }),
+    ])
 
     if (!fund) {
       return NextResponse.json({ error: "Fund not found" }, { status: 404 })
     }
 
-    // Check if funder exists
-    const funder = await prisma.funder.findUnique({
-      where: { id: parsedFunderId }
-    })
-
     if (!funder) {
       return NextResponse.json({ error: "Funder not found" }, { status: 404 })
     }
-
-    // Check if link already exists
-    const existingLink = await prisma.fundFunder.findFirst({
-      where: {
-        fundId: parsedFundId,
-        funderId: parsedFunderId
-      }
-    })
 
     if (existingLink) {
       return NextResponse.json(
@@ -124,21 +113,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Upload documents and create Document records
-    const uploadedDocuments = []
-    for (const file of documentFiles) {
+    // Upload all documents in parallel
+    await Promise.all(documentFiles.map(async (file) => {
       try {
-        // Upload to ImageKit
-        const fileBuffer = Buffer.from(await file.arrayBuffer())
-        const fileBase64 = fileBuffer.toString("base64")
-        
-        const uploadResponse = await imagekit.upload({
-          file: fileBase64,
-          fileName: file.name,
-        })
-
-        // Create Document record linked to both fund and funder
-        const document = await prisma.document.create({
+        const fileBase64 = Buffer.from(await file.arrayBuffer()).toString("base64")
+        const uploadResponse = await imagekit.upload({ file: fileBase64, fileName: file.name })
+        await prisma.document.create({
           data: {
             title: file.name,
             description: `Contract document for ${fund.name} - ${funder.name}`,
@@ -151,13 +131,10 @@ export async function POST(req: NextRequest) {
             createdBy: { connect: { id: parseInt(user.id as string) } }
           }
         })
-        
-        uploadedDocuments.push(document)
       } catch (uploadError) {
         console.error(`Error uploading document ${file.name}:`, uploadError)
-        // Continue with other documents even if one fails
       }
-    }
+    }))
 
     // Recalculate and update fund total amount
     await updateFundTotalAmount(parsedFundId)
@@ -266,21 +243,12 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    // Upload documents and create Document records
-    const uploadedDocuments = []
-    for (const file of documentFiles) {
+    // Upload all documents in parallel
+    await Promise.all(documentFiles.map(async (file) => {
       try {
-        // Upload to ImageKit
-        const fileBuffer = Buffer.from(await file.arrayBuffer())
-        const fileBase64 = fileBuffer.toString("base64")
-        
-        const uploadResponse = await imagekit.upload({
-          file: fileBase64,
-          fileName: file.name,
-        })
-
-        // Create Document record linked to both fund and funder
-        const document = await prisma.document.create({
+        const fileBase64 = Buffer.from(await file.arrayBuffer()).toString("base64")
+        const uploadResponse = await imagekit.upload({ file: fileBase64, fileName: file.name })
+        await prisma.document.create({
           data: {
             title: file.name,
             description: `Contract document for ${fund?.name} - ${funder?.name}`,
@@ -293,13 +261,10 @@ export async function PUT(req: NextRequest) {
             createdBy: { connect: { id: parseInt(user.id as string) } }
           }
         })
-        
-        uploadedDocuments.push(document)
       } catch (uploadError) {
         console.error(`Error uploading document ${file.name}:`, uploadError)
-        // Continue with other documents even if one fails
       }
-    }
+    }))
 
     // Recalculate and update fund total amount
     await updateFundTotalAmount(parsedFundId)

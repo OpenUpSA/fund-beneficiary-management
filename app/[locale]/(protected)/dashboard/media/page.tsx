@@ -29,9 +29,11 @@ const dataChanged = async (media_id?: string) => {
 }
 
 export default async function Page() {
-  const media = await fetchAllMedia()
-  const ldas = await fetchLocalDevelopmentAgencies()
-  const mediaSourceTypes = await fetchMediaSourceTypes()
+  const [media, ldas, mediaSourceTypes] = await Promise.all([
+    fetchAllMedia(),
+    fetchLocalDevelopmentAgencies(),
+    fetchMediaSourceTypes(),
+  ])
 
   return (
     <div>

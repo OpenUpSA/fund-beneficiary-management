@@ -1,4 +1,4 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
+import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, LocalDevelopmentAgencyListItem, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus, Contact, MediaSourceType } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
@@ -100,7 +100,7 @@ export async function fetchFundingStatuses(): Promise<FundingStatus[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['funding-statuses'] } 
+    next: { tags: ['funding-statuses'], revalidate: 86400 }
   })
   return res.json()
 }
@@ -110,7 +110,7 @@ export async function fetchDevelopmentStages(): Promise<DevelopmentStage[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['development-stages'] } 
+    next: { tags: ['development-stages'], revalidate: 86400 }
   })
   return res.json()
 }
@@ -120,7 +120,7 @@ export async function fetchLocations(): Promise<Location[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['locations'] } 
+    next: { tags: ['locations'], revalidate: 86400 }
   })
   return res.json()
 }
@@ -130,12 +130,12 @@ export async function fetchFocusAreas(): Promise<FocusArea[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['focus-areas'] } 
+    next: { tags: ['focus-areas'], revalidate: 86400 }
   })
   return res.json()
 }
 
-export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentAgencyFull[]> {
+export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentAgencyListItem[]> {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
   const user = session?.user || null
 
@@ -178,7 +178,7 @@ export async function fetchUsers(): Promise<UserWithLDAsBasic[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['users:list'] } 
+    next: { tags: ['users:list'], revalidate: 300 }
   })
   return res.json()
 }
@@ -206,7 +206,8 @@ export async function fetchFormTemplates(): Promise<FormTemplateWithRelations[]>
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-template`, {
     headers: {
       cookie: headers().get('cookie') ?? ''
-    }
+    },
+    next: { tags: ['form-templates:list'], revalidate: 300 }
   })
   return res.json()
 }
@@ -357,7 +358,7 @@ export async function fetchFormStatuses(): Promise<FormStatus[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['form-statuses'] } 
+    next: { tags: ['form-statuses'], revalidate: 86400 }
   })
   return res.json()
 }
@@ -390,7 +391,7 @@ export async function fetchProvinces(): Promise<Province[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['provinces:list'] } 
+    next: { tags: ['provinces:list'], revalidate: 86400 }
   })
   const data = await res.json();
   return data;
@@ -401,7 +402,7 @@ export async function fetchProvince(province_code: string): Promise<Province> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['provinces:list', `provinces:detail:${province_code}`] } 
+    next: { tags: ['provinces:list', `provinces:detail:${province_code}`], revalidate: 86400 }
   })
   return res.json()
 }
@@ -431,7 +432,7 @@ export async function fetchMediaSourceTypes(): Promise<MediaSourceType[]> {
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags: ['media-source-types:list'] } 
+    next: { tags: ['media-source-types:list'], revalidate: 86400 } 
   })
   return res.json()
 }
