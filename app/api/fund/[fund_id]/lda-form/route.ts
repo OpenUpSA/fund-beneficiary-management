@@ -51,20 +51,27 @@ export async function GET(
       (fundLda) => fundLda.localDevelopmentAgencyId
     )
 
-    // Get all forms for these LDAs
-    const allForms = await prisma.localDevelopmentAgencyForm.findMany({
+    // Apply permission filter at DB level
+    const accessibleLdaIds = permissions.canViewAllLDAs(user)
+      ? ldaIds
+      : ldaIds.filter(id => (user.ldaIds ?? []).includes(id))
+
+    const forms = await prisma.localDevelopmentAgencyForm.findMany({
       where: {
-        localDevelopmentAgencyId: {
-          in: ldaIds
-        }
+        localDevelopmentAgencyId: { in: accessibleLdaIds }
       },
+      omit: { formData: true },
       include: {
         localDevelopmentAgency: {
           include: {
+            focusAreas: true,
+            developmentStage: true,
             organisationDetail: true
           }
         },
-        formTemplate: true,
+        formTemplate: {
+          omit: { form: true }
+        },
         formStatus: true
       },
       orderBy: {
@@ -72,12 +79,7 @@ export async function GET(
       }
     })
 
-    // Filter forms based on canViewLDA permission
-    const filteredForms = allForms.filter((form) =>
-      permissions.canViewLDA(user, form.localDevelopmentAgencyId)
-    )
-
-    return NextResponse.json(filteredForms)
+    return NextResponse.json(forms)
   } catch (error) {
     console.error("Error fetching LDA forms for fund:", error)
     return NextResponse.json(

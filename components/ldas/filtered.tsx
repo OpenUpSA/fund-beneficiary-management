@@ -202,7 +202,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     return (
       <TableRow key={lda.id}>
         <TableCell className="p-2">
-          <Link href={getLDAlink(lda.id)}>{lda.name}</Link>
+          <Link href={getLDAlink(lda.id)} prefetch={false}>{lda.name}</Link>
         </TableCell>
         <TableCell className="p-2">
           {lda.fundingStatus && <Badge variant="outline">{lda.fundingStatus.label}</Badge>}

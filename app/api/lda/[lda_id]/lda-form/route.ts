@@ -28,8 +28,19 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
 
   const records = await prisma.localDevelopmentAgencyForm.findMany({
     where: { localDevelopmentAgencyId: ldaId },
+    omit: { formData: true },
     include: {
-      formStatus: true
+      localDevelopmentAgency: {
+        include: {
+          focusAreas: true,
+          developmentStage: true,
+          organisationDetail: true
+        }
+      },
+      formStatus: true,
+      formTemplate: {
+        omit: { form: true }
+      }
     },
   });
 

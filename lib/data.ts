@@ -1,4 +1,4 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, LocalDevelopmentAgencyListItem, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
+import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFormListItem, LocalDevelopmentAgencyFull, LocalDevelopmentAgencyListItem, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus, Contact, MediaSourceType } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
@@ -55,7 +55,7 @@ export async function fetchFunderLDAs(funder_id: string) {
   return res.json()
 }
 
-export async function fetchFunderLDAForms(funder_id: string): Promise<LocalDevelopmentAgencyFormFull[]> {
+export async function fetchFunderLDAForms(funder_id: string): Promise<LocalDevelopmentAgencyFormListItem[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/funder/${funder_id}/lda-form`, { 
     headers: {
       cookie: headers().get('cookie') ?? ''
@@ -150,7 +150,7 @@ export async function fetchLocalDevelopmentAgencies(): Promise<LocalDevelopmentA
     headers: {
       cookie: headers().get('cookie') ?? ''
     },
-    next: { tags }
+    next: { tags, revalidate: 300 }
   })
   return res.json()
 }
@@ -340,7 +340,7 @@ export async function fetchAllLocalDevelopmentAgencyForms(): Promise<LocalDevelo
   return res.json()
 }
 
-export async function fetchLocalDevelopmentAgencyFormsForLDA(lda_id: string): Promise<LocalDevelopmentAgencyFormFull[]> {
+export async function fetchLocalDevelopmentAgencyFormsForLDA(lda_id: string): Promise<LocalDevelopmentAgencyFormListItem[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lda/${lda_id}/lda-form`, { 
     headers: {
       cookie: headers().get('cookie') ?? ''
@@ -376,7 +376,7 @@ export async function fetchLDAForm(lda_form_id: string): Promise<LocalDevelopmen
   return res.json()
 }
 
-export async function fetchFundLDAForms(fund_id: string): Promise<LocalDevelopmentAgencyFormFull[]> {
+export async function fetchFundLDAForms(fund_id: string): Promise<LocalDevelopmentAgencyFormListItem[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fund/${fund_id}/lda-form`, { 
     headers: {
       cookie: headers().get('cookie') ?? ''
