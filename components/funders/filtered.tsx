@@ -209,7 +209,7 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders, navig
     return (
       <TableRow key={funder.id}>
         <TableCell className="p-3 w-1/3">
-          <Link href={getFunderLink(funder.id)} className="font-medium">
+          <Link href={getFunderLink(funder.id)} className="font-medium" prefetch={false}>
             {funder.name}
           </Link>
         </TableCell>

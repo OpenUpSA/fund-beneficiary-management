@@ -25,25 +25,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Get all active report schedule configs with their schedules
-    const configs = await prisma.reportScheduleConfig.findMany({
-      where: { active: true },
-      include: {
-        applicationTemplate: true,
-        reportTemplate: true,
-        periodSchedules: {
-          where: {
-            availableDate: { lte: today },
+    // Fetch configs, draftStatus, and approvedStatus in parallel
+    const [configs, draftStatus, approvedStatus] = await Promise.all([
+      prisma.reportScheduleConfig.findMany({
+        where: { active: true },
+        include: {
+          applicationTemplate: true,
+          reportTemplate: true,
+          periodSchedules: {
+            where: {
+              availableDate: { lte: today },
+            },
+            orderBy: [{ year: "asc" }, { period: "asc" }],
           },
-          orderBy: [{ year: "asc" }, { period: "asc" }],
         },
-      },
-    })
-
-    // Get the Draft status for new reports
-    const draftStatus = await prisma.formStatus.findFirst({
-      where: { label: "Draft" },
-    })
+      }),
+      prisma.formStatus.findFirst({ where: { label: "Draft" } }),
+      prisma.formStatus.findFirst({ where: { label: "Approved" } }),
+    ])
 
     if (!draftStatus) {
       return NextResponse.json(
@@ -52,11 +51,6 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Get the Approved status to find approved applications
-    const approvedStatus = await prisma.formStatus.findFirst({
-      where: { label: "Approved" },
-    })
-
     if (!approvedStatus) {
       return NextResponse.json(
         { error: "Approved status not found in database" },
@@ -64,28 +58,60 @@ export async function GET(req: NextRequest) {
       )
     }
 
+    // Collect all unique application template IDs across all configs
+    const applicationTemplateIds = [...new Set(configs.map(c => c.applicationTemplateId))]
+
+    // Fetch ALL approved applications across all configs in one query
+    const allApprovedApplications = applicationTemplateIds.length > 0
+      ? await prisma.localDevelopmentAgencyForm.findMany({
+          where: {
+            formTemplateId: { in: applicationTemplateIds },
+            formStatusId: approvedStatus.id,
+          },
+          include: { localDevelopmentAgency: true },
+        })
+      : []
+
+    // Group applications by templateId for efficient lookup
+    const applicationsByTemplateId = new Map<number, typeof allApprovedApplications>()
+    for (const app of allApprovedApplications) {
+      const group = applicationsByTemplateId.get(app.formTemplateId) ?? []
+      group.push(app)
+      applicationsByTemplateId.set(app.formTemplateId, group)
+    }
+
+    // Fetch ALL existing reports for these applications in one query
+    const allApplicationIds = allApprovedApplications.map(a => a.id)
+    const allExistingReports = allApplicationIds.length > 0
+      ? await prisma.localDevelopmentAgencyForm.findMany({
+          where: { linkedFormId: { in: allApplicationIds } },
+          select: { linkedFormId: true, formTemplateId: true, fundingStart: true, fundingEnd: true },
+        })
+      : []
+
+    // Build a Set for O(1) duplicate checking: "linkedFormId-templateId-start-end"
+    const existingReportKeys = new Set(
+      allExistingReports.map(r =>
+        `${r.linkedFormId}-${r.formTemplateId}-${r.fundingStart?.toISOString()}-${r.fundingEnd?.toISOString()}`
+      )
+    )
+
+    // Determine which reports need to be created (pure in-memory, no DB calls)
+    type CreateData = Parameters<typeof prisma.localDevelopmentAgencyForm.create>[0]['data']
+    const reportsToCreate: { data: CreateData; ldaId: number; period: number; year: number }[] = []
+
     for (const config of configs) {
-      // Find all approved applications using this application template
-      const approvedApplications = await prisma.localDevelopmentAgencyForm.findMany({
-        where: {
-          formTemplateId: config.applicationTemplateId,
-          formStatusId: approvedStatus.id,
-        },
-        include: {
-          localDevelopmentAgency: true,
-        },
-      })
+      const approvedApplications = applicationsByTemplateId.get(config.applicationTemplateId) ?? []
 
       for (const application of approvedApplications) {
         for (const schedule of config.periodSchedules) {
           results.processed++
 
-          // Check dates
           const fundingEnd = new Date(application.fundingEnd)
           const periodStart = new Date(schedule.periodStart)
           const periodEnd = new Date(schedule.periodEnd)
 
-          // Skip if application funding has already ended (fundingEnd is in the past)
+          // Skip if application funding has already ended
           if (fundingEnd < today) {
             results.skipped++
             continue
@@ -103,49 +129,45 @@ export async function GET(req: NextRequest) {
             continue
           }
 
-          // Check if a report already exists for this application, template, and period
-          // We use a combination of linkedFormId, formTemplateId, and date range to identify
-          const existingReport = await prisma.localDevelopmentAgencyForm.findFirst({
-            where: {
-              linkedFormId: application.id,
-              formTemplateId: config.reportTemplateId,
-              fundingStart: schedule.periodStart,
-              fundingEnd: schedule.periodEnd,
-            },
-          })
-
-          if (existingReport) {
+          // Check in-memory Set instead of querying DB
+          const key = `${application.id}-${config.reportTemplateId}-${periodStart.toISOString()}-${periodEnd.toISOString()}`
+          if (existingReportKeys.has(key)) {
             results.skipped++
             continue
           }
 
-          try {
-            // Create the report
-            const periodLabel = getPeriodLabel(config.frequency, schedule.period)
-            
-            await prisma.localDevelopmentAgencyForm.create({
-              data: {
-                localDevelopmentAgencyId: application.localDevelopmentAgencyId,
-                formTemplateId: config.reportTemplateId,
-                formStatusId: draftStatus.id,
-                formData: {},
-                title: `${config.reportTemplate.name} - ${periodLabel} ${schedule.year}`,
-                linkedFormId: application.id,
-                dueDate: schedule.dueDate,
-                fundingStart: schedule.periodStart,
-                fundingEnd: schedule.periodEnd,
-              },
-            })
-
-            results.created++
-          } catch (error) {
-            const errorMsg = `Failed to create report for LDA ${application.localDevelopmentAgencyId}, period ${schedule.period}/${schedule.year}: ${error}`
-            console.error(errorMsg)
-            results.errors.push(errorMsg)
-          }
+          const periodLabel = getPeriodLabel(config.frequency, schedule.period)
+          reportsToCreate.push({
+            data: {
+              localDevelopmentAgencyId: application.localDevelopmentAgencyId,
+              formTemplateId: config.reportTemplateId,
+              formStatusId: draftStatus.id,
+              formData: {},
+              title: `${config.reportTemplate.name} - ${periodLabel} ${schedule.year}`,
+              linkedFormId: application.id,
+              dueDate: schedule.dueDate,
+              fundingStart: schedule.periodStart,
+              fundingEnd: schedule.periodEnd,
+            },
+            ldaId: application.localDevelopmentAgencyId,
+            period: schedule.period,
+            year: schedule.year,
+          })
         }
       }
     }
+
+    // Create all reports in parallel
+    await Promise.all(reportsToCreate.map(async ({ data, ldaId, period, year }) => {
+      try {
+        await prisma.localDevelopmentAgencyForm.create({ data })
+        results.created++
+      } catch (error) {
+        const errorMsg = `Failed to create report for LDA ${ldaId}, period ${period}/${year}: ${error}`
+        console.error(errorMsg)
+        results.errors.push(errorMsg)
+      }
+    }))
 
     return NextResponse.json({
       success: true,

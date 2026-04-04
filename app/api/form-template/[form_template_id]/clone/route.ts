@@ -82,7 +82,7 @@ export async function POST(
 
     // Clone report schedule configs if this is an APPLICATION template
     if (sourceTemplate.templateType === "APPLICATION" && sourceTemplate.reportConfigs.length > 0) {
-      for (const config of sourceTemplate.reportConfigs) {
+      await Promise.all(sourceTemplate.reportConfigs.map(async (config) => {
         const clonedConfig = await prisma.reportScheduleConfig.create({
           data: {
             applicationTemplateId: clonedTemplate.id,
@@ -111,7 +111,7 @@ export async function POST(
             })),
           })
         }
-      }
+      }))
     }
 
     revalidateTag("templates")

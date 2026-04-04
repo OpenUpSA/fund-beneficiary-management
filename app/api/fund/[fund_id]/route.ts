@@ -86,39 +86,39 @@ export async function PUT(req: NextRequest, { params }: { params: { fund_id: str
       return NextResponse.json({ error: "Fund not found" }, { status: 404 });
     }
 
-    // Update organisation detail
-    await prisma.organisationDetail.update({
-      where: { id: existingFund.organisationDetailId },
-      data: {
-        contactNumber: data.contactNumber || "",
-        email: data.email || "",
-        website: data.website || "",
-        physicalStreet: data.physicalStreet || "",
-        physicalComplexName: data.physicalComplexName || "",
-        physicalComplexNumber: data.physicalComplexNumber || "",
-        physicalCity: data.physicalCity || "",
-        physicalPostalCode: data.physicalPostalCode || "",
-        physicalProvince: data.physicalProvince || "",
-        physicalDistrict: data.physicalDistrict || "",
-        useDifferentPostalAddress: data.useDifferentPostalAddress || false,
-        postalStreet: data.postalStreet || "",
-        postalComplexName: data.postalComplexName || "",
-        postalComplexNumber: data.postalComplexNumber || "",
-        postalCity: data.postalCity || "",
-        postalCode: data.postalCode || "",
-        postalProvince: data.postalProvince || "",
-        postalDistrict: data.postalDistrict || "",
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
-        mapAddress: data.mapAddress || "",
-      },
-    });
-
-    // Get current focus areas to disconnect
-    const currentFund = await prisma.fund.findUnique({
-      where: { id: fundId },
-      include: { focusAreas: true }
-    });
+    // Update organisation detail and fetch current focus areas in parallel
+    const [, currentFund] = await Promise.all([
+      prisma.organisationDetail.update({
+        where: { id: existingFund.organisationDetailId },
+        data: {
+          contactNumber: data.contactNumber || "",
+          email: data.email || "",
+          website: data.website || "",
+          physicalStreet: data.physicalStreet || "",
+          physicalComplexName: data.physicalComplexName || "",
+          physicalComplexNumber: data.physicalComplexNumber || "",
+          physicalCity: data.physicalCity || "",
+          physicalPostalCode: data.physicalPostalCode || "",
+          physicalProvince: data.physicalProvince || "",
+          physicalDistrict: data.physicalDistrict || "",
+          useDifferentPostalAddress: data.useDifferentPostalAddress || false,
+          postalStreet: data.postalStreet || "",
+          postalComplexName: data.postalComplexName || "",
+          postalComplexNumber: data.postalComplexNumber || "",
+          postalCity: data.postalCity || "",
+          postalCode: data.postalCode || "",
+          postalProvince: data.postalProvince || "",
+          postalDistrict: data.postalDistrict || "",
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
+          mapAddress: data.mapAddress || "",
+        },
+      }),
+      prisma.fund.findUnique({
+        where: { id: fundId },
+        include: { focusAreas: true }
+      }),
+    ]);
 
     // Update the fund
     const updatedFund = await prisma.fund.update({

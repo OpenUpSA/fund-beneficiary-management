@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useState, useCallback, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
-import { LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFull, FormTemplateWithRelations } from "@/types/models"
+import { LocalDevelopmentAgencyFormListItem, LocalDevelopmentAgencyFull, FormTemplateWithRelations } from "@/types/models"
 import { format } from "date-fns"
 import {
   AlertTriangleIcon,
@@ -44,7 +44,7 @@ import {
 import { toast } from "sonner"
 
 interface Props {
-  ldaForms: LocalDevelopmentAgencyFormFull[]
+  ldaForms: LocalDevelopmentAgencyFormListItem[]
   lda?: LocalDevelopmentAgencyFull
   formTemplates: FormTemplateWithRelations[]
   formStatuses: FormStatus[]
@@ -62,7 +62,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [formToDelete, setFormToDelete] = useState<LocalDevelopmentAgencyFormFull | null>(null)
+  const [formToDelete, setFormToDelete] = useState<LocalDevelopmentAgencyFormListItem | null>(null)
 
   // Filter configurations
   const typeOptions: FilterOption[] = formTemplates.map(template => ({
@@ -160,9 +160,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           return dir * a.title.localeCompare(b.title)
         }
         if (sortColumn === 'amount') {
-          const av = Number(a.formData && typeof a.formData === 'object' && 'amount' in a.formData ? a.formData.amount : 0)
-          const bv = Number(b.formData && typeof b.formData === 'object' && 'amount' in b.formData ? b.formData.amount : 0)
-          return dir * (av - bv)
+          return dir * (Number(a.amount) - Number(b.amount))
         }
         if (sortColumn === 'status') {
           const sa = a.formStatus?.label || ''

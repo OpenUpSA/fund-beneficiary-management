@@ -176,16 +176,7 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
     staffMembers: true,
     fundLocalDevelopmentAgencies: {
       include: {
-        fund: {
-          include: {
-            focusAreas: true,
-            fundFunders: {
-              include: {
-                funder: true
-              }
-            }
-          }
-        }
+        fund: true
       }
     }
   }
@@ -242,6 +233,24 @@ export type LocalDevelopmentAgencyFormFull = Prisma.LocalDevelopmentAgencyFormGe
     }
     formStatus: true
     formTemplate: true
+  }
+}>
+
+// Lightweight type for list views — omits large JSON blobs (formData, formTemplate.form)
+export type LocalDevelopmentAgencyFormListItem = Prisma.LocalDevelopmentAgencyFormGetPayload<{
+  omit: { formData: true }
+  include: {
+    localDevelopmentAgency: {
+      include: {
+        focusAreas: true,
+        developmentStage: true,
+        organisationDetail: true
+      }
+    }
+    formStatus: true
+    formTemplate: {
+      omit: { form: true }
+    }
   }
 }>
 

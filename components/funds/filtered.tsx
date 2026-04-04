@@ -243,7 +243,7 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
   const FundRow = useCallback(({ fund }: { fund: LimitedFundModel }) => (
     <TableRow key={fund.id}>
       <TableCell className="p-3 w-1/3">
-        <Link href={getFundLink(fund.id)} className="font-medium">{fund.name}</Link>
+        <Link href={getFundLink(fund.id)} className="font-medium" prefetch={false}>{fund.name}</Link>
       </TableCell>
       <TableCell className="p-3">R{Number(fund.amount).toLocaleString()}</TableCell>
       <TableCell className="p-3">{fund.fundLocalDevelopmentAgencies.length || 0}</TableCell>

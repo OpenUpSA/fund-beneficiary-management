@@ -39,16 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
         staffMembers: true,
         fundLocalDevelopmentAgencies: {
           include: {
-            fund: {
-              include: {
-                focusAreas: true,
-                fundFunders: {
-                  include: {
-                    funder: true
-                  }
-                }
-              }
-            }
+            fund: true
           }
         }
       },

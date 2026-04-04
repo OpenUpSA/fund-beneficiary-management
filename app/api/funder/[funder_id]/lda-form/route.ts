@@ -54,13 +54,18 @@ export async function GET(
           }
         }
       },
+      omit: { formData: true },
       include: {
         localDevelopmentAgency: {
           include: {
+            focusAreas: true,
+            developmentStage: true,
             organisationDetail: true
           }
         },
-        formTemplate: true,
+        formTemplate: {
+          omit: { form: true }
+        },
         formStatus: true
       },
       orderBy: {
