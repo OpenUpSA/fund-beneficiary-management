@@ -3,6 +3,7 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -43,6 +44,7 @@ export async function PUT(
         icon: data.icon || 'circle',
       }
     })
+    revalidateTag('focus-areas')
     return NextResponse.json(record)
   } catch (error) {
     console.error('Error updating focus area:', error)
@@ -65,6 +67,7 @@ export async function DELETE(
     await prisma.focusArea.delete({
       where: { id }
     })
+    revalidateTag('focus-areas')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting focus area:', error)

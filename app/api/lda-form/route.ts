@@ -16,8 +16,13 @@ export async function GET() {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  // Get all LDA forms first
-  const allRecords = await prisma.localDevelopmentAgencyForm.findMany({
+  // Build where clause from permission — push filtering to DB, not JS
+  const ldaWhere = permissions.canViewAllLDAs(user)
+    ? {}
+    : { localDevelopmentAgencyId: { in: user.ldaIds ?? [] } }
+
+  const records = await prisma.localDevelopmentAgencyForm.findMany({
+    where: ldaWhere,
     include: {
       localDevelopmentAgency: true,
       formTemplate: true,
@@ -25,12 +30,7 @@ export async function GET() {
     },
   });
 
-  // Filter records based on canViewLDA permission
-  const filteredRecords = allRecords.filter(record => 
-    permissions.canViewLDA(user, record.localDevelopmentAgencyId)
-  );
-
-  return NextResponse.json(filteredRecords);
+  return NextResponse.json(records);
 }
 
 export async function POST(req: NextRequest) {

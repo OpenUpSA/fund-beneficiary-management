@@ -6,7 +6,7 @@ import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
 import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
-import { LocalDevelopmentAgencyFull } from "@/types/models";
+import { LocalDevelopmentAgencyListItem } from "@/types/models";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -59,7 +59,7 @@ function FitBoundsToMarkers({ markers }: { markers: Array<[number, number]> }) {
 }
 
 interface LDAMapProps {
-  ldas: LocalDevelopmentAgencyFull[];
+  ldas: LocalDevelopmentAgencyListItem[];
   width?: string | number;
   height?: string | number;
 }
@@ -78,7 +78,7 @@ export default function LDAMap({ ldas, width = "100%", height = "500px" }: LDAMa
   ] as [number, number]);
 
   // Format address from LDA details
-  const formatAddress = (lda: LocalDevelopmentAgencyFull): string => {
+  const formatAddress = (lda: LocalDevelopmentAgencyListItem): string => {
     const details = lda.organisationDetail;
     if (!details) return "No address information";
     

@@ -43,6 +43,13 @@ const cacheTags: CacheTag[] = [
   { tag: 'users:list', description: 'List of all users', category: 'Users' },
   { tag: 'media:list', description: 'Media library', category: 'Media' },
   { tag: 'documents:list', description: 'Documents library', category: 'Documents' },
+  { tag: 'funding-statuses', description: 'Funding status lookup values', category: 'Reference Data' },
+  { tag: 'development-stages', description: 'Development stage lookup values', category: 'Reference Data' },
+  { tag: 'locations', description: 'Location lookup values', category: 'Reference Data' },
+  { tag: 'focus-areas', description: 'Focus area lookup values', category: 'Reference Data' },
+  { tag: 'form-statuses', description: 'Form status lookup values', category: 'Reference Data' },
+  { tag: 'provinces:list', description: 'Province lookup values', category: 'Reference Data' },
+  { tag: 'media-source-types:list', description: 'Media source type lookup values', category: 'Reference Data' },
 ]
 
 export function CacheManagementPanel({ onBack }: CacheManagementPanelProps) {

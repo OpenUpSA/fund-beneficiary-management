@@ -13,7 +13,7 @@ import {
   Database, 
   MapPin 
 } from "lucide-react"
-import { FormTemplateWithRelations, LocalDevelopmentAgencyFull } from "@/types/models"
+import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { CreateFormPanel } from "./create-form-panel"
 import { CrudPanel, FieldConfig } from "./crud-panel"
 import { ReportSchedulesPanel } from "./report-schedules-panel"
@@ -22,7 +22,7 @@ import { ProvincesPanel } from "./provinces-panel"
 import { cn } from "@/lib/utils"
 
 interface AdminPanelProps {
-  ldas: LocalDevelopmentAgencyFull[]
+  ldas: LocalDevelopmentAgencyListItem[]
   formTemplates: FormTemplateWithRelations[]
 }
 

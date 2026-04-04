@@ -21,64 +21,34 @@ export async function GET() {
 
   const records = await prisma.localDevelopmentAgency.findMany({
     where,
-    include: {
-      fundingStatus: true,
-      focusAreas: true,
-      location: true,
-      programmeOfficer: true,
-      developmentStage: true,
-      fundLocalDevelopmentAgencies: {
-        include: {
-          fund: {
-            include: {
-              focusAreas: true,
-              fundFunders: {
-                include: {
-                  funder: true
-                }
-              }
-            }
-          }
-        }
-      },
+    select: {
+      id: true,
+      name: true,
+      fundingStatusId: true,
+      developmentStageId: true,
+      locationId: true,
+      programmeOfficerId: true,
+      fundingStatus: { select: { id: true, label: true } },
+      developmentStage: { select: { id: true, label: true } },
+      focusAreas: { select: { id: true, label: true, icon: true } },
+      programmeOfficer: { select: { id: true, name: true } },
       organisationDetail: {
         select: {
           physicalProvince: true,
-          latitude: true,
-          longitude: true,
           physicalStreet: true,
           physicalComplexName: true,
           physicalComplexNumber: true,
           physicalCity: true,
           physicalPostalCode: true,
           physicalDistrict: true,
+          latitude: true,
+          longitude: true,
         },
-      }
+      },
     },
   });
 
-  // Transform the response to use cleaner key names
-  const transformedRecords = records.map(record => ({
-    ...record,
-    funds: record.fundLocalDevelopmentAgencies.map(fLda => ({
-      ...fLda.fund,
-      description: fLda.description,
-      fundingStart: fLda.fundingStart,
-      fundingEnd: fLda.fundingEnd,
-      fundingStatus: fLda.fundingStatus,
-      funders: fLda.fund.fundFunders.map(ff => ({
-        ...ff.funder,
-        fundAmount: ff.amount,
-        fundingStart: ff.fundingStart,
-        fundingEnd: ff.fundingEnd,
-        notes: ff.notes
-      })),
-      fundFunders: undefined
-    })),
-    fundLocalDevelopmentAgencies: undefined
-  }));
-
-  return NextResponse.json(transformedRecords);
+  return NextResponse.json(records);
 }
 
 export async function POST(req: NextRequest) {

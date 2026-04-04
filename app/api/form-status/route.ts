@@ -3,6 +3,7 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
         icon: data.icon || 'circle',
       }
     })
+    revalidateTag('form-statuses')
     return NextResponse.json(record)
   } catch (error) {
     console.error('Error creating form status:', error)

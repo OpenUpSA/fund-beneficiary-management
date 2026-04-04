@@ -15,6 +15,13 @@ const validTags = [
   'users:list',
   'media:list',
   'documents:list',
+  'funding-statuses',
+  'development-stages',
+  'locations',
+  'focus-areas',
+  'form-statuses',
+  'provinces:list',
+  'media-source-types:list',
 ]
 
 export async function POST(req: NextRequest) {

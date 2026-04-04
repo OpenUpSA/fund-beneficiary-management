@@ -75,7 +75,6 @@ export type FunderFull = Prisma.FunderGetPayload<{
 export type LimitedFundModel = Prisma.FundGetPayload<{
   include: {
     focusAreas: true,
-    organisationDetail: true,
     fundFunders: {
       select: {
         id: true,
@@ -109,6 +108,35 @@ export type FundFull = Prisma.FundGetPayload<{
             id: true
           }
         }
+      }
+    }
+  }
+}>
+
+// Slim type for the LDA list page and map — only fields needed for display/filtering
+export type LocalDevelopmentAgencyListItem = Prisma.LocalDevelopmentAgencyGetPayload<{
+  select: {
+    id: true
+    name: true
+    fundingStatusId: true
+    developmentStageId: true
+    locationId: true
+    programmeOfficerId: true
+    fundingStatus: { select: { id: true; label: true } }
+    developmentStage: { select: { id: true; label: true } }
+    focusAreas: { select: { id: true; label: true; icon: true } }
+    programmeOfficer: { select: { id: true; name: true } }
+    organisationDetail: {
+      select: {
+        physicalProvince: true
+        physicalStreet: true
+        physicalComplexName: true
+        physicalComplexNumber: true
+        physicalCity: true
+        physicalPostalCode: true
+        physicalDistrict: true
+        latitude: true
+        longitude: true
       }
     }
   }

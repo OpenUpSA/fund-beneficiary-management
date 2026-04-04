@@ -221,24 +221,23 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     };
 
     if (organisation && sections) {
+      // Collect all prefill tasks first, then run in parallel
+      const prefillTasks: Array<{ key: string; promise: Promise<unknown> }> = []
+
       for (const section of sections) {
         if (section.fields) {
           for (const field of section.fields) {
-            if (field?.prefill) {
-              const prefill = field?.prefill as { source: string; path: string }
-              // Handle prefill based on the source
-              const value = await getPrefillData(organisation, prefill, linkedFormData, fundingContext)
-              if (value && !(field.name in formData)) {
-                formData[field.name] = value
-              }
+            if (field?.prefill && !(field.name in formData)) {
+              const prefill = field.prefill as { source: string; path: string }
+              prefillTasks.push({ key: field.name, promise: getPrefillData(organisation, prefill, linkedFormData, fundingContext) })
             }
             if (field.fields) {
               for (const subfield of field.fields) {
                 if (subfield?.prefill) {
-                  const subprefill = subfield?.prefill as { source: string; path: string }
-                  const subvalue = await getPrefillData(organisation, subprefill, linkedFormData, fundingContext);
-                  if (subvalue && !(field.name + '_' + subfield.name in formData)) {
-                    formData[field.name + '_' + subfield.name] = subvalue
+                  const key = field.name + '_' + subfield.name
+                  if (!(key in formData)) {
+                    const subprefill = subfield.prefill as { source: string; path: string }
+                    prefillTasks.push({ key, promise: getPrefillData(organisation, subprefill, linkedFormData, fundingContext) })
                   }
                 }
               }
@@ -246,6 +245,13 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
           }
         }
       }
+
+      const results = await Promise.all(prefillTasks.map(t => t.promise))
+      results.forEach((value, i) => {
+        if (value !== undefined && value !== null) {
+          formData[prefillTasks[i].key] = value as Prisma.JsonValue
+        }
+      })
     }
     record.formData = formData as Prisma.JsonValue
   }
@@ -494,25 +500,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
     // Handle linked form based on status changes
     if (updatedRecord.formTemplate?.linkedFormTemplateId) {
-      // Check if a linked form already exists for this form
-      const existingLinkedForm = await prisma.localDevelopmentAgencyForm.findFirst({
-        where: { linkedFormId: ldaFormId }
-      });
+      // Fetch existingLinkedForm and target status in parallel
+      const targetStatusLabel = data.formStatusLabel === "Approved" ? "Draft"
+        : data.formStatusLabel === "Rejected" ? "Rejected"
+        : "Paused"
+
+      const [existingLinkedForm, targetStatus] = await Promise.all([
+        prisma.localDevelopmentAgencyForm.findFirst({ where: { linkedFormId: ldaFormId } }),
+        prisma.formStatus.findFirst({ where: { label: targetStatusLabel } }),
+      ])
 
       if (data.formStatusLabel === "Approved") {
         if (!existingLinkedForm) {
-          // Get Draft status for the new form
-          const draftStatus = await prisma.formStatus.findFirst({
-            where: { label: "Draft" }
-          });
-
-          if (draftStatus) {
+          if (targetStatus) {
             // Create the linked form (e.g., Report form linked to Application)
             const linkedForm = await prisma.localDevelopmentAgencyForm.create({
               data: {
                 localDevelopmentAgencyId: updatedRecord.localDevelopmentAgencyId,
                 formTemplateId: updatedRecord.formTemplate.linkedFormTemplateId,
-                formStatusId: draftStatus.id,
+                formStatusId: targetStatus.id,
                 formData: {},
                 title: `${updatedRecord.formTemplate.linkedFormTemplate?.name || 'Linked Form'} - ${new Date().getFullYear()}`,
                 linkedFormId: ldaFormId,
@@ -524,43 +530,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
             return NextResponse.json({ ...updatedRecord, createdLinkedForm: linkedForm });
           }
-        } else {
+        } else if (targetStatus) {
           // Linked form exists, move it to Draft
-          const draftStatus = await prisma.formStatus.findFirst({
-            where: { label: "Draft" }
-          });
-
-          if (draftStatus) {
-            await prisma.localDevelopmentAgencyForm.update({
-              where: { id: existingLinkedForm.id },
-              data: { formStatusId: draftStatus.id }
-            });
-          }
-        }
-      } else if (data.formStatusLabel === "Rejected" && existingLinkedForm) {
-        // Move linked form to Rejected
-        const rejectedStatus = await prisma.formStatus.findFirst({
-          where: { label: "Rejected" }
-        });
-
-        if (rejectedStatus) {
           await prisma.localDevelopmentAgencyForm.update({
             where: { id: existingLinkedForm.id },
-            data: { formStatusId: rejectedStatus.id }
+            data: { formStatusId: targetStatus.id }
           });
         }
-      } else if (existingLinkedForm) {
-        // Move linked form to Paused
-        const pausedStatus = await prisma.formStatus.findFirst({
-          where: { label: "Paused" }
+      } else if (existingLinkedForm && targetStatus) {
+        // Move linked form to Rejected or Paused
+        await prisma.localDevelopmentAgencyForm.update({
+          where: { id: existingLinkedForm.id },
+          data: { formStatusId: targetStatus.id }
         });
-
-        if (pausedStatus) {
-          await prisma.localDevelopmentAgencyForm.update({
-            where: { id: existingLinkedForm.id },
-            data: { formStatusId: pausedStatus.id }
-          });
-        }
       }
     }
     

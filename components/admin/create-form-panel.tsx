@@ -23,12 +23,12 @@ import { ArrowLeft, CalendarIcon, Check, ChevronsUpDown, FilePlus, Loader2 } fro
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { FormTemplateWithRelations, LocalDevelopmentAgencyFull } from "@/types/models"
+import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { cn } from "@/lib/utils"
 
 interface CreateFormPanelProps {
-  ldas: LocalDevelopmentAgencyFull[]
+  ldas: LocalDevelopmentAgencyListItem[]
   formTemplates: FormTemplateWithRelations[]
   onBack: () => void
 }

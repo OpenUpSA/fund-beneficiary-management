@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { FilteredMedia } from "@/components/media/filtered"
-import { fetchLocalDevelopmentAgency, fetchLDAMedia, fetchMediaSourceTypes, fetchUsers } from "@/lib/data"
+import { fetchLocalDevelopmentAgency, fetchLDAMedia, fetchMediaSourceTypes } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
@@ -27,11 +27,10 @@ export default async function Page({ params }: LDAMediaPageProps) {
   const { lda_id } = params
   
   // Fetch LDA from layout cache and media-related data (LDA fetch will be deduplicated with layout)
-  const [lda, media, mediaSourceTypes, users] = await Promise.all([
+  const [lda, media, mediaSourceTypes] = await Promise.all([
     fetchLocalDevelopmentAgency(lda_id),
     fetchLDAMedia(lda_id),
     fetchMediaSourceTypes(),
-    fetchUsers()
   ])
   
   if (!lda) {
@@ -54,7 +53,6 @@ export default async function Page({ params }: LDAMediaPageProps) {
         dataChanged={dataChanged}
         navigatedFrom="lda"
         mediaSourceTypes={mediaSourceTypes}
-        users={users}
       />
     </div>
   )

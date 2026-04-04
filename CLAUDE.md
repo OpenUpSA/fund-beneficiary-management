@@ -10,8 +10,7 @@ yarn dev              # Start dev server at http://localhost:3000
 yarn build            # Build for production
 yarn lint             # Run ESLint
 
-# Database
-docker compose up     # Start PostgreSQL (required before running the app)
+# Database (Docker is NOT used for local dev — connect to a remote/existing PostgreSQL via env vars)
 yarn db:migrate       # Create and apply new migrations
 yarn db:generate      # Regenerate Prisma client after schema changes
 yarn db:seed          # Seed initial data
@@ -22,7 +21,7 @@ yarn db:studio        # Open Prisma Studio GUI
 yarn create-superuser # Interactively create an admin user
 ```
 
-There is no test suite configured — linting is the only automated quality check.
+There is no test suite configured. **Always run `yarn build` after making code changes** — it is the primary correctness check (TypeScript type errors only surface at build time, not during `yarn dev`).
 
 ## Architecture
 

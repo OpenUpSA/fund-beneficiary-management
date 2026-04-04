@@ -35,7 +35,6 @@ export async function GET(request: Request) {
     } : undefined,
     include: {
       focusAreas: true,
-      organisationDetail: true,
       fundFunders: {
         select: {
           id: true,

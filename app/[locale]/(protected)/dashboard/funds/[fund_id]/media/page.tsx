@@ -1,11 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 import { FilteredMedia } from "@/components/media/filtered"
-import { 
+import {
   fetchFund,
   fetchFundMedia,
   fetchMediaSourceTypes,
-  fetchUsers
 } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
@@ -32,11 +31,10 @@ export default async function Page({ params }: FundMediaPageProps) {
   const { fund_id } = params
 
   // Fetch only the data needed for media tab
-  const [fund, fundMedia, mediaSourceTypes, users] = await Promise.all([
+  const [fund, fundMedia, mediaSourceTypes] = await Promise.all([
     fetchFund(fund_id),
     fetchFundMedia(fund_id),
     fetchMediaSourceTypes(),
-    fetchUsers()
   ])
   
   if (!fund) {
@@ -59,7 +57,6 @@ export default async function Page({ params }: FundMediaPageProps) {
         media={fundMedia}
         fund={{ id: parseInt(fund_id), name: fund.name }}
         mediaSourceTypes={mediaSourceTypes}
-        users={users}
       />
     </div>
   )
