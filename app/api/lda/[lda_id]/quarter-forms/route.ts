@@ -48,41 +48,14 @@ export async function GET(
     }
 
     // Build where clause - only return approved forms
+    // Filter by formData.activity_date falling within the reporting period
     const whereClause: {
       localDevelopmentAgencyId: number
       formStatusId: number
       formTemplate?: { name?: { in: string[] }; formCategory?: { in: string[] } }
-      OR: Array<{
-        fundingStart?: { gte: Date; lte: Date }
-        fundingEnd?: { gte: Date; lte: Date }
-        AND?: Array<{ fundingStart?: { lte: Date }; fundingEnd?: { gte: Date } }>
-      }>
     } = {
       localDevelopmentAgencyId: ldaId,
       formStatusId: approvedStatus.id,
-      OR: [
-        {
-          // Form starts within the quarter
-          fundingStart: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        {
-          // Form ends within the quarter
-          fundingEnd: {
-            gte: startDate,
-            lte: endDate,
-          },
-        },
-        {
-          // Form spans the entire quarter
-          AND: [
-            { fundingStart: { lte: startDate } },
-            { fundingEnd: { gte: endDate } },
-          ],
-        },
-      ],
     }
 
     // Add template filters if specified
@@ -96,7 +69,7 @@ export async function GET(
       }
     }
 
-    // Fetch forms for this LDA within the quarter timeframe
+    // Fetch all approved forms for this LDA with the specified categories
     const forms = await prisma.localDevelopmentAgencyForm.findMany({
       where: whereClause,
       include: {
@@ -111,22 +84,37 @@ export async function GET(
         formStatus: true,
       },
       orderBy: {
-        fundingStart: "desc",
+        createdAt: "desc",
       },
     })
 
-    // Format response
-    const formattedForms = forms.map((form) => ({
-      id: form.id,
-      title: form.title,
-      templateName: form.formTemplate.name,
-      templateType: form.formTemplate.templateType,
-      formCategory: form.formTemplate.formCategory,
-      status: form.formStatus.label,
-      fundingStart: form.fundingStart,
-      fundingEnd: form.fundingEnd,
-      amount: form.amount,
-    }))
+    console.log(forms);
+
+    // Filter forms where formData.activity_date falls within the reporting period
+    const filteredForms = forms.filter((form) => {
+      const formData = form.formData as Record<string, unknown> | null
+      if (!formData?.activity_date) return false
+      
+      const activityDate = new Date(formData.activity_date as string)
+      return activityDate >= startDate && activityDate <= endDate
+    })
+
+    // Format response - include activity_date for display
+    const formattedForms = filteredForms.map((form) => {
+      const formData = form.formData as Record<string, unknown> | null
+      return {
+        id: form.id,
+        title: form.title,
+        templateName: form.formTemplate.name,
+        templateType: form.formTemplate.templateType,
+        formCategory: form.formTemplate.formCategory,
+        status: form.formStatus.label,
+        activityDate: formData?.activity_date || null,
+        fundingStart: form.fundingStart,
+        fundingEnd: form.fundingEnd,
+        amount: form.amount,
+      }
+    })
 
     return NextResponse.json(formattedForms)
   } catch (error) {

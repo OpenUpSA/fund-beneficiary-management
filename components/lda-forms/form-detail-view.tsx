@@ -31,7 +31,8 @@ interface LDAFormDetailViewProps {
     formData: FormData | Record<string, unknown>
     formTemplate: { 
       form: Form | null;
-      sidebarConfig?: { amount?: boolean; status?: boolean; startDate?: boolean; endDate?: boolean; dueDate?: boolean } | undefined
+      sidebarConfig?: { amount?: boolean; status?: boolean; startDate?: boolean; endDate?: boolean; dueDate?: boolean } | undefined;
+      templateType?: 'APPLICATION' | 'REPORT'
     }
     formStatus?: { id: number; label: string; icon: string; createdAt: Date; updatedAt: Date }
     createdAt: Date
@@ -111,7 +112,14 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
       })
       
       if (response.ok) {
-        toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`)
+        // Context-aware field labels for toast messages
+        const isReportType = ldaForm.formTemplate.templateType === 'REPORT'
+        const fieldLabels: Record<string, string> = {
+          fundingStart: isReportType ? 'Reporting start date' : 'Funding start date',
+          fundingEnd: isReportType ? 'Reporting end date' : 'Funding end date',
+        }
+        const displayName = fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1)
+        toast.success(`${displayName} updated successfully`)
         dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
         return true
       } else {
@@ -348,7 +356,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
               
               {ldaForm.formTemplate.sidebarConfig?.startDate && (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Funding start date:</p>
+                  <p className="text-sm text-muted-foreground">{ldaForm.formTemplate.templateType === 'REPORT' ? 'Reporting start date:' : 'Funding start date:'}</p>
                   <Controller
                     name="fundingStart"
                     control={control}
@@ -384,7 +392,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
               
               {ldaForm.formTemplate.sidebarConfig?.endDate && (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Funding end date:</p>
+                  <p className="text-sm text-muted-foreground">{ldaForm.formTemplate.templateType === 'REPORT' ? 'Reporting end date:' : 'Funding end date:'}</p>
                   <Controller
                     name="fundingEnd"
                     control={control}

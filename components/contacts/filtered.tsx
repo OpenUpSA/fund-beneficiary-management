@@ -69,7 +69,6 @@ export function FilteredContacts({ contacts, dataChanged, ldaId }: Props) {
   const handleResetFilters = () => {
     setSearchTerm("")
     setActiveFilters({})
-    setFilteredContacts(contacts)
   }
   
   const handleDeleteContact = async () => {
