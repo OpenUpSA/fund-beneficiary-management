@@ -115,7 +115,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
       toast.success("Form created successfully")
       
       // Navigate to the new form
-      router.push(`/dashboard/ldas/${selectedLDA}/forms/${result.id}`)
+      router.push(`/dashboard/ldas/${selectedLDA}/funding-reports/${result.id}`)
     } catch (error) {
       console.error('Error creating form:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to create form')
