@@ -8,6 +8,7 @@
 import prisma from "@/db"
 import { FormTemplate, LocalDevelopmentAgencyForm } from "@prisma/client"
 import { narrativeReportHandlers } from "./handlers/narrative-report"
+import { genericHandlers } from "./handlers/generic"
 
 // Event types that can be triggered during form lifecycle
 export type FormEventType = 'created' | 'submitted' | 'approved' | 'rejected' | 'updated'
@@ -30,8 +31,9 @@ type HandlerRegistry = {
   }
 }
 
-// Global handler registry
+// Global handler registry - '*' is for generic handlers that run for ALL forms
 const handlerRegistry: HandlerRegistry = {
+  '*': genericHandlers,
   'narrative_report': narrativeReportHandlers,
 }
 
@@ -60,7 +62,22 @@ export async function triggerFormEvent(
     userId
   }
 
-  // Get handlers for this template's category
+  // First, run generic handlers that apply to ALL forms
+  const genericCategoryHandlers = handlerRegistry['*']
+  if (genericCategoryHandlers) {
+    const genericEventHandlers = genericCategoryHandlers[eventType]
+    if (genericEventHandlers && genericEventHandlers.length > 0) {
+      for (const handler of genericEventHandlers) {
+        try {
+          await handler(context)
+        } catch (error) {
+          console.error(`Error executing generic form event handler for ${eventType}:`, error)
+        }
+      }
+    }
+  }
+
+  // Then, run category-specific handlers
   // Use formCategory if available, otherwise derive from template name
   const category = (formTemplate as { formCategory?: string }).formCategory || 
     formTemplate.name.toLowerCase().replace(/\s+/g, '_') || ''

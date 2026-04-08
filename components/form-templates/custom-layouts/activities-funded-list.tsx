@@ -17,6 +17,7 @@ interface QuarterForm {
   templateName: string
   templateType: string
   status: string
+  activityDate: string | null
   fundingStart: string
   fundingEnd: string
   amount: string
@@ -117,9 +118,11 @@ export function ActivitiesFundedList({ inputField, lda_id, lda_form_id }: Activi
                   <span className="text-sm font-medium text-slate-700">
                     {form.templateName} - {form.title}
                   </span>
-                  <span className="text-xs text-slate-500 ml-2">
-                    ({format(new Date(form.fundingStart), "d MMM, yyyy")})
-                  </span>
+                  {form.activityDate && (
+                    <span className="text-xs text-slate-500 ml-2">
+                      ({format(new Date(form.activityDate), "d MMM, yyyy")})
+                    </span>
+                  )}
                 </div>
                 {expandedId === form.id ? (
                   <ChevronUp className="h-4 w-4 text-slate-400 flex-shrink-0" />
@@ -132,9 +135,11 @@ export function ActivitiesFundedList({ inputField, lda_id, lda_form_id }: Activi
                   <p className="text-sm text-slate-600">
                     <span className="font-medium">Status:</span> {form.status}
                   </p>
-                  <p className="text-sm text-slate-600">
-                    <span className="font-medium">Period:</span> {format(new Date(form.fundingStart), "d MMM yyyy")} - {format(new Date(form.fundingEnd), "d MMM yyyy")}
-                  </p>
+                  {form.activityDate && (
+                    <p className="text-sm text-slate-600">
+                      <span className="font-medium">Activity Date:</span> {format(new Date(form.activityDate), "d MMM yyyy")}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

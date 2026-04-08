@@ -36,7 +36,7 @@ next-env.d.ts
 supabase/
 
 .vscode/
-
+.claude/
 prisma/scripts/*
 # Sentry Config File
 .env.sentry-build-plugin

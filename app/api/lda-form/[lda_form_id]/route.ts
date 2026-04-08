@@ -6,6 +6,7 @@ import { Form } from "@/types/forms"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { permissions } from "@/lib/permissions";
+import { triggerFormEvent } from "@/lib/form-events";
 
 
 export const dynamic = "force-dynamic"
@@ -35,6 +36,7 @@ type OrganisationWithDetails = {
 type FundingContext = {
   ldaId: number;
   fundingStart: Date;
+  fundingEnd: Date;
 };
 
 const getPrefillData = async (
@@ -131,15 +133,17 @@ const getPrefillData = async (
     }
 
     case 'fris_funding': {
-      // Sum approved FRIS claim amounts where finance report's start date falls within the claim period
+      // Sum FRIS claim amounts where status is Approved and approval date is between report's funding period
       if (!fundingContext) break;
       const frisClaims = await prisma.localDevelopmentAgencyForm.findMany({
         where: {
           localDevelopmentAgencyId: fundingContext.ldaId,
-          approved: { not: null },
+          formStatus: { label: 'Approved' },
           formTemplate: { formCategory: 'fris_claim' },
-          fundingStart: { lte: fundingContext.fundingStart },
-          fundingEnd: { gte: fundingContext.fundingStart },
+          approved: {
+            gte: fundingContext.fundingStart,
+            lte: fundingContext.fundingEnd,
+          },
         },
         select: { amount: true },
       });
@@ -148,15 +152,17 @@ const getPrefillData = async (
     }
 
     case 'dft_funding': {
-      // Sum approved DFT application amounts where finance report's start date falls within the DFT period
+      // Sum DFT application amounts where status is Approved and approval date is between report's funding period
       if (!fundingContext) break;
       const dftApps = await prisma.localDevelopmentAgencyForm.findMany({
         where: {
           localDevelopmentAgencyId: fundingContext.ldaId,
-          approved: { not: null },
+          formStatus: { label: 'Approved' },
           formTemplate: { formCategory: 'dft_application' },
-          fundingStart: { lte: fundingContext.fundingStart },
-          fundingEnd: { gte: fundingContext.fundingStart },
+          approved: {
+            gte: fundingContext.fundingStart,
+            lte: fundingContext.fundingEnd,
+          },
         },
         select: { amount: true },
       });
@@ -218,6 +224,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     const fundingContext: FundingContext = {
       ldaId: record.localDevelopmentAgencyId,
       fundingStart: record.fundingStart,
+      fundingEnd: record.fundingEnd,
     };
 
     if (organisation && sections) {
@@ -418,8 +425,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       amount?: number;
       fundingStart?: Date;
       fundingEnd?: Date;
-      approved?: Date;
-      submitted?: Date;
+      approved?: Date | null;
+      submitted?: Date | null;
     } = {};
     
     // Process form status (needs to map from label to ID)
@@ -436,7 +443,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       if (data.formStatusLabel === "Approved") {
         updateData.approved = new Date();
       } else {
-        updateData.approved = undefined;
+        updateData.approved = null;
+      }
+
+      // Trigger form event asynchronously (don't await to avoid blocking)
+      if (data.formStatusLabel === "Approved") {
+        // Get the full form record for the event trigger
+        prisma.localDevelopmentAgencyForm.findUnique({
+          where: { id: ldaFormId }
+        }).then(fullForm => {
+          if (fullForm) {
+            triggerFormEvent(
+              'approved',
+              fullForm,
+              user?.id ? parseInt(user.id, 10) : undefined
+            ).catch(err => console.error('Form event trigger error:', err))
+          }
+        })
       }
 
       if (data.formStatusLabel === "Draft") {

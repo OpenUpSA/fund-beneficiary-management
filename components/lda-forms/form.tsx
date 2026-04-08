@@ -73,10 +73,15 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
     },
   })
 
-  // Watch formTemplateId to get selected template's sidebarConfig
+  // Watch formTemplateId to get selected template's sidebarConfig and templateType
   const selectedTemplateId = form.watch('formTemplateId')
   const selectedTemplate = formTemplates.find(t => t.id === Number(selectedTemplateId))
   const sidebarConfig = selectedTemplate?.sidebarConfig as { startDate?: boolean; endDate?: boolean; dueDate?: boolean } | null
+  const isReportType = selectedTemplate?.templateType === 'REPORT'
+  
+  // Context-aware labels based on form type
+  const startDateLabel = isReportType ? 'Reporting Start' : 'Funding Start'
+  const endDateLabel = isReportType ? 'Reporting End' : 'Funding End'
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setOpen(false)
@@ -208,7 +213,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                     name="fundingStart"
                     render={({ field }) => (
                       <FormItem className="flex-1 w-full">
-                        <FormLabel>Funding Start</FormLabel>
+                        <FormLabel>{startDateLabel}</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -241,7 +246,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                     name="fundingEnd"
                     render={({ field }) => (
                       <FormItem className="flex-1 w-full">
-                        <FormLabel>Funding End</FormLabel>
+                        <FormLabel>{endDateLabel}</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>

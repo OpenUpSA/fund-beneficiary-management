@@ -63,6 +63,11 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   const selectedLDAData = ldas.find(l => String(l.id) === selectedLDA)
   const selectedTemplateData = formTemplates.find(t => String(t.id) === selectedTemplate)
   const sidebarConfig: SidebarConfig = selectedTemplateData?.sidebarConfig as SidebarConfig || {}
+  const isReportType = selectedTemplateData?.templateType === 'REPORT'
+  
+  // Context-aware labels based on form type
+  const startDateLabel = isReportType ? 'Reporting Start Date' : 'Funding Start Date'
+  const endDateLabel = isReportType ? 'Reporting End Date' : 'Funding End Date'
 
   const handleSubmit = async () => {
     if (!selectedLDA || !selectedTemplate) {
@@ -290,10 +295,10 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
                 </div>
               )}
 
-              {/* Funding Start Date */}
+              {/* Start Date */}
               {sidebarConfig.startDate && (
                 <div className="space-y-2">
-                  <Label>Funding Start Date</Label>
+                  <Label>{startDateLabel}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -316,10 +321,10 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
                 </div>
               )}
 
-              {/* Funding End Date */}
+              {/* End Date */}
               {sidebarConfig.endDate && (
                 <div className="space-y-2">
-                  <Label>Funding End Date</Label>
+                  <Label>{endDateLabel}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
