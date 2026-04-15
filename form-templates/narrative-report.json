@@ -254,14 +254,9 @@
       "title": "New cases",
       "fields": [
         {
-          "name": "casework_intro",
-          "type": "info",
-          "label": "How many new cases did your organisation handle during this reporting period and how many of these cases were brought in by third-parties?"
-        },
-        {
           "name": "casework_guidance",
           "type": "info",
-          "label": "",
+          "label": "How many new cases did your organisation handle during this reporting period and how many of these cases were brought in by third-parties?",
           "notice": "<strong>How should I answer this question?</strong> Please provide a count of all new cases broken down by the different categories and case types listed. If possible, please separate your cases into those opened by the client themselves (the person effected directly by the case) and those opened by third parties on behalf of the client (eg. a concerned colleague or family member)."
         },
         {
@@ -271,7 +266,7 @@
           "layout": "casework-categories",
           "config": {
             "statusField": "new_cases_status",
-            "headerLabel": "New cases opened during this reporting period",
+            "headerLabel": "New cases opened",
             "columns": [
               { "name": "client", "label": "Opened (by client)" },
               { "name": "thirdparty", "label": "Opened (by third party)" }
@@ -358,14 +353,9 @@
       "title": "Finalised cases",
       "fields": [
         {
-          "name": "finalised_intro",
-          "type": "info",
-          "label": "How many cases did your organisation finalise during this reporting period and what were the demographic details (gender, age and race) of the clients in those cases?"
-        },
-        {
           "name": "finalised_guidance",
           "type": "info",
-          "label": "",
+         "label": "How many cases did your organisation finalise during this reporting period and what were the demographic details (gender, age and race) of the clients in those cases?",
           "notice": "<strong>How should I answer this question?</strong> Please provide a count of all finalised cases broken down by the different categories and case types listed. Please separate your cases into those that were referred, and those that were closed in any other manner."
         },
         {
@@ -511,14 +501,9 @@
       "title": "Community gardens owned or managed",
       "fields": [
         {
-          "name": "community_gardens_intro",
-          "type": "info",
-          "label": "How many community food gardens does your organisation own or manage?"
-        },
-        {
           "name": "community_gardens_guidance",
           "type": "info",
-          "label": "",
+          "label": "How many community food gardens does your organisation own or manage?",
           "notice": "<b>How should I answer this question?</b> The list of gardens that were present in your previous narrative report have been added below. Please check and update the list to ensure all gardens are accounted for and all data is up-to-date and accurate."
         },
         {
@@ -607,14 +592,9 @@
       "title": "Community garden beneficiaries",
       "fields": [
         {
-          "name": "beneficiaries_intro",
-          "type": "info",
-          "label": "How many organisations and individuals benefit from your community gardening?"
-        },
-        {
           "name": "beneficiaries_guidance",
           "type": "info",
-          "label": "",
+          "label": "How many organisations and individuals benefit from your community gardening?",
           "notice": "<b>How should I answer this question?</b> Where possible, the beneficiaries and values that were present in your previous narrative report have been added below. Please check and update the list to ensure all employees and beneficiaries are accounted for and all related data is up-to-date and accurate."
         },
         {
@@ -686,14 +666,9 @@
       "tag": "Food gardening",
       "fields": [
         {
-          "name": "yields_intro",
-          "type": "info",
-          "label": "During this reporting period (1 April, 2025 - 31 July 2025), what food items did you plant and/or harvest in your community gardens?"
-        },
-        {
           "name": "yields_guidance",
           "type": "info",
-          "label": "",
+          "label": "During this reporting period (1 April, 2025 - 31 July 2025), what food items did you plant and/or harvest in your community gardens?",
           "notice": "<b>How should I answer this question?</b> Where possible, we have populated each farm with the items that were planted or harvest in the last reporting period. Please add or remove items from this list until it reflects accurately. If an item was planted in the last reporting period, please do not include that planted amount in your totals. However, please include any harvested amount in your harvested total."
         },
         {
@@ -733,14 +708,9 @@
       "title": "Challenges",
       "fields": [
         {
-          "name": "challenges_intro",
-          "type": "info",
-          "label": "During the last reporting period, across all your activities, operations and in the communities you work in, what existing or new challenges have been preventing growth, prosperity or impact?"
-        },
-        {
           "name": "challenges_guidance",
           "type": "info",
-          "label": "",
+          "label": "During the last reporting period, across all your activities, operations and in the communities you work in, what existing or new challenges have been preventing growth, prosperity or impact?",
           "notice": "<strong>How should I answer this question?</strong> We have added the past challenges from your previous narrative reports below. Please provide updates on past challenges or add new challenges that arose during this reporting period."
         },
         {
@@ -953,14 +923,9 @@
       "title": "Successes",
       "fields": [
         {
-          "name": "successes_intro",
-          "type": "info",
-          "label": "During the last reporting period (1 April, 2025 - 31 July, 2025), across all your activities, operations and in the communities you work in, what successes did you have that helped your organisation or you community achieve growth, prosperity or impact?"
-        },
-        {
           "name": "successes_guidance",
           "type": "info",
-          "label": "",
+          "label": "During the last reporting period (1 April, 2025 - 31 July, 2025), across all your activities, operations and in the communities you work in, what successes did you have that helped your organisation or you community achieve growth, prosperity or impact?",
           "notice": "<strong>How should I answer this question?</strong> Please add any successes to the list below and describe them in no more than 50 words. If you have a noteworthy success that your organisation is particularly proud of, please rather add it to the \"High impact case studies\" section, as we would love to know more about these noteworthy successes."
         },
         {
@@ -1055,10 +1020,6 @@
               "type": "fileUpload",
               "label": "Do you have images relating to this success?",
               "required": false,
-              "show_if": {
-                "field": "scat_assisted",
-                "value": "yes"
-              },
               "config": {
                 "accept": "image/*",
                 "multiple": true
@@ -1072,14 +1033,9 @@
       "title": "Partnerships and collaborations",
       "fields": [
         {
-          "name": "partnerships_intro",
-          "type": "info",
-          "label": "During this reporting period, did you have any new partnerships or collaborations that helped your organisation or your community with growth, prosperity or impact?"
-        },
-        {
           "name": "partnerships_guidance",
           "type": "info",
-          "label": "",
+          "label": "During this reporting period, did you have any new partnerships or collaborations that helped your organisation or your community with growth, prosperity or impact?",
           "notice": "<strong>How should I answer this question?</strong> We have added all partnerships and successes from previous narrative reports below. Please check that the nature of these relationships is still correct, or add new partnerships."
         },
         {
@@ -1276,12 +1232,11 @@
     },
     {
       "title": "SCAT requested case studies (stories)",
-      "description": "Being able to tell stories (case studies) of highly impactful work being done by the organisations that receive funding and support from SCAT is what enables us to secure new funding and opportunities for the organisations we work with. If you have any stories that align with those SCAT is looking to be able to present to funders, please tell us about them!",
       "fields": [
         {
           "name": "case_studies_guidance",
           "type": "info",
-          "label": "",
+          "label": "Being able to tell stories (case studies) of highly impactful work being done by the organisations that receive funding and support from SCAT is what enables us to secure new funding and opportunities for the organisations we work with. If you have any stories that align with those SCAT is looking to be able to present to funders, please tell us about them!",
           "notice": "<strong>How should I answer this question?</strong> Please examine all the areas that SCAT is requesting case studies for. If a story you have matches that area, please provide it there. If you have a story that does not fit in any of those areas, please add it to the \"General case studies\" section."
         },
         {

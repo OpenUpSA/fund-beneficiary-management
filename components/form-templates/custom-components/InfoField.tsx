@@ -12,7 +12,7 @@ export function InfoField({ field }: InfoFieldProps) {
 
   return (
     <>
-    {field.label && <label className="block text-sm font-medium text-slate-900 dark:text-gray-300">
+    {field.label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
       {field.label}
     </label>}
     {content && <div className="p-3 bg-slate-100 text-slate-500 rounded-md mt-2">
