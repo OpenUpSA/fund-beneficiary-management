@@ -489,8 +489,8 @@
         {
           "name": "household_gardens_count",
           "type": "text",
-          "label": "New household food gardens you helped establish",
-          "description": "During this reporting period (April 1, 2025 - July 31, 2025), how many new household food gardens (you must be able to verify that this garden exists) did you support in establishing through direct labour, seeds, equipment or other resources, or training/advice?",
+          "label": "New household food gardens you helped establish or support",
+          "description": "During this reporting period ([period start]-[period end]), how many new household food gardens (you must be able to verify that this garden exists) did you help establish or give support to through direct labour, seeds, equipment or other resources, or training/advice?",
           "required": true,
           "placeholder": "Enter value"
         }
