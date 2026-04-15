@@ -50,15 +50,15 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
     if (name && date) {
       try {
         const formattedDate = format(new Date(date), 'd MMM yyyy')
-        return `${name} (${formattedDate})`
+        return <><span className="font-semibold">{name}</span> ({formattedDate})</>
       } catch {
-        return name || `${defaultLabel} ${groupIndex}`
+        return <span className="font-semibold">{name || `${defaultLabel} ${groupIndex}`}</span>
       }
     }
     
-    if (name) return name
+    if (name) return <span className="font-semibold">{name}</span>
     
-    return `${defaultLabel} ${groupIndex}`
+    return <span className="font-semibold">{`${defaultLabel} ${groupIndex}`}</span>
   }
 
   // Check if a group is complete (all required fields have values)
@@ -177,9 +177,9 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
               value={groupIndex}
               className="border rounded-lg border-slate-200 bg-white overflow-hidden"
             >
-              <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
+              <AccordionTrigger className="px-4 py-5 hover:bg-slate-50 hover:no-underline transition-colors">
                 <div className="flex items-center justify-between flex-1 mr-3">
-                  <span className="text-sm font-medium text-slate-900">{title}</span>
+                  <span className="text-sm text-slate-900">{title}</span>
                   {isComplete ? (
                     <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">
                       Complete

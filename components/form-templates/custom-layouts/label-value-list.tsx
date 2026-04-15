@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Field } from "@/types/forms"
 import { Input } from "@/components/ui/input"
 import { CircleSmall } from "lucide-react"
@@ -17,27 +18,48 @@ export function LabelValueListLayout({
   onValueChange 
 }: LabelValueListLayoutProps) {
   
-  if (!inputField.show) return null
-
-  const fields = inputField.fields || []
+  const fields = useMemo(() => inputField.fields || [], [inputField.fields])
   const showTotal = inputField.config?.showTotal as boolean
   const totalLabel = (inputField.config?.totalLabel as string) || "Total"
 
-  const calculateTotal = (): number => {
-    return fields.reduce((sum, field) => {
-      const value = parseFloat(field.value || "0")
+  // Use local state to track field values for controlled inputs
+  const [localValues, setLocalValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    fields.forEach(field => {
+      initial[field.name] = field.value || ""
+    })
+    return initial
+  })
+
+  // Sync local values when fields change from props (e.g., on reload)
+  useEffect(() => {
+    const newValues: Record<string, string> = {}
+    fields.forEach(field => {
+      newValues[field.name] = field.value || ""
+    })
+    setLocalValues(newValues)
+  }, [fields])
+
+  const calculateTotal = useCallback((): number => {
+    return Object.values(localValues).reduce((sum, val) => {
+      const value = parseFloat(val || "0")
       return sum + (isNaN(value) ? 0 : value)
     }, 0)
-  }
+  }, [localValues])
 
   const handleFieldChange = (field: Field, value: string) => {
+    // Update local state immediately for responsive UI
+    setLocalValues(prev => ({ ...prev, [field.name]: value }))
+    // Propagate to parent
     if (onValueChange) {
       onValueChange(field, value)
     }
   }
+  
+  if (!inputField.show) return null
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-4 px-4 pb-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold leading-5 text-[#0F172A]">{inputField.label}</h3>
         <div className="flex items-center">
@@ -66,7 +88,7 @@ export function LabelValueListLayout({
             <div className="w-40">
               <Input
                 type={field.type === "number" ? "number" : "text"}
-                value={field.value || ""}
+                value={localValues[field.name] ?? ""}
                 placeholder={field.placeholder || "Value"}
                 disabled={!isEditing}
                 min={field.min}

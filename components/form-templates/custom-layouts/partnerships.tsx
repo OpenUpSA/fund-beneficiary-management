@@ -298,7 +298,7 @@ export function PartnershipsLayout({ inputField, isEditing, onValueChange, lda_i
       {existingPartnerships.length > 0 && (
         <div className="space-y-4">
           <div>
-            <h4 className="text-md font-semibold text-slate-900">Ongoing list of partnerships or collaborations</h4>
+            <h4 className="text-lg font-semibold text-slate-900">Ongoing list of <span className="font-semibold">partnerships or collaborations</span></h4>
             <p className="text-sm text-slate-500 mt-1">
               Please check and confirm that the description of your partnerships or collaborations with these organisations or individuals is still correct, or if you are no longer partnered with them, remove them from the list and tell us why.
             </p>
@@ -322,7 +322,7 @@ export function PartnershipsLayout({ inputField, isEditing, onValueChange, lda_i
       <div className="space-y-4">
         {(existingPartnerships.length > 0 || newPartnerships.length > 0) && (
           <div>
-            <h4 className="text-md font-semibold text-slate-900">New partnerships or collaborations</h4>
+            <h4 className="text-lg font-semibold text-slate-900">New partnerships or collaborations</h4>
             <p className="text-sm text-slate-500 mt-1">
               Add any new partnerships or collaborations that started during this reporting period.
             </p>

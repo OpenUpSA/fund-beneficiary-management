@@ -24,7 +24,7 @@ export function ToggleLayout({ inputField, isEditing, onValueChange }: ToggleLay
         />
         <label 
           htmlFor={inputField.name} 
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+          className="text-sm font-medium text-slate-900 dark:text-gray-300 cursor-pointer"
         >
           {inputField.label}
         </label>

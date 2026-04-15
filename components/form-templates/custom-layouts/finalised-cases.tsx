@@ -240,6 +240,11 @@ export function FinalisedCasesLayout({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories, demographics, categoriesWithCases, fieldValues, skippedDemographics, inputField.fields])
 
+  // Calculate grand total across all categories
+  const grandTotal = useMemo(() => {
+    return Object.values(caseTotals).reduce((sum, cat) => sum + cat.total, 0)
+  }, [caseTotals])
+
   // Track previous status to avoid unnecessary saves
   const prevStatusRef = useRef<boolean | null>(null)
 
@@ -288,20 +293,23 @@ export function FinalisedCasesLayout({
   if (inputField.show === false) return <></>
 
   return (
-    <div className="space-y-2 p-4">
+    <div className="space-y-2 p-4 pt-0">
       {/* SECTION 1: Cases Finalised */}
       <div className="space-y-2">
-        <h3 className="text-lg text-slate-900">
-          <span className="font-semibold">{casesLabel}</span> during this reporting period
+        <h3 className="text-lg text-slate-900 flex items-center gap-3 pb-4">
+          <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
+            {grandTotal}
+          </span>
+          <span><span className="font-semibold">{casesLabel}</span> during this reporting period</span>
         </h3>
 
         {casesNotice && (
-          <div className="bg-slate-100 p-3 rounded w-full text-slate-500">
+          <div className="bg-slate-100 p-3 rounded w-full text-slate-500 my-2">
             <strong>Please note!</strong> {casesNotice}
           </div>
         )}
 
-        <Accordion type="single" collapsible className="space-y-2">
+        <Accordion type="single" collapsible className="space-y-2 pt-4">
           {categories.map((category) => {
             const totals = caseTotals[category.name]
             const isComplete = isCategoryComplete(category)
@@ -315,7 +323,7 @@ export function FinalisedCasesLayout({
                 <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
                   <div className="flex items-center justify-between flex-1 mr-3">
                     <div className="flex items-center gap-3">
-                      <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                      <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                         {totals?.total || 0}
                       </span>
                       <span className="font-semibold text-slate-900">{category.label}</span>
@@ -335,7 +343,7 @@ export function FinalisedCasesLayout({
                 <AccordionContent className="border-t border-slate-200 p-4 pb-4">
                   {/* Dynamic Column Headers */}
                   <div 
-                    className="grid gap-4 mb-3 text-sm text-slate-500"
+                    className="grid gap-3 mb-3 text-sm text-slate-500"
                     style={{ gridTemplateColumns: `minmax(150px, 1fr) repeat(${casesColumns.length}, minmax(80px, 1fr)) 32px` }}
                   >
                     <div>Case type</div>
@@ -404,17 +412,17 @@ export function FinalisedCasesLayout({
 
       {/* DEMOGRAPHICS SECTIONS */}
       {demographics.map((demographic) => (
-        <div key={demographic.name} className="space-y-2">
+        <div key={demographic.name} className="space-y-2 pt-4">
           <h3 className="text-lg text-slate-900">
-            <span className="font-semibold">{demographic.label}</span> who’s cases were finalised during this reporting period
+            <span className="font-semibold">{demographic.label}</span> who’s cases were <span className="underline">finalised</span> during this reporting period
           </h3>
 
           {categoriesWithCases.length === 0 ? (
-            <div className="text-sm text-slate-500 italic">
-              No categories with finalised cases to show demographics for.
+            <div className="text-sm text-slate-500 p-3 bg-slate-50 rounded-md">
+              <span className="font-semibold">No finalised cases added.</span> Input finalised case numbers above before adding demographic data.
             </div>
           ) : (
-            <Accordion type="single" collapsible className="space-y-2">
+            <Accordion type="single" collapsible className="space-y-2 pt-2">
               {categoriesWithCases.map((category) => {
                 const totals = getDemographicTotals(demographic.name, category.name)
                 const skipActive = isSkipped(demographic.name, category.name)
@@ -430,7 +438,7 @@ export function FinalisedCasesLayout({
                     <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
                       <div className="flex items-center justify-between flex-1 mr-3">
                         <div className="flex items-center gap-3">
-                          <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                          <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                             {totals.grandTotal}
                           </span>
                           <span className="font-semibold text-slate-900">{category.label}</span>
@@ -546,7 +554,7 @@ export function FinalisedCasesLayout({
 
                           {/* Validation Warning */}
                           {totals.grandTotal > (caseTotals[category.name]?.total || 0) && (
-                            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+                            <div className="mt-3 p-1 rounded-lg text-sm text-white bg-red-500">
                               Client numbers entered exceed total number of cases.
                             </div>
                           )}

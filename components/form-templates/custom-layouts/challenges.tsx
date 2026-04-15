@@ -297,7 +297,7 @@ export function ChallengesLayout({ inputField, isEditing, onValueChange, lda_id,
       {existingChallenges.length > 0 && (
         <div className="space-y-4">
           <div>
-            <h4 className="text-md font-semibold text-slate-900">Ongoing challenges</h4>
+            <h4 className="text-lg font-semibold text-slate-900">Ongoing challenges</h4>
             <p className="text-sm text-slate-500 mt-1">
               Please let us know if the challenges added in previous narrative reports are still an issue during this reporting period. 
               If they are no longer issues, please let us know how they were resolved or overcome.
@@ -322,7 +322,7 @@ export function ChallengesLayout({ inputField, isEditing, onValueChange, lda_id,
       <div className="space-y-4">
         {(existingChallenges.length > 0 || newChallenges.length > 0) && (
           <div>
-            <h4 className="text-md font-semibold text-slate-900">New challenges</h4>
+            <h4 className="text-lg font-semibold text-slate-900">New challenges</h4>
             <p className="text-sm text-slate-500 mt-1">
               Add any new challenges that arose during this reporting period.
             </p>

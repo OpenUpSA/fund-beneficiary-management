@@ -452,7 +452,7 @@ export function GardenBeneficiariesLayout({
   }
 
   return (
-    <div className="space-y-2 p-4">
+    <div className="space-y-2 p-4 pt-0">
       {/* SECTION 1: Employees paid by SCAT funds */}
       <div className="space-y-2">
         <div className="flex items-center">
@@ -480,7 +480,7 @@ export function GardenBeneficiariesLayout({
               <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
                 <div className="flex items-center justify-between flex-1 mr-3">
                   <div className="flex items-center gap-3">
-                    <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                    <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                       {Object.values(employeesTotals).reduce((a, b) => a + b, 0)}
                     </span>
                     <span className="font-semibold text-slate-900">{employeesLabel}</span>
@@ -638,7 +638,7 @@ export function GardenBeneficiariesLayout({
                           style={{ gridTemplateColumns: `minmax(200px, 2fr) repeat(${demo.columns.length}, minmax(80px, 1fr)) 32px` }}
                         >
                           <div className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                            <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                            <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                               {rowTotal}
                             </span>
                             {garden.name}
@@ -714,7 +714,7 @@ export function GardenBeneficiariesLayout({
                 <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
                   <div className="flex items-center justify-between flex-1 mr-3">
                     <div className="flex items-center gap-3">
-                      <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                      <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                         {beneficiaryCount}
                       </span>
                       <span className="font-semibold text-slate-900">{garden.name}</span>

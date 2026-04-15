@@ -657,7 +657,7 @@ export function GardenYieldsLayout({
         </DialogContent>
       </Dialog>
 
-      <div className="p-4 pt-2">
+      <div className="p-4 pt-0">
         <h3 className="text-lg pb-4 text-slate-900"><span className="font-semibold">Items planted or harvested</span> for each community garden</h3>
         
         <Accordion type="single" collapsible className="space-y-2">
@@ -674,7 +674,7 @@ export function GardenYieldsLayout({
                 <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
                   <div className="flex items-center justify-between flex-1 mr-3">
                     <div className="flex items-center gap-3">
-                      <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                      <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                         {itemCount}
                       </span>
                       <span className="font-semibold text-slate-900">{garden.name}</span>

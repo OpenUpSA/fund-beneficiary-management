@@ -15,7 +15,7 @@ export function InfoField({ field }: InfoFieldProps) {
     {field.label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
       {field.label}
     </label>}
-    {content && <div className="p-3 bg-slate-100 text-slate-500 rounded-md">
+    {content && <div className="p-3 bg-slate-100 text-slate-500 rounded-md mt-2">
       <p 
         className="text-sm text-slate-500 m-0 leading-relaxed [&>strong]:font-bold [&>a]:text-slate-500 [&>a]:underline"
         dangerouslySetInnerHTML={{ __html: content }}

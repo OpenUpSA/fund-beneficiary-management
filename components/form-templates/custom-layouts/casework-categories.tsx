@@ -52,7 +52,7 @@ export function CaseworkCategoriesLayout({
     { name: 'client', label: 'Opened (by client)' },
     { name: 'thirdparty', label: 'Opened (by third party)' }
   ]
-  const headerLabel = (inputField.config?.headerLabel as string) || 'New cases opened during this reporting period'
+  const headerLabel = (inputField.config?.headerLabel as string) || 'New cases opened'
   const statusFieldName = (inputField.config?.statusField as string) || null
 
   // Generate field key for a specific case type input
@@ -128,6 +128,11 @@ export function CaseworkCategoriesLayout({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories, fieldValues, inputField.fields, columns, inputField.name])
 
+  // Calculate grand total across all categories
+  const grandTotal = useMemo(() => {
+    return Object.values(categoryTotals).reduce((sum, cat) => sum + cat.total, 0)
+  }, [categoryTotals])
+
   // Track previous status to avoid unnecessary saves
   const prevStatusRef = useRef<boolean | null>(null)
 
@@ -164,10 +169,13 @@ export function CaseworkCategoriesLayout({
   if (inputField.show === false) return <></>
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 pt-0">
       {/* Grand Total Header */}
-      <h3 className="text-lg text-slate-900">
-        <span className="font-semibold">{headerLabel}</span>
+      <h3 className="text-lg text-slate-900 flex items-center gap-3">
+        <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
+          {grandTotal}
+        </span>
+        <span><span className="font-semibold">{headerLabel}</span> during this reporting period</span>
       </h3>
 
       {/* Categories */}
@@ -185,7 +193,7 @@ export function CaseworkCategoriesLayout({
               <AccordionTrigger className="px-4 py-4 hover:bg-slate-50 hover:no-underline transition-colors">
                 <div className="flex items-center justify-between flex-1 mr-3">
                   <div className="flex items-center gap-3">
-                    <span className="bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold">
+                    <span className="bg-slate-900 text-white min-w-6 h-5 px-1 rounded-full flex items-center justify-center text-xs font-semibold">
                       {totals?.total || 0}
                     </span>
                     <span className="font-semibold text-slate-900">{category.label}</span>

@@ -63,7 +63,7 @@ export default function FormAccordionItem({
     return value.trim() !== "";
   }
 
-  const createFieldFromTemplate = (field: Field, index: number) => {
+  const createFieldFromTemplate = useCallback((field: Field, index: number) => {
     const fields = [...(field?.template || [])];
     return fields.map((templateField: Field) => {
       let show_if;
@@ -72,14 +72,37 @@ export default function FormAccordionItem({
         show_if.field = `${field.name}_${templateField.show_if.field}_${index+1}`;
       }
 
+      const newFieldName = `${field.name}_${templateField.name}_${index+1}`;
+      
+      // Also transform nested subfields if they exist
+      let transformedSubfields;
+      if (templateField.fields && templateField.fields.length > 0) {
+        transformedSubfields = templateField.fields.map((subfield: Field) => {
+          // Check if subfield name is already transformed (starts with parent name)
+          const alreadyTransformed = subfield.name.startsWith(newFieldName + '_');
+          const subfieldName = alreadyTransformed ? subfield.name : `${newFieldName}_${subfield.name}`;
+          // Populate value from defaultValues if available
+          const subfieldValue = defaultValues && subfieldName in defaultValues 
+            ? String(defaultValues[subfieldName]) 
+            : undefined;
+          return {
+            ...subfield,
+            name: subfieldName,
+            groupIndex: index + 1,
+            ...(subfieldValue !== undefined && { value: subfieldValue, isValid: true })
+          };
+        });
+      }
+
       return {
         ...templateField,
-        name: `${field.name}_${templateField.name}_${index+1}`,
+        name: newFieldName,
         groupIndex: index + 1,
-        show_if
+        show_if,
+        ...(transformedSubfields && { fields: transformedSubfields })
       };
     });
-  };
+  }, [defaultValues]);
 
   // Prepare fields with default values
   const fieldsWithDefaults = useMemo(() => {
@@ -194,38 +217,59 @@ export default function FormAccordionItem({
         return fieldObj;
       }
 
-      // Process subfields if they exist
+      // Process subfields if they exist - recursively handle nested fields
       if (field.fields) {
         const isRepeatableLayout = field.layout === "repeatable" || field.layout === "narrative-repeatable" || field.layout === "challenges" || field.layout === "partnerships";
-        const subFields = field.fields.map((subfield) => {
-          // Repeatable fields already have full prefixed names from createFieldFromTemplate
-          const subfieldName = isRepeatableLayout ? subfield.name : field.name + '_' + subfield.name;
-          let show_subfield = subfield.show !== false;
-          if (subfield.show_if !== undefined) {
-            const { field: conditionField, value: conditionValue, show_by_default } = subfield.show_if;
-            const hasValue = defaultValues && (conditionField in defaultValues);
-            if (hasValue) {
-              show_subfield = String(defaultValues![conditionField]) === conditionValue;
-            } else {
-              show_subfield = show_by_default === true;
+        
+        // Recursive function to process fields at any depth
+        const processFieldsRecursively = (fields: Field[], parentName: string, isRepeatable: boolean): Field[] => {
+          return fields.map((subfield) => {
+            // Repeatable fields already have full prefixed names from createFieldFromTemplate
+            // Also check if subfield.name already starts with parentName (already transformed)
+            const alreadyTransformed = subfield.name.startsWith(parentName + '_');
+            const subfieldName = (isRepeatable || alreadyTransformed) ? subfield.name : parentName + '_' + subfield.name;
+            let show_subfield = subfield.show !== false;
+            if (subfield.show_if !== undefined) {
+              const { field: conditionField, value: conditionValue, show_by_default } = subfield.show_if;
+              const hasValue = defaultValues && (conditionField in defaultValues);
+              if (hasValue) {
+                show_subfield = String(defaultValues![conditionField]) === conditionValue;
+              } else {
+                show_subfield = show_by_default === true;
+              }
             }
-          }
-          let subFieldObj = {
-            ...subfield,
-            name: subfieldName,
-            show: show_subfield,
-            isValid: subfield.required && show_subfield ? false : true
-          };
+            let subFieldObj: Field = {
+              ...subfield,
+              name: subfieldName,
+              show: show_subfield,
+              isValid: subfield.required && show_subfield ? false : true
+            };
 
-          if (defaultValues && subfieldName in defaultValues) {
-            const value = String(defaultValues[subfieldName]);
-            // A field is valid if it has a value (for required fields) or is optional
-            const isValid = subfield.required ? isValueValid(value, subfield) : true;
-            subFieldObj = { ...subFieldObj, value, isValid };
-          }
-          return subFieldObj;
-        });
-
+            if (defaultValues && subfieldName in defaultValues) {
+              const value = String(defaultValues[subfieldName]);
+              // A field is valid if it has a value (for required fields) or is optional
+              const isValid = subfield.required ? isValueValid(value, subfield) : true;
+              subFieldObj = { ...subFieldObj, value, isValid };
+            }
+            
+            // Recursively process nested fields if they exist
+            if (subfield.fields && subfield.fields.length > 0) {
+              const nestedFields = processFieldsRecursively(subfield.fields, subfieldName, false);
+              const requiredNestedFields = nestedFields.filter(nf => nf.required);
+              const allNestedValid = requiredNestedFields.length > 0 ? 
+                requiredNestedFields.every(nf => nf.isValid) : true;
+              subFieldObj = { 
+                ...subFieldObj, 
+                fields: nestedFields,
+                isValid: subfield.required ? allNestedValid : true
+              };
+            }
+            
+            return subFieldObj;
+          });
+        };
+        
+        const subFields = processFieldsRecursively(field.fields, field.name, isRepeatableLayout);
         // For a field with subfields, check if all required subfields are valid
         const requiredSubfields = subFields.filter(sf => sf.required);
         const allRequiredSubfieldsValid = requiredSubfields.length > 0 ? 
@@ -240,7 +284,7 @@ export default function FormAccordionItem({
       }
       return fieldObj;
     }) as Field[];
-  }, [sectionData.fields, defaultValues]);
+  }, [sectionData.fields, defaultValues, createFieldFromTemplate]);
 
   const flattenVisibleRepeatableFields = (fields: Field[]): Field[] =>
     fields.flatMap(field => {
@@ -620,7 +664,7 @@ export default function FormAccordionItem({
     if (debouncedSaveRef.current && formId) {
       debouncedSaveRef.current(field.name, value);
     }
-  }, [calculateCompletionStatus, formId, isSectionEditable, formValuesStore])
+  }, [calculateCompletionStatus, formId, isSectionEditable, formValuesStore, createFieldFromTemplate])
 
   // Don't render section if not visible to current user
   if (!isSectionVisible) return null;

@@ -33,7 +33,7 @@ function FieldHeader({label, required = false, isValid}: {label: string, require
 
   return (
     <div className="flex items-center justify-between w-full px-4">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label className="block text-sm font-medium text-slate-900 dark:text-gray-300">
         {label}
       </label>
       <div className="flex items-center">
@@ -53,7 +53,7 @@ function FieldHeader({label, required = false, isValid}: {label: string, require
 function FieldDescription({description}: {description: string}) {
 
   return (
-    <div className="flex items-center justify-between w-full px-4 mt-2 pt-1">
+    <div className="flex items-center justify-between w-full px-4 mt-2">
       <label className="block text-sm font-medium text-slate-500">
         {description}
       </label>
@@ -125,6 +125,7 @@ import { GardenYieldsLayout } from "./custom-layouts/garden-yields"
 import { ChallengesLayout } from "./custom-layouts/challenges"
 import { PartnershipsLayout } from "./custom-layouts/partnerships"
 import { FinanceTotalsLayout } from "./custom-layouts/finance-totals"
+import { HeadingLayout } from "./custom-layouts/heading"
 
 function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_form_id }: { inputField: Field; isEditing: boolean; onValueChange?: (field: Field, value: string) => void; lda_id?: number; lda_form_id?: number | string }) {
   switch (inputField.layout) {
@@ -156,13 +157,15 @@ function FormLayout({ inputField, isEditing = false, onValueChange, lda_id, lda_
       return <PartnershipsLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id} />
     case "finance-totals":
       return <FinanceTotalsLayout inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} />
+    case "heading":
+      return <HeadingLayout inputField={inputField} />
     default:
       return (
       <>
         {inputField.show && <>
         {inputField.type !== "info" && <FieldHeader label={inputField.label} required={inputField.required} isValid={inputField.isValid} />}
         {inputField.description && <FieldDescription description={inputField.description} />}
-        <div className="text-sm mt-1 p-2 text-slate-700">
+        <div className="text-sm mt-1 p-2 pb-4 text-slate-700">
           {inputField.type !== "group" && inputField.show && <FieldRender inputField={inputField} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>}
           {inputField.fields && inputField.fields.length > 0 && inputField.show && (
             <div className="flex flex-wrap -mr-2">
