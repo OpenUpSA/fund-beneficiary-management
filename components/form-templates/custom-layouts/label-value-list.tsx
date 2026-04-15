@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Field } from "@/types/forms"
 import { Input } from "@/components/ui/input"
 import { CircleSmall } from "lucide-react"
@@ -18,7 +18,7 @@ export function LabelValueListLayout({
   onValueChange 
 }: LabelValueListLayoutProps) {
   
-  const fields = inputField.fields || []
+  const fields = useMemo(() => inputField.fields || [], [inputField.fields])
   const showTotal = inputField.config?.showTotal as boolean
   const totalLabel = (inputField.config?.totalLabel as string) || "Total"
 
@@ -59,7 +59,7 @@ export function LabelValueListLayout({
   if (!inputField.show) return null
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-4 px-4 pb-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold leading-5 text-[#0F172A]">{inputField.label}</h3>
         <div className="flex items-center">

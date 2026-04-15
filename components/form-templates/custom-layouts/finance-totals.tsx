@@ -83,7 +83,7 @@ export function FinanceTotalsLayout({ inputField, isEditing, onValueChange }: Fi
       {/* Total Income */}
       <div className="px-4">
         <div className="flex items-center justify-between w-full mb-1">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-slate-900">
             {incomeField?.label || "Total income"}
           </label>
           <div className="flex items-center">
@@ -110,7 +110,7 @@ export function FinanceTotalsLayout({ inputField, isEditing, onValueChange }: Fi
       {/* Total Expenditure */}
       <div className="px-4">
         <div className="flex items-center justify-between w-full mb-1">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-slate-900">
             {expenditureField?.label || "Total expenditure for this period"}
           </label>
           <div className="flex items-center">

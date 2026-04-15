@@ -5,15 +5,9 @@
       "title": "Activities held",
       "fields": [
         {
-          "name": "activities_intro",
-          "type": "info",
-          "label": "Activities held",
-          "notice": "What activities has your organisation organised or assisted with that have furthered it's goals or objectives during this reporting period? These events should have had a measurable impact on your organisation or the community members you work with."
-        },
-        {
           "name": "activities_guidance",
           "type": "info",
-          "label": "How should I answer this question?",
+          "label": "What activities has your organisation organised or assisted with that have furthered it's goals or objectives during this reporting period? These events should have had a measurable impact on your organisation or the community members you work with.",
           "notice": "<strong>How should I answer this question?</strong> Please list all the various activities your organisation has undertaken for this reporting period. These can include workshops, training, marches, community meetings, door-to-door campaigns, awareness campaigns, fundraising events etc. If you feel the event you ran does not fit within the groupings provided, please select \"Other\"."
         },
         {
@@ -112,6 +106,12 @@
               ]
             },
             {
+              "name": "attendance_heading",
+              "type": "info",
+              "layout": "heading",
+              "label": "Attendance"
+            },
+            {
               "name": "did_not_take_attendance",
               "type": "toggle",
               "layout": "toggle",
@@ -180,6 +180,7 @@
               "type": "group",
               "layout": "label-value-list",
               "label": "Demographics of attendees",
+              "description": "Tell us about the attendees that were at the event",
               "required": true,
               "show_if": {
                 "field": "did_not_take_attendance",
@@ -232,6 +233,17 @@
                 "value": "true"
               },
               "required": true
+            },
+            {
+              "name": "upload_photos_from_activities",
+              "type": "fileUpload",
+              "label": "Upload photos from this activity",
+              "required": false,
+              "multiple": true,
+              "config": {
+                "destination": "media",
+                "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+              }
             }
           ]
         }

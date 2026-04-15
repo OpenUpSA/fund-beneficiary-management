@@ -63,7 +63,7 @@ export default function FormAccordionItem({
     return value.trim() !== "";
   }
 
-  const createFieldFromTemplate = (field: Field, index: number) => {
+  const createFieldFromTemplate = useCallback((field: Field, index: number) => {
     const fields = [...(field?.template || [])];
     return fields.map((templateField: Field) => {
       let show_if;
@@ -102,7 +102,7 @@ export default function FormAccordionItem({
         ...(transformedSubfields && { fields: transformedSubfields })
       };
     });
-  };
+  }, [defaultValues]);
 
   // Prepare fields with default values
   const fieldsWithDefaults = useMemo(() => {
@@ -245,8 +245,6 @@ export default function FormAccordionItem({
               isValid: subfield.required && show_subfield ? false : true
             };
 
-            console.log(defaultValues);
-            console.log(subfieldName);
             if (defaultValues && subfieldName in defaultValues) {
               const value = String(defaultValues[subfieldName]);
               // A field is valid if it has a value (for required fields) or is optional
@@ -286,7 +284,7 @@ export default function FormAccordionItem({
       }
       return fieldObj;
     }) as Field[];
-  }, [sectionData.fields, defaultValues]);
+  }, [sectionData.fields, defaultValues, createFieldFromTemplate]);
 
   const flattenVisibleRepeatableFields = (fields: Field[]): Field[] =>
     fields.flatMap(field => {
@@ -666,7 +664,7 @@ export default function FormAccordionItem({
     if (debouncedSaveRef.current && formId) {
       debouncedSaveRef.current(field.name, value);
     }
-  }, [calculateCompletionStatus, formId, isSectionEditable, formValuesStore])
+  }, [calculateCompletionStatus, formId, isSectionEditable, formValuesStore, createFieldFromTemplate])
 
   // Don't render section if not visible to current user
   if (!isSectionVisible) return null;

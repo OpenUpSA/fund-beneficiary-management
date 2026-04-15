@@ -111,18 +111,20 @@ export function ActivitiesFundedList({ inputField, lda_id, lda_form_id }: Activi
             <div key={form.id} className="border rounded-md overflow-hidden">
               <button
                 type="button"
-                className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 text-left transition-colors"
+                className="w-full flex items-center justify-between p-3 py-4 text-left transition-colors"
                 onClick={() => setExpandedId(expandedId === form.id ? null : form.id)}
               >
                 <div className="flex-1">
-                  <span className="text-sm font-medium text-slate-700">
-                    {form.templateName} - {form.title}
+                  <span className="text-sm text-slate-900">
+                    <strong>{form.templateName?.includes('FRIS') ? 'FRIS Event' : form.templateName?.includes('DFT') ? 'DFT Event' : form.templateName}</strong> - {form.title}
+                    {form.activityDate && (
+                      <>
+                        {" "}
+                        ({format(new Date(form.activityDate), "d MMM, yyyy")})
+                      </>
+                    )}
                   </span>
-                  {form.activityDate && (
-                    <span className="text-xs text-slate-500 ml-2">
-                      ({format(new Date(form.activityDate), "d MMM, yyyy")})
-                    </span>
-                  )}
+                  
                 </div>
                 {expandedId === form.id ? (
                   <ChevronUp className="h-4 w-4 text-slate-400 flex-shrink-0" />

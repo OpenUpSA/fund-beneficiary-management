@@ -88,8 +88,6 @@ export async function GET(
       },
     })
 
-    console.log(forms);
-
     // Filter forms where formData.activity_date falls within the reporting period
     const filteredForms = forms.filter((form) => {
       const formData = form.formData as Record<string, unknown> | null
