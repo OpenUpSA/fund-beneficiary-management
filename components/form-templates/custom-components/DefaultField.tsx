@@ -17,7 +17,6 @@ export function DefaultField({ field, isEditing, onValueChange }: DefaultFieldPr
       disabled={!isEditing}
       value={field.value || ""}
       placeholder={field?.placeholder || ""}
-      className="text-red-500"
       onChange={(e) => onValueChange && onValueChange(field, e.target.value)}
     />
   )
