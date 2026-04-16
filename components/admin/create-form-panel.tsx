@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input"
 import { ArrowLeft, CalendarIcon, Check, ChevronsUpDown, FilePlus, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { cn } from "@/lib/utils"
@@ -42,7 +41,6 @@ interface SidebarConfig {
 }
 
 export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanelProps) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   
   // LDA selection state
@@ -110,12 +108,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
         const error = await response.json()
         throw new Error(error.error || 'Failed to create form')
       }
-
-      const result = await response.json()
       toast.success("Form created successfully")
-      
-      // Navigate to the new form
-      router.push(`/dashboard/ldas/${selectedLDA}/funding-reports/${result.id}`)
     } catch (error) {
       console.error('Error creating form:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to create form')
