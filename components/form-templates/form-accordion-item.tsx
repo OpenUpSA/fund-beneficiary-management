@@ -655,7 +655,9 @@ export default function FormAccordionItem({
     }
 
     // Save the field value to the API with debouncing
-    if (debouncedSaveRef.current && formId) {
+    // Skip for repeatable fields - they handle their own saving inside the repeatable block
+    const isRepeatableField = field.type === "repeatable" || field.layout === "partnerships" || field.layout === "narrative-repeatable";
+    if (debouncedSaveRef.current && formId && !isRepeatableField) {
       debouncedSaveRef.current(field.name, value);
     }
   }, [calculateCompletionStatus, formId, isSectionEditable, formValuesStore, createFieldFromTemplate])
