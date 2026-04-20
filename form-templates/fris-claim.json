@@ -301,7 +301,7 @@
           "name": "budget_notice",
           "type": "info",
           "label": "",
-          "notice": "<strong>Please use our budget template.</strong> To ensure you are reporting correctly, please use the template created by SCAT. <a href='/downloads/Fris_and_DFT_Budget_template_draft.xlsx' class='text-slate-500' download>Download budget (.xls)</a>."
+          "notice": "<strong>Please use our budget template.</strong> To ensure you are reporting correctly, please use the template created by SCAT. <a href='/downloads/Fris_and_DFT_Budget_template_draft.xlsx' class='text-slate-500' download>Download budget (.xlsx)</a>."
         },
         {
           "name": "budget_upload",
