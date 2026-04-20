@@ -491,6 +491,8 @@ export default function FormAccordionItem({
   const onChange = useCallback((field: Field, value: string) => {
     // If section is not editable by this user, don't allow changes
     if (!isSectionEditable) return;
+
+    console.log("onChange Called", {field, value})
     
     // Update local state
     setSection((prev) => {

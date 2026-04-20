@@ -92,7 +92,9 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
         } else if (typeof parsed === "number") {
           currentIndices = Array.from({ length: parsed }, (_, i) => i + 1)
         }
-      } catch {
+        console.log("currentIndices", currentIndices)
+      } catch (error) {
+        console.error("Error parsing inputField.value:", error, "value:", inputField.value)
         // Fall back to getting indices from grouped fields
         currentIndices = Object.keys(groupedFields || {}).map(k => parseInt(k))
       }
@@ -101,6 +103,8 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
       const maxIndex = currentIndices.length > 0 ? Math.max(...currentIndices) : 0
       const newIndex = maxIndex + 1
       
+      console.log("inputField", inputField)
+      console.log("newIndex", String(newIndex))
       // Signal to add a new item (form-accordion-item will handle the rest)
       onValueChange(inputField, String(newIndex))
       setOpenAccordion(String(newIndex))
