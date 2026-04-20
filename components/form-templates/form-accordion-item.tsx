@@ -164,12 +164,15 @@ export default function FormAccordionItem({
       }
 
       if (field.layout === "repeatable" || field.layout === "narrative-repeatable" || field.layout === "challenges" || field.layout === "partnerships") {
-        // Parse indices - must be array format [1,3,4]
+        // Parse indices - handle both array format [1,3,4] and old count format (number)
         let indices: number[] = [];
         try {
           const parsed = fieldObj.value ? JSON.parse(fieldObj.value) : [];
           if (Array.isArray(parsed)) {
             indices = parsed;
+          } else if (typeof parsed === "number") {
+            // Convert old count format to indices array [1, 2, 3, ...]
+            indices = parsed > 0 ? Array.from({ length: parsed }, (_, i) => i + 1) : [];
           }
         } catch {
           indices = []; // Default to empty
@@ -497,7 +500,7 @@ export default function FormAccordionItem({
       updatedSection.fields = updatedSection.fields.map((f: Field) => {
 
         // if field type repeatable or has repeatable layout, add or remove fields based on the value index
-        if ((f.type === "repeatable" || f.layout === "partnerships" || f.layout === "narrative-repeatable" || f.layout === "challenges") && f.name === field.name) {
+        if ((f.type === "repeatable" || f.layout === "partnerships") && f.name === field.name) {
           // Check if this is a delete specific index command (format: "delete:INDEX")
           if (value.startsWith("delete:")) {
             const deleteIndex = parseInt(value.split(":")[1]);
@@ -527,12 +530,15 @@ export default function FormAccordionItem({
               debouncedSaveRef.current(f.name, JSON.stringify(remainingIndices));
             }
           } else {
-            // Adding new item - parse current indices array
+            // Adding new item - parse current indices array or convert from old count format
             let currentIndices: number[] = [];
             try {
               const parsed = JSON.parse(f?.value || "[]");
               if (Array.isArray(parsed)) {
                 currentIndices = parsed;
+              } else if (typeof parsed === "number") {
+                // Convert old count format to indices array
+                currentIndices = Array.from({ length: parsed }, (_, i) => i + 1);
               }
             } catch {
               // Get indices from existing fields
