@@ -500,7 +500,7 @@ export default function FormAccordionItem({
       updatedSection.fields = updatedSection.fields.map((f: Field) => {
 
         // if field type repeatable or has repeatable layout, add or remove fields based on the value index
-        if ((f.type === "repeatable" || f.layout === "partnerships" || f.layout === "narrative-repeatable" || f.layout === "challenges") && f.name === field.name) {
+        if ((f.type === "repeatable" || f.layout === "partnerships") && f.name === field.name) {
           // Check if this is a delete specific index command (format: "delete:INDEX")
           if (value.startsWith("delete:")) {
             const deleteIndex = parseInt(value.split(":")[1]);
