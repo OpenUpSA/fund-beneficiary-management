@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const formData = (ldaForm.formData as Record<string, string>) || {}
 
-    // Parse the indices array for the source field
+    // Parse the indices array for the source field - must be array format [1,3,4]
     let indices: number[] = []
     try {
       const indicesValue = formData[sourceField]

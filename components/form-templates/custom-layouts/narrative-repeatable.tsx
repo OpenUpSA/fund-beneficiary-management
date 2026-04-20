@@ -89,8 +89,6 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
         const parsed = inputField.value ? JSON.parse(inputField.value) : []
         if (Array.isArray(parsed)) {
           currentIndices = parsed
-        } else if (typeof parsed === "number") {
-          currentIndices = Array.from({ length: parsed }, (_, i) => i + 1)
         }
       } catch {
         // Fall back to getting indices from grouped fields

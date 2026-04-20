@@ -164,15 +164,12 @@ export default function FormAccordionItem({
       }
 
       if (field.layout === "repeatable" || field.layout === "narrative-repeatable" || field.layout === "challenges" || field.layout === "partnerships") {
-        // Parse indices - handle both array format [1,3,4] and old count format (number)
+        // Parse indices - must be array format [1,3,4]
         let indices: number[] = [];
         try {
           const parsed = fieldObj.value ? JSON.parse(fieldObj.value) : [];
           if (Array.isArray(parsed)) {
             indices = parsed;
-          } else if (typeof parsed === "number") {
-            // Convert old count format to indices array [1, 2, 3, ...]
-            indices = parsed > 0 ? Array.from({ length: parsed }, (_, i) => i + 1) : [];
           }
         } catch {
           indices = []; // Default to empty
@@ -530,15 +527,12 @@ export default function FormAccordionItem({
               debouncedSaveRef.current(f.name, JSON.stringify(remainingIndices));
             }
           } else {
-            // Adding new item - parse current indices array or convert from old count format
+            // Adding new item - parse current indices array
             let currentIndices: number[] = [];
             try {
               const parsed = JSON.parse(f?.value || "[]");
               if (Array.isArray(parsed)) {
                 currentIndices = parsed;
-              } else if (typeof parsed === "number") {
-                // Convert old count format to indices array
-                currentIndices = Array.from({ length: parsed }, (_, i) => i + 1);
               }
             } catch {
               // Get indices from existing fields
