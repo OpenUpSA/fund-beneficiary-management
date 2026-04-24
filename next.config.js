@@ -7,6 +7,7 @@ const ldaUrlPath = process.env.NEXT_PUBLIC_LDA_URL_PATH || 'ldas'
 
 /** @type {import('next').NextConfig} */
 const config = {
+  output: 'standalone',
   logging: {
     fetches: {
       fullUrl: process.env.NODE_ENV !== 'production',
