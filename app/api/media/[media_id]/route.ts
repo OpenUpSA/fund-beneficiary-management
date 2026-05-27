@@ -111,7 +111,7 @@ export async function PUT(req: NextRequest, { params }: { params: { media_id: st
     const fileBase64 = fileBuffer.toString("base64")
     const fileName = file.name
 
-    const uploadResponse = await imagekit.upload({
+    const uploadResponse = await imagekit().upload({
       file: fileBase64,
       fileName: fileName,
     })
@@ -173,7 +173,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { media_id:
 
     if (media) {
 
-      const listResults = await imagekit.listFiles({
+      const listResults = await imagekit().listFiles({
         searchQuery: `name="${getFileNameFromPath(media.filePath)}"`,
       })
 
@@ -183,7 +183,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { media_id:
 
 
       if (matchingFile) {
-        await imagekit.deleteFile(matchingFile.fileId)
+        await imagekit().deleteFile(matchingFile.fileId)
       }
     }
 

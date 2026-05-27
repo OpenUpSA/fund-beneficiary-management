@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
     await Promise.all(documentFiles.map(async (file) => {
       try {
         const fileBase64 = Buffer.from(await file.arrayBuffer()).toString("base64")
-        const uploadResponse = await imagekit.upload({ file: fileBase64, fileName: file.name })
+        const uploadResponse = await imagekit().upload({ file: fileBase64, fileName: file.name })
         await prisma.document.create({
           data: {
             title: file.name,
@@ -247,7 +247,7 @@ export async function PUT(req: NextRequest) {
     await Promise.all(documentFiles.map(async (file) => {
       try {
         const fileBase64 = Buffer.from(await file.arrayBuffer()).toString("base64")
-        const uploadResponse = await imagekit.upload({ file: fileBase64, fileName: file.name })
+        const uploadResponse = await imagekit().upload({ file: fileBase64, fileName: file.name })
         await prisma.document.create({
           data: {
             title: file.name,

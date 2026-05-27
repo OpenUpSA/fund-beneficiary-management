@@ -17,7 +17,7 @@ const uploadFile = async (filename: string) => {
 
   if (!fileName) throw new Error('Invalid filename')
 
-  const uploadResponse = await imagekit.upload({
+  const uploadResponse = await imagekit().upload({
     file: fileBase64,
     fileName: fileName,
   })

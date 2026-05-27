@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
   const fileBase64 = fileBuffer.toString("base64")
   const fileName = file.name
 
-  const uploadResponse = await imagekit.upload({
+  const uploadResponse = await imagekit().upload({
     file: fileBase64,
     fileName: fileName,
   })
