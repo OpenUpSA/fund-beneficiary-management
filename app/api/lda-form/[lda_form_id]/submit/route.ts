@@ -3,6 +3,10 @@ import { getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import prisma from "@/db";
 import { permissions } from "@/lib/permissions";
+import {
+  validateFormSubmission,
+  type FormTemplateInput,
+} from "@/lib/form-validation/validate-submission";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_form_id: string }> }) {
   try {
@@ -16,10 +20,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
     const ldaFormId = parseInt(lda_form_id, 10);
     await req.json(); // Read request body but not using it
     
-    // First, get the form to check LDA access
+    // Fetch the form along with the template and saved formData so we
+    // can validate completeness server-side before marking as submitted.
     const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
-      select: { localDevelopmentAgencyId: true }
+      select: {
+        localDevelopmentAgencyId: true,
+        formData: true,
+        formTemplate: { select: { form: true } },
+      },
     });
 
     if (!existingForm) {
@@ -34,6 +43,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
     // Additional check: LDA user must have access to this specific LDA
     if (!permissions.canViewLDA(session.user, existingForm.localDevelopmentAgencyId)) {
       return NextResponse.json({ error: "Permission denied - no access to this LDA" }, { status: 403 });
+    }
+
+    // Server-side completeness check. This is the source of truth: even
+    // if the frontend believes the form is valid, the submission is
+    // blocked when any required, visible field is missing.
+    const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
+    const formDataObj = (existingForm.formData ?? {}) as Record<string, unknown>;
+    const issues = validateFormSubmission(template, formDataObj, session.user.role);
+
+    if (issues.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Form is incomplete. Please complete all required fields before submitting.",
+          issues,
+        },
+        { status: 400 }
+      );
     }
     
     // Find the form status ID for "UnderReview"

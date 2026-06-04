@@ -161,7 +161,32 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
         // Refresh the form data after successful submission
         window.location.reload();
       } else {
-        toast.error('Failed to submit form', { id: toastId })
+        // Surface structured validation errors returned by the server.
+        let message = 'Failed to submit form'
+        let description: string | undefined
+        try {
+          const errorData = await response.json() as {
+            error?: string
+            issues?: Array<{ sectionTitle?: string; fieldLabel?: string; message?: string }>
+          }
+          if (errorData?.error) message = errorData.error
+          if (Array.isArray(errorData?.issues) && errorData.issues.length > 0) {
+            console.warn('Form submission blocked by server validation:', errorData.issues)
+            const preview = errorData.issues.slice(0, 3).map(issue => {
+              const section = issue.sectionTitle ? `${issue.sectionTitle}: ` : ''
+              const label = issue.fieldLabel ?? 'field'
+              const reason = issue.message ?? 'is required'
+              return `• ${section}${label} ${reason}`
+            }).join('\n')
+            const remaining = errorData.issues.length - 3
+            description = remaining > 0
+              ? `${preview}\n• …and ${remaining} more`
+              : preview
+          }
+        } catch {
+          /* response had no JSON body — keep the default message */
+        }
+        toast.error(message, { id: toastId, description, duration: 10000 })
       }
     } catch {  
       toast.error('Error submitting form. Please try again later', { id: toastId })
