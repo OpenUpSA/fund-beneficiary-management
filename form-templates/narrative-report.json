@@ -251,7 +251,21 @@
     },
     {
       "tag": "Casework",
+      "title": "Casework activities",
+      "fields": [
+        {
+          "name": "casework_enabled",
+          "type": "toggle",
+          "label": "Did you work on casework during this reporting period?",
+          "description": "Select 'Yes' if your organisation handled any cases during this reporting period. This includes new cases opened and cases finalised.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "tag": "Casework",
       "title": "New cases",
+      "show_if": { "field": "casework_enabled", "value": "true" },
       "fields": [
         {
           "name": "casework_guidance",
@@ -351,6 +365,7 @@
     {
       "tag": "Casework",
       "title": "Finalised cases",
+      "show_if": { "field": "casework_enabled", "value": "true" },
       "fields": [
         {
           "name": "finalised_guidance",
@@ -484,7 +499,21 @@
     },
     {
       "tag": "Food gardening",
+      "title": "Food gardening activities",
+      "fields": [
+        {
+          "name": "food_gardening_enabled",
+          "type": "toggle",
+          "label": "Did you work on food gardening during this reporting period?",
+          "description": "Select 'Yes' if your organisation was involved in any food gardening activities during this reporting period. This includes establishing household gardens, managing community gardens, or supporting garden beneficiaries.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "tag": "Food gardening",
       "title": "Household food gardens",
+      "show_if": { "field": "food_gardening_enabled", "value": "true" },
       "fields": [
         {
           "name": "household_gardens_count",
@@ -499,6 +528,7 @@
     {
       "tag": "Food gardening",
       "title": "Community gardens owned or managed",
+      "show_if": { "field": "food_gardening_enabled", "value": "true" },
       "fields": [
         {
           "name": "community_gardens_guidance",
@@ -590,6 +620,7 @@
     {
       "tag": "Food gardening",
       "title": "Community garden beneficiaries",
+      "show_if": { "field": "food_gardening_enabled", "value": "true" },
       "fields": [
         {
           "name": "beneficiaries_guidance",
@@ -664,6 +695,7 @@
     {
       "title": "Community garden yields",
       "tag": "Food gardening",
+      "show_if": { "field": "food_gardening_enabled", "value": "true" },
       "fields": [
         {
           "name": "yields_guidance",

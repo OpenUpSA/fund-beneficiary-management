@@ -60,6 +60,7 @@ export interface Section {
   editable_by?: string[];
   visible_to?: string[];
   admin_feedback?: boolean;
+  show_if?: { field: string; value: string };
 }
 
 export type FormData = Record<string, string | number | boolean | null | undefined>

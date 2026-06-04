@@ -24,6 +24,7 @@ interface Section {
   title: string
   visible_to?: string[]
   editable_by?: string[]
+  show_if?: { field: string; value: string }
   fields: Field[]
 }
 
@@ -592,6 +593,8 @@ export const validateFormSubmission = (
 
   for (const section of sections) {
     if (!isSectionVisibleToRole(section, userRole)) continue
+    // Skip sections hidden by show_if condition
+    if (section.show_if && !evaluateShowIf(section.show_if, data)) continue
     for (const field of section.fields) {
       collectFieldIssues(field, field.name, data, section.title, issues)
     }
