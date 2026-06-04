@@ -35,31 +35,33 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
-    // Permission check: Only LDA users can submit forms
-    if (!permissions.isLDAUser(session.user)) {
+    const isSuperUser = permissions.isSuperUser(session.user);
+
+    // Permission check: Only LDA users (or super users) can submit forms
+    if (!isSuperUser && !permissions.isLDAUser(session.user)) {
       return NextResponse.json({ error: "Permission denied - only LDA users can submit forms" }, { status: 403 });
     }
 
-    // Additional check: LDA user must have access to this specific LDA
-    if (!permissions.canViewLDA(session.user, existingForm.localDevelopmentAgencyId)) {
+    // Additional check: LDA user must have access to this specific LDA (super users bypass)
+    if (!isSuperUser && !permissions.canViewLDA(session.user, existingForm.localDevelopmentAgencyId)) {
       return NextResponse.json({ error: "Permission denied - no access to this LDA" }, { status: 403 });
     }
 
-    // Server-side completeness check. This is the source of truth: even
-    // if the frontend believes the form is valid, the submission is
-    // blocked when any required, visible field is missing.
-    const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
-    const formDataObj = (existingForm.formData ?? {}) as Record<string, unknown>;
-    const issues = validateFormSubmission(template, formDataObj, session.user.role);
+    // Server-side completeness check. Super users can bypass this check.
+    if (!isSuperUser) {
+      const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
+      const formDataObj = (existingForm.formData ?? {}) as Record<string, unknown>;
+      const issues = validateFormSubmission(template, formDataObj, session.user.role);
 
-    if (issues.length > 0) {
-      return NextResponse.json(
-        {
-          error: "Form is incomplete. Please complete all required fields before submitting.",
-          issues,
-        },
-        { status: 400 }
-      );
+      if (issues.length > 0) {
+        return NextResponse.json(
+          {
+            error: "Form is incomplete. Please complete all required fields before submitting.",
+            issues,
+          },
+          { status: 400 }
+        );
+      }
     }
     
     // Find the form status ID for "UnderReview"

@@ -7,6 +7,10 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { permissions } from "@/lib/permissions";
 import { triggerFormEvent } from "@/lib/form-events";
+import {
+  validateFormSubmission,
+  type FormTemplateInput,
+} from "@/lib/form-validation/validate-submission";
 
 
 export const dynamic = "force-dynamic"
@@ -416,6 +420,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
             }
           }
         }
+      }
+    }
+
+    // Validate form data completeness before allowing Approved status
+    if (data.formStatusLabel === "Approved") {
+      const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
+      const formDataObj = (existingForm.formData ?? {}) as Record<string, unknown>;
+      const issues = validateFormSubmission(template, formDataObj, user.role);
+
+      if (issues.length > 0) {
+        return NextResponse.json(
+          {
+            error: "Form data is incomplete. Cannot approve a form with missing required fields.",
+            issues,
+          },
+          { status: 400 }
+        );
       }
     }
     
