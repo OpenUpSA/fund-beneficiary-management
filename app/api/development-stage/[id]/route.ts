@@ -42,6 +42,7 @@ export async function PUT(
       data: {
         label: data.label,
         description: data.description || '',
+        icon: data.icon || '',
       }
     })
     revalidateTag('development-stages')

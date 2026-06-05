@@ -153,6 +153,7 @@ model DevelopmentStage {
   id                       Int                      @id @default(autoincrement())
   label                    String                   @unique
   description              String
+  icon                     String                   @default("") // Lucide icon name, e.g. "sprout"
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   localDevelopmentAgencies LocalDevelopmentAgency[]
@@ -418,6 +419,7 @@ model Province {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   code      String   @unique
+  shortCode String   @default("") // Two-letter abbreviation, e.g. "EC", "KZN"
   districts Json // Stored as JSON array of district objects
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

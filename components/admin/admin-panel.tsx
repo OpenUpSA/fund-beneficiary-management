@@ -113,6 +113,7 @@ const crudConfigs: Record<string, { apiEndpoint: string; fields: FieldConfig[]; 
     fields: [
       { name: 'label', label: 'Label', type: 'text', required: true, placeholder: 'e.g., Emerging' },
       { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Description of this stage' },
+      { name: 'icon', label: 'Icon', type: 'text', placeholder: 'Lucide icon name (e.g., sprout)' },
     ],
   },
   'focus-areas': {

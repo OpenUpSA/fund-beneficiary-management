@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CirclePlusIcon } from "lucide-react"
 
 export interface FilterOption {
@@ -25,6 +26,8 @@ interface FilterButtonProps {
   className?: string
   from?: string
   to?: string
+  // When true, only one option can be selected at a time (rendered as radios).
+  singleSelect?: boolean
 }
 
 export function FilterButton({
@@ -32,6 +35,7 @@ export function FilterButton({
   options,
   selectedOptions,
   onFilterChange,
+  singleSelect = false,
 }: FilterButtonProps) {
   const [open, setOpen] = useState(false)
 
@@ -45,13 +49,22 @@ export function FilterButton({
     }
   }
 
+  const handleSingleSelect = (option: FilterOption) => {
+    if (onFilterChange) {
+      onFilterChange([option])
+    }
+    setOpen(false)
+  }
+
+  const selectedLabel =
+    singleSelect && selectedOptions.length > 0 ? selectedOptions[0].label : null
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           className="h-9 flex items-center gap-1 border border-gray-300 border-dashed text-slate-500"
         >
             <CirclePlusIcon size={16} />
@@ -59,7 +72,7 @@ export function FilterButton({
             {selectedOptions.length > 0 &&
             <span className="flex items-center border-l border-gray-300 pl-2 ml-2">
               <Badge variant="secondary" className="rounded-sm">
-                {selectedOptions.length} selected
+                {selectedLabel ?? `${selectedOptions.length} selected`}
               </Badge>
             </span>}
         </Button>
@@ -67,27 +80,53 @@ export function FilterButton({
       <PopoverContent className="w-56 p-0" align="start">
         <div className="p-2">
           <div className="font-medium mb-2">{label}</div>
-          <div className="space-y-2 max-h-[40vh] overflow-y-auto">
-            {options.map((option) => (
-              <div 
-                key={option.id} 
-                className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
-                onClick={() => handleOptionToggle(option)}
-              >
-                <Checkbox 
-                  id={`filter-${label}-${option.id}`}
-                  checked={selectedOptions.some(item => item.id === option.id)}
-                  onCheckedChange={() => handleOptionToggle(option)}
-                />
-                <label 
-                  htmlFor={`filter-${label}-${option.id}`}
-                  className="text-sm cursor-pointer flex-grow"
+          {singleSelect ? (
+            <RadioGroup
+              value={selectedOptions[0]?.id != null ? String(selectedOptions[0].id) : ""}
+              className="space-y-2 max-h-[40vh] overflow-y-auto"
+            >
+              {options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                  onClick={() => handleSingleSelect(option)}
                 >
-                  {option.label}
-                </label>
-              </div>
-            ))}
-          </div>
+                  <RadioGroupItem
+                    value={String(option.id)}
+                    id={`filter-${label}-${option.id}`}
+                  />
+                  <label
+                    htmlFor={`filter-${label}-${option.id}`}
+                    className="text-sm cursor-pointer flex-grow"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </RadioGroup>
+          ) : (
+            <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+              {options.map((option) => (
+                <div
+                  key={option.id}
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-1 rounded"
+                  onClick={() => handleOptionToggle(option)}
+                >
+                  <Checkbox
+                    id={`filter-${label}-${option.id}`}
+                    checked={selectedOptions.some(item => item.id === option.id)}
+                    onCheckedChange={() => handleOptionToggle(option)}
+                  />
+                  <label
+                    htmlFor={`filter-${label}-${option.id}`}
+                    className="text-sm cursor-pointer flex-grow"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
         <div className="border-t p-2 flex justify-between">

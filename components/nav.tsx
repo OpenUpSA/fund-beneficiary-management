@@ -5,7 +5,7 @@ import {
   BanknoteIcon,
   HandCoins,
   Images,
-  // LayoutDashboard,
+  LayoutDashboard,
   LayoutTemplate,
   MapPinHouse,
   Settings,
@@ -55,12 +55,12 @@ export function Nav() {
       }
     ],
     navMain: [
-      // {
-      //   url: '/dashboard',
-      //   title: 'Dashboard',
-      //   icon: LayoutDashboard,
-      //   requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'USER', 'SUPER_USER']
-      // },
+      {
+        url: '/dashboard',
+        title: 'Dashboard',
+        icon: LayoutDashboard,
+        requiredRoles: ['ADMIN', 'PROGRAMME_OFFICER', 'SUPER_USER']
+      },
       {
         url: user?.role === 'USER' && user?.ldaIds?.length === 1
           ? `${LDA_TERMINOLOGY.dashboardPath}/${user.ldaIds[0]}`

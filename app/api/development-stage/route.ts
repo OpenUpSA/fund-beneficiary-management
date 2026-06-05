@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       data: {
         label: data.label,
         description: data.description || '',
+        icon: data.icon || '',
       }
     })
     revalidateTag('development-stages')

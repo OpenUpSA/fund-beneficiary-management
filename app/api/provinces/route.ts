@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       data: {
         name: data.name,
         code: data.code,
+        shortCode: data.shortCode || "",
         districts: data.districts || [],
       }
     })
