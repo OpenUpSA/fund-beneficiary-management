@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -80,15 +80,13 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
   }, [passwordMethod, isNewUser, form])
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
+    let toastId: string | number | undefined
     try {
       // Only include ldaId if role is USER and ldaId is selected
       const shouldIncludeLda = data.role === 'USER' && data.ldaId
 
       if (user) {
-        toast({
-          title: 'Updating user...',
-          variant: 'processing'
-        })
+        toastId = toast.loading('Updating user...')
 
         const userData = {
           name: data.name,
@@ -113,18 +111,12 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
           throw new Error(error.error || 'Failed to update user')
         }
 
-        toast({
-          title: 'User updated',
-          variant: 'success'
-        })
+        toast.success('User updated', { id: toastId })
         
         // Close dialog after successful update
         setOpen(false)
       } else {
-        toast({
-          title: 'Creating user...',
-          variant: 'processing'
-        })
+        toastId = toast.loading('Creating user...')
 
         const userData = {
           name: data.name,
@@ -146,10 +138,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
           throw new Error(error.error || 'Failed to create user')
         }
 
-        toast({
-          title: 'User created',
-          variant: 'success'
-        })
+        toast.success('User created', { id: toastId })
       }
 
       // Reset form after successful submission
@@ -168,10 +157,7 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
       callback()
     } catch (error) {
       console.error('Form submission error:', error)
-      toast({
-        title: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive'
-      })
+      toast.error(error instanceof Error ? error.message : 'An error occurred', { id: toastId })
     }
   }
 

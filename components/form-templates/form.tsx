@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -100,21 +100,21 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
     setOpen(false)
 
     if (formTemplate) {
-      toast({ title: 'Updating form template...', variant: 'processing' })
+      const toastId = toast.loading('Updating form template...')
       await fetch(`/api/form-template/${formTemplate?.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast({ title: 'Form template updated', variant: 'success' })
+      toast.success('Form template updated', { id: toastId })
     } else {
-      toast({ title: 'Creating form template...', variant: 'processing' })
+      const toastId = toast.loading('Creating form template...')
       await fetch(`/api/form-template/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast({ title: 'Form template created', variant: 'success' })
+      toast.success('Form template created', { id: toastId })
     }
   }
 
@@ -347,12 +347,12 @@ function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
 
   const handleClone = async () => {
     if (!selectedTemplate || !cloneName.trim()) {
-      toast({ title: "Please select a template and enter a name", variant: "destructive" })
+      toast.error("Please select a template and enter a name")
       return
     }
 
     onOpenChange(false)
-    toast({ title: 'Cloning form template...', variant: 'processing' })
+    const toastId = toast.loading('Cloning form template...')
 
     const res = await fetch(`/api/form-template/${selectedTemplate}/clone`, {
       method: "POST",
@@ -361,12 +361,12 @@ function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
     })
 
     if (res.ok) {
-      toast({ title: 'Form template cloned', variant: 'success' })
+      toast.success('Form template cloned', { id: toastId })
       setSelectedTemplate("")
       setCloneName("")
     } else {
       const error = await res.json()
-      toast({ title: error.error || 'Failed to clone template', variant: 'destructive' })
+      toast.error(error.error || 'Failed to clone template', { id: toastId })
     }
   }
 
@@ -489,13 +489,13 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     onClose()
-    toast({ title: 'Creating form template...', variant: 'processing' })
+    const toastId = toast.loading('Creating form template...')
     await fetch(`/api/form-template/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
-    toast({ title: 'Form template created', variant: 'success' })
+    toast.success('Form template created', { id: toastId })
   }
 
   return (

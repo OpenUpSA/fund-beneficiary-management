@@ -1,5 +1,5 @@
 import { SessionWrapper } from '@/components/session-wrapper'
-import { Toaster } from '@/components/ui/toaster'
+import { Toaster } from '@/components/ui/sonner'
 import localFont from 'next/font/local'
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'

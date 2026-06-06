@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTranslations } from 'next-intl'
 import { useRef, useState } from "react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useSession } from "next-auth/react"
 import { Skeleton } from "./ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
@@ -47,10 +47,7 @@ export function AccountForm({ callback }: Props) {
   const updateUser = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
 
-    toast({
-      title: "Updating your account...",
-      variant: "processing"
-    })
+    const toastId = toast.loading("Updating your account...")
 
     const data = { name: accountName, email: accountEmail }
 
@@ -67,10 +64,7 @@ export function AccountForm({ callback }: Props) {
     // Update session
     await update({ trigger: "update", updatedUser: await response.json() })
 
-    toast({
-      title: "Account updated",
-      variant: "success"
-    })
+    toast.success("Account updated", { id: toastId })
   }
 
   const onAvatarChangeClick = () => {
@@ -85,10 +79,7 @@ export function AccountForm({ callback }: Props) {
     // Show an instant local preview while the upload runs
     setPreviewUrl(window.URL.createObjectURL(file))
 
-    toast({
-      title: "Uploading avatar...",
-      variant: "processing"
-    })
+    const toastId = toast.loading("Uploading avatar...")
 
     const formData = new FormData()
     formData.append("file", file)
@@ -100,10 +91,7 @@ export function AccountForm({ callback }: Props) {
 
     if (!response.ok) {
       setPreviewUrl(null)
-      toast({
-        title: "Failed to upload avatar",
-        variant: "destructive"
-      })
+      toast.error("Failed to upload avatar", { id: toastId })
       return
     }
 
@@ -115,10 +103,7 @@ export function AccountForm({ callback }: Props) {
     await update({ trigger: "update", updatedUser: updated })
     callback('users')
 
-    toast({
-      title: "Avatar updated",
-      variant: "success"
-    })
+    toast.success("Avatar updated", { id: toastId })
   }
 
   return (

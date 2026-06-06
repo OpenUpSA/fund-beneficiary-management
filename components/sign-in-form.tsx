@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from "next/navigation";
 import { useState } from "react"
 import { signIn } from "next-auth/react";
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export function SignInForm({
@@ -32,10 +32,7 @@ export function SignInForm({
             onSubmit={
               async (e) => {
                 e.preventDefault();
-                toast({
-                  title: "Signing you in...",
-                  variant: "processing"
-                })
+                const toastId = toast.loading("Signing you in...")
                 setInvalidCredentials(false)
                 
                 const res = await signIn("credentials", {
@@ -45,16 +42,10 @@ export function SignInForm({
                 })
 
                 if (res?.status === 200) {
-                  toast({
-                    title: "You are signed in",
-                    variant: "success"
-                  })
+                  toast.success("You are signed in", { id: toastId })
                   router.push(LDA_TERMINOLOGY.dashboardPath)
                 } else {
-                  toast({
-                    title: "Problem signing in",
-                    variant: "destructive"
-                  })
+                  toast.error("Problem signing in", { id: toastId })
                   setInvalidCredentials(true)
                 }
 

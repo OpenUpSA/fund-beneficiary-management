@@ -5,7 +5,7 @@ import { Button } from "../ui/button"
 import { FormTemplate } from "@prisma/client"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { EyeIcon, SaveIcon } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
 import { ReportScheduleConfigDialog } from "@/components/form-templates/report-schedule-config"
@@ -37,10 +37,7 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
   }
 
   const saveCode = async () => {
-    toast({
-      title: 'Saving form template...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Saving form template...')
     const data = {
       form: JSON.parse(jsonText)
     }
@@ -51,10 +48,7 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
         data
       ),
     })
-    toast({
-      title: 'Form template saved',
-      variant: 'success'
-    })
+    toast.success('Form template saved', { id: toastId })
   }
 
   return (

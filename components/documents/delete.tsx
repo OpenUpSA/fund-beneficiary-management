@@ -1,6 +1,6 @@
 "use client"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { AlertCircle, Trash2 } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation"
@@ -16,20 +16,14 @@ export function DeleteDialog({ document, callback }: Props) {
   const router = useRouter()
 
   const deleteDocument = async () => {
-    toast({
-      title: 'Deleting document...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Deleting document...')
     await fetch(`/api/document/${document.id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
     callback()
     router.push('/dashboard/documents')
-    toast({
-      title: 'Document deleted.',
-      variant: 'warning'
-    })
+    toast.warning('Document deleted.', { id: toastId })
   }
 
   return (

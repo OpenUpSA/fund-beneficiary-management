@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl'
 import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export function ChangePasswordForm({
   className,
@@ -29,11 +29,11 @@ export function ChangePasswordForm({
     if (!session?.user?.id) return
 
     if (accountNewPassword !== accountNewPasswordConfirm) {
-      toast({ title: "Passwords do not match", variant: "destructive" })
+      toast.error("Passwords do not match")
       return
     }
     if (accountNewPassword.length < 8) {
-      toast({ title: "Password must be at least 8 characters", variant: "destructive" })
+      toast.error("Password must be at least 8 characters")
       return
     }
 
@@ -50,11 +50,11 @@ export function ChangePasswordForm({
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
-        toast({ title: data.error || "Failed to change password", variant: "destructive" })
+        toast.error(data.error || "Failed to change password")
         return
       }
 
-      toast({ title: "Password changed", variant: "success" })
+      toast.success("Password changed")
       router.push("/account")
     } finally {
       setSaving(false)

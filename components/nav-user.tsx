@@ -29,7 +29,7 @@ import {
 import { Link } from "@/i18n/routing"
 import { useTranslations } from "next-intl"
 import { signOut, useSession } from "next-auth/react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
 import { getInitials, avatarUrl } from "@/lib/avatar"
@@ -106,10 +106,7 @@ export function NavUser() {
             <Link href="" onClick={async () => {
               const data = await signOut({ redirect: false, callbackUrl: "/" })
               router.push(data.url)
-              toast({
-                title: "You are signed out",
-                variant: "warning"
-              })
+              toast.warning("You are signed out")
             }}>
               <DropdownMenuItem>
                 <LogOut />
