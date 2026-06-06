@@ -2,32 +2,12 @@ import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { fetchFormTemplates } from "@/lib/data"
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Link } from "@/i18n/routing"
 
 import { FormTemplateWithRelations } from "@/types/models"
 import { CreateTemplateButton } from "@/components/form-templates/form"
+import { FilteredFormTemplates } from "@/components/form-templates/filtered"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
-
-// Acronyms that should stay fully uppercased when formatting category slugs.
-const CATEGORY_ACRONYMS = new Set(["dft", "fris", "lda", "scat", "npo", "bpo", "fbo"])
-
-// Turn a stored category slug (e.g. "dft_report") into a readable label ("DFT Report").
-function formatCategory(category?: string | null): string {
-  if (!category) return "—"
-  return category
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((word) =>
-      CATEGORY_ACRONYMS.has(word.toLowerCase())
-        ? word.toUpperCase()
-        : word.charAt(0).toUpperCase() + word.slice(1)
-    )
-    .join(" ")
-}
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -60,44 +40,7 @@ export default async function Page() {
           <CreateTemplateButton allTemplates={formTemplates}/>
         </div>
       </div>
-      <div className="sm:flex sm:space-x-4 mt-4">
-        <Card className="w-full">
-          <CardContent>
-            <Table className="text-xs w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-full">Template Name</TableHead>
-                  <TableHead className="text-nowrap">Template type</TableHead>
-                  <TableHead className="text-nowrap">Form category</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Usage</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {formTemplates.map((formTemplate) => (
-                  <TableRow key={formTemplate.id}>
-                    <TableCell>
-                      <Link href={`/dashboard/form-templates/${formTemplate.id}`}>
-                        {formTemplate.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-nowrap">{formTemplate.templateType}</TableCell>
-                    <TableCell className="text-nowrap">{formatCategory(formTemplate.formCategory)}</TableCell>
-                    <TableCell>
-                      <Badge variant={formTemplate.active ? "default" : "secondary"}>
-                        {formTemplate.active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {formTemplate.localDevelopmentAgencyForms.length}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+      <FilteredFormTemplates formTemplates={formTemplates} />
     </div>
   )
 }
