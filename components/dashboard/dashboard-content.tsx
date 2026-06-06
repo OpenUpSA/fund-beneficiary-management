@@ -115,11 +115,7 @@ export function DashboardContent() {
     return { provinceCodes, developmentStageIds, focusAreaIds, fundType, periodStart, periodEnd }
   }, [activeFilters])
 
-  useEffect(() => {
-    fetchData()
-  }, [apiFilters])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -140,7 +136,11 @@ export function DashboardContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [apiFilters])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   // Build filter options from API data
   const stageOptions = useMemo<FilterOption[]>(
