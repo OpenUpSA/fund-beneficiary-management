@@ -10,6 +10,8 @@ import { useRef, useState } from "react"
 import { toast } from "@/hooks/use-toast"
 import { useSession } from "next-auth/react"
 import { Skeleton } from "./ui/skeleton"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { getInitials, avatarUrl } from "@/lib/avatar"
 
 interface Props {
   callback: (tag: string) => void
@@ -22,7 +24,8 @@ export function AccountForm({ callback }: Props) {
   const { data: session, update } = useSession()
 
   const avatarFile = useRef<HTMLInputElement>(null)
-  const [accountAvatar, setAccountAvatar] = useState<string>('/images/users/1.png')
+  const [accountAvatar, setAccountAvatar] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [accountName, setAccountName] = useState<string>('')
   const [accountEmail, setAccountEmail] = useState<string>('')
 
@@ -33,6 +36,7 @@ export function AccountForm({ callback }: Props) {
         const data = await res.json();
         setAccountName(data.name);
         setAccountEmail(data.email);
+        setAccountAvatar(data.avatar ?? null);
       };
       fetchUser();
     }
@@ -75,10 +79,46 @@ export function AccountForm({ callback }: Props) {
 
   const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const { files } = event.target
-    if (files && files.length) {
-      const imageData = window.URL.createObjectURL(files[0])
-      setAccountAvatar(imageData)
+    if (!files || !files.length) return
+    const file = files[0]
+
+    // Show an instant local preview while the upload runs
+    setPreviewUrl(window.URL.createObjectURL(file))
+
+    toast({
+      title: "Uploading avatar...",
+      variant: "processing"
+    })
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const response = await fetch("/api/user/avatar", {
+      method: "POST",
+      body: formData,
+    })
+
+    if (!response.ok) {
+      setPreviewUrl(null)
+      toast({
+        title: "Failed to upload avatar",
+        variant: "destructive"
+      })
+      return
     }
+
+    const updated = await response.json()
+    setAccountAvatar(updated.avatar)
+    setPreviewUrl(null)
+
+    // Refresh the session so the nav avatar updates immediately
+    await update({ trigger: "update", updatedUser: updated })
+    callback('users')
+
+    toast({
+      title: "Avatar updated",
+      variant: "success"
+    })
   }
 
   return (
@@ -98,7 +138,10 @@ export function AccountForm({ callback }: Props) {
                 onChange={onAvatarChange} />
               <div className="hover:brightness-[1.2] cursor-pointer" onClick={onAvatarChangeClick}>
                 <div className="flex justify-center">
-                  <img className="h-16 w-16 rounded-full object-fill black border" src={accountAvatar} alt={t("change avatar alt")} />
+                  <Avatar className="h-16 w-16 border">
+                    <AvatarImage src={previewUrl ?? avatarUrl(accountAvatar)} alt={t("change avatar alt")} className="object-cover" />
+                    <AvatarFallback className="text-lg">{getInitials(accountName)}</AvatarFallback>
+                  </Avatar>
                 </div>
                 <div className="text-sm underline text-center">
                   {t("Change Avatar")}

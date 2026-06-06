@@ -15,6 +15,7 @@ model User {
   name                        String
   email                       String                       @unique
   passwordHash                String
+  avatar                      String?                      // ImageKit filePath; null = use initials fallback
   approved                    Boolean                      @default(false)
   role                        Role                         @default(USER)
   createdAt                   DateTime                     @default(now())
