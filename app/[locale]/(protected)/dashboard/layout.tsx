@@ -9,7 +9,7 @@ export default async function Layout({ children }: Readonly<{
 }>) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
   if (!session || !session.user) {
-    redirect('/');
+    redirect('/sign-in');
   }
 
   return (

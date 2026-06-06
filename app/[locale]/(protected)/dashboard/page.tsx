@@ -4,6 +4,7 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { permissions } from "@/lib/permissions"
 import { DashboardContent } from "@/components/dashboard/dashboard-content"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -28,7 +29,7 @@ export default async function Page() {
       (!permissions.isAdmin(session.user) && 
        !permissions.isProgrammeOfficer(session.user) && 
        !permissions.isSuperUser(session.user))) {
-    redirect("/ldas")
+    redirect(LDA_TERMINOLOGY.dashboardPath)
   }
 
   return (

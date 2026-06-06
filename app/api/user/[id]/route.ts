@@ -16,15 +16,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  // Permission check: Only superuser and admin can view users
-  if (!permissions.isSuperUser(currentUser) && !permissions.isAdmin(currentUser)) {
-    return NextResponse.json({ error: "Permission denied - only superuser and admin can view users" }, { status: 403 });
-  }
-
   const userId = Number(params.id)
 
   if (Number.isNaN(userId)) {
     return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+  }
+
+  // SuperUser/Admin can view any user; everyone else may view only their own account.
+  const isPrivileged = permissions.isSuperUser(currentUser) || permissions.isAdmin(currentUser)
+  if (!isPrivileged && Number(currentUser.id) !== userId) {
+    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
   const user = await prisma.user.findUnique({
