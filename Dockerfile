@@ -43,6 +43,8 @@ ARG NEXT_PUBLIC_FAVICON_PATH="/images/favicon/favicon.ico"
 ARG NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=""
 # API Base URL
 ARG NEXT_PUBLIC_API_BASE_URL=""
+# Deployment environment for client-side Sentry gating/tagging (e.g. "prod")
+ARG NEXT_PUBLIC_ENVIRONMENT=""
 
 # Sentry source-map upload (build-time only). NOT a NEXT_PUBLIC var, so it is never
 # inlined into the client bundle. Optional — the build still succeeds without it
