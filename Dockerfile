@@ -44,8 +44,14 @@ ARG NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=""
 # API Base URL
 ARG NEXT_PUBLIC_API_BASE_URL=""
 
-# ARG values are available in the RUN environment, so next build inlines these
-# NEXT_PUBLIC_* values directly — no ENV step needed.
+# Sentry source-map upload (build-time only). NOT a NEXT_PUBLIC var, so it is never
+# inlined into the client bundle. Optional — the build still succeeds without it
+# (source maps just aren't uploaded). Use a release-scoped token.
+ARG SENTRY_AUTH_TOKEN=""
+
+# ARG values are available in the RUN environment, so next build inlines the
+# NEXT_PUBLIC_* values and the Sentry plugin reads SENTRY_AUTH_TOKEN directly —
+# no ENV step needed.
 RUN yarn build
 
 FROM base AS runner
