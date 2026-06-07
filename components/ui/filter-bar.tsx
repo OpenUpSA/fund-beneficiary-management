@@ -12,6 +12,7 @@ interface FilterBarProps {
     type: string
     label: string
     options: FilterOption[]
+    singleSelect?: boolean
     customFilterComponent?: React.ComponentType<{ filterType: string, onFilterChange: (filterType: string, selectedOptions: FilterOption[]) => void, activeFilters: Record<string, FilterOption[]> }>
   }[]
   activeFilters?: Record<string, FilterOption[]>
@@ -62,8 +63,9 @@ export function FilterBar({
             key={config.type}
             label={config.label}
             options={config.options}
+            singleSelect={config.singleSelect}
             selectedOptions={activeFilters?.[config.type] || []}
-            onFilterChange={(selectedOptions) => 
+            onFilterChange={(selectedOptions) =>
               handleFilterChange(config.type, selectedOptions)
             }
           />

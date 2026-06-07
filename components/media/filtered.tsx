@@ -51,7 +51,7 @@ export function FilteredMedia({ media, dataChanged, lda, fund, funder, navigated
   const [sortColumn, setSortColumn] = useState<SortableColumn>('createdAt')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
-  const imagekitUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
+  const imagekitUrlEndpoint = (process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "")
 
   const availableMediaTypes = MediaTypeEnum.options.map((type) => ({
     id: type,

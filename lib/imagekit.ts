@@ -7,7 +7,7 @@ function getImageKit(): ImageKit {
     _imagekit = new ImageKit({
       publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
       privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-      urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+      urlEndpoint: (process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? ""),
     })
   }
   return _imagekit

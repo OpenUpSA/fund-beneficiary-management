@@ -162,7 +162,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
         name: file.name,
         size: file.size,
         type: file.type,
-        url: `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}/${result.filePath}`,
+        url: `${(process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "")}/${result.filePath}`,
         filePath: result.filePath,
         dbId: result.id
       }
@@ -320,7 +320,14 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
               <p className="text-sm font-medium mb-2">Files</p>
               <div className="space-y-2">
                 {files.filter(file => !isImageFile(file.type)).map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                  <div 
+                    key={file.id} 
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      window.open(file.url, '_blank')
+                    }}
+                  >
                     <div className="flex items-center gap-3">
                       <FileIcon className="h-10 w-10 text-gray-400" />
                       <div>

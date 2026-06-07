@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -129,14 +129,14 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
     const method = document ? "PUT" : "POST"
     const endpoint = document ? `/api/document/${document.id}` : `/api/document`
 
-    toast({ title: document ? "Updating document..." : "Creating document...", variant: "processing" })
+    const toastId = toast.loading(document ? "Updating document..." : "Creating document...")
 
     await fetch(endpoint, {
       method,
       body: formData,
     })
 
-    toast({ title: document ? "Document updated" : "Document created", variant: "success" })
+    toast.success(document ? "Document updated" : "Document created", { id: toastId })
     callback()
   }
 

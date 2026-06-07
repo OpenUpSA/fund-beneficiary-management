@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -63,10 +63,7 @@ export function FormDialog({ organisationDetail, callback }: FormDialogProps) {
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setOpen(false)
 
-    toast({
-      title: 'Updating details...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Updating details...')
 
     await fetch(`/api/organisation-detail/${organisationDetail.id}`, {
       method: "PUT",
@@ -74,10 +71,7 @@ export function FormDialog({ organisationDetail, callback }: FormDialogProps) {
       body: JSON.stringify(data),
     })
 
-    toast({
-      title: 'Details updated',
-      variant: 'success'
-    })
+    toast.success('Details updated', { id: toastId })
 
     callback()
   }

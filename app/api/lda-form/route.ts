@@ -77,12 +77,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pending status not found" }, { status: 404 })
     }
 
+    // Validate that the user exists in the database
+    const userId = parseInt(session.user.id, 10)
+    if (isNaN(userId)) {
+      console.error("Invalid user ID in session:", session.user.id)
+      return NextResponse.json({ error: "Invalid user session" }, { status: 400 })
+    }
+
+    const userExists = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true }
+    })
+
+    if (!userExists) {
+      console.error("User not found in database:", userId)
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
     const query = {
       data: {
         ...data,
         title: formTemplate.name,
         formStatusId: pendingStatus.id,
-        createdById: session.user.id,
+        createdById: userId,
       },
     }
     const record = await prisma.localDevelopmentAgencyForm.create(query)

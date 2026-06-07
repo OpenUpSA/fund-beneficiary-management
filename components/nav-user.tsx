@@ -29,9 +29,10 @@ import {
 import { Link } from "@/i18n/routing"
 import { useTranslations } from "next-intl"
 import { signOut, useSession } from "next-auth/react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
+import { getInitials, avatarUrl } from "@/lib/avatar"
 
 export function NavUser() {
   const { isMobile } = useSidebar()
@@ -64,8 +65,8 @@ export function NavUser() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src="/images/users/1.png" alt={session.user.name || ''} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage src={avatarUrl(session.user.avatar)} alt={session.user.name || ''} className="object-cover" />
+                <AvatarFallback className="rounded-lg">{getInitials(session.user.name)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{session.user.name}</span>
@@ -83,8 +84,8 @@ export function NavUser() {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src="/images/users/1.png" alt={session.user.name || ''} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={avatarUrl(session.user.avatar)} alt={session.user.name || ''} className="object-cover" />
+                  <AvatarFallback className="rounded-lg">{getInitials(session.user.name)}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{session.user.name}</span>
@@ -105,10 +106,7 @@ export function NavUser() {
             <Link href="" onClick={async () => {
               const data = await signOut({ redirect: false, callbackUrl: "/" })
               router.push(data.url)
-              toast({
-                title: "You are signed out",
-                variant: "warning"
-              })
+              toast.warning("You are signed out")
             }}>
               <DropdownMenuItem>
                 <LogOut />

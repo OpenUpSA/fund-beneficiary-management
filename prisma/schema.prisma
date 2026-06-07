@@ -15,6 +15,7 @@ model User {
   name                        String
   email                       String                       @unique
   passwordHash                String
+  avatar                      String?                      // ImageKit filePath; null = use initials fallback
   approved                    Boolean                      @default(false)
   role                        Role                         @default(USER)
   createdAt                   DateTime                     @default(now())
@@ -153,6 +154,7 @@ model DevelopmentStage {
   id                       Int                      @id @default(autoincrement())
   label                    String                   @unique
   description              String
+  icon                     String                   @default("") // Lucide icon name, e.g. "sprout"
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   localDevelopmentAgencies LocalDevelopmentAgency[]
@@ -418,6 +420,7 @@ model Province {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   code      String   @unique
+  shortCode String   @default("") // Two-letter abbreviation, e.g. "EC", "KZN"
   districts Json // Stored as JSON array of district objects
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

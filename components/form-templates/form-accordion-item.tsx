@@ -37,7 +37,7 @@ export default function FormAccordionItem({
   const formValuesStore = useFormValuesStore();
 
   // Check if section is visible to current user role
-  const isSectionVisible = useMemo(() => {
+  const isRoleVisible = useMemo(() => {
     // If visible_to doesn't exist, section is visible to everyone
     if (!sectionData.visible_to) return true;
     
@@ -50,6 +50,21 @@ export default function FormAccordionItem({
     // Check if user's role is in the visible_to array
     return sectionData.visible_to.includes(userRole);
   }, [sectionData.visible_to, userRole]);
+
+  // Check if section is visible based on show_if condition
+  const isShowIfVisible = useMemo(() => {
+    if (!sectionData.show_if) return true;
+    
+    const { field: conditionField, value: conditionValue } = sectionData.show_if;
+    
+    // Check formValuesStore first (for reactive updates), then defaultValues
+    const currentValue = formValuesStore?.get(conditionField) ?? 
+      (defaultValues && conditionField in defaultValues ? String(defaultValues[conditionField]) : undefined);
+    
+    return currentValue === conditionValue;
+  }, [sectionData.show_if, formValuesStore, defaultValues]);
+
+  const isSectionVisible = isRoleVisible && isShowIfVisible;
 
   const isValueValid = (value: string, field: Field) => {
     if (field.type === "fileUpload") {

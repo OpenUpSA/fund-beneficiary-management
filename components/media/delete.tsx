@@ -1,6 +1,6 @@
 "use client"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Trash2, AlertCircle } from "lucide-react"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 
@@ -13,19 +13,13 @@ interface Props {
 
 export function DeleteDialog({ media, callback }: Props) {
   const deleteMedia = async () => {
-    toast({
-      title: 'Deleting media...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Deleting media...')
     await fetch(`/api/media/${media.id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
     callback()
-    toast({
-      title: 'Media deleted.',
-      variant: 'warning'
-    })
+    toast.warning('Media deleted.', { id: toastId })
   }
 
   return (

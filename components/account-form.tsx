@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTranslations } from 'next-intl'
 import { useRef, useState } from "react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useSession } from "next-auth/react"
 import { Skeleton } from "./ui/skeleton"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { getInitials, avatarUrl } from "@/lib/avatar"
 
 interface Props {
   callback: (tag: string) => void
@@ -22,7 +24,8 @@ export function AccountForm({ callback }: Props) {
   const { data: session, update } = useSession()
 
   const avatarFile = useRef<HTMLInputElement>(null)
-  const [accountAvatar, setAccountAvatar] = useState<string>('/images/users/1.png')
+  const [accountAvatar, setAccountAvatar] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [accountName, setAccountName] = useState<string>('')
   const [accountEmail, setAccountEmail] = useState<string>('')
 
@@ -33,6 +36,7 @@ export function AccountForm({ callback }: Props) {
         const data = await res.json();
         setAccountName(data.name);
         setAccountEmail(data.email);
+        setAccountAvatar(data.avatar ?? null);
       };
       fetchUser();
     }
@@ -43,10 +47,7 @@ export function AccountForm({ callback }: Props) {
   const updateUser = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
 
-    toast({
-      title: "Updating your account...",
-      variant: "processing"
-    })
+    const toastId = toast.loading("Updating your account...")
 
     const data = { name: accountName, email: accountEmail }
 
@@ -63,10 +64,7 @@ export function AccountForm({ callback }: Props) {
     // Update session
     await update({ trigger: "update", updatedUser: await response.json() })
 
-    toast({
-      title: "Account updated",
-      variant: "success"
-    })
+    toast.success("Account updated", { id: toastId })
   }
 
   const onAvatarChangeClick = () => {
@@ -75,10 +73,37 @@ export function AccountForm({ callback }: Props) {
 
   const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const { files } = event.target
-    if (files && files.length) {
-      const imageData = window.URL.createObjectURL(files[0])
-      setAccountAvatar(imageData)
+    if (!files || !files.length) return
+    const file = files[0]
+
+    // Show an instant local preview while the upload runs
+    setPreviewUrl(window.URL.createObjectURL(file))
+
+    const toastId = toast.loading("Uploading avatar...")
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const response = await fetch("/api/user/avatar", {
+      method: "POST",
+      body: formData,
+    })
+
+    if (!response.ok) {
+      setPreviewUrl(null)
+      toast.error("Failed to upload avatar", { id: toastId })
+      return
     }
+
+    const updated = await response.json()
+    setAccountAvatar(updated.avatar)
+    setPreviewUrl(null)
+
+    // Refresh the session so the nav avatar updates immediately
+    await update({ trigger: "update", updatedUser: updated })
+    callback('users')
+
+    toast.success("Avatar updated", { id: toastId })
   }
 
   return (
@@ -98,7 +123,10 @@ export function AccountForm({ callback }: Props) {
                 onChange={onAvatarChange} />
               <div className="hover:brightness-[1.2] cursor-pointer" onClick={onAvatarChangeClick}>
                 <div className="flex justify-center">
-                  <img className="h-16 w-16 rounded-full object-fill black border" src={accountAvatar} alt={t("change avatar alt")} />
+                  <Avatar className="h-16 w-16 border">
+                    <AvatarImage src={previewUrl ?? avatarUrl(accountAvatar)} alt={t("change avatar alt")} className="object-cover" />
+                    <AvatarFallback className="text-lg">{getInitials(accountName)}</AvatarFallback>
+                  </Avatar>
                 </div>
                 <div className="text-sm underline text-center">
                   {t("Change Avatar")}

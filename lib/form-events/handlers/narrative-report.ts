@@ -57,8 +57,8 @@ async function onNarrativeReportCreated(context: FormEventContext): Promise<void
   const previousData = previousReport.formData as Prisma.JsonObject
   const newFormData: Prisma.JsonObject = (form.formData as Prisma.JsonObject) || {}
 
-  // 1. Copy community gardens (all data)
-  copyFieldData(previousData, newFormData, 'community_gardens')
+  // 1. Copy community gardens (indices AND all related fields)
+  copyCommunityGardensData(previousData, newFormData)
 
   // 2. Copy garden beneficiaries (all data)
   copyGardenBeneficiariesData(previousData, newFormData)
@@ -80,15 +80,17 @@ async function onNarrativeReportCreated(context: FormEventContext): Promise<void
 }
 
 /**
- * Simple field copy - copies all data for a field
+ * Copy community gardens data
+ * Copies the indices array AND all related fields (garden_name, garden_size, etc.)
  */
-function copyFieldData(
+function copyCommunityGardensData(
   source: Prisma.JsonObject,
-  target: Prisma.JsonObject,
-  fieldName: string
+  target: Prisma.JsonObject
 ): void {
-  if (source[fieldName] !== undefined) {
-    target[fieldName] = source[fieldName]
+  for (const key of Object.keys(source)) {
+    if (key === 'community_gardens' || key.startsWith('community_gardens_')) {
+      target[key] = source[key]
+    }
   }
 }
 

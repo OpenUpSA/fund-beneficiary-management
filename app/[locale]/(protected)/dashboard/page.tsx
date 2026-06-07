@@ -1,12 +1,12 @@
 import { getTranslations } from "next-intl/server"
-// import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
-// import { DownloadIcon, Share2Icon } from "lucide-react"
-// import { Button } from "@/components/ui/button"
-// import { FilteredReport } from "@/components/dashboard/filtered"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import { permissions } from "@/lib/permissions"
+import { DashboardContent } from "@/components/dashboard/dashboard-content"
+import { LDA_TERMINOLOGY } from "@/constants/lda"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
-import { redirect } from "next/navigation"
-import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -21,35 +21,21 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
   }
 }
 
-export default function Page() {
-  // TEMPORARY: Redirect users from /dashboard to LDAs page
-  redirect(LDA_TERMINOLOGY.dashboardPath)
+export default async function Page() {
+  const session = await getServerSession(NEXT_AUTH_OPTIONS)
+  
+  // Redirect non-authorized users to LDAs page
+  if (!session?.user || 
+      (!permissions.isAdmin(session.user) && 
+       !permissions.isProgrammeOfficer(session.user) && 
+       !permissions.isSuperUser(session.user))) {
+    redirect(LDA_TERMINOLOGY.dashboardPath)
+  }
 
-  // Original dashboard content (temporarily disabled)
-  /*
   return (
     <div>
-      <BreadcrumbNav
-        className="mb-4"
-        links={[
-          { label: "Dashboard", isCurrent: true }
-        ]}
-      />
-      <div className="flex flex-wrap items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">Reporting dashboard</h1>
-        <div className="space-x-2">
-          <Button variant="outline">
-            <span className="hidden md:inline">Download</span>
-            <DownloadIcon />
-          </Button>
-          <Button variant="outline">
-            <span className="hidden md:inline">Share</span>
-            <Share2Icon />
-          </Button>
-        </div>
-      </div>
-      <FilteredReport />
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+      <DashboardContent />
     </div>
   )
-  */
 }

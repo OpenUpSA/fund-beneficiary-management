@@ -21,6 +21,7 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
         token.name = user.name
         token.email = user.email
         token.role = user.role
+        token.avatar = user.avatar
         token.ldaIds = user.localDevelopmentAgencies?.map((lda: { id: number }) => lda.id) || []
       }
 
@@ -28,6 +29,7 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
         token.name = data.session.updatedUser.name
         token.role = data.session.updatedUser.role
         token.email = data.session.updatedUser.email
+        token.avatar = data.session.updatedUser.avatar ?? token.avatar
       }
 
       return token
@@ -39,6 +41,7 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
         session.user.name = token.name as string
         session.user.email = token.email as string
         session.user.role = token.role as string
+        session.user.avatar = token.avatar as string | null
         session.user.ldaIds = token.ldaIds as number[]
       }
       return session
@@ -77,6 +80,7 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
           name: user.name,
           email: user.email,
           role: user.role,
+          avatar: user.avatar,
           localDevelopmentAgencies: user.localDevelopmentAgencies
         } as unknown as User
       },

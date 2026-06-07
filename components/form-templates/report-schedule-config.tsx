@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { PlusIcon, SettingsIcon, Trash2Icon } from "lucide-react"
 import { FormTemplate } from "@prisma/client"
 import {
@@ -149,13 +149,12 @@ export function ReportScheduleConfigDialog({
 
   const handleAddConfig = async () => {
     if (!newConfig.reportTemplateId) {
-      toast({ title: "Please select a report template", variant: "destructive" })
+      toast.error("Please select a report template")
       return
     }
 
+    const toastId = toast.loading("Creating schedule config...")
     try {
-      toast({ title: "Creating schedule config...", variant: "processing" })
-
       const res = await fetch("/api/report-schedule-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,7 +169,7 @@ export function ReportScheduleConfigDialog({
       })
 
       if (res.ok) {
-        toast({ title: "Schedule config created", variant: "success" })
+        toast.success("Schedule config created", { id: toastId })
         setShowAddForm(false)
         setNewConfig({
           reportTemplateId: "",
@@ -181,10 +180,10 @@ export function ReportScheduleConfigDialog({
         fetchConfigs()
       } else {
         const error = await res.json()
-        toast({ title: error.error || "Failed to create", variant: "destructive" })
+        toast.error(error.error || "Failed to create", { id: toastId })
       }
     } catch {
-      toast({ title: "Failed to create config", variant: "destructive" })
+      toast.error("Failed to create config", { id: toastId })
     }
   }
 
@@ -197,13 +196,13 @@ export function ReportScheduleConfigDialog({
       })
 
       if (res.ok) {
-        toast({ title: "Config deleted", variant: "success" })
+        toast.success("Config deleted")
         fetchConfigs()
       } else {
-        toast({ title: "Failed to delete", variant: "destructive" })
+        toast.error("Failed to delete")
       }
     } catch {
-      toast({ title: "Failed to delete", variant: "destructive" })
+      toast.error("Failed to delete")
     }
   }
 
@@ -224,20 +223,19 @@ export function ReportScheduleConfigDialog({
       })
 
       if (res.ok) {
-        toast({ title: "Schedule updated", variant: "success" })
+        toast.success("Schedule updated")
         fetchConfigs()
       } else {
-        toast({ title: "Failed to update", variant: "destructive" })
+        toast.error("Failed to update")
       }
     } catch {
-      toast({ title: "Failed to update", variant: "destructive" })
+      toast.error("Failed to update")
     }
   }
 
   const handleGenerateYear = async (configId: number, year: number) => {
+    const toastId = toast.loading(`Generating ${year} schedules...`)
     try {
-      toast({ title: `Generating ${year} schedules...`, variant: "processing" })
-
       const res = await fetch(`/api/report-schedule-config/${configId}/schedules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -245,14 +243,14 @@ export function ReportScheduleConfigDialog({
       })
 
       if (res.ok) {
-        toast({ title: `${year} schedules generated`, variant: "success" })
+        toast.success(`${year} schedules generated`, { id: toastId })
         fetchConfigs()
       } else {
         const error = await res.json()
-        toast({ title: error.error || "Failed to generate", variant: "destructive" })
+        toast.error(error.error || "Failed to generate", { id: toastId })
       }
     } catch {
-      toast({ title: "Failed to generate schedules", variant: "destructive" })
+      toast.error("Failed to generate schedules", { id: toastId })
     }
   }
 

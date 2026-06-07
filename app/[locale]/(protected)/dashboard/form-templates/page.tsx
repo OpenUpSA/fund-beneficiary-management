@@ -2,12 +2,10 @@ import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
 import { fetchFormTemplates } from "@/lib/data"
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Link } from "@/i18n/routing"
 
 import { FormTemplateWithRelations } from "@/types/models"
 import { CreateTemplateButton } from "@/components/form-templates/form"
+import { FilteredFormTemplates } from "@/components/form-templates/filtered"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 
@@ -42,36 +40,7 @@ export default async function Page() {
           <CreateTemplateButton allTemplates={formTemplates}/>
         </div>
       </div>
-      <div className="sm:flex sm:space-x-4 mt-4">
-        <Card className="w-full">
-          <CardContent>
-            <Table className="text-xs w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-full">Template Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Usage</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {formTemplates.map((formTemplate) => (
-                  <TableRow key={formTemplate.id}>
-                    <TableCell>
-                      <Link href={`/dashboard/form-templates/${formTemplate.id}`}>
-                        {formTemplate.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-nowrap">{formTemplate.description}</TableCell>
-                    <TableCell>
-                      {formTemplate.localDevelopmentAgencyForms.length}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+      <FilteredFormTemplates formTemplates={formTemplates} />
     </div>
   )
 }

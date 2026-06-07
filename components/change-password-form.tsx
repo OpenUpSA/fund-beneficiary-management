@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useTranslations } from 'next-intl'
 import { useState } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export function ChangePasswordForm({
   className,
@@ -14,21 +17,61 @@ export function ChangePasswordForm({
 }: React.ComponentProps<"div">) {
   const t = useTranslations('AccountChangePasswordPage')
   const tC = useTranslations('common')
+  const { data: session } = useSession()
+  const router = useRouter()
 
-  const [accountNewPassword, setAccountNewPassword] = useState<string>()
-  const [accountNewPasswordConfirm, setAccountNewPasswordConfirm] = useState<string>()
+  const [accountNewPassword, setAccountNewPassword] = useState<string>('')
+  const [accountNewPasswordConfirm, setAccountNewPasswordConfirm] = useState<string>('')
+  const [saving, setSaving] = useState(false)
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!session?.user?.id) return
+
+    if (accountNewPassword !== accountNewPasswordConfirm) {
+      toast.error("Passwords do not match")
+      return
+    }
+    if (accountNewPassword.length < 8) {
+      toast.error("Password must be at least 8 characters")
+      return
+    }
+
+    setSaving(true)
+    try {
+      const response = await fetch(`/api/user/${session.user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: accountNewPassword,
+          passwordConfirm: accountNewPasswordConfirm,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        toast.error(data.error || "Failed to change password")
+        return
+      }
+
+      toast.success("Password changed")
+      router.push("/account")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form action="/account" className="p-6 md:p-8">
+          <form onSubmit={onSubmit} className="p-6 md:p-8">
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">{t('title')}</h1>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="name">{t('New Password')}</Label>
+                <Label htmlFor="new_password">{t('New Password')}</Label>
                 <Input
                   id="new_password"
                   type="password"
@@ -39,7 +82,7 @@ export function ChangePasswordForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="name">{t('New Password Confirm')}</Label>
+                <Label htmlFor="new_password_confirm">{t('New Password Confirm')}</Label>
                 <Input
                   id="new_password_confirm"
                   type="password"
@@ -50,7 +93,7 @@ export function ChangePasswordForm({
                 />
               </div>
 
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={saving}>
                 {t('Save New Password')}
               </Button>
 

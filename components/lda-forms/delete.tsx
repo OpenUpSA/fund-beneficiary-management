@@ -1,6 +1,6 @@
 "use client"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { CircleXIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -17,20 +17,14 @@ export function DeleteDialog({ ldaForm, callback }: Props) {
   const router = useRouter()
 
   const deleteLDAForm = async () => {
-    toast({
-      title: 'Deleting form...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Deleting form...')
     await fetch(`/api/lda-form/${ldaForm.id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
     callback(ldaForm.localDevelopmentAgencyId)
     router.push('/dashboard/applications-reports')
-    toast({
-      title: 'Form deleted.',
-      variant: 'warning'
-    })
+    toast.warning('Form deleted.', { id: toastId })
   }
 
   return (

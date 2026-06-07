@@ -46,6 +46,7 @@ interface Province {
   id: number
   name: string
   code: string
+  shortCode: string
   districts: District[]
 }
 
@@ -60,6 +61,7 @@ export function ProvincesPanel({ onBack }: ProvincesPanelProps) {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
+    shortCode: '',
     districts: [] as District[]
   })
   const [newDistrictName, setNewDistrictName] = useState('')
@@ -93,11 +95,12 @@ export function ProvincesPanel({ onBack }: ProvincesPanelProps) {
       setFormData({
         name: province.name,
         code: province.code,
+        shortCode: province.shortCode || '',
         districts: Array.isArray(province.districts) ? province.districts : []
       })
     } else {
       setEditingProvince(null)
-      setFormData({ name: '', code: '', districts: [] })
+      setFormData({ name: '', code: '', shortCode: '', districts: [] })
     }
     setNewDistrictName('')
     setDialogOpen(true)
@@ -222,6 +225,9 @@ export function ProvincesPanel({ onBack }: ProvincesPanelProps) {
                     <div className="flex items-center gap-4 flex-1">
                       <span className="font-medium">{province.name}</span>
                       <Badge variant="outline" className="font-mono">{province.code}</Badge>
+                      {province.shortCode && (
+                        <Badge variant="outline" className="font-mono">{province.shortCode}</Badge>
+                      )}
                       <Badge variant="secondary" className="ml-auto mr-4">
                         {province.districts?.length || 0} districts
                       </Badge>
@@ -286,7 +292,7 @@ export function ProvincesPanel({ onBack }: ProvincesPanelProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Province Name <span className="text-destructive">*</span></Label>
                 <Input
@@ -301,7 +307,16 @@ export function ProvincesPanel({ onBack }: ProvincesPanelProps) {
                 <Input
                   id="code"
                   value={formData.code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                  placeholder="e.g., western-cape"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="shortCode">Short Code</Label>
+                <Input
+                  id="shortCode"
+                  value={formData.shortCode}
+                  onChange={(e) => setFormData(prev => ({ ...prev, shortCode: e.target.value.toUpperCase() }))}
                   placeholder="e.g., WC"
                   maxLength={5}
                 />

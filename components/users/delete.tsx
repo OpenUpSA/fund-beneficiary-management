@@ -1,6 +1,6 @@
 "use client"
 
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { CircleXIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
@@ -22,20 +22,14 @@ export function DeleteDialog({ user, callback }: Props) {
   const canDelete = canDeleteSpecificUser(user)
 
   const deleteUser = async () => {
-    toast({
-      title: 'Deleting user...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Deleting user...')
     await fetch(`/api/user/${user.id}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
     })
     callback()
     router.push('/dashboard/users')
-    toast({
-      title: 'User deleted.',
-      variant: 'warning'
-    })
+    toast.warning('User deleted.', { id: toastId })
   }
 
   // Don't render delete button if user doesn't have delete permissions

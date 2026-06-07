@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useTranslations } from 'next-intl'
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { UserFormSchema } from "@/types/formSchemas"
 
@@ -44,26 +44,17 @@ export function SignUpForm({
   })
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
-    toast({
-      title: 'Signing you up...',
-      variant: 'processing'
-    })
+    const toastId = toast.loading('Signing you up...')
     const response = await fetch(`/api/user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
     if (response.ok) {
-      toast({
-        title: 'You are signed up',
-        variant: 'success'
-      })
+      toast.success('You are signed up', { id: toastId })
       router.push("/sign-up/pending")
     } else {
-      toast({
-        title: 'Problem signing you up',
-        variant: 'destructive'
-      })
+      toast.error('Problem signing you up', { id: toastId })
     }
   }
 

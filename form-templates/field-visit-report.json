@@ -91,7 +91,7 @@
       ]
     },
     {
-      "title": "Visit notes",
+      "title": "Visit context",
       "fields": [
         {
           "name": "org_profile_changed",
@@ -144,19 +144,516 @@
       ]
     },
     {
-      "title": "Governance and management",
+      "title": "Engagement with government",
       "fields": [
         {
-          "name": "systems_controls",
+          "name": "engage_clinics",
+          "type": "radio",
+          "label": "Has this LDA engage with Clinics / Health Department?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "engage_clinics_type",
           "type": "textarea",
-          "label": "Systems and controls",
+          "label": "Type of engagement",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_clinics", "value": "yes" }
+        },
+        {
+          "name": "engage_clinics_challenges",
+          "type": "textarea",
+          "label": "Challenges and successes in this area",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_clinics", "value": "yes" }
+        },
+        {
+          "name": "engage_schools",
+          "type": "radio",
+          "label": "Has this LDA engage with Schools / Education?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "engage_schools_type",
+          "type": "textarea",
+          "label": "Type of engagement",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_schools", "value": "yes" }
+        },
+        {
+          "name": "engage_schools_challenges",
+          "type": "textarea",
+          "label": "Challenges and successes in this area",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_schools", "value": "yes" }
+        },
+        {
+          "name": "engage_municipality",
+          "type": "radio",
+          "label": "Has this LDA engage with Municipality?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "engage_municipality_type",
+          "type": "textarea",
+          "label": "Type of engagement",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_municipality", "value": "yes" }
+        },
+        {
+          "name": "engage_municipality_challenges",
+          "type": "textarea",
+          "label": "Challenges and successes in this area",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_municipality", "value": "yes" }
+        },
+        {
+          "name": "engage_saps",
+          "type": "radio",
+          "label": "Has this LDA engage with SAPS / Justice system?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "engage_saps_type",
+          "type": "textarea",
+          "label": "Type of engagement",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_saps", "value": "yes" }
+        },
+        {
+          "name": "engage_saps_challenges",
+          "type": "textarea",
+          "label": "Challenges and successes in this area",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_saps", "value": "yes" }
+        },
+        {
+          "name": "engage_sassa",
+          "type": "radio",
+          "label": "Has this LDA engage with Social Development / SASSA?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "engage_sassa_type",
+          "type": "textarea",
+          "label": "Type of engagement",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_sassa", "value": "yes" }
+        },
+        {
+          "name": "engage_sassa_challenges",
+          "type": "textarea",
+          "label": "Challenges and successes in this area",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_sassa", "value": "yes" }
+        },
+        {
+          "name": "engage_other_gov",
+          "type": "radio",
+          "label": "Has this LDA engage with any other government bodies?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "engage_other_gov_type",
+          "type": "textarea",
+          "label": "Type of engagement",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_other_gov", "value": "yes" }
+        },
+        {
+          "name": "engage_other_gov_challenges",
+          "type": "textarea",
+          "label": "Challenges and successes in this area",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "engage_other_gov", "value": "yes" }
+        }
+      ]
+    },
+    {
+      "title": "Areas of work",
+      "fields": [
+        {
+          "name": "work_gbv",
+          "type": "radio",
+          "label": "Has this LDA worked on GBV Prevention?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "work_gbv_types",
+          "type": "multiselect",
+          "label": "Select the types of work",
+          "options": [
+            { "label": "Prevention", "value": "prevention" },
+            { "label": "Response", "value": "response" },
+            { "label": "Advocacy", "value": "advocacy" }
+          ],
+          "required": true,
+          "show_if": { "field": "work_gbv", "value": "yes" }
+        },
+        {
+          "name": "work_gbv_notes",
+          "type": "textarea",
+          "label": "Notes on this work",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "work_gbv", "value": "yes" }
+        },
+        {
+          "name": "work_youth",
+          "type": "radio",
+          "label": "Has this LDA worked on Youth Development?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "work_youth_types",
+          "type": "multiselect",
+          "label": "Select the types of work",
+          "options": [
+            { "label": "Prevention", "value": "prevention" },
+            { "label": "Response", "value": "response" },
+            { "label": "Advocacy", "value": "advocacy" }
+          ],
+          "required": true,
+          "show_if": { "field": "work_youth", "value": "yes" }
+        },
+        {
+          "name": "work_youth_notes",
+          "type": "textarea",
+          "label": "Notes on this work",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "work_youth", "value": "yes" }
+        },
+        {
+          "name": "work_food_security",
+          "type": "radio",
+          "label": "Has this LDA worked on Food Security?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "work_food_security_types",
+          "type": "multiselect",
+          "label": "Select the types of work",
+          "options": [
+            { "label": "Prevention", "value": "prevention" },
+            { "label": "Response", "value": "response" },
+            { "label": "Advocacy", "value": "advocacy" }
+          ],
+          "required": true,
+          "show_if": { "field": "work_food_security", "value": "yes" }
+        },
+        {
+          "name": "work_food_security_notes",
+          "type": "textarea",
+          "label": "Notes on this work",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "work_food_security", "value": "yes" }
+        },
+        {
+          "name": "work_climate",
+          "type": "radio",
+          "label": "Has this LDA worked on Climate Change/Environmental Justice?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "work_climate_types",
+          "type": "multiselect",
+          "label": "Select the types of work",
+          "options": [
+            { "label": "Prevention", "value": "prevention" },
+            { "label": "Response", "value": "response" },
+            { "label": "Advocacy", "value": "advocacy" }
+          ],
+          "required": true,
+          "show_if": { "field": "work_climate", "value": "yes" }
+        },
+        {
+          "name": "work_climate_notes",
+          "type": "textarea",
+          "label": "Notes on this work",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "work_climate", "value": "yes" }
+        },
+        {
+          "name": "work_social_justice",
+          "type": "radio",
+          "label": "Has this LDA worked on Social Justice/Human Rights?",
+          "options": [
+            { "label": "No", "value": "no" },
+            { "label": "Yes", "value": "yes" }
+          ],
+          "required": true
+        },
+        {
+          "name": "work_social_justice_types",
+          "type": "multiselect",
+          "label": "Select the types of work",
+          "options": [
+            { "label": "Prevention", "value": "prevention" },
+            { "label": "Response", "value": "response" },
+            { "label": "Advocacy", "value": "advocacy" }
+          ],
+          "required": true,
+          "show_if": { "field": "work_social_justice", "value": "yes" }
+        },
+        {
+          "name": "work_social_justice_notes",
+          "type": "textarea",
+          "label": "Notes on this work",
+          "required": true,
+          "placeholder": "Enter details here",
+          "show_if": { "field": "work_social_justice", "value": "yes" }
+        }
+      ]
+    },
+    {
+      "title": "Organisational performance",
+      "fields": [
+        {
+          "name": "planning_monitoring",
+          "type": "textarea",
+          "label": "Planning, monitoring, implementation of plans and evaluation of the organisations work",
           "required": true,
           "placeholder": "Enter details here"
         },
         {
-          "name": "current_funders",
+          "name": "committee_performance",
           "type": "textarea",
-          "label": "Current funders",
+          "label": "Performance of the committee in terms of overall governance and staff management",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "staff_performance",
+          "type": "textarea",
+          "label": "Performance of the staff in terms of the implementation of plans",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "staff_committee_relations",
+          "type": "textarea",
+          "label": "Staff and committee working relations",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "fundraising_local",
+          "type": "textarea",
+          "label": "Fundraising events in the local community (including FRIS)",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "fundraising_external",
+          "type": "textarea",
+          "label": "Fundraising events outside the community",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "scat_dft_funds",
+          "type": "textarea",
+          "label": "Organisations use of SCAT DFT funds",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "agm_details",
+          "type": "textarea",
+          "label": "AGM details",
+          "required": true,
+          "placeholder": "Enter details here"
+        }
+      ]
+    },
+    {
+      "title": "Financial management",
+      "fields": [
+        {
+          "name": "analysis_book",
+          "type": "textarea",
+          "label": "Analysis book (month last updated)",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "bank_reconciliations",
+          "type": "textarea",
+          "label": "Bank reconciliations (month last updated)",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "petty_cash_book",
+          "type": "textarea",
+          "label": "Petty cash book (month last updated)",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "last_financial_report",
+          "type": "textarea",
+          "label": "Last financial report to SCAT and the quality of the report",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "budgets_expenditure",
+          "type": "textarea",
+          "label": "Budgets and actual expenditure",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "annual_audit",
+          "type": "textarea",
+          "label": "Annual audit and implementation of the auditor's recommendations",
+          "required": true,
+          "placeholder": "Enter details here"
+        }
+      ]
+    },
+    {
+      "title": "General administration",
+      "fields": [
+        {
+          "name": "filing_system",
+          "type": "textarea",
+          "label": "Filing system",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "record_keeping",
+          "type": "textarea",
+          "label": "Record keeping",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "correspondence_record",
+          "type": "textarea",
+          "label": "Correspondence record",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "staff_attendance",
+          "type": "textarea",
+          "label": "Staff's work attendance",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "last_activity_report",
+          "type": "textarea",
+          "label": "Last activity report to SCAT and the quality of the report",
+          "required": true,
+          "placeholder": "Enter details here"
+        }
+      ]
+    },
+    {
+      "title": "Other commentary",
+      "fields": [
+        {
+          "name": "program_implementation",
+          "type": "textarea",
+          "label": "Comment on program specific implementation",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "key_challenges",
+          "type": "textarea",
+          "label": "Key challenges, remedies and lessons learnt",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "other_notes",
+          "type": "textarea",
+          "label": "Other/further notes and comments",
+          "required": true,
+          "placeholder": "Enter details here"
+        }
+      ]
+    },
+    {
+      "title": "Outcomes",
+      "fields": [
+        {
+          "name": "key_outputs",
+          "type": "textarea",
+          "label": "Key outputs/results from the visit",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "implementation_details",
+          "type": "textarea",
+          "label": "Details of the implementation of the activities implemented at the site",
+          "required": true,
+          "placeholder": "Enter details here"
+        },
+        {
+          "name": "areas_of_improvement",
+          "type": "textarea",
+          "label": "Areas of improvement for the organisation",
           "required": true,
           "placeholder": "Enter details here"
         }
@@ -189,10 +686,10 @@
           "label": "Upload attendance register",
           "multiple": true,
           "required": false,
-          "accepted_file_types": [
-            "image/*",
-            "application/pdf"
-          ]
+          "config": {
+            "destination": "document",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+          }
         },
         {
           "name": "visit_photos",
