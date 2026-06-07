@@ -162,7 +162,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
         name: file.name,
         size: file.size,
         type: file.type,
-        url: `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}/${result.filePath}`,
+        url: `${(process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "")}/${result.filePath}`,
         filePath: result.filePath,
         dbId: result.id
       }

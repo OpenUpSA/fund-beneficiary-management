@@ -14,7 +14,7 @@ export function getInitials(name?: string | null): string {
 export function avatarUrl(filePath?: string | null): string | undefined {
   if (!filePath) return undefined
   if (/^https?:\/\//.test(filePath)) return filePath
-  const endpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT
+  const endpoint = (process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "")
   if (!endpoint) return undefined
   return `${endpoint.replace(/\/$/, "")}/${filePath.replace(/^\//, "")}`
 }

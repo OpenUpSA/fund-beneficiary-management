@@ -50,7 +50,7 @@ interface BreadcrumbLink {
 
 export default async function Page({ params, searchParams }: Props) {
   const media = await fetchMedia(params.media_id)
-  const imagekitUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
+  const imagekitUrlEndpoint = (process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "")
   const { from } = searchParams
 
   let breadcrumbLinks: BreadcrumbLink[] = [

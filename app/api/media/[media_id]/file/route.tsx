@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 
-const imagekitUrlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!
+const imagekitUrlEndpoint = (process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ?? "")
 
 export async function GET(req: NextRequest, { params }: { params: { media_id: string } }) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
