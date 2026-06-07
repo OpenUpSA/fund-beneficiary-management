@@ -7,6 +7,10 @@ import * as Sentry from "@sentry/nextjs";
 Sentry.init({
   dsn: "https://df47c5f381c5e7ef8e20b4c7232ce61a@o242378.ingest.us.sentry.io/4509836797673472",
 
+  // Only report from the prod deployment; tag events with the environment.
+  enabled: process.env.ENVIRONMENT === 'prod',
+  environment: process.env.ENVIRONMENT,
+
   // Sample 10% of traces in production; 100% locally for debugging
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1,
 
