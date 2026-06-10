@@ -107,7 +107,6 @@ export async function PUT(req: NextRequest, { params }: { params: { funder_id: s
         data: {
           name: data.name,
           about: data.about,
-          amount: data.amount,
           fundingStatus: data.fundingStatus,
           fundingStart: new Date(data.fundingStart),
           fundingEnd: new Date(data.fundingEnd),

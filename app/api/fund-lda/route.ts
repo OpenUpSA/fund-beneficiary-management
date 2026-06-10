@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { canManageFund } from "@/lib/permissions"
+
+async function updateFundFundedAmount(fundId: number) {
+  const allFundLDAs = await prisma.fundLocalDevelopmentAgency.findMany({
+    where: { fundId },
+    select: { amount: true }
+  })
+
+  const totalFunded = allFundLDAs.reduce((sum, lda) => {
+    return sum + (lda.amount ? Number(lda.amount) : 0)
+  }, 0)
+
+  await prisma.fund.update({
+    where: { id: fundId },
+    data: { fundedAmount: totalFunded }
+  })
+}
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -90,6 +107,10 @@ export async function POST(req: NextRequest) {
       }
     })
 
+    await updateFundFundedAmount(parsedFundId)
+    revalidateTag('funds:list')
+    revalidateTag(`fund:detail:${parsedFundId}`)
+
     return NextResponse.json(fundLDA, { status: 201 })
   } catch (error) {
     console.error("Error linking LDA to fund:", error)
@@ -166,6 +187,10 @@ export async function PUT(req: NextRequest) {
       }
     })
 
+    await updateFundFundedAmount(parsedFundId)
+    revalidateTag('funds:list')
+    revalidateTag(`fund:detail:${parsedFundId}`)
+
     return NextResponse.json(updatedFundLDA, { status: 200 })
   } catch (error) {
     console.error("Error updating funding:", error)
@@ -229,6 +254,10 @@ export async function DELETE(req: NextRequest) {
         id: existingLink.id
       }
     })
+
+    await updateFundFundedAmount(parsedFundId)
+    revalidateTag('funds:list')
+    revalidateTag(`fund:detail:${parsedFundId}`)
 
     return NextResponse.json(
       { message: "Funding removed successfully" },

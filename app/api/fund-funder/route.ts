@@ -12,6 +12,22 @@ export const runtime = "nodejs"
 /**
  * Recalculates and updates the fund's total amount based on all linked funders
  */
+async function updateFunderContributedAmount(funderId: number) {
+  const allFundFunders = await prisma.fundFunder.findMany({
+    where: { funderId },
+    select: { amount: true }
+  })
+
+  const totalContributed = allFundFunders.reduce((sum, ff) => {
+    return sum + (ff.amount ? Number(ff.amount) : 0)
+  }, 0)
+
+  await prisma.funder.update({
+    where: { id: funderId },
+    data: { amount: totalContributed }
+  })
+}
+
 async function updateFundTotalAmount(fundId: number) {
   const allFundFunders = await prisma.fundFunder.findMany({
     where: { fundId },
@@ -136,14 +152,15 @@ export async function POST(req: NextRequest) {
       }
     }))
 
-    // Recalculate and update fund total amount
     await updateFundTotalAmount(parsedFundId)
+    await updateFunderContributedAmount(parsedFunderId)
 
     // Revalidate cache tags
-    revalidateTag(`funder-${parsedFunderId}`)
-    revalidateTag(`fund-${parsedFundId}`)
-    revalidateTag('funders')
-    revalidateTag('funds')
+    revalidateTag(`funder:detail:${parsedFunderId}`)
+    revalidateTag(`funder:${parsedFunderId}:funds:list`)
+    revalidateTag(`fund:detail:${parsedFundId}`)
+    revalidateTag('funders:list')
+    revalidateTag('funds:list')
 
     return NextResponse.json(fundFunder, { status: 201 })
   } catch (error) {
@@ -266,14 +283,15 @@ export async function PUT(req: NextRequest) {
       }
     }))
 
-    // Recalculate and update fund total amount
     await updateFundTotalAmount(parsedFundId)
+    await updateFunderContributedAmount(parsedFunderId)
 
     // Revalidate cache tags
-    revalidateTag(`funder-${parsedFunderId}`)
-    revalidateTag(`fund-${parsedFundId}`)
-    revalidateTag('funders')
-    revalidateTag('funds')
+    revalidateTag(`funder:detail:${parsedFunderId}`)
+    revalidateTag(`funder:${parsedFunderId}:funds:list`)
+    revalidateTag(`fund:detail:${parsedFundId}`)
+    revalidateTag('funders:list')
+    revalidateTag('funds:list')
 
     return NextResponse.json(updatedFundFunder, { status: 200 })
   } catch (error) {
@@ -342,14 +360,15 @@ export async function DELETE(req: NextRequest) {
       }
     })
 
-    // Recalculate and update fund total amount
     await updateFundTotalAmount(parsedFundId)
+    await updateFunderContributedAmount(parsedFunderId)
 
     // Revalidate cache tags
-    revalidateTag(`funder-${parsedFunderId}`)
-    revalidateTag(`fund-${parsedFundId}`)
-    revalidateTag('funders')
-    revalidateTag('funds')
+    revalidateTag(`funder:detail:${parsedFunderId}`)
+    revalidateTag(`funder:${parsedFunderId}:funds:list`)
+    revalidateTag(`fund:detail:${parsedFundId}`)
+    revalidateTag('funders:list')
+    revalidateTag('funds:list')
 
     return NextResponse.json({ message: "Fund-funder relationship deleted successfully" }, { status: 200 })
   } catch (error) {

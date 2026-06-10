@@ -57,7 +57,7 @@ model FundingStatus {
 model Funder {
   id                   Int                @id @default(autoincrement())
   name                 String             @unique
-  amount               Decimal            @db.Money
+  amount               Decimal            @default(0) @db.Money
   about                String
   fundingStatus        FundStatus         @default(Active)
   fundingStart         DateTime           @default(now())
@@ -99,7 +99,8 @@ model Fund {
   fundingStatus                FundStatus                     @default(Active)
   fundType                     FundType                       @default(CORE_FUND)
   fundingCalculationType       FundingCalculationType         @default(total_funded_amount)
-  amount                       Decimal                        @db.Money
+  amount                       Decimal                        @default(0) @db.Money
+  fundedAmount                 Decimal                        @default(0) @db.Money
   defaultAmount                Decimal?                       @db.Money
   fundingStart                 DateTime                       @default(now())
   fundingEnd                   DateTime                       @default(now())

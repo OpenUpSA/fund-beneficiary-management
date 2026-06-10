@@ -317,7 +317,7 @@ export const FilteredFundFunders: React.FC<FilteredFundFundersProps> = ({
 
         <Card className="w-full">
           <CardContent className="p-0">
-            <div className="h-[calc(100vh-650px)] min-h-[300px] overflow-y-auto">
+            <div className="h-[calc(100vh-280px)] min-h-[300px] overflow-y-auto">
               <Table className="text-xs w-full relative">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
