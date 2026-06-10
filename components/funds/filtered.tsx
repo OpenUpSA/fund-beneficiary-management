@@ -27,7 +27,7 @@ interface FilteredFundsProps {
   focusAreas: FocusArea[]
 }
 
-type SortableColumn = 'name' | 'status' | 'startDate' | 'endDate' | 'amount' | null
+type SortableColumn = 'name' | 'status' | 'startDate' | 'endDate' | 'amount' | 'fundedAmount' | null
 type SortDirection = 'asc' | 'desc' | null
 
 
@@ -188,6 +188,10 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
           aValue = Number(a.amount)
           bValue = Number(b.amount)
           break
+        case 'fundedAmount':
+          aValue = Number(a.fundedAmount)
+          bValue = Number(b.fundedAmount)
+          break
         default:
           return 0
       }
@@ -245,7 +249,8 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
       <TableCell className="p-3 w-1/3">
         <Link href={getFundLink(fund.id)} className="font-medium" prefetch={false}>{fund.name}</Link>
       </TableCell>
-      <TableCell className="p-3">R{Number(fund.amount).toLocaleString()}</TableCell>
+      <TableCell className="p-3 text-nowrap">R{Number(fund.amount).toLocaleString()}</TableCell>
+      <TableCell className="p-3 text-nowrap">R{Number(fund.fundedAmount ?? 0).toLocaleString()}</TableCell>
       <TableCell className="p-3">{fund.fundLocalDevelopmentAgencies.length || 0}</TableCell>
       <TableCell className="p-3">{fund.fundFunders.length || 0}</TableCell>
       <TableCell className="p-3">
@@ -330,7 +335,7 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
         </div>
         <Card className="w-full">
           <CardContent className="p-0">
-            <div className="h-[calc(100vh-650px)] min-h-[300px] overflow-y-auto">
+            <div className="h-[calc(100vh-280px)] min-h-[300px] overflow-y-auto">
               <Table className="text-xs w-full relative">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -345,11 +350,22 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
                         </span>
                       </div>
                     </TableHead>
-                    <TableHead className="h-12 cursor-pointer select-none pl-3" onClick={() => handleSort('amount')}>
+                    <TableHead className="h-12 cursor-pointer select-none pl-3 text-nowrap" onClick={() => handleSort('amount')}>
                       <div className="flex items-center justify-start">
-                        <span className="font-medium">Amount</span>
+                        <span className="font-medium">Total Funds</span>
                         <span className="ml-1">
                           {sortColumn === 'amount' && sortDirection !== null
+                            ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
+                            : <ChevronsUpDownIcon size={14} className="text-gray-400" />
+                          }
+                        </span>
+                      </div>
+                    </TableHead>
+                    <TableHead className="h-12 cursor-pointer select-none pl-3 text-nowrap" onClick={() => handleSort('fundedAmount')}>
+                      <div className="flex items-center justify-start">
+                        <span className="font-medium">Funded Amount</span>
+                        <span className="ml-1">
+                          {sortColumn === 'fundedAmount' && sortDirection !== null
                             ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
                             : <ChevronsUpDownIcon size={14} className="text-gray-400" />
                           }
@@ -407,7 +423,7 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
                     sortedFunds.map(fund => <FundRow key={fund.id} fund={fund} />)
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={selectedFundType === 'project' ? 8 : 7} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={selectedFundType === 'project' ? 9 : 8} className="text-center py-8 text-gray-500">
                         No funds found
                       </TableCell>
                     </TableRow>

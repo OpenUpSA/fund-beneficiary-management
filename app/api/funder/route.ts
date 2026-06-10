@@ -77,7 +77,6 @@ export async function POST(req: NextRequest) {
       data: {
         name: data.name,
         about: data.about,
-        amount: data.amount,
         fundingStatus: data.fundingStatus || 'Active',
         fundingStart: new Date(data.fundingStart),
         fundingEnd: new Date(data.fundingEnd),

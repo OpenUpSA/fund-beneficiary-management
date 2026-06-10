@@ -356,7 +356,7 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders, navig
 
         <Card className="w-full">
           <CardContent className="p-0">
-            <div className="h-[calc(100vh-650px)] min-h-[300px] overflow-y-auto">
+            <div className="h-[calc(100vh-280px)] min-h-[300px] overflow-y-auto">
               <Table className="text-xs w-full relative">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -373,7 +373,7 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders, navig
                     </TableHead>
                     <TableHead className="h-12 cursor-pointer select-none px-3" onClick={() => handleSort('amount')}>
                       <div className="flex items-center justify-start">
-                        <span className="font-medium">Amount</span>
+                        <span className="font-medium">Contributed Amount</span>
                         <span className="ml-1">
                           {sortColumn === 'amount' && sortDirection !== null
                             ? (sortDirection === 'asc' ? <ChevronUpIcon size={14} /> : <ChevronDownIcon size={14} />)
