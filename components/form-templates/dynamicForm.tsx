@@ -28,6 +28,7 @@ export function DynamicForm({
   setIsFormValid,
   setCompletionStatus,
   dataChanged,
+  failedSectionTitles,
 }: {
   form: FormTemplate["form"]
   setData?: React.Dispatch<React.SetStateAction<FormData>>
@@ -45,6 +46,7 @@ export function DynamicForm({
     applicationId?: string | number,
     form_template_id?: number | string
   ) => Promise<void>
+  failedSectionTitles?: string[]
 }) {
   // Force re-render when isEditing changes
   const [editingState, setEditingState] = useState(true);
@@ -152,6 +154,7 @@ export function DynamicForm({
                 lda_id={lda_id}
                 dataChanged={dataChanged}
                 onSectionStatusChange={(status: { isValid: boolean; completed: number; required: number }) => handleSectionStatusChange(index, status)}
+                hasSubmitError={failedSectionTitles?.includes(section.title) ?? false}
               />
             ))}
           </Accordion>

@@ -19,6 +19,7 @@ interface FormAccordionItemProps {
   formStatus?: string
   dataChanged?: (ldaId?: number, applicationId?: string | number) => Promise<void>
   onSectionStatusChange?: (status: { isValid: boolean; completed: number; required: number }) => void
+  hasSubmitError?: boolean
 }
 
 
@@ -33,6 +34,7 @@ export default function FormAccordionItem({
   formStatus,
   dataChanged,
   onSectionStatusChange,
+  hasSubmitError = false,
 }: FormAccordionItemProps) {
   const formValuesStore = useFormValuesStore();
 
@@ -419,9 +421,19 @@ export default function FormAccordionItem({
 
     if (!onSectionStatusChange || !section) return;
 
+    // Hidden sections (show_if condition not met) must not block submission
+    if (!isSectionVisible) {
+      const prevSection = prevSectionRef.current;
+      if (!prevSection || !prevSection.isValid || prevSection.completed !== 0 || prevSection.required !== 0) {
+        prevSectionRef.current = { isValid: true, completed: 0, required: 0 };
+        onSectionStatusChange({ isValid: true, completed: 0, required: 0 });
+      }
+      return;
+    }
+
     // Determine effective isValid - use status fields if available
-    const effectiveIsValid = statusFieldsState?.hasStatusFields 
-      ? statusFieldsState.isComplete 
+    const effectiveIsValid = statusFieldsState?.hasStatusFields
+      ? statusFieldsState.isComplete
       : section.isValid;
 
     // Only update if values have changed
@@ -438,7 +450,7 @@ export default function FormAccordionItem({
         completed: section.completed,
         required: section.required
       };
-      
+
       // Notify parent with effective validity
       onSectionStatusChange({
         isValid: effectiveIsValid,
@@ -446,7 +458,7 @@ export default function FormAccordionItem({
         required: section.required
       });
     }
-  }, [section?.isValid, section?.completed, section?.required, onSectionStatusChange, section, statusFieldsState]);
+  }, [section?.isValid, section?.completed, section?.required, onSectionStatusChange, section, statusFieldsState, isSectionVisible]);
 
   // Batch save: accumulate pending field changes and flush them in a single API call
   type SaveFieldFunction = (fieldName: string, fieldValue: string) => Promise<void>;
@@ -561,32 +573,40 @@ export default function FormAccordionItem({
                 new Set((f?.fields || []).map(field => field.groupIndex).filter(Boolean))
               ) as number[];
             }
-            
-            // Find the next available index (max + 1)
-            const maxIndex = currentIndices.length > 0 ? Math.max(...currentIndices) : 0;
-            const newIndex = maxIndex + 1;
-            
-            // Create new fields from template (already includes parent prefix in name)
-            const newFields = createFieldFromTemplate(f, newIndex - 1); // -1 because createFieldFromTemplate adds 1
-            const subFields = newFields.flat().map((subfield) => {
-              // Respect show: false from template, otherwise check show_if
-              const showField = subfield.show === false ? false : (subfield.show_if ? false : true);
-              const subFieldObj = {
-                ...subfield,
-                show: showField,
-                isValid: subfield.required ? false : true
-              };
-              return subFieldObj;
-            });
-            
-            // Add new index to array and update fields
-            const newIndices = [...currentIndices, newIndex].sort((a, b) => a - b);
-            f.fields = [...(f.fields || []), ...subFields];
-            f = { ...f, value: JSON.stringify(newIndices) };
-            
-            // Save the new indices array to DB
-            if (debouncedSaveRef.current) {
-              debouncedSaveRef.current(f.name, JSON.stringify(newIndices));
+
+            // The caller (e.g. NarrativeRepeatableLayout) passes the requested new index as value.
+            // Using that authoritative index (instead of re-computing max+1) makes this block
+            // idempotent: React Strict Mode calls state updaters twice, and the second invocation
+            // would see the index already in currentIndices and skip — preventing a phantom extra entry.
+            const requestedIndex = parseInt(value, 10);
+            const newIndex = !isNaN(requestedIndex)
+              ? requestedIndex
+              : (currentIndices.length > 0 ? Math.max(...currentIndices) + 1 : 1);
+
+            // Skip if already present (idempotency guard — catches React Strict Mode double-invocation)
+            if (!currentIndices.includes(newIndex)) {
+              // Create new fields from template (already includes parent prefix in name)
+              const newFields = createFieldFromTemplate(f, newIndex - 1); // -1 because createFieldFromTemplate adds 1
+              const subFields = newFields.flat().map((subfield) => {
+                // Respect show: false from template, otherwise check show_if
+                const showField = subfield.show === false ? false : (subfield.show_if ? false : true);
+                const subFieldObj = {
+                  ...subfield,
+                  show: showField,
+                  isValid: subfield.required ? false : true
+                };
+                return subFieldObj;
+              });
+
+              // Add new index to array and update fields
+              const newIndices = [...currentIndices, newIndex].sort((a, b) => a - b);
+              f.fields = [...(f.fields || []), ...subFields];
+              f = { ...f, value: JSON.stringify(newIndices) };
+
+              // Save the new indices array to DB
+              if (debouncedSaveRef.current) {
+                debouncedSaveRef.current(f.name, JSON.stringify(newIndices));
+              }
             }
           }
         }
@@ -691,13 +711,14 @@ export default function FormAccordionItem({
       value={`section-${sectionIndex}`}
       className="border-b overflow-hidden text-gray-400"
     >
-      <AccordionTrigger 
+      <AccordionTrigger
         className={cn(
           "px-4 hover:no-underline",
-          // Use status fields if available, otherwise use standard isValid
-          statusFieldsState?.hasStatusFields
-            ? (statusFieldsState.isComplete ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950")
-            : (section?.isValid ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950")
+          hasSubmitError
+            ? "bg-red-100 border-l-4 border-red-500 dark:bg-red-950"
+            : statusFieldsState?.hasStatusFields
+              ? (statusFieldsState.isComplete ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950")
+              : (section?.isValid ? "bg-green-50 dark:bg-green-950" : "bg-red-50 dark:bg-red-950")
         )}
       >
         <div className="flex justify-between items-center w-full">

@@ -1,86 +1,70 @@
+# syntax=docker/dockerfile:1
 FROM node:20-alpine AS base
 
-# Install dependencies needed for native modules (bcrypt)
 RUN apk add --no-cache libc6-compat openssl
 
-# Enable corepack for Yarn 4
-RUN corepack enable
+# Enable corepack and pre-bake the exact Yarn version so it is never
+# downloaded again at build time (avoids the per-stage corepack download).
+RUN corepack enable && corepack prepare yarn@4.9.2 --activate
 
+# ── deps ─────────────────────────────────────────────────────────────────────
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files and prisma schema (needed for postinstall)
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY prisma ./prisma
 
-# Install dependencies (includes prisma generate via postinstall)
-RUN yarn install
+# Mount the Yarn global cache so packages are only fetched once across builds.
+# BuildKit persists this cache on the host between deploys.
+RUN --mount=type=cache,target=/root/.yarn \
+    YARN_CACHE_FOLDER=/root/.yarn yarn install --immutable
 
+# ── builder ───────────────────────────────────────────────────────────────────
 FROM base AS builder
 WORKDIR /app
 
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
 RUN yarn prisma generate
 
-# Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build args for NEXT_PUBLIC vars (baked into the app at build time)
-# LDA naming
 ARG NEXT_PUBLIC_LDA_SHORT_NAME="LDA"
 ARG NEXT_PUBLIC_LDA_SHORT_NAME_PLURAL="LDAs"
 ARG NEXT_PUBLIC_LDA_FULL_NAME="Local Development Agency"
 ARG NEXT_PUBLIC_LDA_FULL_NAME_PLURAL="Local Development Agencies"
 ARG NEXT_PUBLIC_LDA_URL_PATH="ldas"
-# Branding
 ARG NEXT_PUBLIC_LOGO_PATH="/images/logo.webp"
 ARG NEXT_PUBLIC_FAVICON_PATH="/images/favicon/favicon.ico"
-# ImageKit
 ARG NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=""
-# API Base URL
 ARG NEXT_PUBLIC_API_BASE_URL=""
-# Deployment environment for client-side Sentry gating/tagging (e.g. "prod")
 ARG NEXT_PUBLIC_ENVIRONMENT=""
-
-# Sentry source-map upload (build-time only). NOT a NEXT_PUBLIC var, so it is never
-# inlined into the client bundle. Optional — the build still succeeds without it
-# (source maps just aren't uploaded). Use a release-scoped token.
 ARG SENTRY_AUTH_TOKEN=""
 
-# ARG values are available in the RUN environment, so next build inlines the
-# NEXT_PUBLIC_* values and the Sentry plugin reads SENTRY_AUTH_TOKEN directly —
-# no ENV step needed.
-RUN yarn build
+RUN --mount=type=cache,target=/app/.next/cache \
+    yarn build
 
+# ── runner ────────────────────────────────────────────────────────────────────
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy public assets
 COPY --from=builder /app/public ./public
 
-# Set correct permissions for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN mkdir .next && chown nextjs:nodejs .next
 
-# Copy standalone build output
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 3000
-
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 

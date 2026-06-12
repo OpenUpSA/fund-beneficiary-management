@@ -68,6 +68,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     completed: 0,
     required: 0
   })
+  const [failedSectionTitles, setFailedSectionTitles] = useState<string[]>([])
 
   const { data: session } = useSession()
   // const { isLDAUser } = usePermissions()
@@ -154,14 +155,11 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
       })
       
       if (response.ok) {
+        setFailedSectionTitles([])
         toast.success('Form submitted successfully', { id: toastId })
-        
-        // Call dataChanged to revalidate data if provided
         dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
-        // Refresh the form data after successful submission
         window.location.reload();
       } else {
-        // Surface structured validation errors returned by the server.
         let message = 'Failed to submit form'
         let description: string | undefined
         try {
@@ -171,22 +169,33 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
           }
           if (errorData?.error) message = errorData.error
           if (Array.isArray(errorData?.issues) && errorData.issues.length > 0) {
-            console.warn('Form submission blocked by server validation:', errorData.issues)
-            const preview = errorData.issues.slice(0, 3).map(issue => {
-              const section = issue.sectionTitle ? `${issue.sectionTitle}: ` : ''
-              const label = issue.fieldLabel ?? 'field'
-              const reason = issue.message ?? 'is required'
-              return `• ${section}${label} ${reason}`
+            // Collect unique section titles that have errors
+            const sectionsWithErrors = [...new Set(
+              errorData.issues.map(i => i.sectionTitle).filter((t): t is string => Boolean(t))
+            )]
+            setFailedSectionTitles(sectionsWithErrors)
+
+            // Show sections grouped (no raw field names)
+            const previewSections = sectionsWithErrors.slice(0, 3)
+            const preview = previewSections.map(title => {
+              const count = errorData.issues!.filter(i => i.sectionTitle === title).length
+              return `• ${title} (${count} field${count !== 1 ? 's' : ''} incomplete)`
             }).join('\n')
-            const remaining = errorData.issues.length - 3
+            const remaining = sectionsWithErrors.length - previewSections.length
             description = remaining > 0
-              ? `${preview}\n• …and ${remaining} more`
+              ? `${preview}\n• …and ${remaining} more section${remaining !== 1 ? 's' : ''}`
               : preview
           }
         } catch {
           /* response had no JSON body — keep the default message */
         }
-        toast.error(message, { id: toastId, description, duration: 10000 })
+        toast.error(message, {
+          id: toastId,
+          duration: 10000,
+          description: description
+            ? <span className="text-foreground whitespace-pre-line text-sm">{description}</span>
+            : undefined,
+        })
       }
     } catch {  
       toast.error('Error submitting form. Please try again later', { id: toastId })
@@ -255,6 +264,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 setIsFormValid={setIsFormValid}
                 setCompletionStatus={setCompletionStatus}
                 dataChanged={dataChanged}
+                failedSectionTitles={failedSectionTitles}
               />
           ) : (
             <p className="text-muted-foreground">Form template not available</p>
