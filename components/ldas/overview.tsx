@@ -2,6 +2,7 @@
 
 import { Badge } from "../ui/badge"
 import { Card, CardContent, CardHeader } from "../ui/card"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { LocalDevelopmentAgencyFull, FundFull } from "@/types/models"
 import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
@@ -100,12 +101,17 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <div className="flex justify-between items-center">
               <span className="text-slate-900">Focus area(s):</span>
               <div className="flex gap-2">
-                {lda.focusAreas?.length > 0 ? 
+                {lda.focusAreas?.length > 0 ?
                   lda.focusAreas.map(area => (
-                    <Badge key={area.id} variant="outline" className="flex items-center gap-1" title={area.label}>
-                      <DynamicIcon name={area.icon} size={16} />
-                    </Badge>
-                  )) : 
+                    <Tooltip key={area.id}>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <DynamicIcon name={area.icon} size={16} />
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>{area.label}</TooltipContent>
+                    </Tooltip>
+                  )) :
                   "None specified"}
               </div>
             </div>

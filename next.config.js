@@ -8,6 +8,23 @@ const ldaUrlPath = process.env.NEXT_PUBLIC_LDA_URL_PATH || 'ldas'
 /** @type {import('next').NextConfig} */
 const config = {
   output: 'standalone',
+  experimental: {
+    // Prevent webpack from trying to bundle Node.js-only OpenTelemetry packages
+    // imported transitively through @sentry/nextjs → @sentry/node.
+    serverComponentsExternalPackages: ['require-in-the-middle', '@opentelemetry/instrumentation'],
+  },
+  webpack(webpackConfig) {
+    // Suppress "Critical dependency: require function is used in a way in which
+    // dependencies cannot be statically extracted" warnings from OpenTelemetry /
+    // require-in-the-middle. These are benign — the packages intentionally use
+    // dynamic require() for monkey-patching and work correctly at runtime.
+    webpackConfig.ignoreWarnings = [
+      ...(webpackConfig.ignoreWarnings || []),
+      { module: /require-in-the-middle/ },
+      { module: /@opentelemetry\/instrumentation/ },
+    ]
+    return webpackConfig
+  },
   logging: {
     fetches: {
       fullUrl: process.env.NODE_ENV !== 'production',
@@ -42,42 +59,23 @@ const config = {
   },
 }
 
-module.exports = withNextIntl(config)
+const nextConfig = withNextIntl(config)
 
-
-// Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
-
-module.exports = withSentryConfig(
-  module.exports,
-  {
-    // For all available options, see:
-    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
-
+// Only wrap with Sentry when an auth token is present.
+// Without a token the Sentry webpack plugin still registers hooks that can
+// contact Sentry's API during compilation and cause the build to hang on
+// Dokku (where SENTRY_AUTH_TOKEN is not set).
+if (process.env.SENTRY_AUTH_TOKEN) {
+  const { withSentryConfig } = require("@sentry/nextjs");
+  module.exports = withSentryConfig(nextConfig, {
     org: "openupsa",
     project: "fbmscat",
-
-    // Only print logs for uploading source maps in CI
     silent: !process.env.CI,
-
-    // For all available options, see:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-    // Only upload source maps when a Sentry auth token is present (skips on Dokku staging builds)
-    sourcemaps: {
-      disable: !process.env.SENTRY_AUTH_TOKEN,
-    },
-    // Upload a larger set of source maps for prettier stack traces (increases build time)
-    widenClientFileUpload: !!process.env.SENTRY_AUTH_TOKEN,
-
-    // Automatically tree-shake Sentry logger statements to reduce bundle size
+    sourcemaps: { disable: false },
+    widenClientFileUpload: true,
     disableLogger: true,
-
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true,
-  }
-);
+  });
+} else {
+  module.exports = nextConfig
+}

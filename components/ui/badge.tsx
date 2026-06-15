@@ -25,28 +25,19 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {
-  title?: string;
-}
+    VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, title, ...props }: BadgeProps) {
-  return (
-    <div 
-      className={cn(
-        badgeVariants({ variant }), 
-        className,
-        title ? "relative group cursor-pointer" : ""
-      )} 
-      {...props}
-    >
-      {props.children}
-      {title && (
-        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
-          {title}
-        </span>
-      )}
-    </div>
-  )
-}
+const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
+  ({ className, variant, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(badgeVariants({ variant }), className)}
+        {...props}
+      />
+    )
+  }
+)
+Badge.displayName = "Badge"
 
 export { Badge, badgeVariants }

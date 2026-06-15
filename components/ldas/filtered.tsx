@@ -10,6 +10,8 @@ import { availableReportingStatuses } from "@/app/data"
 import { LocalDevelopmentAgencyListItem, UserWithLDAsBasic } from "@/types/models"
 import { FocusArea, FundingStatus, Province, DevelopmentStage } from "@prisma/client"
 import { DynamicIcon } from "../dynamicIcon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { InitialsBadge } from "@/components/ui/initials-badge"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "@/components/ldas/form"
@@ -17,7 +19,6 @@ import { FormDialog } from "@/components/ldas/form"
 import React, { useCallback, useMemo, useState, useDeferredValue, startTransition } from "react"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
-const getInitials = (name: string) => name.split(" ").map(w => w[0]).join("")
 const getShortName = (name: string) => name.split(" ").map(w => w[0]).join("")
 
 type SortDirection = 'asc' | 'desc' | null
@@ -195,7 +196,14 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     if (!code) return null
     const info = provinceMap.get(code)
     if (!info) return null
-    return <Badge variant="outline" title={info.label}>{info.shortName}</Badge>
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline">{info.shortName}</Badge>
+        </TooltipTrigger>
+        <TooltipContent>{info.label}</TooltipContent>
+      </Tooltip>
+    )
   }, [provinceMap])
 
   const LdaRow = useMemo(() => React.memo(function LdaRow({ lda }: { lda: LocalDevelopmentAgencyListItem }) {
@@ -216,25 +224,22 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
         <TableCell className="p-2">
           <div className="flex items-center space-x-2">
             {lda.focusAreas.map(fa => (
-              <Badge
-                key={`lda-${lda.id}-focusArea-${fa.id}`}
-                variant="outline"
-                title={fa.label}
-                className="p-1"
-              >
-                <DynamicIcon name={fa.icon} size={14} className="m-0" />
-              </Badge>
+              <Tooltip key={`lda-${lda.id}-focusArea-${fa.id}`}>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="p-1">
+                    <DynamicIcon name={fa.icon} size={14} className="m-0" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{fa.label}</TooltipContent>
+              </Tooltip>
             ))}
           </div>
         </TableCell>
         <TableCell className="p-2">
-          <Badge
-            variant="outline"
-            className="text-slate-700 border-slate-200 border rounded-full w-6 h-6 text-xs flex items-center justify-center p-0"
+          <InitialsBadge
+            name={lda.programmeOfficer?.name ?? ""}
             title={lda.programmeOfficer?.name ?? "No Programme Officer assigned"}
-          >
-            {getInitials(lda.programmeOfficer?.name ?? "")}
-          </Badge>
+          />
         </TableCell>
       </TableRow>
     )

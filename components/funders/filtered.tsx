@@ -10,6 +10,7 @@ import { ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon, MoreHorizontal, Pen
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { DynamicIcon } from "@/components/dynamicIcon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { format } from "date-fns"
 import { FocusArea, Funder, Province } from '@prisma/client'
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -220,14 +221,14 @@ export const FilteredFunders: React.FC<FilteredFundersProps> = ({ funders, navig
           <div className="flex items-center space-x-1">
             {funder.focusAreas.length > 0 ? (
               funder.focusAreas.map(fa => (
-                <Badge
-                  key={`funder-${funder.id}-focusArea-${fa.id}`}
-                  variant="outline"
-                  title={fa.label}
-                  className="p-1"
-                >
-                  <DynamicIcon name={fa.icon} size={14} className="m-0" />
-                </Badge>
+                <Tooltip key={`funder-${funder.id}-focusArea-${fa.id}`}>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="p-1">
+                      <DynamicIcon name={fa.icon} size={14} className="m-0" />
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>{fa.label}</TooltipContent>
+                </Tooltip>
               ))
             ) : (
               <span className="text-gray-500">All</span>

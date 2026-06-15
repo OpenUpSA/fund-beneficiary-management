@@ -2,6 +2,7 @@
 
 import { Badge } from "../ui/badge"
 import { Card, CardContent, CardHeader } from "../ui/card"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { FundFull } from "@/types/models"
 import { FocusArea } from "@prisma/client"
 import { format } from "date-fns"
@@ -99,12 +100,17 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
             <div className="flex justify-between items-center">
               <span className="text-slate-900">Focus area(s):</span>
               <div className="flex gap-2">
-                {fund.focusAreas?.length > 0 ? 
+                {fund.focusAreas?.length > 0 ?
                   fund.focusAreas.map((focusArea: FocusArea) => (
-                    <Badge key={`focusArea-${focusArea.id}`} variant="outline" className="flex items-center gap-1" title={focusArea.label}>
-                      <DynamicIcon name={focusArea.icon} size={16} />
-                    </Badge>
-                  )) : 
+                    <Tooltip key={`focusArea-${focusArea.id}`}>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <DynamicIcon name={focusArea.icon} size={16} />
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>{focusArea.label}</TooltipContent>
+                    </Tooltip>
+                  )) :
                   "None specified"}
               </div>
             </div>

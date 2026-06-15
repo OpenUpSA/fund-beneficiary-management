@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface InitialsBadgeProps {
   name: string
@@ -30,12 +31,16 @@ export function InitialsBadge({
   }
 
   return (
-    <Badge
-      variant={variant}
-      className={`text-slate-700 border-slate-200 border rounded-full ${sizeClasses[size]} flex items-center justify-center p-0 ${className}`}
-      title={title || name}
-    >
-      {getInitials(name)}
-    </Badge>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          variant={variant}
+          className={`text-slate-700 border-slate-200 border rounded-full ${sizeClasses[size]} flex items-center justify-center p-0 ${className}`}
+        >
+          {getInitials(name)}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>{title || name}</TooltipContent>
+    </Tooltip>
   )
 }

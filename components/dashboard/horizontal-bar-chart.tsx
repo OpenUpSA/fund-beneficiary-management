@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { DynamicIcon } from "@/components/dynamicIcon"
 import { LucideIcon } from "lucide-react"
 
@@ -39,16 +40,20 @@ export function HorizontalBarChart({ title, icon: Icon, items, maxItems = 10, sh
         <div className="space-y-2">
           {displayItems.map((item, index) => (
             <div key={index} className="flex items-center gap-3">
-              {/* Icon or short label */}
-              <div className="w-10 h-8 flex items-center justify-center border border-gray-200 rounded-md bg-white">
-                {showIcons && item.icon ? (
-                  <DynamicIcon name={item.icon} size={18} className="text-gray-600 m-0" />
-                ) : (
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {item.short || item.label.slice(0, 3).toUpperCase()}
-                  </span>
-                )}
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="w-10 h-8 flex items-center justify-center border border-gray-200 rounded-md bg-white cursor-default">
+                    {showIcons && item.icon ? (
+                      <DynamicIcon name={item.icon} size={18} className="text-gray-600 m-0" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground font-medium">
+                        {item.short || item.label.slice(0, 3).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">{item.label}</TooltipContent>
+              </Tooltip>
               {/* Value and bar */}
               <div className="flex-1 flex items-center">
                 {/* Full-width background track */}

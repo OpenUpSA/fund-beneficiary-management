@@ -12,6 +12,7 @@ import { format } from "date-fns"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { DynamicIcon } from "@/components/dynamicIcon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { buildReferrerUrl } from "@/lib/breadcrumb-utils"
 import {
   DropdownMenu,
@@ -303,14 +304,14 @@ export const ContributedFunds: React.FC<ContributedFundsProps> = ({
           <div className="flex items-center space-x-1">
             {ff.fund.focusAreas.length > 0 ? (
               ff.fund.focusAreas.map(fa => (
-                <Badge
-                  key={`fund-${ff.fund.id}-focusArea-${fa.id}`}
-                  variant="outline"
-                  title={fa.label}
-                  className="p-1"
-                >
-                  <DynamicIcon name={fa.icon} size={14} className="m-0" />
-                </Badge>
+                <Tooltip key={`fund-${ff.fund.id}-focusArea-${fa.id}`}>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="p-1">
+                      <DynamicIcon name={fa.icon} size={14} className="m-0" />
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>{fa.label}</TooltipContent>
+                </Tooltip>
               ))
             ) : (
               <span className="text-gray-500">-</span>
