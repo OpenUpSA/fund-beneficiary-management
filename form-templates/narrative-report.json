@@ -255,10 +255,14 @@
       "fields": [
         {
           "name": "casework_enabled",
-          "type": "toggle",
+          "type": "radio",
           "label": "Did you work on casework during this reporting period?",
           "description": "Select 'Yes' if your organisation handled any cases during this reporting period. This includes new cases opened and cases finalised.",
-          "required": true
+          "required": true,
+          "options": [
+            { "value": "false", "label": "No" },
+            { "value": "true", "label": "Yes" }
+          ]
         }
       ]
     },
@@ -503,10 +507,14 @@
       "fields": [
         {
           "name": "food_gardening_enabled",
-          "type": "toggle",
+          "type": "radio",
           "label": "Did you work on food gardening during this reporting period?",
           "description": "Select 'Yes' if your organisation was involved in any food gardening activities during this reporting period. This includes establishing household gardens, managing community gardens, or supporting garden beneficiaries.",
-          "required": true
+          "required": true,
+          "options": [
+            { "value": "false", "label": "No" },
+            { "value": "true", "label": "Yes" }
+          ]
         }
       ]
     },
