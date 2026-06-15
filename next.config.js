@@ -64,8 +64,12 @@ module.exports = withSentryConfig(
     // For all available options, see:
     // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
+    // Only upload source maps when a Sentry auth token is present (skips on Dokku staging builds)
+    sourcemaps: {
+      disable: !process.env.SENTRY_AUTH_TOKEN,
+    },
     // Upload a larger set of source maps for prettier stack traces (increases build time)
-    widenClientFileUpload: true,
+    widenClientFileUpload: !!process.env.SENTRY_AUTH_TOKEN,
 
     // Automatically tree-shake Sentry logger statements to reduce bundle size
     disableLogger: true,

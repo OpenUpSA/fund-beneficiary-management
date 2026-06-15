@@ -76,7 +76,6 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
 
   const handleRemove = (groupIndex: number) => {
     if (onValueChange) {
-      // Use delete:INDEX format to delete specific item
       onValueChange(inputField, `delete:${groupIndex}`)
     }
   }
