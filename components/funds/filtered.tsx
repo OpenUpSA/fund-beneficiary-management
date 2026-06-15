@@ -9,6 +9,7 @@ import Link from "next/link";
 import { LimitedFundModel } from "@/types/models";
 import { FocusArea, Province, FundStatus } from "@prisma/client";
 import { DynamicIcon } from "../dynamicIcon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { format } from "date-fns";
 import { ChevronUpIcon, ChevronDownIcon, ChevronsUpDownIcon } from "lucide-react"
 import { FilterBar } from "../ui/filter-bar"
@@ -270,14 +271,14 @@ export const FilteredFunds: React.FC<FilteredFundsProps> = ({ funds, navigatedFr
         <TableCell className="p-3">
           <div className="flex items-center space-x-2">
             {fund.focusAreas.map((fa) => (
-              <Badge
-                key={`fund-${fund.id}-focusArea-${fa.id}`}
-                variant="outline"
-                title={fa.label}
-                className="p-1"
-              >
-                <DynamicIcon name={fa.icon} size={14} className="m-0" />
-              </Badge>
+              <Tooltip key={`fund-${fund.id}-focusArea-${fa.id}`}>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="p-1">
+                    <DynamicIcon name={fa.icon} size={14} className="m-0" />
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>{fa.label}</TooltipContent>
+              </Tooltip>
             ))}
           </div>
         </TableCell>
