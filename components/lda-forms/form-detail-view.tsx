@@ -10,7 +10,7 @@ import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Form, FormData } from "@/types/forms"
-import {PenLine, Send, CalendarIcon} from "lucide-react"
+import { PenLine, Send, CalendarIcon, Eye } from "lucide-react"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
@@ -231,24 +231,33 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
       <Card className="col-span-7 h-fit">
         <CardHeader className="border-b pb-2 grid grid-cols-2 items-center p-4 min-h-[79px]">
           <h2 className="text-lg font-bold text-slate-900">{getFormTypeName()}</h2>
-          {ldaForm.formStatus?.label === "Draft" && <div className="flex gap-2 justify-end">
-            {!isEditing && <Button onClick={() => setIsEditing(true)}>
-              <PenLine className="h-4 w-4" />
-              <span>Edit form</span>
-            </Button>}
-            {!isEditing && <Button 
-              onClick={submitForm} 
-              disabled={!isFormValid} 
-              variant="secondary" 
-              className={isFormValid ?
-                "bg-green-600 text-white hover:bg-green-700"
-                : "bg-slate-100 text-slate-400"
-              }
-            >
-              <Send className="h-4 w-4" />
-              <span>Submit form</span>
-            </Button>}
-          </div>}
+          <div className="flex gap-2 justify-end">
+            {ldaForm.formStatus?.label === "Draft" && !isEditing && (
+              <Button onClick={() => setIsEditing(true)}>
+                <PenLine className="h-4 w-4" />
+                <span>Edit form</span>
+              </Button>
+            )}
+            {ldaForm.formStatus?.label === "Draft" && !isEditing && (
+              <Button
+                onClick={submitForm}
+                disabled={!isFormValid}
+                variant="secondary"
+                className={isFormValid ? "bg-green-600 text-white hover:bg-green-700" : "bg-slate-100 text-slate-400"}
+              >
+                <Send className="h-4 w-4" />
+                <span>Submit form</span>
+              </Button>
+            )}
+            {ldaForm.formStatus?.label !== "Draft" && !isEditing && (
+              <Button variant="outline" asChild>
+                <a href={`/form-preview/${ldaForm.id}`} target="_blank" rel="noopener noreferrer">
+                  <Eye className="h-4 w-4" />
+                  <span>Preview</span>
+                </a>
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {ldaForm.formTemplate.form ? (
