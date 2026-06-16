@@ -14,7 +14,8 @@ import {
   ChevronDownIcon,
   AlertCircle,
   MoreHorizontal,
-  Trash2
+  Trash2,
+  Eye,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -316,7 +317,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                 </div>
               </TableHead>
               <TableHead className="font-medium">Reporting status</TableHead>
-              {isSuperUser() && <TableHead className="font-medium"></TableHead>}
+              <TableHead className="font-medium"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -405,7 +406,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   <TableCell>
                     {getReportingStatus()}
                   </TableCell>
-                  {isSuperUser() && <TableCell>
+                  <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -414,21 +415,36 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setFormToDelete(ldaForm)}>
-                          <div className="flex items-center gap-2 text-destructive hover:cursor-pointer">
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                          </div>
-                        </DropdownMenuItem>
+                        {ldaForm.formStatus?.label !== "Draft" && (
+                          <DropdownMenuItem asChild>
+                            <a
+                              href={`/form-preview/${ldaForm.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4" />
+                              Preview
+                            </a>
+                          </DropdownMenuItem>
+                        )}
+                        {isSuperUser() && (
+                          <DropdownMenuItem onSelect={() => setFormToDelete(ldaForm)}>
+                            <div className="flex items-center gap-2 text-destructive hover:cursor-pointer">
+                              <Trash2 className="h-4 w-4" />
+                              Delete
+                            </div>
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>}
+                  </TableCell>
                 </TableRow>
               );
             })}
             {filteredForms.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-gray-500 text-lg">
+                <TableCell colSpan={8} className="h-24 text-center text-gray-500 text-lg">
                   No applications found
                 </TableCell>
               </TableRow>
