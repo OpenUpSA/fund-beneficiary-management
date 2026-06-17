@@ -15,7 +15,6 @@ import {
   AlertCircle,
   MoreHorizontal,
   Trash2,
-  Eye,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
