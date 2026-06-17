@@ -249,6 +249,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 <span>Submit form</span>
               </Button>
             )}
+            {/* Preview button disabled
             {ldaForm.formStatus?.label !== "Draft" && !isEditing && (
               <Button variant="outline" asChild>
                 <a href={`/form-preview/${ldaForm.id}`} target="_blank" rel="noopener noreferrer">
@@ -257,6 +258,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 </a>
               </Button>
             )}
+            */}
           </div>
         </CardHeader>
         <CardContent className="p-0">
