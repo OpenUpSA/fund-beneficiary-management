@@ -415,6 +415,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {/* Preview menu item disabled
                         {ldaForm.formStatus?.label !== "Draft" && (
                           <DropdownMenuItem asChild>
                             <a
@@ -428,6 +429,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                             </a>
                           </DropdownMenuItem>
                         )}
+                        */}
                         {isSuperUser() && (
                           <DropdownMenuItem onSelect={() => setFormToDelete(ldaForm)}>
                             <div className="flex items-center gap-2 text-destructive hover:cursor-pointer">
