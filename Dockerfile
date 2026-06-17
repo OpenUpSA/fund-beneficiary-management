@@ -42,7 +42,7 @@ ARG NEXT_PUBLIC_API_BASE_URL=""
 ARG NEXT_PUBLIC_ENVIRONMENT=""
 ARG SENTRY_AUTH_TOKEN=""
 
-ENV NODE_OPTIONS="--max-old-space-size=1536"
+ENV NODE_OPTIONS="--max-old-space-size=1280"
 
 RUN --mount=type=cache,target=/app/.next/cache \
     yarn build
