@@ -1,25 +1,16 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
-import { FilteredLDAs } from "@/components/ldas/filtered"
 import { fetchDevelopmentStages, fetchFocusAreas, fetchFundingStatuses, fetchLocalDevelopmentAgencies, fetchProvinces, fetchUsers } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
-import dynamic from "next/dynamic";
-import { Card, CardContent } from "@/components/ui/card";
-import { Suspense } from "react"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { redirect } from "next/navigation"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
-
-// Dynamically import the map component to avoid SSR issues with Leaflet
-const LDAMap = dynamic(
-  () => import("@/components/ldas/map/lda-map"),
-  { ssr: false }
-);
+import { LDAPageContent } from "@/components/ldas/lda-page-content"
 
 export async function generateMetadata({ params: { locale } }: Readonly<{ params: { locale: string } }>): Promise<Metadata> {
   const tM = await getTranslations({ locale, namespace: 'metadata' })
@@ -81,20 +72,7 @@ export default async function Page() {
         <h1 className="text-xl md:text-2xl font-semibold">{LDA_TERMINOLOGY.fullNamePlural}</h1>
       </div>
       
-      {/* Map Card */}
-      <Card className="mb-6 hidden md:block">
-        <CardContent className="p-0">
-        <Suspense fallback={<div style={{height: 400}} className="w-full animate-pulse bg-muted" />}>
-          <LDAMap 
-            ldas={ldas} 
-            height="400px" 
-            width="100%" 
-          />
-        </Suspense>
-        </CardContent>
-      </Card>
-      
-      <FilteredLDAs
+      <LDAPageContent
         ldas={ldas}
         focusAreas={focusAreas}
         developmentStages={developmentStages}
