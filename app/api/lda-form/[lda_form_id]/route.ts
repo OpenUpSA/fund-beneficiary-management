@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
-import { Prisma, Gender } from "@prisma/client"
-import { Form } from "@/types/forms"
+import { Prisma } from "@prisma/client"
 
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
@@ -11,171 +10,11 @@ import {
   validateFormSubmission,
   type FormTemplateInput,
 } from "@/lib/form-validation/validate-submission";
+import { applyPrefill } from "@/lib/lda-form-prefill";
 
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-
-// Define a type for the staff member structure
-type StaffMember = {
-  firstName: string;
-  lastName: string;
-  gender: Gender; // Use the Gender enum from Prisma
-  position?: string | null; // Allow null values for position
-  isCommittee: boolean;
-  // Add other potential properties from the database
-  id?: number;
-  localDevelopmentAgencyId?: number;
-};
-
-// Define a type for the organisation object with index signature to allow dynamic property access
-type OrganisationWithDetails = {
-  organisationDetail?: { [key: string]: unknown } | null;
-  operations?: { [key: string]: unknown } | null;
-  staffMembers: StaffMember[];
-};
-
-// Context needed for funding-related prefill sources
-type FundingContext = {
-  ldaId: number;
-  fundingStart: Date;
-  fundingEnd: Date;
-};
-
-const getPrefillData = async (
-  organisation: OrganisationWithDetails, 
-  prefill: {source: string; path: string}, 
-  linkedFormData?: Record<string, unknown> | null,
-  fundingContext?: FundingContext
-) => {
-  switch (prefill.source) {
-    case 'organisation':
-      // Direct properties of the organisation
-      if (organisation && prefill.path) {
-        const value = organisation[prefill.path as keyof typeof organisation]
-        if (value !== undefined && value !== null) {
-          return String(value)
-        }
-      }
-      break;
-      
-    case 'organisation_detail':
-      // Properties from the related organisationDetail
-      if (organisation.organisationDetail && prefill.path) {
-        const detailValue = organisation.organisationDetail[prefill.path as keyof typeof organisation.organisationDetail]
-        if (detailValue !== undefined && detailValue !== null) {
-          return String(detailValue)
-        }
-      }
-      break;
-      
-    case 'organisation_operations':
-      // Properties from the related operations
-      if (organisation.operations && prefill.path) {
-        const operationsValue = organisation.operations[prefill.path as keyof typeof organisation.operations]
-        if (operationsValue !== undefined && operationsValue !== null) {
-          return String(operationsValue)
-        }
-      }
-      break;
-
-    case 'organisation_staff':
-      // Properties from the related staff
-      if (prefill.path) {
-        if (prefill.path === 'organisation_staff_members') {
-          return organisation.staffMembers.filter((staffMember) => staffMember.isCommittee === false).map((staffMember) => ({
-            name: staffMember.firstName + ' ' + staffMember.lastName,
-            gender: staffMember.gender,
-            position: staffMember.position
-          }))
-        } else if (prefill.path === 'organisation_board_members') {
-          return organisation.staffMembers.filter((staffMember) => staffMember.isCommittee === true).map((staffMember) => ({
-            name: staffMember.firstName + ' ' + staffMember.lastName,
-            gender: staffMember.gender
-          }))
-        }
-      }
-      break;
-
-    case 'linkedForm':
-      // Properties from the linked form's formData
-      if (linkedFormData && prefill.path) {
-        const linkedValue = linkedFormData[prefill.path]
-        if (linkedValue !== undefined && linkedValue !== null) {
-          return linkedValue
-        }
-      }
-      break;
-
-    case 'defaultValue':
-      if (prefill.path) {
-        return prefill.path
-      }
-      break;
-
-    case 'core_grant_funding': {
-      // Find approved grant funding form where finance report's start date is within the grant period
-      // Amount is divided by 4 (quarterly)
-      if (!fundingContext) break;
-      const grantForm = await prisma.localDevelopmentAgencyForm.findFirst({
-        where: {
-          localDevelopmentAgencyId: fundingContext.ldaId,
-          approved: { not: null },
-          formTemplate: { formCategory: 'grant_funding' },
-          fundingStart: { lte: fundingContext.fundingStart },
-          fundingEnd: { gte: fundingContext.fundingStart },
-        },
-        orderBy: { approved: 'desc' },
-        select: { amount: true },
-      });
-      if (grantForm?.amount) {
-        const quarterlyAmount = Number(grantForm.amount) / 4;
-        return String(quarterlyAmount);
-      }
-      return "0";
-    }
-
-    case 'fris_funding': {
-      // Sum FRIS claim amounts where status is Approved and approval date is between report's funding period
-      if (!fundingContext) break;
-      const frisClaims = await prisma.localDevelopmentAgencyForm.findMany({
-        where: {
-          localDevelopmentAgencyId: fundingContext.ldaId,
-          formStatus: { label: 'Approved' },
-          formTemplate: { formCategory: 'fris_claim' },
-          approved: {
-            gte: fundingContext.fundingStart,
-            lte: fundingContext.fundingEnd,
-          },
-        },
-        select: { amount: true },
-      });
-      const totalFris = frisClaims.reduce((sum, claim) => sum + Number(claim.amount), 0);
-      return String(totalFris);
-    }
-
-    case 'dft_funding': {
-      // Sum DFT application amounts where status is Approved and approval date is between report's funding period
-      if (!fundingContext) break;
-      const dftApps = await prisma.localDevelopmentAgencyForm.findMany({
-        where: {
-          localDevelopmentAgencyId: fundingContext.ldaId,
-          formStatus: { label: 'Approved' },
-          formTemplate: { formCategory: 'dft_application' },
-          approved: {
-            gte: fundingContext.fundingStart,
-            lte: fundingContext.fundingEnd,
-          },
-        },
-        select: { amount: true },
-      });
-      const totalDft = dftApps.reduce((sum, app) => sum + Number(app.amount), 0);
-      return String(totalDft);
-    }
-  }
-  
-}
 
 export async function GET(req: NextRequest, { params }: { params: { lda_form_id: string } }) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
@@ -213,58 +52,11 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
-  // Check if the form is not submitted and needs prefilling
+  // Apply prefill for display only — prefill is persisted to DB on approval, not here
   if (record.formTemplate?.form) {
-    // Initialize formData if it doesn't exist
-    const formData = record.formData as Prisma.JsonObject || {}
-    const formTemplate = record.formTemplate.form as unknown as Form
-    const organisation = record.localDevelopmentAgency
-    const linkedFormData = record.linkedForm?.formData as Record<string, unknown> | null
-    
-    // Now you can safely access formTemplate.sections
-    const sections = formTemplate.sections
-
-    // Build funding context for funding-related prefill sources
-    const fundingContext: FundingContext = {
-      ldaId: record.localDevelopmentAgencyId,
-      fundingStart: record.fundingStart,
-      fundingEnd: record.fundingEnd,
-    };
-
-    if (organisation && sections) {
-      // Collect all prefill tasks first, then run in parallel
-      const prefillTasks: Array<{ key: string; promise: Promise<unknown> }> = []
-
-      for (const section of sections) {
-        if (section.fields) {
-          for (const field of section.fields) {
-            if (field?.prefill && !(field.name in formData)) {
-              const prefill = field.prefill as { source: string; path: string }
-              prefillTasks.push({ key: field.name, promise: getPrefillData(organisation, prefill, linkedFormData, fundingContext) })
-            }
-            if (field.fields) {
-              for (const subfield of field.fields) {
-                if (subfield?.prefill) {
-                  const key = field.name + '_' + subfield.name
-                  if (!(key in formData)) {
-                    const subprefill = subfield.prefill as { source: string; path: string }
-                    prefillTasks.push({ key, promise: getPrefillData(organisation, subprefill, linkedFormData, fundingContext) })
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-
-      const results = await Promise.all(prefillTasks.map(t => t.promise))
-      results.forEach((value, i) => {
-        if (value !== undefined && value !== null) {
-          formData[prefillTasks[i].key] = value as Prisma.JsonValue
-        }
-      })
-    }
-    record.formData = formData as Prisma.JsonValue
+    const savedFormData = (record.formData as Record<string, unknown>) ?? {}
+    const { mergedData } = await applyPrefill(ldaFormId, savedFormData)
+    record.formData = mergedData as Prisma.JsonValue
   }
 
   return NextResponse.json(record)
