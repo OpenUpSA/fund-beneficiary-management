@@ -138,6 +138,8 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
       if (data.postalProvince !== undefined) orgDetailData.postalProvince = data.postalProvince;
       if (data.postalDistrict !== undefined) orgDetailData.postalDistrict = data.postalDistrict;
     }
+    if (data.country !== undefined) orgDetailData.country = data.country || null;
+    if (data.region !== undefined) orgDetailData.region = data.region || null;
     if (data.latitude !== undefined) orgDetailData.latitude = data.latitude;
     if (data.longitude !== undefined) orgDetailData.longitude = data.longitude;
     if (data.mapAddress !== undefined) orgDetailData.mapAddress = data.mapAddress;

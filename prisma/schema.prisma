@@ -285,6 +285,8 @@ model OrganisationDetail {
   postalDistrict            String                   @default("")
   postalCode                String                   @default("")
   useDifferentPostalAddress Boolean                  @default(false)
+  country                   String?
+  region                    String?
   latitude                  Float?
   longitude                 Float?
   mapAddress                String                   @default("")

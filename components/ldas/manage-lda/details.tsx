@@ -182,6 +182,35 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
             )}
           />
       </div>
+
+      {process.env.NEXT_PUBLIC_ENABLE_COUNTRY_REGION === 'true' && (
+        <div className="space-y-2">
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country &amp; Region</FormLabel>
+                <FormControl>
+                  <Input placeholder="Country" {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="region"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input placeholder="Region" {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
+
       <div className="space-y-2">
         <FormField
           control={form.control}
