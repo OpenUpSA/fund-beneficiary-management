@@ -15,8 +15,11 @@ interface FinanceTotalsLayoutProps {
 
 function parseNumeric(val: string | undefined): number {
   if (!val) return 0;
-  const num = parseFloat(String(val).replace(/[^0-9.]/g, ""));
-  return isNaN(num) ? 0 : num;
+  const str = String(val).trim();
+  const negative = str.startsWith('-');
+  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
+  if (isNaN(num)) return 0;
+  return negative ? -num : num;
 }
 
 function formatCurrency(value: number): string {
@@ -29,6 +32,7 @@ export function FinanceTotalsLayout({ inputField, isEditing, onValueChange }: Fi
 
   // Get subfields — these have prefixed names (e.g., finance_totals_total_income)
   const subfields = inputField.fields || [];
+  const carryoverField = subfields.find((f) => f.name.endsWith("carryover_amount"));
   const incomeField = subfields.find((f) => f.name.endsWith("total_income"));
   const expenditureField = subfields.find((f) => f.name.endsWith("total_expenditure"));
   const confirmationField = subfields.find((f) => f.name.endsWith("totals_confirmation"));
@@ -78,8 +82,35 @@ export function FinanceTotalsLayout({ inputField, isEditing, onValueChange }: Fi
 
   if (!inputField.show) return null;
 
+  const carryoverValue = carryoverField ? parseNumeric(values[carryoverField.name]) : 0;
+
   return (
     <div className="space-y-4">
+      {/* Carryover Amount */}
+      {carryoverField && (
+        <div className="px-4">
+          <div className="flex items-center justify-between w-full mb-1">
+            <label className="block text-sm font-medium text-slate-900">
+              {carryoverField.label || "Carryover amount"}
+            </label>
+          </div>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <span className="text-gray-500">R</span>
+            </div>
+            <Input
+              type="text"
+              disabled
+              value={formatCurrency(carryoverValue)}
+              className="pl-8 pr-10 bg-slate-50 text-slate-700"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <Lock className="h-4 w-4 text-slate-400" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Total Income */}
       <div className="px-4">
         <div className="flex items-center justify-between w-full mb-1">

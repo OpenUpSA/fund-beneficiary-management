@@ -177,6 +177,14 @@
           "required": true,
           "fields": [
             {
+              "name": "carryover_amount",
+              "type": "currency",
+              "label": "Carryover amount",
+              "required": false,
+              "config": { "locked": true },
+              "prefill": { "source": "carryover_amount", "path": "" }
+            },
+            {
               "name": "total_income",
               "type": "currency",
               "label": "Total income",

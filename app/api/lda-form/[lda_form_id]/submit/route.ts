@@ -48,9 +48,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
     }
 
     // Server-side completeness check — runs for all users including super users.
+    // Locked fields (prefill.config.locked) are excluded from required checks
+    // because they are system-populated on approval, not at submission time.
+    const savedFormData = (existingForm.formData ?? {}) as Record<string, unknown>;
     const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
-    const formDataObj = (existingForm.formData ?? {}) as Record<string, unknown>;
-    const issues = validateFormSubmission(template, formDataObj, session.user.role);
+    const issues = validateFormSubmission(template, savedFormData, session.user.role);
 
     if (issues.length > 0) {
       return NextResponse.json(

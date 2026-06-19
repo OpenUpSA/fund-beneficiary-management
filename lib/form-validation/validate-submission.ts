@@ -558,6 +558,9 @@ const collectFieldIssues = (
     return
   }
 
+  // Locked fields are system-populated on approval — skip required check at submission
+  if ((field.config as Record<string, unknown> | undefined)?.locked) return
+
   // Leaf required-field check
   if (field.required) {
     if (isFieldValueEmpty(formData[effectiveName], field.type)) {

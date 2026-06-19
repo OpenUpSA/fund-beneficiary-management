@@ -272,12 +272,12 @@
         {
           "name": "attendance_register",
           "type": "fileUpload",
-          "label": "Upload an image of your attendance register",
+          "label": "Upload your attendance register",
           "required": true,
           "multiple": true,
           "config": {
-            "destination": "media",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+            "destination": "document",
+            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
           },
           "show_if": {
             "field": "did_not_take_attendance",
