@@ -194,6 +194,8 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
       postalCode: lda?.organisationDetail?.postalCode ?? '',
       postalProvince: lda?.organisationDetail?.postalProvince ?? '',
       postalDistrict: lda?.organisationDetail?.postalDistrict ?? '',
+      country: lda?.organisationDetail?.country ?? '',
+      region: lda?.organisationDetail?.region ?? '',
       latitude: lda?.organisationDetail?.latitude ?? 0,
       longitude: lda?.organisationDetail?.longitude ?? 0,
       mapAddress: lda?.organisationDetail?.mapAddress ?? '',

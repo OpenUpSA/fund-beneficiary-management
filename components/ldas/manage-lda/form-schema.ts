@@ -37,6 +37,10 @@ export const FormSchema = z.object({
   postalProvince: z.string().optional(),
   postalDistrict: z.string().optional(),
   
+  // Country / Region (feature-flagged)
+  country: z.string().optional(),
+  region: z.string().optional(),
+
   // Mapped location
   latitude: z.number().optional(),
   longitude: z.number().optional(),

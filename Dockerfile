@@ -40,9 +40,10 @@ ARG NEXT_PUBLIC_FAVICON_PATH="/images/favicon/favicon.ico"
 ARG NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=""
 ARG NEXT_PUBLIC_API_BASE_URL=""
 ARG NEXT_PUBLIC_ENVIRONMENT=""
+ARG NEXT_PUBLIC_ENABLE_COUNTRY_REGION="false"
 ARG SENTRY_AUTH_TOKEN=""
 
-ENV NODE_OPTIONS="--max-old-space-size=1536"
+ENV NODE_OPTIONS="--max-old-space-size=1280"
 
 RUN --mount=type=cache,target=/app/.next/cache \
     yarn build

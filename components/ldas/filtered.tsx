@@ -33,6 +33,7 @@ interface FilteredLDAsProps {
   provinces: Province[]
   fundingStatus: FundingStatus[]
   callback?: (ldaId?: number) => void
+  mapMinimized?: boolean
 }
 
 export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
@@ -43,7 +44,8 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
   programmeOfficers,
   provinces,
   fundingStatus,
-  callback
+  callback,
+  mapMinimized = false,
 }) => {
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
@@ -282,7 +284,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
 
         <Card className="w-full">
           <CardContent className="p-0">
-            <div className="h-[calc(100vh-650px)] min-h-[300px] overflow-y-auto">
+            <div className={`${mapMinimized ? "h-[calc(100vh-250px)]" : "h-[calc(100vh-650px)]"} min-h-[300px] overflow-y-auto`}>
               <Table className="text-xs w-full relative">
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>

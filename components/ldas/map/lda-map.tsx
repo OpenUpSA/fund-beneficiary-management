@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
 import { LocalDevelopmentAgencyListItem } from "@/types/models";
 
@@ -58,13 +58,50 @@ function FitBoundsToMarkers({ markers }: { markers: Array<[number, number]> }) {
   return null;
 }
 
+const MINIMIZE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="10" y1="14" x2="3" y2="21"></line><line x1="21" y1="3" x2="14" y2="10"></line></svg>`
+
+function MinimizeControl({ onMinimize }: { onMinimize: () => void }) {
+  const map = useMap()
+  const callbackRef = useRef(onMinimize)
+
+  useEffect(() => { callbackRef.current = onMinimize }, [onMinimize])
+
+  useEffect(() => {
+    const MinCtrl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd() {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control')
+        const link = L.DomUtil.create('a', '', container) as HTMLAnchorElement
+        link.href = '#'
+        link.title = 'Minimize map'
+        link.setAttribute('role', 'button')
+        link.style.cssText = 'display:flex;align-items:center;justify-content:center;width:26px;height:26px;'
+        link.innerHTML = MINIMIZE_SVG
+        L.DomEvent.on(link, 'click', (e) => {
+          L.DomEvent.stopPropagation(e)
+          L.DomEvent.preventDefault(e)
+          callbackRef.current()
+        })
+        return container
+      },
+      onRemove() {},
+    })
+    const ctrl = new MinCtrl()
+    ctrl.addTo(map)
+    return () => { ctrl.remove() }
+  }, [map])
+
+  return null
+}
+
 interface LDAMapProps {
   ldas: LocalDevelopmentAgencyListItem[];
   width?: string | number;
   height?: string | number;
+  onMinimize?: () => void;
 }
 
-export default function LDAMap({ ldas, width = "100%", height = "500px" }: LDAMapProps) {
+export default function LDAMap({ ldas, width = "100%", height = "500px", onMinimize }: LDAMapProps) {
   // Filter LDAs with valid coordinates
   const validLDAs = ldas.filter(lda => 
     lda.organisationDetail?.latitude && 
@@ -164,6 +201,7 @@ export default function LDAMap({ ldas, width = "100%", height = "500px" }: LDAMa
         {markerCoordinates.length > 0 && <FitBoundsToMarkers markers={markerCoordinates} />}
         <ZoomControl position="bottomright" />
         <FullscreenControl />
+        {onMinimize && <MinimizeControl onMinimize={onMinimize} />}
       </MapContainer>
     </div>
   );
