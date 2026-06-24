@@ -95,15 +95,6 @@ export function SignInForm({
                   {t('forgot password')}
                 </a>
               </div>
-
-              <hr />
-
-              <div className="text-center text-sm">
-                {t('account sign up')}{" "}
-                <a href="/sign-up" className="underline underline-offset-4">
-                  {tC('Sign up')}
-                </a>
-              </div>
             </div>
           </form>
           <div className="relative hidden bg-muted md:block">
