@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Form, FormData } from "@/types/forms"
-import { PenLine, Send, CalendarIcon, Maximize2, Minimize2 } from "lucide-react"
+import { PenLine, Send, CalendarIcon, Maximize2, Minimize2, Check, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "sonner"
@@ -259,7 +259,40 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
             focusMode && "sticky top-0 z-20 bg-card"
           )}
         >
-          <h2 className="text-lg font-bold text-slate-900">{getFormTypeName()}</h2>
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-bold text-slate-900">{focusMode ? ldaForm.title : getFormTypeName()}</h2>
+            {focusMode && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <span>
+                    <strong className="text-foreground">{completionStatus.completed}</strong>/
+                    {completionStatus.required} required fields
+                  </span>
+                  <span className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                    <span
+                      className="block h-full rounded-full bg-green-600 transition-all"
+                      style={{
+                        width: `${
+                          completionStatus.required > 0
+                            ? Math.round((completionStatus.completed / completionStatus.required) * 100)
+                            : 100
+                        }%`,
+                      }}
+                    />
+                  </span>
+                </span>
+                {ldaForm.formTemplate.sidebarConfig?.dueDate && ldaForm.dueDate && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    Due {formatDateTime(ldaForm.dueDate)} ({getDaysBetweenDates(ldaForm.dueDate)})
+                  </span>
+                )}
+                {ldaForm.formStatus?.label && (
+                  <span>Status: <strong className="text-foreground">{ldaForm.formStatus.label}</strong></span>
+                )}
+              </div>
+            )}
+          </div>
           <div className="flex gap-2 justify-end items-center">
             {ldaForm.formStatus?.label === "Draft" && !isEditing && (
               <Button onClick={() => setIsEditing(true)}>
@@ -276,6 +309,12 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
               >
                 <Send className="h-4 w-4" />
                 <span>Submit form</span>
+              </Button>
+            )}
+            {focusMode && isEditing && (
+              <Button variant="secondary" onClick={() => setIsEditing(false)}>
+                <Check className="h-4 w-4" />
+                <span>Done</span>
               </Button>
             )}
             <TooltipProvider>
