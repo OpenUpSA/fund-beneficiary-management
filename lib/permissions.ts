@@ -299,6 +299,23 @@ export const getAvailableRolesForCreation = (currentUser: User): Role[] => {
   return []
 }
 
+// Map a free-text role value (from a CSV, etc.) to a valid Role enum value.
+// Accepts enum names ("USER") and common labels ("LDA User", "Programme Officer").
+// Returns null when the value can't be matched.
+export const normalizeRole = (value: string): Role | null => {
+  const key = value.trim().toUpperCase().replace(/[\s-]+/g, '_')
+  const map: Record<string, Role> = {
+    USER: Role.USER,
+    LDA_USER: Role.USER,
+    PROGRAMME_OFFICER: Role.PROGRAMME_OFFICER,
+    PROGRAM_OFFICER: Role.PROGRAMME_OFFICER,
+    ADMIN: Role.ADMIN,
+    SUPER_USER: Role.SUPER_USER,
+    SUPERUSER: Role.SUPER_USER,
+  }
+  return map[key] ?? null
+}
+
 export const canViewFunders = (user: User | null): boolean => {
   if (!user) return false
   if (permissions.isSuperUser(user)) return true

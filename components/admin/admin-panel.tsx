@@ -10,8 +10,9 @@ import {
   FileCheck, 
   Wallet, 
   Calendar, 
-  Database, 
-  MapPin 
+  Database,
+  MapPin,
+  Upload
 } from "lucide-react"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { CreateFormPanel } from "./create-form-panel"
@@ -19,6 +20,7 @@ import { CrudPanel, FieldConfig } from "./crud-panel"
 import { ReportSchedulesPanel } from "./report-schedules-panel"
 import { CacheManagementPanel } from "./cache-management-panel"
 import { ProvincesPanel } from "./provinces-panel"
+import { BulkUploadPanel } from "./bulk-upload-panel"
 import { cn } from "@/lib/utils"
 
 interface AdminPanelProps {
@@ -35,6 +37,7 @@ type AdminTool =
   | 'report-schedules'
   | 'cache-management'
   | 'provinces'
+  | 'bulk-upload'
   | null
 
 interface ToolOption {
@@ -42,7 +45,7 @@ interface ToolOption {
   title: string
   description: string
   icon: React.ElementType
-  category: 'forms' | 'data' | 'system'
+  category: 'forms' | 'data' | 'bulk' | 'system'
 }
 
 const toolOptions: ToolOption[] = [
@@ -94,6 +97,13 @@ const toolOptions: ToolOption[] = [
     description: 'Manage provinces and their districts',
     icon: MapPin,
     category: 'data',
+  },
+  {
+    id: 'bulk-upload',
+    title: 'Bulk Upload',
+    description: 'Import records in bulk from a file (e.g. users)',
+    icon: Upload,
+    category: 'bulk',
   },
   {
     id: 'cache-management',
@@ -161,6 +171,9 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
       
       case 'provinces':
         return <ProvincesPanel onBack={() => setSelectedTool(null)} />
+
+      case 'bulk-upload':
+        return <BulkUploadPanel onBack={() => setSelectedTool(null)} />
       
       case 'development-stages':
       case 'focus-areas':
@@ -192,6 +205,7 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
   const categories = {
     forms: { label: 'Forms & Reports', tools: toolOptions.filter(t => t.category === 'forms') },
     data: { label: 'Data Management', tools: toolOptions.filter(t => t.category === 'data') },
+    bulk: { label: 'Bulk Data Actions', tools: toolOptions.filter(t => t.category === 'bulk') },
     system: { label: 'System', tools: toolOptions.filter(t => t.category === 'system') },
   }
 
