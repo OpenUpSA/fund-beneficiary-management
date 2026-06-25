@@ -52,7 +52,7 @@ export default function Page() {
 
   const dataChanged = async () => {
     "use server"
-    revalidateTag('users')
+    revalidateTag('users:list')
   }
 
   return (

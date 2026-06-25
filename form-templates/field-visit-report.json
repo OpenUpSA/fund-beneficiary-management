@@ -323,8 +323,13 @@
           "label": "Select the types of work",
           "options": [
             { "label": "Prevention", "value": "prevention" },
-            { "label": "Response", "value": "response" },
-            { "label": "Advocacy", "value": "advocacy" }
+            { "label": "Response and Support Services", "value": "response_and_support_services" },
+            { "label": "Advocacy and Accountability", "value": "advocacy_and_accountability" },
+            { "label": "Economic Empowerment", "value": "economic_empowerment" },
+            { "label": "Capacity building", "value": "capacity_building" },
+            { "label": "Community Mobilisation and Civic Participation", "value": "community_mobilisation_and_civic_participation" },
+            { "label": "Systems Strengthening and referrals", "value": "systems_strengthening_and_referrals" },
+            { "label": "Policy engagement", "value": "policy_engagement" }
           ],
           "required": true,
           "show_if": { "field": "work_gbv", "value": "yes" }
@@ -352,9 +357,14 @@
           "type": "multiselect",
           "label": "Select the types of work",
           "options": [
-            { "label": "Prevention", "value": "prevention" },
-            { "label": "Response", "value": "response" },
-            { "label": "Advocacy", "value": "advocacy" }
+            { "label": "Leadership Development", "value": "leadership_development" },
+            { "label": "Education and Skills Development", "value": "education_and_skills_development" },
+            { "label": "Employment and Economic Empowerment", "value": "employment_and_economic_empowerment" },
+            { "label": "Health and Wellbeing", "value": "health_and_wellbeing" },
+            { "label": "Environmental and Climate Action", "value": "environmental_and_climate_action" },
+            { "label": "Anti-corruption action", "value": "anti_corruption_action" },
+            { "label": "Gender Equality and GBV Prevention", "value": "gender_equality_and_gbv_prevention" },
+            { "label": "Youth Civic Participation and Advocacy", "value": "youth_civic_participation_and_advocacy" }
           ],
           "required": true,
           "show_if": { "field": "work_youth", "value": "yes" }
@@ -412,9 +422,15 @@
           "type": "multiselect",
           "label": "Select the types of work",
           "options": [
-            { "label": "Prevention", "value": "prevention" },
-            { "label": "Response", "value": "response" },
-            { "label": "Advocacy", "value": "advocacy" }
+            { "label": "Climate Adaptation and Community Resilience", "value": "climate_adaptation_and_community_resilience" },
+            { "label": "Sustainable Food Systems, community gardens and Agroecology", "value": "sustainable_food_systems_community_gardens_and_agroecology" },
+            { "label": "Water Security and Natural Resource Management", "value": "water_security_and_natural_resource_management" },
+            { "label": "Environmental Education and Awareness", "value": "environmental_education_and_awareness" },
+            { "label": "Advocacy and accountability", "value": "advocacy_and_accountability" },
+            { "label": "Community Mobilisation and Environmental Action", "value": "community_mobilisation_and_environmental_action" },
+            { "label": "Green Livelihoods and Sustainable Economic Development", "value": "green_livelihoods_and_sustainable_economic_development" },
+            { "label": "Biodiversity and Ecosystem Protection", "value": "biodiversity_and_ecosystem_protection" },
+            { "label": "Policy engagement", "value": "policy_engagement" }
           ],
           "required": true,
           "show_if": { "field": "work_climate", "value": "yes" }
@@ -442,9 +458,17 @@
           "type": "multiselect",
           "label": "Select the types of work",
           "options": [
-            { "label": "Prevention", "value": "prevention" },
-            { "label": "Response", "value": "response" },
-            { "label": "Advocacy", "value": "advocacy" }
+            { "label": "Case management and referrals", "value": "case_management_and_referrals" },
+            { "label": "Court support", "value": "court_support" },
+            { "label": "Human Rights Education and Awareness", "value": "human_rights_education_and_awareness" },
+            { "label": "Access to Justice and Legal Support", "value": "access_to_justice_and_legal_support" },
+            { "label": "Advocacy and Policy Influence", "value": "advocacy_and_policy_influence" },
+            { "label": "Civic Participation at the different government levels", "value": "civic_participation_at_the_different_government_levels" },
+            { "label": "Social security", "value": "social_security" },
+            { "label": "Community Organising and Mobilisation", "value": "community_organising_and_mobilisation" },
+            { "label": "Socio-Economic Rights and Service Delivery", "value": "socio_economic_rights_and_service_delivery" },
+            { "label": "Accountability and Social Monitoring", "value": "accountability_and_social_monitoring" },
+            { "label": "Peacebuilding (Mediation) and Social Cohesion", "value": "peacebuilding_mediation_and_social_cohesion" }
           ],
           "required": true,
           "show_if": { "field": "work_social_justice", "value": "yes" }

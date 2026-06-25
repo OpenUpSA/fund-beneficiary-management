@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useEffect, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,8 @@ const LDAMap = dynamic(
   () => import("@/components/ldas/map/lda-map"),
   { ssr: false }
 )
+
+const MAP_MINIMIZED_KEY = "lda-map-minimized"
 
 interface LDAPageContentProps {
   ldas: LocalDevelopmentAgencyListItem[]
@@ -35,6 +37,19 @@ export function LDAPageContent({
 }: LDAPageContentProps) {
   const [mapMinimized, setMapMinimized] = useState(false)
 
+  // Remember the user's map minimise/maximise choice for the session. Read
+  // after mount (rather than in the initial state) to avoid hydration mismatch.
+  useEffect(() => {
+    if (sessionStorage.getItem(MAP_MINIMIZED_KEY) === "true") {
+      setMapMinimized(true)
+    }
+  }, [])
+
+  const updateMapMinimized = (minimized: boolean) => {
+    setMapMinimized(minimized)
+    sessionStorage.setItem(MAP_MINIMIZED_KEY, String(minimized))
+  }
+
   return (
     <>
       {mapMinimized ? (
@@ -43,7 +58,7 @@ export function LDAPageContent({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setMapMinimized(false)}
+            onClick={() => updateMapMinimized(false)}
             className="h-7 px-2 gap-1 text-xs"
           >
             <Maximize2 size={13} /> Show map
@@ -57,7 +72,7 @@ export function LDAPageContent({
                 ldas={ldas}
                 height="400px"
                 width="100%"
-                onMinimize={() => setMapMinimized(true)}
+                onMinimize={() => updateMapMinimized(true)}
               />
             </Suspense>
           </CardContent>

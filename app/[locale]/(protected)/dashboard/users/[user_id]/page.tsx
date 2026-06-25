@@ -55,7 +55,7 @@ export default function Page({ params }: UserPageProps) {
 
   const dataChanged = async () => {
     "use server"
-    revalidateTag('users')
+    revalidateTag('users:list')
   }
 
   return (

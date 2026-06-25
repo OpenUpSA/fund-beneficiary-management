@@ -23,12 +23,37 @@ interface SendEmailOptions {
   html: string
 }
 
+// In local development (or whenever EMAIL_TRANSPORT=console) we print the
+// email to the server console instead of sending it through Resend. This lets
+// you grab password-reset / set-password links without a real mail provider.
+function isConsoleTransport(): boolean {
+  if (process.env.EMAIL_TRANSPORT === 'console') return true
+  if (process.env.EMAIL_TRANSPORT === 'resend') return false
+  return !process.env.RESEND_API_KEY
+}
+
+function logEmailToConsole({ to, subject, html }: SendEmailOptions) {
+  // Pull out any links so they're easy to click/copy from the terminal.
+  const links = Array.from(html.matchAll(/href="([^"]+)"/g)).map((m) => m[1])
+
+  console.log('\n' + '='.repeat(70))
+  console.log('📧  EMAIL (console transport — not actually sent)')
+  console.log('='.repeat(70))
+  console.log('From:    ', getEmailFrom())
+  console.log('To:      ', to)
+  console.log('Subject: ', subject)
+  if (links.length) {
+    console.log('-'.repeat(70))
+    console.log('Links:')
+    for (const link of links) console.log('  •', link)
+  }
+  console.log('='.repeat(70) + '\n')
+}
+
 export async function sendEmail({ to, subject, html }: SendEmailOptions) {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not configured. Email not sent.')
-    console.log('Would have sent email to:', to)
-    console.log('Subject:', subject)
-    return { success: false, error: 'Email service not configured' }
+  if (isConsoleTransport()) {
+    logEmailToConsole({ to, subject, html })
+    return { success: true, data: { id: 'console' } }
   }
 
   try {
