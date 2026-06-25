@@ -29,6 +29,7 @@ export function DynamicForm({
   setCompletionStatus,
   dataChanged,
   failedSectionTitles,
+  focusMode = false,
 }: {
   form: FormTemplate["form"]
   setData?: React.Dispatch<React.SetStateAction<FormData>>
@@ -47,6 +48,7 @@ export function DynamicForm({
     form_template_id?: number | string
   ) => Promise<void>
   failedSectionTitles?: string[]
+  focusMode?: boolean
 }) {
   // Force re-render when isEditing changes
   const [editingState, setEditingState] = useState(true);
@@ -138,7 +140,13 @@ export function DynamicForm({
 
   return (
     <div className="w-full flex flex-col h-full relative">
-      <div className="flex-grow overflow-y-auto max-h-[calc(80vh-200px)]">
+      <div
+        className={
+          focusMode
+            ? "flex-grow h-auto max-h-full"
+            : "flex-grow overflow-y-auto max-h-[calc(80vh-200px)]"
+        }
+      >
         <FormValuesProvider defaultValues={formData}>
           <Accordion type="single" collapsible>
             {form.sections.map((section, index) => (

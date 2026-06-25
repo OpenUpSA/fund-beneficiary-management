@@ -5,12 +5,14 @@ import { z } from "zod"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Calendar } from "../ui/calendar";
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Form, FormData } from "@/types/forms"
-import { PenLine, Send, CalendarIcon } from "lucide-react"
+import { PenLine, Send, CalendarIcon, Maximize2, Minimize2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
@@ -63,12 +65,28 @@ type FormValues = z.infer<typeof FormSchema>
 export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetailViewProps) {
 
   const [isEditing, setIsEditing] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
   const [isFormValid, setIsFormValid] = useState(false)
   const [completionStatus, setCompletionStatus] = useState({
     completed: 0,
     required: 0
   })
   const [failedSectionTitles, setFailedSectionTitles] = useState<string[]>([])
+
+  // Focus mode: expand the form to fullscreen for easier filling. Lock body
+  // scroll and allow Escape to exit while it's active.
+  useEffect(() => {
+    if (!focusMode) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFocusMode(false)
+    }
+    document.body.style.overflow = "hidden"
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.body.style.overflow = ""
+      document.removeEventListener("keydown", onKeyDown)
+    }
+  }, [focusMode])
 
   const { data: session } = useSession()
   // const { isLDAUser } = usePermissions()
@@ -228,10 +246,21 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
   return (
     <div className="grid grid-cols-10 gap-4">
       {/* Application Form Card */}
-      <Card className="col-span-7 h-fit">
-        <CardHeader className="border-b pb-2 grid grid-cols-2 items-center p-4 min-h-[79px]">
+      <Card
+        className={cn(
+          "col-span-7 h-fit",
+          focusMode &&
+            "fixed inset-0 z-50 col-span-10 m-0 h-full overflow-y-auto rounded-none border-0 bg-muted shadow-none"
+        )}
+      >
+        <CardHeader
+          className={cn(
+            "border-b pb-2 grid grid-cols-2 items-center p-4 min-h-[79px]",
+            focusMode && "sticky top-0 z-20 bg-card"
+          )}
+        >
           <h2 className="text-lg font-bold text-slate-900">{getFormTypeName()}</h2>
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-2 justify-end items-center">
             {ldaForm.formStatus?.label === "Draft" && !isEditing && (
               <Button onClick={() => setIsEditing(true)}>
                 <PenLine className="h-4 w-4" />
@@ -249,6 +278,22 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 <span>Submit form</span>
               </Button>
             )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setFocusMode((v) => !v)}
+                    aria-label={focusMode ? "Exit focus mode" : "Focus mode"}
+                    className="ml-1 text-muted-foreground hover:text-foreground"
+                  >
+                    {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{focusMode ? "Exit focus mode" : "Focus mode"}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {/* Preview button disabled
             {ldaForm.formStatus?.label !== "Draft" && !isEditing && (
               <Button variant="outline" asChild>
@@ -261,7 +306,13 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
             */}
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent
+          className={cn(
+            "p-0",
+            focusMode &&
+              "mx-auto w-[calc(100%-2rem)] max-w-6xl overflow-hidden rounded-lg border bg-card shadow-sm min-h-full my-4"
+          )}
+        >
           {ldaForm.formTemplate.form ? (
               <DynamicForm
                 form={ldaForm.formTemplate.form}
@@ -276,6 +327,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 setCompletionStatus={setCompletionStatus}
                 dataChanged={dataChanged}
                 failedSectionTitles={failedSectionTitles}
+                focusMode={focusMode}
               />
           ) : (
             <p className="text-muted-foreground">Form template not available</p>
@@ -284,7 +336,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
       </Card>
       
       {/* Application Admin Card */}
-      <Card className="col-span-3 h-fit">
+      <Card className={cn("col-span-3 h-fit", focusMode && "hidden")}>
         <CardHeader className="pb-2 border-b grid items-center p-4 py-6">
           <h2 className="text-lg font-bold text-slate-900">Application Admin</h2>
         </CardHeader>
