@@ -1,6 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchFormTemplates, fetchLDAForm } from "@/lib/data"
+import { notFound } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { canFillForm } from "@/lib/permissions"
 import { revalidateTag } from "next/cache"
 import { FormDialog } from "@/components/lda-forms/form"
 import { DeleteDialog } from "@/components/lda-forms/delete"
@@ -55,6 +59,10 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
   const { lda_form_id } = params
   const { from } = searchParams
   const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
+  // No id means the API denied access (403) or the form is missing — block the page
+  if (!ldaForm?.id) notFound()
+  const session = await getServerSession(NEXT_AUTH_OPTIONS)
+  const canFill = canFillForm(session?.user ?? null, ldaForm.formTemplate.fillRoles)
   const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
 
   let breadcrumbLinks: BreadcrumbLink[] = [
@@ -83,12 +91,14 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
         <div className="flex flex-wrap items-center justify-between mb-4">
           <h1 className="text-xl md:text-2xl font-semibold">{ldaForm.title}</h1>
           <div className="space-x-2">
-            <Button asChild>
-              <Link href={`/dashboard/applications-reports/${ldaForm.id}/fill/`}>
-                <span className="hidden md:inline">Fill</span>
-                <NotebookPenIcon />
-              </Link>
-            </Button>
+            {canFill && (
+              <Button asChild>
+                <Link href={`/dashboard/applications-reports/${ldaForm.id}/fill/`}>
+                  <span className="hidden md:inline">Fill</span>
+                  <NotebookPenIcon />
+                </Link>
+              </Button>
+            )}
             <FormDialog
               formTemplates={formTemplates}
               ldaForm={ldaForm}

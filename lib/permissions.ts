@@ -286,15 +286,15 @@ const userHasFormRole = (user: User | null, allowedRoles?: Role[] | string[] | n
 }
 
 // Can the user view/read a form built from this template (FormTemplate.readRoles)
-export const canReadForm = (user: User | null, readRoles?: Role[] | null): boolean =>
+export const canReadForm = (user: User | null, readRoles?: Role[] | string[] | null): boolean =>
   userHasFormRole(user, readRoles)
 
 // Can the user fill/edit a form built from this template (FormTemplate.fillRoles)
-export const canFillForm = (user: User | null, fillRoles?: Role[] | null): boolean =>
+export const canFillForm = (user: User | null, fillRoles?: Role[] | string[] | null): boolean =>
   userHasFormRole(user, fillRoles)
 
 // Can the user approve a form built from this template (FormTemplate.approveRoles)
-export const canApproveForm = (user: User | null, approveRoles?: Role[] | null): boolean =>
+export const canApproveForm = (user: User | null, approveRoles?: Role[] | string[] | null): boolean =>
   userHasFormRole(user, approveRoles)
 
 // Helper function to get user role display name

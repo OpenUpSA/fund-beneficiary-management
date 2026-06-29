@@ -453,6 +453,9 @@ export default async function FormPreviewPage({ params }: Props) {
     notFound()
   }
 
+  // No id means the API denied access (403) or the form is missing — block the page
+  if (!ldaForm?.id) notFound()
+
   // Block Draft forms
   if (ldaForm.formStatus?.label === "Draft") notFound()
 

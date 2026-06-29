@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import prisma from "@/db";
-import { permissions } from "@/lib/permissions";
+import { permissions, canFillForm } from "@/lib/permissions";
 import {
   validateFormSubmission,
   type FormTemplateInput,
@@ -27,7 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       select: {
         localDevelopmentAgencyId: true,
         formData: true,
-        formTemplate: { select: { form: true } },
+        formTemplate: { select: { form: true, fillRoles: true } },
       },
     });
 
@@ -35,15 +35,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
-    const isSuperUser = permissions.isSuperUser(session.user);
-
-    // Permission check: Only LDA users (or super users) can submit forms
-    if (!isSuperUser && !permissions.isLDAUser(session.user)) {
-      return NextResponse.json({ error: "Permission denied - only LDA users can submit forms" }, { status: 403 });
+    // Permission check: template must grant this user's role fill access
+    if (!canFillForm(session.user, existingForm.formTemplate?.fillRoles)) {
+      return NextResponse.json({ error: "Permission denied - your role cannot fill this form" }, { status: 403 });
     }
 
-    // Additional check: LDA user must have access to this specific LDA (super users bypass)
-    if (!isSuperUser && !permissions.canViewLDA(session.user, existingForm.localDevelopmentAgencyId)) {
+    // Additional check: user must have access to this specific LDA (super users bypass)
+    if (!permissions.canViewLDA(session.user, existingForm.localDevelopmentAgencyId)) {
       return NextResponse.json({ error: "Permission denied - no access to this LDA" }, { status: 403 });
     }
 

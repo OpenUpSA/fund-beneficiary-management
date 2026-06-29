@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
-import { canManageFund, permissions } from "@/lib/permissions"
+import { canManageFund, permissions, canReadForm } from "@/lib/permissions"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -79,7 +79,10 @@ export async function GET(
       }
     })
 
-    return NextResponse.json(forms)
+    // Hide forms whose template does not grant this user's role read access
+    const visible = forms.filter((f) => canReadForm(user, f.formTemplate.readRoles))
+
+    return NextResponse.json(visible)
   } catch (error) {
     console.error("Error fetching LDA forms for fund:", error)
     return NextResponse.json(

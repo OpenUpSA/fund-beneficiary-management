@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
-import { permissions } from "@/lib/permissions"
+import { permissions, canReadForm } from "@/lib/permissions"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -44,5 +44,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
     },
   });
 
-  return NextResponse.json(records);
+  // Hide forms whose template does not grant this user's role read access
+  const visible = records.filter((r) => canReadForm(user, r.formTemplate.readRoles));
+
+  return NextResponse.json(visible);
 }
