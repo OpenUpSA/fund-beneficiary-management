@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client"
 
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-import { permissions } from "@/lib/permissions";
+import { permissions, canReadForm, canFillForm, canApproveForm } from "@/lib/permissions";
 import { triggerFormEvent } from "@/lib/form-events";
 import {
   validateFormSubmission,
@@ -52,6 +52,11 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
+  // Permission check: template must grant this user's role read access
+  if (!canReadForm(user, record.formTemplate.readRoles)) {
+    return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+  }
+
   // Apply prefill for display only — prefill is persisted to DB on approval, not here
   if (record.formTemplate?.form) {
     const savedFormData = (record.formData as Record<string, unknown>) ?? {}
@@ -73,10 +78,13 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
   const ldaFormId = parseInt(params.lda_form_id, 10)
 
   try {
-    // First check if the form exists and get its LDA ID
+    // First check if the form exists and get its LDA ID + fill permissions
     const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
-      select: { localDevelopmentAgencyId: true }
+      select: {
+        localDevelopmentAgencyId: true,
+        formTemplate: { select: { fillRoles: true, approveRoles: true } }
+      }
     });
 
     if (!existingForm) {
@@ -92,6 +100,16 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     }
 
     const data = await req.json()
+
+    // Changing submission state counts as submitting — only roles allowed to fill may do so
+    if (data.submitted !== undefined && !canFillForm(user, existingForm.formTemplate?.fillRoles)) {
+      return NextResponse.json({ error: "Permission denied - your role cannot submit this form" }, { status: 403 });
+    }
+
+    // Changing approval state counts as approving — only roles allowed to approve may do so
+    if (data.approved !== undefined && !canApproveForm(user, existingForm.formTemplate?.approveRoles)) {
+      return NextResponse.json({ error: "Permission denied - your role cannot approve this form" }, { status: 403 });
+    }
 
     const updated = await prisma.localDevelopmentAgencyForm.update({
       where: { id: ldaFormId },
@@ -168,12 +186,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
     const existingForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
-      select: { 
+      select: {
         localDevelopmentAgencyId: true,
         formData: true,
         formTemplate: {
           select: {
-            form: true
+            form: true,
+            approveRoles: true
           }
         }
       }
@@ -183,10 +202,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       return NextResponse.json({ error: "Form not found" }, { status: 404 });
     }
 
-    if (
-      !permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)
-      || permissions.isLDAUser(user)
-    ) {
+    if (!permissions.canViewLDA(user, existingForm.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
+    // Permission check: template must grant this user's role approve access
+    // (this PATCH drives status changes — including Approved/Rejected — amount and dates)
+    if (!canApproveForm(user, existingForm.formTemplate?.approveRoles)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 

@@ -1,6 +1,10 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 import { fetchLDAForm } from "@/lib/data"
+import { notFound, redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { canFillForm } from "@/lib/permissions"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
 import Filler from "@/components/lda-forms/data-filler"
 import * as Sentry from '@sentry/nextjs'
@@ -26,6 +30,14 @@ export async function generateMetadata({ params: { locale } }: Readonly<{ params
 export default async function Page({ params }: FormTemplatePageProps) {
   const { lda_form_id } = params
   const ldaForm: LocalDevelopmentAgencyFormFull = await fetchLDAForm(lda_form_id)
+  // No id means the API denied access (403) or the form is missing — block the page
+  if (!ldaForm?.id) notFound()
+
+  // Block users whose role cannot fill this form — send them to the read-only view
+  const session = await getServerSession(NEXT_AUTH_OPTIONS)
+  if (!canFillForm(session?.user ?? null, ldaForm.formTemplate.fillRoles)) {
+    redirect(`/dashboard/applications-reports/${lda_form_id}/`)
+  }
 
   return (
     <div>

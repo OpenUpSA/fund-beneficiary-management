@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
+import { canFillForm, canApproveForm } from "@/lib/permissions"
 // import { usePermissions } from "@/hooks/use-permissions"
 import { Input } from "@/components/ui/input"
 import { 
@@ -31,10 +32,12 @@ interface LDAFormDetailViewProps {
     id: number | string
     title: string
     formData: FormData | Record<string, unknown>
-    formTemplate: { 
+    formTemplate: {
       form: Form | null;
       sidebarConfig?: { amount?: boolean; status?: boolean; startDate?: boolean; endDate?: boolean; dueDate?: boolean } | undefined;
       templateType?: 'APPLICATION' | 'REPORT'
+      fillRoles?: string[]
+      approveRoles?: string[]
     }
     formStatus?: { id: number; label: string; icon: string; createdAt: Date; updatedAt: Date }
     createdAt: Date
@@ -106,7 +109,12 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     }
   })
 
-  const canEditAmountAndStatus = session?.user?.role === 'ADMIN' || session?.user?.role === 'PROGRAMME_OFFICER' || session?.user?.role === 'SUPER_USER'
+  // Whether the current user's role is allowed to fill/edit this form (per template fillRoles)
+  const canFill = canFillForm(session?.user ?? null, ldaForm.formTemplate.fillRoles)
+
+  // Whether the current user's role is allowed to approve this form — drives the admin
+  // sidebar controls (status, approved amount, funding dates), per template approveRoles
+  const canApprove = canApproveForm(session?.user ?? null, ldaForm.formTemplate.approveRoles)
 
   const updateField = async (field: string, value: string | Date | number | undefined): Promise<boolean> => {
     if (value === undefined) return false; // Don't update if value is undefined
@@ -294,13 +302,13 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
             )}
           </div>
           <div className="flex gap-2 justify-end items-center">
-            {ldaForm.formStatus?.label === "Draft" && !isEditing && (
+            {ldaForm.formStatus?.label === "Draft" && !isEditing && canFill && (
               <Button onClick={() => setIsEditing(true)}>
                 <PenLine className="h-4 w-4" />
                 <span>Edit form</span>
               </Button>
             )}
-            {ldaForm.formStatus?.label === "Draft" && !isEditing && (
+            {ldaForm.formStatus?.label === "Draft" && !isEditing && canFill && (
               <Button
                 onClick={submitForm}
                 disabled={!isFormValid}
@@ -437,7 +445,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                         onValueChange={async (value) => {
                           const previousValue = field.value
                           field.onChange(value)
-                          if (canEditAmountAndStatus) {
+                          if (canApprove) {
                             const success = await updateField('formStatusLabel', value)
                             if (!success) {
                               // Revert to previous value on failure
@@ -445,7 +453,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                             }
                           }
                         }}
-                        disabled={!canEditAmountAndStatus}
+                        disabled={!canApprove}
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select status" />
@@ -474,10 +482,10 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                         <Input 
                           {...field} 
                           placeholder="R 0.00" 
-                          disabled={!canEditAmountAndStatus}
+                          disabled={!canApprove}
                           className={errors.amount ? "border-red-500" : ""}
                           onBlur={() => {
-                            if (canEditAmountAndStatus) {
+                            if (canApprove) {
                               updateField('amount', field.value)
                             }
                           }}
@@ -503,6 +511,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                           <Button
                             variant={"outline"}
                             className="w-full justify-start text-left font-normal"
+                            disabled={!canApprove}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? format(field.value, "PPP") : <span>Select date</span>}
@@ -539,6 +548,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                           <Button
                             variant={"outline"}
                             className="w-full justify-start text-left font-normal"
+                            disabled={!canApprove}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {field.value ? format(field.value, "PPP") : <span>Select date</span>}

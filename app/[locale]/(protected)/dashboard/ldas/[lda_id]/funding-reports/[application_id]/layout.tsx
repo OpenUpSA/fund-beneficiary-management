@@ -23,8 +23,9 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
   }
   
   const ldaForm = await fetchLDAForm(application_id)
-  
-  if (!ldaForm) {
+
+  // No id means the API denied access (403) or the form is missing — send the user back
+  if (!ldaForm?.id) {
     redirect(`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/funding-reports`)
   }
 

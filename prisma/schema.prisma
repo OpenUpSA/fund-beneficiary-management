@@ -222,6 +222,11 @@ model FormTemplate {
   linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
   linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
   sidebarConfig               Json                         @default("{\"amount\": true, \"status\": true, \"startDate\": true, \"endDate\": true, \"dueDate\": true}")
+  // Role-based permissions for forms built from this template. Each list holds the roles
+  // allowed to perform that action; SUPER_USER is always implicitly allowed and never stored.
+  readRoles                   Role[]                       @default([])
+  fillRoles                   Role[]                       @default([])
+  approveRoles                Role[]                       @default([])
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @updatedAt
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]

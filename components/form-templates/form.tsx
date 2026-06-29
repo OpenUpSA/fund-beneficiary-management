@@ -13,6 +13,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -36,6 +37,21 @@ import { FormTemplate } from "@prisma/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { Control } from "react-hook-form"
+import { ASSIGNABLE_FORM_ROLES, getRoleDisplayName } from "@/lib/permissions"
+
+// Roles selectable in the form-permission pickers. SUPER_USER is excluded — it
+// always has full access. Labels use the configured terminology (e.g. "LDA User").
+const formRoleOptions = ASSIGNABLE_FORM_ROLES.map((role) => ({
+  value: role,
+  label: getRoleDisplayName(role),
+}))
+
+type FormRole = 'USER' | 'PROGRAMME_OFFICER' | 'ADMIN'
+
+// Roles pre-selected when creating a new template. Existing templates show whatever
+// is stored (empty at the DB level until set).
+const defaultRoleSelection = [...ASSIGNABLE_FORM_ROLES] as FormRole[]
 
 const formCategoryOptions = [
   { value: 'dft_application', label: 'DFT Application' },
@@ -61,7 +77,74 @@ const FormSchema = z.object({
     endDate: z.boolean(),
     dueDate: z.boolean(),
   }),
+  readRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])).min(1, { message: "Select at least one role." }),
+  fillRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])).min(1, { message: "Select at least one role." }),
+  approveRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])).min(1, { message: "Select at least one role." }),
 })
+
+type FormTemplateFormValues = z.infer<typeof FormSchema>
+
+// Multi-role checkbox picker for a single form-permission key (read/fill/approve).
+function FormPermissionRow({
+  control,
+  name,
+  label,
+}: {
+  control: Control<FormTemplateFormValues>
+  name: 'readRoles' | 'fillRoles' | 'approveRoles'
+  label: string
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="space-y-1">
+          <FormLabel className="text-sm font-normal text-muted-foreground">{label}</FormLabel>
+          <div className="flex flex-wrap gap-4">
+            {formRoleOptions.map((role) => {
+              const selected = (field.value ?? []) as string[]
+              const checked = selected.includes(role.value)
+              return (
+                <label key={role.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(value) => {
+                      field.onChange(
+                        value
+                          ? [...selected, role.value]
+                          : selected.filter((v) => v !== role.value)
+                      )
+                    }}
+                  />
+                  <span className="text-sm font-normal">{role.label}</span>
+                </label>
+              )
+            })}
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+// Form-permissions section shared by the create and edit dialogs.
+function FormPermissionsSection({ control }: { control: Control<FormTemplateFormValues> }) {
+  return (
+    <div className="rounded-md border p-4 space-y-3">
+      <div>
+        <Label className="text-sm font-medium">Form Permissions</Label>
+        <p className="text-xs text-muted-foreground">
+          Choose which roles can read, fill in and approve forms built from this template. Super Users always have full access.
+        </p>
+      </div>
+      <FormPermissionRow control={control} name="readRoles" label="Read by" />
+      <FormPermissionRow control={control} name="fillRoles" label="Filled by" />
+      <FormPermissionRow control={control} name="approveRoles" label="Approved by" />
+    </div>
+  )
+}
 
 interface FormDialogProps {
   formTemplate?: FormTemplate
@@ -73,9 +156,9 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
   const [open, setOpen] = useState(false)
 
   const defaultSidebarConfig = { amount: true, status: true, startDate: true, endDate: true, dueDate: true }
-  const parsedSidebarConfig = formTemplate?.sidebarConfig 
-    ? (typeof formTemplate.sidebarConfig === 'string' 
-        ? JSON.parse(formTemplate.sidebarConfig) 
+  const parsedSidebarConfig = formTemplate?.sidebarConfig
+    ? (typeof formTemplate.sidebarConfig === 'string'
+        ? JSON.parse(formTemplate.sidebarConfig)
         : formTemplate.sidebarConfig)
     : defaultSidebarConfig
 
@@ -89,6 +172,10 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       formCategory: formTemplate?.formCategory || null,
       linkedFormTemplateId: formTemplate?.linkedFormTemplateId || null,
       sidebarConfig: parsedSidebarConfig,
+      // Existing templates use stored roles; a brand-new template pre-selects all roles.
+      readRoles: (formTemplate?.readRoles as FormRole[] | undefined) ?? defaultRoleSelection,
+      fillRoles: (formTemplate?.fillRoles as FormRole[] | undefined) ?? defaultRoleSelection,
+      approveRoles: (formTemplate?.approveRoles as FormRole[] | undefined) ?? defaultRoleSelection,
     },
   })
 
@@ -314,6 +401,8 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                   />
                 </div>
               </div>
+
+              <FormPermissionsSection control={form.control} />
             </div>
             <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
               <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
@@ -484,6 +573,9 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
       formCategory: null,
       linkedFormTemplateId: null,
       sidebarConfig: defaultSidebarConfig,
+      readRoles: defaultRoleSelection,
+      fillRoles: defaultRoleSelection,
+      approveRoles: defaultRoleSelection,
     },
   })
 
@@ -687,6 +779,8 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
                 />
               </div>
             </div>
+
+            <FormPermissionsSection control={form.control} />
           </div>
           <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
             <Button type="button" onClick={onClose} variant="secondary" className="sm:order-1 order-2">Cancel</Button>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
-import { permissions } from "@/lib/permissions"
+import { permissions, canFillForm } from "@/lib/permissions"
 
 export async function PATCH(
   req: NextRequest,
@@ -44,11 +44,12 @@ export async function PATCH(
       )
     }
 
-    // Permission check: get LDA ID
+    // Permission check: get LDA ID and the template's fill permissions
     const currentForm = await prisma.localDevelopmentAgencyForm.findUnique({
       where: { id: ldaFormId },
-      select: { 
-        localDevelopmentAgencyId: true
+      select: {
+        localDevelopmentAgencyId: true,
+        formTemplate: { select: { fillRoles: true } }
       }
     })
 
@@ -60,6 +61,11 @@ export async function PATCH(
     }
 
     if (!permissions.canViewLDA(user, currentForm.localDevelopmentAgencyId)) {
+      return NextResponse.json({ error: "Permission denied" }, { status: 403 });
+    }
+
+    // Permission check: template must grant this user's role fill access
+    if (!canFillForm(user, currentForm.formTemplate.fillRoles)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 

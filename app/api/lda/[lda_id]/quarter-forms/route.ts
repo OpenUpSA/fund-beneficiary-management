@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import { canReadForm } from "@/lib/permissions"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -79,6 +80,7 @@ export async function GET(
             name: true,
             templateType: true,
             formCategory: true,
+            readRoles: true,
           },
         },
         formStatus: true,
@@ -89,10 +91,13 @@ export async function GET(
     })
 
     // Filter forms where formData.activity_date falls within the reporting period
+    // and the template grants this user's role read access
     const filteredForms = forms.filter((form) => {
+      if (!canReadForm(session.user, form.formTemplate.readRoles)) return false
+
       const formData = form.formData as Record<string, unknown> | null
       if (!formData?.activity_date) return false
-      
+
       const activityDate = new Date(formData.activity_date as string)
       return activityDate >= startDate && activityDate <= endDate
     })
