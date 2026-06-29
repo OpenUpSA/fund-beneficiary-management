@@ -272,6 +272,31 @@ export const permissions = {
   }
 }
 
+// Roles that can be assigned in the form template permission lists
+// (FormTemplate.readRoles / fillRoles / approveRoles). SUPER_USER is intentionally
+// excluded — it always has full access and is never stored.
+export const ASSIGNABLE_FORM_ROLES: Role[] = [Role.USER, Role.PROGRAMME_OFFICER, Role.ADMIN]
+
+// True when the user's role is in the allowed list. SUPER_USER is always allowed.
+const userHasFormRole = (user: User | null, allowedRoles?: Role[] | string[] | null): boolean => {
+  if (!user) return false
+  if (permissions.isSuperUser(user)) return true // SuperUsers can always read/fill/approve
+  if (!allowedRoles || allowedRoles.length === 0) return false
+  return (allowedRoles as string[]).includes(user.role)
+}
+
+// Can the user view/read a form built from this template (FormTemplate.readRoles)
+export const canReadForm = (user: User | null, readRoles?: Role[] | null): boolean =>
+  userHasFormRole(user, readRoles)
+
+// Can the user fill/edit a form built from this template (FormTemplate.fillRoles)
+export const canFillForm = (user: User | null, fillRoles?: Role[] | null): boolean =>
+  userHasFormRole(user, fillRoles)
+
+// Can the user approve a form built from this template (FormTemplate.approveRoles)
+export const canApproveForm = (user: User | null, approveRoles?: Role[] | null): boolean =>
+  userHasFormRole(user, approveRoles)
+
 // Helper function to get user role display name
 export const getRoleDisplayName = (role: Role): string => {
   switch (role) {
