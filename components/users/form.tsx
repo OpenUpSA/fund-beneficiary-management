@@ -180,12 +180,13 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
             </>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-w-[40vw]">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] max-w-lg w-full p-0 gap-0 flex flex-col">
+        <DialogHeader className="p-5 border-b">
           <DialogTitle>{user ? "Edit" : "Add"} user</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-grow contents">
+            <div className="flex-grow overflow-y-auto px-6 py-4 space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -384,11 +385,13 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
               </div>
             )}
 
+            </div>
+            <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)} className="sm:order-1 order-2">Cancel</Button>
+              <Button type="submit" className="sm:order-2 order-1">{user ? "Save changes" : "Create User"}</Button>
+            </DialogFooter>
           </form>
         </Form>
-        <DialogFooter>
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>{user ? "Save changes" : "Create User"}</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog >
   )
