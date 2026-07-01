@@ -392,9 +392,16 @@
           "type": "multiselect",
           "label": "Select the types of work",
           "options": [
-            { "label": "Prevention", "value": "prevention" },
-            { "label": "Response", "value": "response" },
-            { "label": "Advocacy", "value": "advocacy" }
+            { "label": "Monitoring and Supporting community gardens.", "value": "monitoring_and_supporting_community_gardens" },
+            { "label": "Monitoring and Supporting household gardens", "value": "monitoring_and_supporting_household_gardens" },
+            { "label": "Training gardeners on permaculture sustainable methods of farming", "value": "training_gardeners_on_permaculture_sustainable_methods_of_farming" },
+            { "label": "Promoting permaculture methods of farming", "value": "promoting_permaculture_methods_of_farming" },
+            { "label": "Water harvesting", "value": "water_harvesting" },
+            { "label": "Seed bank", "value": "seed_bank" },
+            { "label": "Advocating for access to land, water, and government support.", "value": "advocating_for_access_to_land_water_and_government_support" },
+            { "label": "Bee Keeping", "value": "bee_keeping" },
+            { "label": "Poultry farming", "value": "poultry_farming" },
+            { "label": "Livestock farming", "value": "livestock_farming" }
           ],
           "required": true,
           "show_if": { "field": "work_food_security", "value": "yes" }
