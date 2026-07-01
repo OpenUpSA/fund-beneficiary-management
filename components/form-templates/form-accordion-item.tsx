@@ -393,8 +393,14 @@ export default function FormAccordionItem({
   // Check if section has any status fields and get their completion state
   // Use section.fields to react to updates from custom layouts
   const statusFieldsState = useMemo(() => {
+    // Only sections that explicitly opt in manage their own completion.
+    // This must be a declared section property — never inferred from field
+    // names, or real fields like `org_legal_status` / `npo_status` would be
+    // mistaken for status markers and lock the section as "Incomplete".
+    if (!section?.selfManagedCompletion) return null;
+
     const fields = section?.fields || fieldsWithDefaults;
-    // Find all fields that end with _status and check their values
+    // Within an opted-in section, the hidden `*_status` field stores the value.
     const statusFields = fields.filter((f: Field) => f.name.endsWith('_status'));
     if (statusFields.length === 0) return null;
     
@@ -407,7 +413,7 @@ export default function FormAccordionItem({
       isComplete: !hasIncomplete && hasComplete,
       isIncomplete: hasIncomplete
     };
-  }, [section?.fields, fieldsWithDefaults]);
+  }, [section?.selfManagedCompletion, section?.fields, fieldsWithDefaults]);
 
   // Use ref to track previous state to prevent unnecessary updates
   const prevSectionRef = useRef<{

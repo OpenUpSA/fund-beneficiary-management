@@ -35,6 +35,26 @@ This document describes all available field types, layouts, modifiers, and secti
 | `editable_by` | `string[]` | Restrict editing to specific roles. If omitted, editable by anyone |
 | `visible_to` | `string[]` | Restrict visibility to specific roles. If omitted, visible to everyone |
 | `admin_feedback` | `boolean` | Enables admin feedback UI on this section |
+| `selfManagedCompletion` | `boolean` | Opt this section out of the default required-field count. Its header shows **Complete / Incomplete** instead of "x/x Required", driven by a hidden `*_status` field written by a custom layout. See below. |
+
+### Section completion display
+
+By default a section header shows a required-field count (`3/3 Required`) and the section is considered complete when every `required` field is valid.
+
+Some custom layouts (`casework-categories`, `finalised-cases`, `garden-beneficiaries`, `garden-yields`) can't express completeness as a simple field count. They instead compute it themselves and write `"complete"` / `"incomplete"` into a hidden helper field named in their `config.statusField`. For that to drive the header, the **section must opt in explicitly** with `"selfManagedCompletion": true`.
+
+```json
+{
+  "title": "New cases",
+  "selfManagedCompletion": true,
+  "fields": [
+    { "name": "new_cases", "type": "group", "layout": "casework-categories", "config": { "statusField": "new_cases_status", "...": "..." }, "fields": [] },
+    { "name": "new_cases_status", "type": "text", "label": "", "show": false }
+  ]
+}
+```
+
+> **Important:** completion is opt-in per section and is **never** inferred from field names. The `_status` suffix carries no special meaning on its own — a normal field such as `org_legal_status` or `npo_status` is treated as an ordinary field and does **not** switch the section into self-managed mode. Only sections with `"selfManagedCompletion": true` read the hidden status field.
 
 ---
 
@@ -502,7 +522,7 @@ Category-based data grid with configurable columns. Used with `type: "group"`.
 }
 ```
 
-**Requires a hidden status field:**
+**Requires a hidden status field, and the containing section must set `"selfManagedCompletion": true`** (see [Section completion display](#section-completion-display)):
 ```json
 { "name": "new_cases_status", "type": "text", "label": "", "show": false }
 ```
@@ -541,6 +561,8 @@ Extended version of casework-categories with demographics breakdown (gender, rac
 }
 ```
 
+Requires a hidden `finalised_cases_status` field, and the containing section must set `"selfManagedCompletion": true` (see [Section completion display](#section-completion-display)).
+
 ### `garden-beneficiaries`
 
 Garden-linked layout for tracking employees and beneficiaries with demographics. References a `sourceField` repeatable.
@@ -568,6 +590,8 @@ Garden-linked layout for tracking employees and beneficiaries with demographics.
 }
 ```
 
+Requires a hidden `garden_beneficiaries_status` field, and the containing section must set `"selfManagedCompletion": true` (see [Section completion display](#section-completion-display)).
+
 ### `garden-yields`
 
 Garden-linked layout for tracking farmed items with configurable columns. References a `sourceField` repeatable.
@@ -591,6 +615,8 @@ Garden-linked layout for tracking farmed items with configurable columns. Refere
   "fields": []
 }
 ```
+
+Requires a hidden `garden_yields_status` field, and the containing section must set `"selfManagedCompletion": true` (see [Section completion display](#section-completion-display)).
 
 ### `data-grid`
 
