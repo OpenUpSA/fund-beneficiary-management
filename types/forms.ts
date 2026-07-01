@@ -61,6 +61,10 @@ export interface Section {
   visible_to?: string[];
   admin_feedback?: boolean;
   show_if?: { field: string; value: string };
+  // When true, the section manages its own completion via a hidden `*_status`
+  // field written by a custom layout, instead of the default "x/x required"
+  // count. Must be set explicitly — do NOT infer it from field names.
+  selfManagedCompletion?: boolean;
 }
 
 export type FormData = Record<string, string | number | boolean | null | undefined>

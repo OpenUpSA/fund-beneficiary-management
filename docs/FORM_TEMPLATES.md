@@ -62,6 +62,7 @@ Form templates are JSON files that define the structure, fields, and behavior of
 | `description` | string | No | Explanatory text below title |
 | `notice` | string | No | Highlighted notice box |
 | `editable_by` | string[] | No | Roles that can edit (empty = locked) |
+| `selfManagedCompletion` | boolean | No | Section shows **Complete/Incomplete** (driven by a custom layout's hidden `*_status` field) instead of the default "x/x Required" count. See [form-template-reference.md](form-template-reference.md#section-completion-display) |
 | `fields` | Field[] | Yes | Array of field definitions |
 
 ---

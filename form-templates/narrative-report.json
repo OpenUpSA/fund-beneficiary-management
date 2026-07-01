@@ -269,6 +269,7 @@
     {
       "tag": "Casework",
       "title": "New cases",
+      "selfManagedCompletion": true,
       "show_if": { "field": "casework_enabled", "value": "true" },
       "fields": [
         {
@@ -369,6 +370,7 @@
     {
       "tag": "Casework",
       "title": "Finalised cases",
+      "selfManagedCompletion": true,
       "show_if": { "field": "casework_enabled", "value": "true" },
       "fields": [
         {
@@ -628,6 +630,7 @@
     {
       "tag": "Food gardening",
       "title": "Community garden beneficiaries",
+      "selfManagedCompletion": true,
       "show_if": { "field": "food_gardening_enabled", "value": "true" },
       "fields": [
         {
@@ -703,6 +706,7 @@
     {
       "title": "Community garden yields",
       "tag": "Food gardening",
+      "selfManagedCompletion": true,
       "show_if": { "field": "food_gardening_enabled", "value": "true" },
       "fields": [
         {
