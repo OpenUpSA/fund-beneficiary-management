@@ -2,18 +2,21 @@
 
 import { useState, useEffect, useMemo, useCallback, startTransition } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { StatCard } from "./stat-card"
 import { HorizontalBarChart } from "./horizontal-bar-chart"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
+import { Link } from "@/i18n/routing"
 import {
-  Target, 
+  Target,
   MapPin,
   ArrowUpDown,
   TriangleRight,
   Handshake,
   Banknote,
-  HandCoins
+  HandCoins,
+  FileText
 } from "lucide-react"
 
 interface ApiFilterOption {
@@ -28,6 +31,7 @@ interface FilterOptions {
   developmentStages: ApiFilterOption[]
   focusAreas: ApiFilterOption[]
   fundTypes: { value: string; label: string }[]
+  formStatuses: { id: number; label: string }[]
 }
 
 interface LDAStats {
@@ -55,10 +59,27 @@ interface FundStats {
   surplus: number
 }
 
+interface ReportingReport {
+  id: number
+  ldaId: number
+  title: string
+  ldaName: string
+  count: number
+}
+
+interface ReportingIndicatorStat {
+  key: string
+  label: string
+  occurrences: number
+  reportCount: number
+  reports: ReportingReport[]
+}
+
 interface DashboardData {
   lda: LDAStats
   funder: FunderStats
   fund: FundStats
+  reporting: ReportingIndicatorStat[]
   filterOptions: FilterOptions
 }
 
@@ -110,9 +131,10 @@ export function DashboardContent() {
     const developmentStageIds = (activeFilters['stage'] || []).map(o => Number(o.id))
     const focusAreaIds = (activeFilters['focus'] || []).map(o => Number(o.id))
     const fundType = activeFilters['fundType']?.[0]?.id as string | undefined
+    const formStatusIds = (activeFilters['reportStatus'] || []).map(o => Number(o.id))
     const periodId = activeFilters['period']?.[0]?.id as string | undefined
     const { periodStart, periodEnd } = getPeriodRange(periodId)
-    return { provinceCodes, developmentStageIds, focusAreaIds, fundType, periodStart, periodEnd }
+    return { provinceCodes, developmentStageIds, focusAreaIds, fundType, formStatusIds, periodStart, periodEnd }
   }, [activeFilters])
 
   const fetchData = useCallback(async () => {
@@ -123,6 +145,7 @@ export function DashboardContent() {
       if (apiFilters.developmentStageIds.length) params.set("developmentStageIds", apiFilters.developmentStageIds.join(","))
       if (apiFilters.focusAreaIds.length) params.set("focusAreaIds", apiFilters.focusAreaIds.join(","))
       if (apiFilters.fundType) params.set("fundType", apiFilters.fundType)
+      if (apiFilters.formStatusIds.length) params.set("formStatusIds", apiFilters.formStatusIds.join(","))
       if (apiFilters.periodStart) params.set("periodStart", apiFilters.periodStart)
       if (apiFilters.periodEnd) params.set("periodEnd", apiFilters.periodEnd)
 
@@ -159,6 +182,10 @@ export function DashboardContent() {
     () => (data?.filterOptions.fundTypes || []).map(({ value, label }) => ({ id: value, label })),
     [data?.filterOptions.fundTypes]
   )
+  const reportStatusOptions = useMemo<FilterOption[]>(
+    () => (data?.filterOptions.formStatuses || []).map(({ id, label }) => ({ id: String(id), label })),
+    [data?.filterOptions.formStatuses]
+  )
 
   // Period filter options
   const periodOptions = useMemo<FilterOption[]>(() => [
@@ -176,14 +203,19 @@ export function DashboardContent() {
     const location = { type: 'location', label: 'Location', options: locationOptions }
     const fundType = { type: 'fundType', label: 'Funding type', options: fundTypeOptions }
     const focus = { type: 'focus', label: 'Focus area', options: focusOptions }
+    const reportStatus = { type: 'reportStatus', label: 'Report status', options: reportStatusOptions }
 
+    if (activeTab === 'reporting') {
+      // Report indicators are filtered by their owning LDA plus report status.
+      return [period, reportStatus, stage, location, focus]
+    }
     if (activeTab === 'ldas') {
       // Funding type is a fund-level attribute and doesn't apply to LDAs.
       return [period, stage, location, focus]
     }
     // Funders / Funds — to be refined later.
     return [period, stage, location, fundType, focus]
-  }, [activeTab, periodOptions, stageOptions, locationOptions, fundTypeOptions, focusOptions])
+  }, [activeTab, periodOptions, stageOptions, locationOptions, fundTypeOptions, focusOptions, reportStatusOptions])
 
   const handleFilterChange = useCallback((filterType: string, selected: FilterOption[]) => {
     startTransition(() => {
@@ -213,6 +245,7 @@ export function DashboardContent() {
           <TabsTrigger value="ldas" className="data-[state=active]:bg-white">LDAs</TabsTrigger>
           <TabsTrigger value="funders" className="data-[state=active]:bg-white">Funders</TabsTrigger>
           <TabsTrigger value="funds" className="data-[state=active]:bg-white">Funds</TabsTrigger>
+          <TabsTrigger value="reporting" className="data-[state=active]:bg-white">Reporting</TabsTrigger>
         </TabsList>
 
         {/* Filters - using same FilterBar as LDAs page */}
@@ -332,13 +365,74 @@ export function DashboardContent() {
               icon={HandCoins}
               format="currency"
             />
-            <StatCard 
-              title="Total surplus/shortfall" 
-              value={data?.fund.surplus || 0} 
+            <StatCard
+              title="Total surplus/shortfall"
+              value={data?.fund.surplus || 0}
               icon={ArrowUpDown}
               format="currency"
             />
           </div>
+        </TabsContent>
+
+        {/* Reporting Tab — indicator keyword counts across report answers, with
+            links to each source report. No charts by design. */}
+        <TabsContent value="reporting" className="mt-6 space-y-6">
+          <div className="rounded-lg border bg-white">
+            {/* Header row */}
+            <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 border-b px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <span>Indicator</span>
+              <span className="w-24 text-right">Occurrences</span>
+              <span className="w-20 text-right">Reports</span>
+            </div>
+
+            <Accordion type="multiple" className="w-full">
+              {(data?.reporting || []).map((indicator) => (
+                <AccordionItem key={indicator.key} value={indicator.key} className="border-b last:border-b-0 px-4">
+                  <AccordionTrigger className="hover:no-underline py-3" disabled={indicator.reportCount === 0}>
+                    <div className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-4 pr-2 text-left">
+                      <span className="text-sm font-medium text-slate-900">{indicator.label}</span>
+                      <span className="w-24 text-right text-lg font-bold tabular-nums">
+                        {indicator.occurrences.toLocaleString("en-ZA")}
+                      </span>
+                      <span className="w-20 text-right text-sm text-muted-foreground tabular-nums">
+                        {indicator.reportCount.toLocaleString("en-ZA")}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {indicator.reports.length === 0 ? (
+                      <p className="py-2 text-sm text-muted-foreground">No matching reports yet.</p>
+                    ) : (
+                      <ul className="space-y-1 pb-2">
+                        {indicator.reports.map((report) => (
+                          <li key={report.id}>
+                            <Link
+                              href={`/dashboard/ldas/${report.ldaId}/funding-reports/${report.id}/`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-between gap-3 rounded-md px-2 py-2 text-sm hover:bg-slate-50"
+                            >
+                              <span className="flex min-w-0 items-center gap-2">
+                                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span className="truncate text-slate-900">{report.title}</span>
+                                <span className="truncate text-muted-foreground">· {report.ldaName}</span>
+                              </span>
+                              <span className="shrink-0 text-muted-foreground tabular-nums">
+                                {report.count.toLocaleString("en-ZA")}×
+                              </span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Counts reflect exact-phrase matches (and close variants) across all report answers, including drafts.
+          </p>
         </TabsContent>
       </Tabs>
     </div>
