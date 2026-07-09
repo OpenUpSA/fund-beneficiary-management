@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { Role } from "@prisma/client"
 import prisma from "@/db"
 import { createHash } from '@/lib/hash'
 import { getServerSession } from "next-auth"
@@ -10,16 +11,25 @@ import { sendSetPasswordEmail } from "@/lib/email"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS);
   const user = session?.user || null;
-  
+
   if (!user) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
+  // Optional ?role= filter. Callers that only need one role (e.g. the
+  // "Assigned programme officer" select) shouldn't receive every user.
+  const roleParam = req.nextUrl.searchParams.get('role')
+  if (roleParam !== null && !(roleParam in Role)) {
+    return NextResponse.json({ error: `Unknown role '${roleParam}'` }, { status: 400 });
+  }
+  const role = roleParam as Role | null
+
   const records = await prisma.user.findMany(
     {
+      ...(role ? { where: { role } } : {}),
       select: {
         id: true,
         name: true,
