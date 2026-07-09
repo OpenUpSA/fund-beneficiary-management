@@ -21,6 +21,7 @@ interface LDAPageContentProps {
   focusAreas: FocusArea[]
   developmentStages: DevelopmentStage[]
   programmeOfficers: UserWithLDAsBasic[]
+  assignableProgrammeOfficers: UserWithLDAsBasic[]
   provinces: Province[]
   fundingStatus: FundingStatus[]
   callback?: (ldaId?: number) => void
@@ -31,6 +32,7 @@ export function LDAPageContent({
   focusAreas,
   developmentStages,
   programmeOfficers,
+  assignableProgrammeOfficers,
   provinces,
   fundingStatus,
   callback,
@@ -84,6 +86,7 @@ export function LDAPageContent({
         focusAreas={focusAreas}
         developmentStages={developmentStages}
         programmeOfficers={programmeOfficers}
+        assignableProgrammeOfficers={assignableProgrammeOfficers}
         provinces={provinces}
         fundingStatus={fundingStatus}
         callback={callback}

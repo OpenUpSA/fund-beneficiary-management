@@ -29,7 +29,10 @@ interface FilteredLDAsProps {
   navigatedFrom?: string
   focusAreas: FocusArea[]
   developmentStages: DevelopmentStage[]
+  /** Users to offer in the "PO" filter — every user currently assigned to an LDA, whatever their role. */
   programmeOfficers: UserWithLDAsBasic[]
+  /** Users offerable as a new programme officer (role = PROGRAMME_OFFICER only). Feeds the Manage dialog. */
+  assignableProgrammeOfficers: UserWithLDAsBasic[]
   provinces: Province[]
   fundingStatus: FundingStatus[]
   callback?: (ldaId?: number) => void
@@ -42,6 +45,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
   focusAreas,
   developmentStages,
   programmeOfficers,
+  assignableProgrammeOfficers,
   provinces,
   fundingStatus,
   callback,
@@ -275,7 +279,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
             <FormDialog
               focusAreas={focusAreas}
               developmentStages={developmentStages}
-              programmeOfficers={programmeOfficers}
+              programmeOfficers={assignableProgrammeOfficers}
               provinces={provinces}
               callback={callback}
             />

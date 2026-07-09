@@ -7,7 +7,7 @@ import {
   fetchDevelopmentStages, 
   fetchFocusAreas, 
   fetchLocalDevelopmentAgency,
-  fetchUsers,
+  fetchProgrammeOfficers,
   fetchProvinces
 } from "@/lib/data"
 import { redirect } from "next/navigation"
@@ -29,7 +29,7 @@ export default async function Layout({ children, params }: LDALayoutProps) {
     fetchLocalDevelopmentAgency(lda_id),
     fetchFocusAreas(),
     fetchDevelopmentStages(),
-    fetchUsers(),
+    fetchProgrammeOfficers(),
     fetchProvinces()
   ])
   
