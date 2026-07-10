@@ -19,7 +19,13 @@ yarn db:studio        # Open Prisma Studio GUI
 
 # Utilities
 yarn create-superuser # Interactively create an admin user
+yarn assign-pos       # Assign programme officers to LDAs from a CSV (dry run by default)
 ```
+
+`yarn assign-pos` writes to the database — see [docs/ASSIGN_PROGRAMME_OFFICERS.md](docs/ASSIGN_PROGRAMME_OFFICERS.md).
+Note that `LocalDevelopmentAgency.programmeOfficerId` is also the only `User`↔`LDA` relation
+and backs the session's `ldaIds` (`lib/auth.ts`), so reassigning an LDA revokes the previous
+officer's access to it.
 
 There is no test suite configured. **Always run `yarn build` after making code changes** — it is the primary correctness check (TypeScript type errors only surface at build time, not during `yarn dev`).
 
