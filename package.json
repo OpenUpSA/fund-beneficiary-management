@@ -16,6 +16,7 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "create-superuser": "tsx ./scripts/create-superuser.ts",
+    "assign-pos": "tsx ./scripts/assign-programme-officers.ts",
     "postinstall": "prisma generate",
     "next-build": "npx prisma generate && next build"
   },
