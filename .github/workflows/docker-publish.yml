@@ -1,0 +1,53 @@
+  name: Build and publish image
+
+  on:
+    push:
+      branches: [main]
+      tags: ['v*']
+
+  jobs:
+    build:                                        
+      runs-on: ubuntu-latest                     
+      permissions:
+        contents: read                           
+        packages: write                          
+      steps:
+        - uses: actions/checkout@v4
+
+        - uses: docker/login-action@v3
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+          
+        - id: meta
+          uses: docker/metadata-action@v5
+          with:
+            images: ghcr.io/${{ github.repository }}   # -> ghcr.io/openupsa/fund-beneficiary-management
+            tags: |
+              type=raw,value=latest,enable={{is_default_branch}}
+              type=sha
+              type=ref,event=tag
+          
+        - uses: docker/build-push-action@v6
+          with:
+            context: .
+            push: true
+            tags: ${{ steps.meta.outputs.tags }}
+            labels: ${{ steps.meta.outputs.labels }}
+            # Next.js bakes NEXT_PUBLIC_* at BUILD time — pass every one the app reads.
+            # These are public (compiled into the client bundle) → repo Variables.
+            # SENTRY_AUTH_TOKEN is a secret → repo Secret.
+            build-args: |
+              NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+              NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=${{ vars.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT }}
+              NEXT_PUBLIC_ENVIRONMENT=${{ vars.NEXT_PUBLIC_ENVIRONMENT }}
+              NEXT_PUBLIC_ENABLE_COUNTRY_REGION=${{ vars.NEXT_PUBLIC_ENABLE_COUNTRY_REGION }}
+              NEXT_PUBLIC_LDA_SHORT_NAME=${{ vars.NEXT_PUBLIC_LDA_SHORT_NAME }}
+              NEXT_PUBLIC_LDA_SHORT_NAME_PLURAL=${{ vars.NEXT_PUBLIC_LDA_SHORT_NAME_PLURAL }}
+              NEXT_PUBLIC_LDA_FULL_NAME=${{ vars.NEXT_PUBLIC_LDA_FULL_NAME }}
+              NEXT_PUBLIC_LDA_FULL_NAME_PLURAL=${{ vars.NEXT_PUBLIC_LDA_FULL_NAME_PLURAL }}
+              NEXT_PUBLIC_LDA_URL_PATH=${{ vars.NEXT_PUBLIC_LDA_URL_PATH }}
+              NEXT_PUBLIC_LOGO_PATH=${{ vars.NEXT_PUBLIC_LOGO_PATH }}
+              NEXT_PUBLIC_FAVICON_PATH=${{ vars.NEXT_PUBLIC_FAVICON_PATH }}
+              SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
