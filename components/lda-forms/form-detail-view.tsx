@@ -14,6 +14,7 @@ import { Form, FormData } from "@/types/forms"
 import { PenLine, Send, CalendarIcon, Maximize2, Minimize2, Check, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import DynamicForm from "@/components/form-templates/dynamicForm"
+import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
 import { canFillForm, canApproveForm } from "@/lib/permissions"
@@ -75,6 +76,20 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     required: 0
   })
   const [failedSectionTitles, setFailedSectionTitles] = useState<string[]>([])
+
+  // Deep-link from the reporting dashboard: ?section=<index> opens and scrolls to
+  // that form section. Ignore anything that isn't a valid in-range section index.
+  const searchParams = useSearchParams()
+  const sectionCount = ldaForm.formTemplate?.form?.sections?.length ?? 0
+  const sectionParam = Number(searchParams.get("section"))
+  const initialOpenSection =
+    searchParams.get("section") !== null &&
+    Number.isInteger(sectionParam) &&
+    sectionParam >= 0 &&
+    sectionParam < sectionCount
+      ? sectionParam
+      : undefined
+  const initialHighlightField = searchParams.get("field") ?? undefined
 
   // Focus mode: expand the form to fullscreen for easier filling. Lock body
   // scroll and allow Escape to exit while it's active.
@@ -375,6 +390,8 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                 dataChanged={dataChanged}
                 failedSectionTitles={failedSectionTitles}
                 focusMode={focusMode}
+                initialOpenSection={initialOpenSection}
+                initialHighlightField={initialHighlightField}
               />
           ) : (
             <p className="text-muted-foreground">Form template not available</p>

@@ -195,9 +195,10 @@ export function FormField({ field, isEditing = false, onValueChange, lda_id, lda
   // Don't render fields with show: false
 
   if (field.show === false) return null;
-  
+
   return (
-    <div key={field.name}>
+    // id is a deep-link anchor for the reporting dashboard (field-<name>).
+    <div key={field.name} id={field.name ? `field-${field.name}` : undefined}>
       <FormLayout inputField={field} isEditing={isEditing} onValueChange={onValueChange} lda_id={lda_id} lda_form_id={lda_form_id}/>
     </div>
   )
