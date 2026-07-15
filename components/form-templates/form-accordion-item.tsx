@@ -11,6 +11,8 @@ import { useFormValuesStore } from "@/components/form-templates/form-values-cont
 interface FormAccordionItemProps {
   sectionIndex: number
   sectionData: Section
+  /** DOM id for the section root, used as a deep-link scroll anchor. */
+  id?: string
   isEditing: boolean
   defaultValues?: FormData
   formId?: number | string
@@ -26,6 +28,7 @@ interface FormAccordionItemProps {
 export default function FormAccordionItem({
   sectionIndex,
   sectionData,
+  id,
   isEditing,
   defaultValues,
   formId,
@@ -713,7 +716,8 @@ export default function FormAccordionItem({
   if (!isSectionVisible) return null;
 
   return (
-    <AccordionItem 
+    <AccordionItem
+      id={id}
       value={`section-${sectionIndex}`}
       className="border-b overflow-hidden text-gray-400"
     >

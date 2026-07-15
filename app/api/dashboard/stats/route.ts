@@ -5,6 +5,9 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { prisma } from "@/db"
 import { permissions } from "@/lib/permissions"
 import { REPORTING_INDICATORS } from "@/lib/reporting/indicators"
+import { attributeSections, buildFieldSectionIndex, countOccurrences } from "@/lib/reporting/section-attribution"
+import type { AttributedSection } from "@/lib/reporting/section-attribution"
+import type { Form, FormData } from "@/types/forms"
 
 interface DashboardFilters {
   periodStart?: string
@@ -349,7 +352,41 @@ async function getFundStats(filters: DashboardFilters) {
 // Search runs live against LocalDevelopmentAgencyForm.formData cast to text; the
 // `formData_trgm_idx` GIN trigram index accelerates the ILIKE match. Occurrences
 // are counted case-insensitively via the classic length/replace trick.
+interface ReportingReportResult {
+  id: number
+  ldaId: number
+  title: string
+  ldaName: string
+  count: number
+  sections: AttributedSection[]
+}
+
+// Parsed template form + its precomputed field→section index, cached by templateId
+// so each template is indexed once across all indicators rather than per report.
+interface TemplateEntry {
+  form: Form
+  index: ReturnType<typeof buildFieldSectionIndex>
+}
+
 async function getReportingStats(filters: DashboardFilters) {
+  // Templates referenced by displayed reports, loaded lazily and shared across the
+  // 8 indicator iterations.
+  const templateCache = new Map<number, TemplateEntry | null>()
+  async function loadTemplates(templateIds: number[]) {
+    const missing = templateIds.filter(id => !templateCache.has(id))
+    if (missing.length === 0) return
+    const templates = await prisma.formTemplate.findMany({
+      where: { id: { in: missing } },
+      select: { id: true, form: true },
+    })
+    const byId = new Map(templates.map(t => [t.id, t]))
+    for (const id of missing) {
+      const row = byId.get(id)
+      const form = row?.form as unknown as Form | undefined
+      templateCache.set(id, form?.sections ? { form, index: buildFieldSectionIndex(form) } : null)
+    }
+  }
+
   // The LDA-level filters (province, stage, focus area) constrain WHICH reports
   // are searched, by their owning LDA. Only resolve them when at least one is
   // active, and reuse Prisma's relation handling rather than raw join-table SQL.
@@ -379,7 +416,7 @@ async function getReportingStats(filters: DashboardFilters) {
         label: ind.label,
         occurrences: 0,
         reportCount: 0,
-        reports: [] as { id: number; ldaId: number; title: string; ldaName: string; count: number }[],
+        reports: [] as ReportingReportResult[],
       }))
     }
   }
@@ -395,39 +432,62 @@ async function getReportingStats(filters: DashboardFilters) {
   const results = []
   for (const ind of REPORTING_INDICATORS) {
     // Match when any variant appears (ILIKE OR-chain → trigram index, case-insensitive).
+    // This is only the filter — occurrence counts are computed in Node (below) so
+    // overlapping variants aren't double-counted the way a SQL per-variant sum is.
     const matchOr = Prisma.join(
       ind.phrases.map(p => Prisma.sql`f."formData"::text ILIKE ${"%" + p + "%"}`),
       " OR ",
     )
-    // Per-report occurrence count = sum over variants of (case-insensitive) hits.
-    const occurrenceExpr = Prisma.join(
-      ind.phrases.map(
-        p => Prisma.sql`(char_length(lower(f."formData"::text)) - char_length(replace(lower(f."formData"::text), ${p}, ''))) / char_length(${p})`,
-      ),
-      " + ",
-    )
     const where = Prisma.join([Prisma.sql`(${matchOr})`, ...rowFilters], " AND ")
 
-    const rows = await prisma.$queryRaw<{ id: number; ldaId: number; title: string; ldaName: string; count: bigint }[]>(Prisma.sql`
-      SELECT f.id, f."localDevelopmentAgencyId" AS "ldaId", f.title, lda.name AS "ldaName", (${occurrenceExpr})::bigint AS count
+    const rows = await prisma.$queryRaw<{
+      id: number
+      ldaId: number
+      title: string
+      ldaName: string
+      formData: unknown
+      formTemplateId: number | null
+    }[]>(Prisma.sql`
+      SELECT f.id, f."localDevelopmentAgencyId" AS "ldaId", f.title, lda.name AS "ldaName",
+             f."formData", f."formTemplateId"
       FROM "LocalDevelopmentAgencyForm" f
       JOIN "LocalDevelopmentAgency" lda ON lda.id = f."localDevelopmentAgencyId"
       WHERE ${where}
-      ORDER BY count DESC, f."updatedAt" DESC
+      ORDER BY f."updatedAt" DESC
     `)
+
+    await loadTemplates(
+      [...new Set(rows.map(r => r.formTemplateId).filter((id): id is number => id != null))],
+    )
+
+    // Deduplicated occurrence count per matched report (Node, template-aware).
+    const counted = rows.map(r => {
+      const template = r.formTemplateId != null ? templateCache.get(r.formTemplateId) : null
+      const count = template
+        ? countOccurrences(template.form, r.formData as FormData, ind.phrases, template.index)
+        : 0
+      return { row: r, template, count }
+    })
+    // Show the strongest matches first; keep matched-but-unattributable reports last.
+    counted.sort((a, b) => b.count - a.count)
+
+    const reports: ReportingReportResult[] = counted.slice(0, 20).map(({ row, template, count }) => ({
+      id: row.id,
+      ldaId: row.ldaId,
+      title: row.title,
+      ldaName: row.ldaName,
+      count,
+      sections: template
+        ? attributeSections(template.form, row.formData as FormData, ind.phrases, template.index)
+        : [],
+    }))
 
     results.push({
       key: ind.key,
       label: ind.label,
-      occurrences: rows.reduce((sum, r) => sum + Number(r.count), 0),
+      occurrences: counted.reduce((sum, c) => sum + c.count, 0),
       reportCount: rows.length,
-      reports: rows.slice(0, 20).map(r => ({
-        id: r.id,
-        ldaId: r.ldaId,
-        title: r.title,
-        ldaName: r.ldaName,
-        count: Number(r.count),
-      })),
+      reports,
     })
   }
 

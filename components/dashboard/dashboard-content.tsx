@@ -65,6 +65,23 @@ interface ReportingReport {
   title: string
   ldaName: string
   count: number
+  // Sections the keyword was attributed to, with highlighted context snippets.
+  // May be empty even for a matched report (see the reporting stats API) — the
+  // whole-report link is the fallback.
+  sections: {
+    index: number
+    title: string
+    count: number
+    snippets: {
+      fieldName: string
+      fieldLabel: string
+      before: string
+      match: string
+      after: string
+      clippedStart: boolean
+      clippedEnd: boolean
+    }[]
+  }[]
 }
 
 interface ReportingIndicatorStat {
@@ -405,12 +422,12 @@ export function DashboardContent() {
                     ) : (
                       <ul className="space-y-1 pb-2">
                         {indicator.reports.map((report) => (
-                          <li key={report.id}>
+                          <li key={report.id} className="rounded-md px-2 py-1 hover:bg-slate-50">
                             <Link
                               href={`/dashboard/ldas/${report.ldaId}/funding-reports/${report.id}/`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center justify-between gap-3 rounded-md px-2 py-2 text-sm hover:bg-slate-50"
+                              className="flex items-center justify-between gap-3 py-1 text-sm"
                             >
                               <span className="flex min-w-0 items-center gap-2">
                                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -421,6 +438,50 @@ export function DashboardContent() {
                                 {report.count.toLocaleString("en-ZA")}×
                               </span>
                             </Link>
+                            {report.sections.length > 0 ? (
+                              <div className="space-y-2 pb-2 pl-6">
+                                {report.sections.map((section) => (
+                                  <div key={section.index}>
+                                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                                      <span className="truncate">{section.title}</span>
+                                      <span className="shrink-0 font-normal text-muted-foreground">
+                                        ({section.count.toLocaleString("en-ZA")})
+                                      </span>
+                                    </div>
+                                    <ul className="mt-1 space-y-1">
+                                      {section.snippets.map((snippet, i) => (
+                                        <li key={`${snippet.fieldName}-${i}`}>
+                                          <Link
+                                            href={`/dashboard/ldas/${report.ldaId}/funding-reports/${report.id}/?section=${section.index}&field=${encodeURIComponent(snippet.fieldName)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block rounded-md border border-transparent px-2 py-1 hover:border-slate-200 hover:bg-slate-50"
+                                            title={`Open “${section.title}” → ${snippet.fieldLabel}`}
+                                          >
+                                            <span className="block text-[10px] uppercase tracking-wide text-muted-foreground">
+                                              {snippet.fieldLabel}
+                                            </span>
+                                            <span className="block text-xs leading-relaxed text-slate-600">
+                                              {snippet.clippedStart ? "… " : ""}
+                                              {snippet.before}{" "}
+                                              <mark className="rounded bg-yellow-200 px-0.5 text-slate-900">
+                                                {snippet.match}
+                                              </mark>{" "}
+                                              {snippet.after}
+                                              {snippet.clippedEnd ? " …" : ""}
+                                            </span>
+                                          </Link>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="pb-1 pl-6 text-xs italic text-muted-foreground">
+                                Matched, but the section couldn’t be pinpointed — open the report to view.
+                              </p>
+                            )}
                           </li>
                         ))}
                       </ul>
