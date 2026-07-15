@@ -136,6 +136,9 @@ function getPeriodRange(periodId?: string): { periodStart?: string; periodEnd?: 
   }
 }
 
+// Reporting tab is gated behind a feature flag until the indicator set is finalised.
+const REPORTING_ENABLED = process.env.NEXT_PUBLIC_ENABLE_REPORTING === "true"
+
 export function DashboardContent() {
   const [activeTab, setActiveTab] = useState("ldas")
   const [data, setData] = useState<DashboardData | null>(null)
@@ -262,7 +265,9 @@ export function DashboardContent() {
           <TabsTrigger value="ldas" className="data-[state=active]:bg-white">LDAs</TabsTrigger>
           <TabsTrigger value="funders" className="data-[state=active]:bg-white">Funders</TabsTrigger>
           <TabsTrigger value="funds" className="data-[state=active]:bg-white">Funds</TabsTrigger>
-          <TabsTrigger value="reporting" className="data-[state=active]:bg-white">Reporting</TabsTrigger>
+          {REPORTING_ENABLED && (
+            <TabsTrigger value="reporting" className="data-[state=active]:bg-white">Reporting</TabsTrigger>
+          )}
         </TabsList>
 
         {/* Filters - using same FilterBar as LDAs page */}
@@ -392,7 +397,8 @@ export function DashboardContent() {
         </TabsContent>
 
         {/* Reporting Tab — indicator keyword counts across report answers, with
-            links to each source report. No charts by design. */}
+            links to each source report. No charts by design. Feature-flagged. */}
+        {REPORTING_ENABLED && (
         <TabsContent value="reporting" className="mt-6 space-y-6">
           <div className="rounded-lg border bg-white">
             {/* Header row */}
@@ -495,6 +501,7 @@ export function DashboardContent() {
             Counts reflect exact-phrase matches (and close variants) across all report answers, including drafts.
           </p>
         </TabsContent>
+        )}
       </Tabs>
     </div>
   )
