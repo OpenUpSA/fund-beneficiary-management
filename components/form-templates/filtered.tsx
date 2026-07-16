@@ -97,6 +97,7 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
                 <TableHead className="text-nowrap">Form category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Usage</TableHead>
+                <TableHead>Submitted</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -117,11 +118,14 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
                   <TableCell>
                     {formTemplate.localDevelopmentAgencyForms.length}
                   </TableCell>
+                  <TableCell>
+                    {formTemplate.localDevelopmentAgencyForms.filter((f) => f.submitted).length}
+                  </TableCell>
                 </TableRow>
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                     No form templates match the selected filters.
                   </TableCell>
                 </TableRow>
