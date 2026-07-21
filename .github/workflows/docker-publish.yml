@@ -51,3 +51,22 @@
               NEXT_PUBLIC_LOGO_PATH=${{ vars.NEXT_PUBLIC_LOGO_PATH }}
               NEXT_PUBLIC_FAVICON_PATH=${{ vars.NEXT_PUBLIC_FAVICON_PATH }}
               SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+
+    deploy:
+      needs: build
+      runs-on: ubuntu-latest
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      steps:
+        - name: Configure SSH deploy key
+          run: |
+            mkdir -p ~/.ssh
+            echo "${{ secrets.DOKKU_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+            ssh-keyscan -H dokku10.openup.org.za >> ~/.ssh/known_hosts 2>/dev/null
+        - name: Deploy image to Dokku
+          run: |
+            REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            IMAGE="ghcr.io/${REPO}:sha-$(echo "${{ github.sha }}" | cut -c1-7)"
+            echo "Deploying $IMAGE to Dokku app fund-beneficiary-management"
+            ssh -o BatchMode=yes dokku@dokku10.openup.org.za \
+              git:from-image fund-beneficiary-management "$IMAGE"
