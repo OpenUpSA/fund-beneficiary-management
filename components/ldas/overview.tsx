@@ -262,8 +262,9 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             </CardContent>
           </Card>
 
-          {/* Funding by Fund Type */}
-          {fundAllocations.slice(0, 2).map((funding, index) => (
+          {/* Per-fund allocations — one card per funding round (an LDA can only
+              be linked once per fund, so these never duplicate a fund) */}
+          {fundAllocations.map((funding, index) => (
             <Card key={funding.id || index}>
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-1">
@@ -276,21 +277,6 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
               </CardContent>
             </Card>
           ))}
-
-          {/* Fill in with placeholder cards if needed */}
-          {fundAllocations.length < 2 &&
-            [...Array(2 - fundAllocations.length)].map((_, index) => (
-              <Card key={`placeholder-${index}`}>
-                <CardContent className="pt-6 pb-4">
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Additional funding</p>
-                    <h3 className="text-2xl font-bold">R 0</h3>
-                    <p className="text-sm text-gray-500">No additional funds</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          }
         </div>
       </div>
     </div>
