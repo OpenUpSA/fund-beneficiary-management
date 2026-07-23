@@ -11,6 +11,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Combobox } from "@/components/ui/combobox"
+import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, CalendarIcon, FilePlus, Loader2 } from "lucide-react"
 import { format } from "date-fns"
@@ -36,7 +37,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   const [loading, setLoading] = useState(false)
   
   // LDA selection state
-  const [selectedLDA, setSelectedLDA] = useState<string>("")
+  const [selectedLDAs, setSelectedLDAs] = useState<string[]>([])
 
   // Template selection state
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
@@ -57,57 +58,73 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   const endDateLabel = isReportType ? 'Reporting End Date' : 'Funding End Date'
 
   const handleSubmit = async () => {
-    if (!selectedLDA || !selectedTemplate) {
-      toast.error("Please select an LDA and a form template")
+    if (selectedLDAs.length === 0 || !selectedTemplate) {
+      toast.error(`Please select at least one ${LDA_TERMINOLOGY.shortName} and a form template`)
       return
     }
 
     setLoading(true)
 
     try {
-      const payload: Record<string, unknown> = {
-        localDevelopmentAgencyId: parseInt(selectedLDA, 10),
+      const basePayload: Record<string, unknown> = {
         formTemplateId: parseInt(selectedTemplate, 10),
         formData: {},
       }
 
       // Add optional fields based on sidebar config
       if (sidebarConfig.amount && amount) {
-        payload.amount = parseFloat(amount)
+        basePayload.amount = parseFloat(amount)
       }
       if (sidebarConfig.dueDate && dueDate) {
-        payload.dueDate = dueDate.toISOString()
+        basePayload.dueDate = dueDate.toISOString()
       }
       if (sidebarConfig.startDate && fundingStart) {
-        payload.fundingStart = fundingStart.toISOString()
+        basePayload.fundingStart = fundingStart.toISOString()
       }
       if (sidebarConfig.endDate && fundingEnd) {
-        payload.fundingEnd = fundingEnd.toISOString()
+        basePayload.fundingEnd = fundingEnd.toISOString()
       }
 
-      const response = await fetch('/api/lda-form', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
+      const results = await Promise.allSettled(
+        selectedLDAs.map(async (ldaId) => {
+          const response = await fetch('/api/lda-form', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...basePayload, localDevelopmentAgencyId: parseInt(ldaId, 10) }),
+          })
+          if (!response.ok) {
+            const error = await response.json().catch(() => null)
+            throw new Error(error?.error || 'Failed to create form')
+          }
+        })
+      )
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create form')
+      const failed = results.filter((r) => r.status === "rejected").length
+      const succeeded = results.length - failed
+
+      if (failed === 0) {
+        toast.success(
+          succeeded === 1
+            ? "Form assigned successfully"
+            : `Form assigned to ${succeeded} ${LDA_TERMINOLOGY.shortNamePlural}`
+        )
+      } else if (succeeded === 0) {
+        toast.error(`Failed to assign the form to all ${results.length} ${LDA_TERMINOLOGY.shortNamePlural}`)
+      } else {
+        toast.warning(
+          `Form assigned to ${succeeded} of ${results.length} ${LDA_TERMINOLOGY.shortNamePlural} — ${failed} failed`
+        )
       }
-      toast.success("Form created successfully")
     } catch (error) {
-      console.error('Error creating form:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to create form')
+      console.error('Error creating forms:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create forms')
     } finally {
       setLoading(false)
     }
   }
 
   const resetForm = () => {
-    setSelectedLDA("")
+    setSelectedLDAs([])
     setSelectedTemplate("")
     setAmount("")
     setDueDate(undefined)
@@ -127,27 +144,27 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FilePlus className="h-5 w-5" />
-            Create Form
+            Assign Form
           </CardTitle>
           <CardDescription>
-            Create a new form for any {LDA_TERMINOLOGY.shortName} using any active template
+            Assign a form to any {LDA_TERMINOLOGY.shortName} using any active template
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* LDA Selection - Searchable */}
+          {/* LDA Selection - searchable multiselect with Select All */}
           <div className="space-y-2">
-            <Label>{LDA_TERMINOLOGY.shortName}</Label>
-            <Combobox
+            <Label>{LDA_TERMINOLOGY.shortNamePlural}</Label>
+            <InputMultiSelect
               options={ldas.map((lda) => ({
                 value: String(lda.id),
                 label: lda.name,
               }))}
-              value={selectedLDA}
-              onChange={setSelectedLDA}
-              placeholder={`Select ${LDA_TERMINOLOGY.shortName}...`}
-              searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
-              emptyText={`No ${LDA_TERMINOLOGY.shortName} found.`}
-            />
+              value={selectedLDAs}
+              onValueChange={setSelectedLDAs}
+              placeholder={`Select ${LDA_TERMINOLOGY.shortNamePlural}...`}
+            >
+              {(provided) => <InputMultiSelectTrigger {...provided} />}
+            </InputMultiSelect>
           </div>
 
           {/* Template Selection - Searchable */}
@@ -276,16 +293,18 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
           <div className="flex gap-2 pt-4">
             <Button
               onClick={handleSubmit}
-              disabled={loading || !selectedLDA || !selectedTemplate}
+              disabled={loading || selectedLDAs.length === 0 || !selectedTemplate}
               className="flex-1"
             >
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Assigning...
                 </>
               ) : (
-                "Create Form"
+                selectedLDAs.length > 1
+                  ? `Assign Form to ${selectedLDAs.length} ${LDA_TERMINOLOGY.shortNamePlural}`
+                  : "Assign Form"
               )}
             </Button>
             <Button

@@ -2,20 +2,24 @@
 
 import { useState } from "react"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { 
-  FilePlus, 
-  ChevronRight, 
-  Layers, 
-  Target, 
-  FileCheck, 
-  Wallet, 
-  Calendar, 
+import {
+  FilePlus,
+  ChevronRight,
+  Layers,
+  Target,
+  FileCheck,
+  Wallet,
+  Calendar,
   Database,
   MapPin,
-  Upload
+  Upload,
+  LayoutTemplate,
+  FileDown
 } from "lucide-react"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { CreateFormPanel } from "./create-form-panel"
+import { FormTemplatesPanel } from "./form-templates-panel"
+import { ExportResponsesPanel } from "./export-responses-panel"
 import { CrudPanel, FieldConfig } from "./crud-panel"
 import { ReportSchedulesPanel } from "./report-schedules-panel"
 import { CacheManagementPanel } from "./cache-management-panel"
@@ -28,11 +32,13 @@ interface AdminPanelProps {
   formTemplates: FormTemplateWithRelations[]
 }
 
-type AdminTool = 
-  | 'create-form' 
-  | 'development-stages' 
-  | 'focus-areas' 
-  | 'form-status' 
+type AdminTool =
+  | 'form-templates'
+  | 'assign-form'
+  | 'export-responses'
+  | 'development-stages'
+  | 'focus-areas'
+  | 'form-status'
   | 'funding-status'
   | 'report-schedules'
   | 'cache-management'
@@ -50,11 +56,25 @@ interface ToolOption {
 
 const toolOptions: ToolOption[] = [
   {
-    id: 'create-form',
-    title: 'Create Form',
-    description: 'Create a new form for any LDA with any active template',
+    id: 'form-templates',
+    title: 'Form Templates',
+    description: 'Build and manage form templates — sections, fields, and access',
+    icon: LayoutTemplate,
+    category: 'forms',
+  },
+  {
+    id: 'assign-form',
+    title: 'Assign Form',
+    description: 'Assign a form to any LDA from any active template',
     icon: FilePlus,
     category: 'forms',
+  },
+  {
+    id: 'export-responses',
+    title: 'Export Responses',
+    description: 'Export individual or selected form responses as a spreadsheet',
+    icon: FileDown,
+    category: 'bulk',
   },
   {
     id: 'report-schedules',
@@ -160,8 +180,14 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
 
   const renderToolContent = () => {
     switch (selectedTool) {
-      case 'create-form':
+      case 'form-templates':
+        return <FormTemplatesPanel formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
+
+      case 'assign-form':
         return <CreateFormPanel ldas={ldas} formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
+
+      case 'export-responses':
+        return <ExportResponsesPanel formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
       
       case 'report-schedules':
         return <ReportSchedulesPanel ldas={ldas} onBack={() => setSelectedTool(null)} />

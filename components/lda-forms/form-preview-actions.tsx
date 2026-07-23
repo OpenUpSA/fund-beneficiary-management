@@ -1,9 +1,9 @@
 "use client"
 
+import { useEffect } from "react"
 import { DownloadIcon, PrinterIcon } from "lucide-react"
-import { Form, Field } from "@/types/forms"
-
-const SKIP_TYPES = new Set(["info", "data-table"])
+import { Form } from "@/types/forms"
+import { buildResponseRows, toCSV } from "@/lib/form-response-export"
 
 interface PreviewData {
   title: string
@@ -13,61 +13,8 @@ interface PreviewData {
   formData: Record<string, string>
 }
 
-function resolveLabel(field: Field, raw: string): string {
-  if (field.type === "toggle") return raw === "true" ? "Yes" : raw === "false" ? "No" : raw
-  if (field.type === "radio" || field.type === "select") {
-    return field.options?.find((o) => o.value === raw)?.label ?? raw
-  }
-  if (field.type === "multiselect") {
-    try {
-      const values = JSON.parse(raw) as string[]
-      return values.map((v) => field.options?.find((o) => o.value === v)?.label ?? v).join(", ")
-    } catch { return raw }
-  }
-  return raw
-}
-
-function buildCSVRows(data: PreviewData): string[][] {
-  const rows: string[][] = [["Section", "Question", "Answer"]]
-
-  for (const section of data.form.sections) {
-    for (const field of section.fields) {
-      if (SKIP_TYPES.has(field.type)) continue
-
-      if (field.type === "group" && field.fields) {
-        for (const sub of field.fields) {
-          const raw = data.formData[`${field.name}_${sub.name}`] ?? ""
-          rows.push([section.title, `${field.label} – ${sub.label}`, raw])
-        }
-        continue
-      }
-
-      if (field.type === "repeatable" && field.template) {
-        const raw = data.formData[field.name] ?? ""
-        let indices: number[] = []
-        try { indices = JSON.parse(raw) as number[] } catch { /* empty */ }
-        for (const idx of indices) {
-          for (const tmpl of field.template) {
-            const key = `${field.name}_${tmpl.name}_${idx}`
-            const val = data.formData[key] ?? ""
-            rows.push([section.title, `${field.label} #${idx} – ${tmpl.label}`, val])
-          }
-        }
-        continue
-      }
-
-      const raw = data.formData[field.name] ?? ""
-      const val = resolveLabel(field, raw)
-      rows.push([section.title, field.label, val])
-    }
-  }
-
-  return rows
-}
-
 function downloadCSV(data: PreviewData) {
-  const rows = buildCSVRows(data)
-  const csv = rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n")
+  const csv = toCSV(buildResponseRows(data.form, data.formData))
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
@@ -82,6 +29,15 @@ interface Props {
 }
 
 export function FormPreviewActions({ data }: Props) {
+  // ?print=1 (e.g. from the admin Export Responses screen) opens the browser
+  // print dialog once the page has rendered, for direct save-as-PDF
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("print")) {
+      const timer = setTimeout(() => window.print(), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   return (
     <div className="space-y-1">
       <button

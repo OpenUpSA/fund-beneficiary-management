@@ -12,6 +12,7 @@ import { FormTemplateWithRelations, LocalDevelopmentAgencyFormFull } from "@/typ
 import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import LDAFormDataView from "@/components/lda-forms/data-view"
+import { DownloadResponseButton } from "@/components/lda-forms/download-response-button"
 import { Form } from "@/types/forms"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/i18n/routing"
@@ -91,6 +92,13 @@ export default async function Page({ params, searchParams }: FormTemplatePagePro
         <div className="flex flex-wrap items-center justify-between mb-4">
           <h1 className="text-xl md:text-2xl font-semibold">{ldaForm.title}</h1>
           <div className="space-x-2">
+            {ldaForm.formTemplate.form && (
+              <DownloadResponseButton
+                title={ldaForm.title}
+                form={ldaForm.formTemplate.form as unknown as Form}
+                formData={ldaForm.formData as Record<string, string>}
+              />
+            )}
             {canFill && (
               <Button asChild>
                 <Link href={`/dashboard/applications-reports/${ldaForm.id}/fill/`}>

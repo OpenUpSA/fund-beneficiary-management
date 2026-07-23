@@ -15,11 +15,16 @@ type FormTemplate = {
   form: Form
 }
 
+// Stable identity for callers that pass no defaultValues (e.g. the template
+// editor preview) — an inline `{}` default would be a new object every render,
+// re-triggering the setData sync effect in an infinite loop.
+const EMPTY_DEFAULT_VALUES: FormData = {}
+
 export function DynamicForm({
   form,
   setData,
   isEditing = true,
-  defaultValues = {},
+  defaultValues = EMPTY_DEFAULT_VALUES,
   setParentEditing,
   formId,
   lda_id,
