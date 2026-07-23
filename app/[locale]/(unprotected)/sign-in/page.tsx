@@ -1,4 +1,6 @@
+import { Suspense } from "react"
 import { SignInForm } from "@/components/sign-in-form"
+import { DbHealthMarker } from "@/components/db-health-marker"
 import { getTranslations } from 'next-intl/server'
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
@@ -22,6 +24,9 @@ export default function SignInPage() {
       <div className="w-full max-w-sm md:max-w-3xl">
         <SignInForm />
       </div>
+      <Suspense fallback={null}>
+        <DbHealthMarker />
+      </Suspense>
     </div>
   )
 }
