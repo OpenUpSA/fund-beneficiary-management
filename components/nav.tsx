@@ -6,7 +6,6 @@ import {
   HandCoins,
   Images,
   LayoutDashboard,
-  LayoutTemplate,
   MapPinHouse,
   Settings,
   Users,
@@ -35,12 +34,6 @@ export function Nav() {
 
   const data = useMemo(() => ({
     navAdmin: [
-      {
-        title: "Form Templates",
-        url: "/dashboard/form-templates",
-        icon: LayoutTemplate,
-        requiredRoles: ['ADMIN', 'SUPER_USER']
-      },
       {
         title: "Users",
         url: "/dashboard/users",

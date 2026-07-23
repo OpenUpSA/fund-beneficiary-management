@@ -127,10 +127,10 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FilePlus className="h-5 w-5" />
-            Create Form
+            Assign Form
           </CardTitle>
           <CardDescription>
-            Create a new form for any {LDA_TERMINOLOGY.shortName} using any active template
+            Assign a form to any {LDA_TERMINOLOGY.shortName} using any active template
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -282,10 +282,10 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  Assigning...
                 </>
               ) : (
-                "Create Form"
+                "Assign Form"
               )}
             </Button>
             <Button
