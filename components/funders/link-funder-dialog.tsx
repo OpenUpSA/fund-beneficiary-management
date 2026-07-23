@@ -11,13 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -244,18 +238,17 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                 ) : (
-                  <Select value={selectedFunder} onValueChange={setSelectedFunder}>
-                    <SelectTrigger id="funder">
-                      <SelectValue placeholder="Select a funder" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableFunders?.map((funder) => (
-                        <SelectItem key={funder.id} value={String(funder.id)}>
-                          {funder.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={availableFunders?.map((funder) => ({
+                      value: String(funder.id),
+                      label: funder.name,
+                    })) ?? []}
+                    value={selectedFunder}
+                    onChange={setSelectedFunder}
+                    placeholder="Select a funder"
+                    searchPlaceholder="Search funders..."
+                    emptyText="No funder found."
+                  />
                 )}
               </div>
 
@@ -273,18 +266,17 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
                     <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   </div>
                 ) : (
-                  <Select value={selectedFund} onValueChange={setSelectedFund}>
-                    <SelectTrigger id="fund">
-                      <SelectValue placeholder="Select a fund" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableFunds?.map((fund) => (
-                        <SelectItem key={fund.id} value={String(fund.id)}>
-                          {fund.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    options={availableFunds?.map((fund) => ({
+                      value: String(fund.id),
+                      label: fund.name,
+                    })) ?? []}
+                    value={selectedFund}
+                    onChange={setSelectedFund}
+                    placeholder="Select a fund"
+                    searchPlaceholder="Search funds..."
+                    emptyText="No fund found."
+                  />
                 )}
               </div>
 

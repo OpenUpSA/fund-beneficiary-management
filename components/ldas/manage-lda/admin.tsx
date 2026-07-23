@@ -20,6 +20,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { InputMultiSelect, InputMultiSelectTrigger } from "@/components/ui/multiselect"
 import { FocusArea, DevelopmentStage } from '@prisma/client'
 import { UserWithLDAsBasic } from '@/types/models'
@@ -169,23 +170,19 @@ export function AdminTab({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Development stage</FormLabel>
-            <Select value={field.value?.toString()} onValueChange={field.onChange}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select stage" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {developmentStages.map((developmentStage) => (
-                  <SelectItem
-                    key={developmentStage.id}
-                    value={developmentStage.id.toString()}
-                  >
-                    {developmentStage.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <Combobox
+                options={developmentStages.map((developmentStage) => ({
+                  value: developmentStage.id.toString(),
+                  label: developmentStage.label,
+                }))}
+                value={field.value?.toString()}
+                onChange={field.onChange}
+                placeholder="Select stage"
+                searchPlaceholder="Search stages..."
+                emptyText="No stage found."
+              />
+            </FormControl>
           </FormItem>
         )} />
 
@@ -195,23 +192,19 @@ export function AdminTab({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Assigned programme officer</FormLabel>
-            <Select value={field.value?.toString()} onValueChange={field.onChange}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select officer" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {programmeOfficers.map((programmeOfficer) => (
-                  <SelectItem
-                    key={programmeOfficer.id}
-                    value={programmeOfficer.id.toString()}
-                  >
-                    {programmeOfficer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <FormControl>
+              <Combobox
+                options={programmeOfficers.map((programmeOfficer) => ({
+                  value: programmeOfficer.id.toString(),
+                  label: programmeOfficer.name,
+                }))}
+                value={field.value?.toString()}
+                onChange={field.onChange}
+                placeholder="Select officer"
+                searchPlaceholder="Search officers..."
+                emptyText="No officer found."
+              />
+            </FormControl>
           </FormItem>
         )} />
 

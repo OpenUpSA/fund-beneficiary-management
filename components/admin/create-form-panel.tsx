@@ -10,21 +10,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, CalendarIcon, Check, ChevronsUpDown, FilePlus, Loader2 } from "lucide-react"
+import { ArrowLeft, CalendarIcon, FilePlus, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
-import { cn } from "@/lib/utils"
 
 interface CreateFormPanelProps {
   ldas: LocalDevelopmentAgencyListItem[]
@@ -44,11 +36,9 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   const [loading, setLoading] = useState(false)
   
   // LDA selection state
-  const [ldaOpen, setLdaOpen] = useState(false)
   const [selectedLDA, setSelectedLDA] = useState<string>("")
-  
+
   // Template selection state
-  const [templateOpen, setTemplateOpen] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   
   // Form fields
@@ -58,7 +48,6 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   const [fundingEnd, setFundingEnd] = useState<Date | undefined>(undefined)
 
   // Get selected items for display
-  const selectedLDAData = ldas.find(l => String(l.id) === selectedLDA)
   const selectedTemplateData = formTemplates.find(t => String(t.id) === selectedTemplate)
   const sidebarConfig: SidebarConfig = selectedTemplateData?.sidebarConfig as SidebarConfig || {}
   const isReportType = selectedTemplateData?.templateType === 'REPORT'
@@ -148,98 +137,34 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
           {/* LDA Selection - Searchable */}
           <div className="space-y-2">
             <Label>{LDA_TERMINOLOGY.shortName}</Label>
-            <Popover open={ldaOpen} onOpenChange={setLdaOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={ldaOpen}
-                  className="w-full justify-between"
-                >
-                  {selectedLDAData ? selectedLDAData.name : `Select ${LDA_TERMINOLOGY.shortName}...`}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput placeholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`} />
-                  <CommandList>
-                    <CommandEmpty>No {LDA_TERMINOLOGY.shortName} found.</CommandEmpty>
-                    <CommandGroup>
-                      {ldas.map((lda) => (
-                        <CommandItem
-                          key={lda.id}
-                          value={lda.name}
-                          onSelect={() => {
-                            setSelectedLDA(String(lda.id))
-                            setLdaOpen(false)
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedLDA === String(lda.id) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {lda.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <Combobox
+              options={ldas.map((lda) => ({
+                value: String(lda.id),
+                label: lda.name,
+              }))}
+              value={selectedLDA}
+              onChange={setSelectedLDA}
+              placeholder={`Select ${LDA_TERMINOLOGY.shortName}...`}
+              searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
+              emptyText={`No ${LDA_TERMINOLOGY.shortName} found.`}
+            />
           </div>
 
           {/* Template Selection - Searchable */}
           <div className="space-y-2">
             <Label>Form Template</Label>
-            <Popover open={templateOpen} onOpenChange={setTemplateOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={templateOpen}
-                  className="w-full justify-between"
-                >
-                  {selectedTemplateData ? selectedTemplateData.name : "Select template..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search templates..." />
-                  <CommandList>
-                    <CommandEmpty>No template found.</CommandEmpty>
-                    <CommandGroup>
-                      {formTemplates.map((template) => (
-                        <CommandItem
-                          key={template.id}
-                          value={template.name}
-                          onSelect={() => {
-                            setSelectedTemplate(String(template.id))
-                            setTemplateOpen(false)
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedTemplate === String(template.id) ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          <div className="flex flex-col">
-                            <span>{template.name}</span>
-                            {template.description && (
-                              <span className="text-xs text-muted-foreground">{template.description}</span>
-                            )}
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <Combobox
+              options={formTemplates.map((template) => ({
+                value: String(template.id),
+                label: template.name,
+                description: template.description ?? undefined,
+              }))}
+              value={selectedTemplate}
+              onChange={setSelectedTemplate}
+              placeholder="Select template..."
+              searchPlaceholder="Search templates..."
+              emptyText="No template found."
+            />
           </div>
 
           {/* Conditional fields based on template sidebar config */}

@@ -30,6 +30,7 @@ import { Checkbox } from "../ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
 import { Label } from "../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { useTranslations } from "next-intl"
 import { UserFull } from "@/types/models"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -247,26 +248,19 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full">
                     <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
-                    <Select 
-                      value={field.value?.toString() || ''} 
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ldas.map((lda) => (
-                          <SelectItem
-                            key={lda.id}
-                            value={lda.id.toString()}
-                          >
-                            {lda.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={ldas.map((lda) => ({
+                          value: lda.id.toString(),
+                          label: lda.name,
+                        }))}
+                        value={field.value?.toString() || ''}
+                        onChange={(value) => field.onChange(value)}
+                        placeholder={LDA_TERMINOLOGY.selectPlaceholder}
+                        searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
+                        emptyText={`No ${LDA_TERMINOLOGY.shortName} found.`}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

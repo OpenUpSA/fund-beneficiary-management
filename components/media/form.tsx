@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
@@ -210,23 +211,19 @@ export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, c
                     render={({ field }) => (
                       <FormItem className="flex-1 w-full">
                         <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
-                        <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {ldas.map((lda) => (
-                              <SelectItem
-                                key={lda.id}
-                                value={lda.id.toString()}
-                              >
-                                {lda.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Combobox
+                            options={ldas.map((lda) => ({
+                              value: lda.id.toString(),
+                              label: lda.name,
+                            }))}
+                            value={field.value?.toString()}
+                            onChange={field.onChange}
+                            placeholder={LDA_TERMINOLOGY.selectPlaceholder}
+                            searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
+                            emptyText={`No ${LDA_TERMINOLOGY.shortName} found.`}
+                          />
+                        </FormControl>
                       </FormItem>
                     )} />)}
                 <FormField
