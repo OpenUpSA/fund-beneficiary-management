@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { FocusArea, Province, FundStatus } from '@prisma/client'
@@ -506,20 +507,19 @@ export function FormDialog({ funder, focusAreas, provinces, callback }: FormDial
                               name="physicalProvince"
                               render={({ field }) => (
                                 <FormItem>
-                                  <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                                    <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="Select province" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      {provinces.map((province) => (
-                                        <SelectItem key={province.code} value={province.code}>
-                                          {province.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                  <FormControl>
+                                    <Combobox
+                                      options={provinces.map((province) => ({
+                                        value: province.code,
+                                        label: province.name,
+                                      }))}
+                                      value={field.value?.toString()}
+                                      onChange={field.onChange}
+                                      placeholder="Select province"
+                                      searchPlaceholder="Search provinces..."
+                                      emptyText="No province found."
+                                    />
+                                  </FormControl>
                                 </FormItem>
                               )}
                             />
@@ -624,20 +624,19 @@ export function FormDialog({ funder, focusAreas, provinces, callback }: FormDial
                                 name="postalProvince"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                                      <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select province" />
-                                        </SelectTrigger>
-                                      </FormControl>
-                                      <SelectContent>
-                                        {provinces.map((province) => (
-                                          <SelectItem key={province.code} value={province.code}>
-                                            {province.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
+                                    <FormControl>
+                                      <Combobox
+                                        options={provinces.map((province) => ({
+                                          value: province.code,
+                                          label: province.name,
+                                        }))}
+                                        value={field.value?.toString()}
+                                        onChange={field.onChange}
+                                        placeholder="Select province"
+                                        searchPlaceholder="Search provinces..."
+                                        emptyText="No province found."
+                                      />
+                                    </FormControl>
                                   </FormItem>
                                 )}
                               />

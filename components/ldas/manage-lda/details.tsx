@@ -8,13 +8,7 @@ import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
 import { FormValues } from "./form-schema"
 import { Province } from "@/types/models"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Switch } from "@/components/ui/switch"
 import { useState, useEffect, useMemo } from "react"
 import Map from "@/components/ldas/map";
@@ -276,48 +270,41 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
             name="physicalProvince"
             render={({ field }) => (
             <FormItem>
-              <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select province" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {provinces.map((province) => (
-                    <SelectItem
-                        key={province.code}
-                        value={province.code}
-                    >
-                        {province.name}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
+              <FormControl>
+                <Combobox
+                  options={provinces.map((province) => ({
+                    value: province.code,
+                    label: province.name,
+                  }))}
+                  value={field.value?.toString()}
+                  onChange={field.onChange}
+                  placeholder="Select province"
+                  searchPlaceholder="Search provinces..."
+                  emptyText="No province found."
+                />
+              </FormControl>
             </FormItem>
           )} />
-          
+
           <FormField
             control={form.control}
             name="physicalDistrict"
             render={({ field }) => (
             <FormItem>
-              <Select value={field.value?.toString()} onValueChange={field.onChange} disabled={districts.length === 0}>
-                <FormControl>
-                    <SelectTrigger>
-                  <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {districts.map((district) => (
-                    <SelectItem
-                        key={district.code}
-                        value={district.code}
-                    >
-                        {district.name}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
+              <FormControl>
+                <Combobox
+                  options={districts.map((district) => ({
+                    value: district.code,
+                    label: district.name,
+                  }))}
+                  value={field.value?.toString()}
+                  onChange={field.onChange}
+                  disabled={districts.length === 0}
+                  placeholder="Select district"
+                  searchPlaceholder="Search districts..."
+                  emptyText="No district found."
+                />
+              </FormControl>
             </FormItem>
           )} />
       </div>
@@ -386,48 +373,41 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
             name="postalProvince"
             render={({ field }) => (
             <FormItem>
-              <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                <FormControl>
-                    <SelectTrigger>
-                    <SelectValue placeholder="Select province" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {provinces.map((province) => (
-                    <SelectItem
-                        key={province.code}
-                        value={province.code}
-                    >
-                        {province.name}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
+              <FormControl>
+                <Combobox
+                  options={provinces.map((province) => ({
+                    value: province.code,
+                    label: province.name,
+                  }))}
+                  value={field.value?.toString()}
+                  onChange={field.onChange}
+                  placeholder="Select province"
+                  searchPlaceholder="Search provinces..."
+                  emptyText="No province found."
+                />
+              </FormControl>
             </FormItem>
           )} />
-          
+
           <FormField
             control={form.control}
             name="postalDistrict"
             render={({ field }) => (
             <FormItem>
-              <Select value={field.value?.toString()} onValueChange={field.onChange} disabled={districts.length === 0}>
-                <FormControl>
-                    <SelectTrigger>
-                  <SelectValue placeholder="Select district" />
-                    </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                    {postalDistricts.map((district) => (
-                    <SelectItem
-                        key={district.code}
-                        value={district.code}
-                    >
-                        {district.name}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
+              <FormControl>
+                <Combobox
+                  options={postalDistricts.map((district) => ({
+                    value: district.code,
+                    label: district.name,
+                  }))}
+                  value={field.value?.toString()}
+                  onChange={field.onChange}
+                  disabled={districts.length === 0}
+                  placeholder="Select district"
+                  searchPlaceholder="Search districts..."
+                  emptyText="No district found."
+                />
+              </FormControl>
             </FormItem>
           )} />
       </div>

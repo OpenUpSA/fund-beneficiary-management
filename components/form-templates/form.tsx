@@ -35,6 +35,7 @@ import { ChevronDownIcon, CopyIcon, PencilIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { FormTemplate } from "@prisma/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Control } from "react-hook-form"
@@ -301,24 +302,22 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Linked Form Template</FormLabel>
-                    <Select 
-                      value={field.value?.toString() || 'none'} 
-                      onValueChange={(val) => field.onChange(val === 'none' ? null : parseInt(val))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select form template" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {availableTemplatesForLinking.map((t) => (
-                          <SelectItem key={t.id} value={t.id.toString()}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={[
+                          { value: 'none', label: 'None' },
+                          ...availableTemplatesForLinking.map((t) => ({
+                            value: t.id.toString(),
+                            label: t.name,
+                          })),
+                        ]}
+                        value={field.value?.toString() || 'none'}
+                        onChange={(val) => field.onChange(val === 'none' ? null : parseInt(val))}
+                        placeholder="Select form template"
+                        searchPlaceholder="Search templates..."
+                        emptyText="No templates found."
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />
@@ -468,18 +467,17 @@ function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Select Template to Clone</Label>
-            <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a template" />
-              </SelectTrigger>
-              <SelectContent>
-                {allTemplates.map((t) => (
-                  <SelectItem key={t.id} value={t.id.toString()}>
-                    {t.name} ({t.templateType})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={allTemplates.map((t) => ({
+                value: t.id.toString(),
+                label: `${t.name} (${t.templateType})`,
+              }))}
+              value={selectedTemplate}
+              onChange={handleTemplateSelect}
+              placeholder="Select a template"
+              searchPlaceholder="Search templates..."
+              emptyText="No templates found."
+            />
           </div>
 
           {selectedTemplate && (
@@ -679,24 +677,22 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Linked Form Template</FormLabel>
-                  <Select 
-                    value={field.value?.toString() || 'none'} 
-                    onValueChange={(val) => field.onChange(val === 'none' ? null : parseInt(val))}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select form template" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {allTemplates.map((t) => (
-                        <SelectItem key={t.id} value={t.id.toString()}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Combobox
+                      options={[
+                        { value: 'none', label: 'None' },
+                        ...allTemplates.map((t) => ({
+                          value: t.id.toString(),
+                          label: t.name,
+                        })),
+                      ]}
+                      value={field.value?.toString() || 'none'}
+                      onChange={(val) => field.onChange(val === 'none' ? null : parseInt(val))}
+                      placeholder="Select form template"
+                      searchPlaceholder="Search templates..."
+                      emptyText="No templates found."
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

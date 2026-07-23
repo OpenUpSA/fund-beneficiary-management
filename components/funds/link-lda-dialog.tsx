@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -202,18 +203,18 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
                     <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   </div>
                 ) : (
-                  <Select value={selectedLDA} onValueChange={setSelectedLDA}>
-                    <SelectTrigger id="lda">
-                      <SelectValue placeholder={LDA_TERMINOLOGY.selectPlaceholder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableLDAs.map((lda) => (
-                        <SelectItem key={lda.id} value={String(lda.id)}>
-                          {lda.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    id="lda"
+                    options={availableLDAs.map((lda) => ({
+                      value: String(lda.id),
+                      label: lda.name,
+                    }))}
+                    value={selectedLDA}
+                    onChange={setSelectedLDA}
+                    placeholder={LDA_TERMINOLOGY.selectPlaceholder}
+                    searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
+                    emptyText={`No ${LDA_TERMINOLOGY.shortName} found.`}
+                  />
                 )}
               </div>
 

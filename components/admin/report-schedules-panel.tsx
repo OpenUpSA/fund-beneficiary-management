@@ -27,20 +27,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { Combobox } from "@/components/ui/combobox"
 import { Calendar } from "@/components/ui/calendar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Calendar as CalendarIcon, Check, ChevronsUpDown, Edit, Loader2, RefreshCw } from "lucide-react"
+import { ArrowLeft, Calendar as CalendarIcon, Edit, Loader2, RefreshCw } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
 import { LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
@@ -89,7 +81,6 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
   const [configs, setConfigs] = useState<ReportConfig[]>([])
   const [generatedReports, setGeneratedReports] = useState<GeneratedReport[]>([])
   const [selectedLDA, setSelectedLDA] = useState<string>("all")
-  const [ldaOpen, setLdaOpen] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState<PeriodSchedule | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -98,8 +89,6 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
     dueDate: undefined as Date | undefined,
     note: ""
   })
-
-  const selectedLDAData = ldas.find(l => String(l.id) === selectedLDA)
 
   // Refetch configs after updates
   const refetchConfigs = async () => {
@@ -384,38 +373,21 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
                 {/* LDA Filter */}
                 <div className="flex items-center gap-4">
                   <Label>Filter by {LDA_TERMINOLOGY.shortName}:</Label>
-                  <Popover open={ldaOpen} onOpenChange={setLdaOpen}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" className="w-[300px] justify-between">
-                        {selectedLDA === 'all' ? `All ${LDA_TERMINOLOGY.shortNamePlural}` : selectedLDAData?.name || 'Select...'}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[300px] p-0">
-                      <Command>
-                        <CommandInput placeholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`} />
-                        <CommandList>
-                          <CommandEmpty>No results found.</CommandEmpty>
-                          <CommandGroup>
-                            <CommandItem value="all" onSelect={() => { setSelectedLDA('all'); setLdaOpen(false) }}>
-                              <Check className={cn("mr-2 h-4 w-4", selectedLDA === 'all' ? "opacity-100" : "opacity-0")} />
-                              All {LDA_TERMINOLOGY.shortNamePlural}
-                            </CommandItem>
-                            {ldas.map((lda) => (
-                              <CommandItem
-                                key={lda.id}
-                                value={lda.name}
-                                onSelect={() => { setSelectedLDA(String(lda.id)); setLdaOpen(false) }}
-                              >
-                                <Check className={cn("mr-2 h-4 w-4", selectedLDA === String(lda.id) ? "opacity-100" : "opacity-0")} />
-                                {lda.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <Combobox
+                    options={[
+                      { value: 'all', label: `All ${LDA_TERMINOLOGY.shortNamePlural}` },
+                      ...ldas.map((lda) => ({
+                        value: String(lda.id),
+                        label: lda.name,
+                      })),
+                    ]}
+                    value={selectedLDA}
+                    onChange={setSelectedLDA}
+                    placeholder="Select..."
+                    searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
+                    emptyText="No results found."
+                    className="w-[300px]"
+                  />
                 </div>
 
                 {generatedReports.length === 0 ? (

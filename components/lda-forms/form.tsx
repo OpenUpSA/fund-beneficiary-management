@@ -13,13 +13,7 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 
 import { LocalDevelopmentAgencyForm } from '@prisma/client'
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFull } from '@/types/models'
@@ -155,23 +149,19 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full">
                     <FormLabel>{LDA_TERMINOLOGY.fullName}</FormLabel>
-                    <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ldas.map((lda) => (
-                          <SelectItem
-                            key={lda.id}
-                            value={lda.id.toString()}
-                          >
-                            {lda.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={ldas.map((lda) => ({
+                          value: lda.id.toString(),
+                          label: lda.name,
+                        }))}
+                        value={field.value?.toString()}
+                        onChange={field.onChange}
+                        placeholder={LDA_TERMINOLOGY.selectPlaceholder}
+                        searchPlaceholder={`Search ${LDA_TERMINOLOGY.shortNamePlural}...`}
+                        emptyText={`No ${LDA_TERMINOLOGY.shortName} found.`}
+                      />
+                    </FormControl>
 
                   </FormItem>
                 )} />}
@@ -182,25 +172,21 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
               render={({ field }) => (
                 <FormItem className="flex-1 w-full">
                   <FormLabel>Form Template</FormLabel>
-                  <Select value={field.value?.toString()} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {formTemplates
+                  <FormControl>
+                    <Combobox
+                      options={formTemplates
                         .filter(template => template.active === true && template.templateType !== 'REPORT')
-                        .map((template) => (
-                        <SelectItem
-                          key={template.id}
-                          value={template.id.toString()}
-                        >
-                          {template.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        .map((template) => ({
+                          value: template.id.toString(),
+                          label: template.name,
+                        }))}
+                      value={field.value?.toString()}
+                      onChange={field.onChange}
+                      placeholder="Select a form template"
+                      searchPlaceholder="Search form templates..."
+                      emptyText="No form template found."
+                    />
+                  </FormControl>
 
                 </FormItem>
               )} />}

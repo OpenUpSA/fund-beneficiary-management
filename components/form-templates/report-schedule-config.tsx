@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
@@ -426,25 +427,21 @@ export function ReportScheduleConfigDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Report Template</Label>
-                      <Select
+                      <Combobox
+                        options={reportTemplates
+                          .filter((t) => t.templateType === "REPORT")
+                          .map((t) => ({
+                            value: t.id.toString(),
+                            label: t.name,
+                          }))}
                         value={newConfig.reportTemplateId}
-                        onValueChange={(val) =>
+                        onChange={(val) =>
                           setNewConfig({ ...newConfig, reportTemplateId: val })
                         }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select report template" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {reportTemplates
-                            .filter((t) => t.templateType === "REPORT")
-                            .map((t) => (
-                              <SelectItem key={t.id} value={t.id.toString()}>
-                                {t.name}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
+                        placeholder="Select report template"
+                        searchPlaceholder="Search templates..."
+                        emptyText="No templates found."
+                      />
                     </div>
 
                     <div className="space-y-2">
