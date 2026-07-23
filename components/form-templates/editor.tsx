@@ -9,20 +9,24 @@ import { toast } from "sonner"
 import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
 import { ReportScheduleConfigDialog } from "@/components/form-templates/report-schedule-config"
-import { Form, FormData } from "@/types/forms"
-import CodeMirror from "@uiw/react-codemirror"
-import { json, jsonParseLinter } from "@codemirror/lang-json"
-import { linter, lintGutter } from "@codemirror/lint"
+import { Form } from "@/types/forms"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import CodeMirror, { EditorView } from "@uiw/react-codemirror"
+import { lintGutter } from "@codemirror/lint"
+import { jsonSchema } from "codemirror-json-schema"
+import { FORM_TEMPLATE_SCHEMA } from "@/lib/form-template-schema"
 
-const editorExtensions = [json(), linter(jsonParseLinter()), lintGutter()]
+// jsonSchema bundles JSON language support, parse + schema linting,
+// hover docs, and property/value autocompletion
+const editorExtensions = [...jsonSchema(FORM_TEMPLATE_SCHEMA), lintGutter(), EditorView.lineWrapping]
 
 export default function Editor({ formTemplate, allTemplates = [] }: {
   formTemplate: FormTemplate
   allTemplates?: FormTemplate[]
 }) {
   const [form, setForm] = useState<Form>()
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(formTemplate.form, null, 2))
-  const [data, setData] = useState<FormData>({})
   const [jsonError, setJsonError] = useState<string | null>(null)
 
   const parseJson = (): Form | null => {
@@ -40,6 +44,7 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
     const parsedForm = parseJson()
     if (parsedForm) {
       setForm(parsedForm)
+      setPreviewOpen(true)
     } else {
       toast.error("Cannot preview: the template JSON is invalid")
     }
@@ -102,38 +107,39 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
           <DeleteDialog formTemplate={formTemplate} />
         </div>
       </div>
-      <div className="flex flex-wrap items-start justify-between space-x-4">
-        <div className="w-full flex-1 h-[68vh] overflow-hidden rounded-md border">
-          <CodeMirror
-            value={jsonText}
-            height="68vh"
-            theme="dark"
-            extensions={editorExtensions}
-            onChange={(value) => {
-              setJsonText(value)
-              setJsonError(null)
-            }}
-            basicSetup={{
-              lineNumbers: true,
-              foldGutter: true,
-              highlightActiveLine: true,
-              bracketMatching: true,
-              autocompletion: false,
-            }}
-          />
-        </div>
-        <div className="w-full flex-1 px-6 py-4 text-white bg-black dark:bg-white dark:text-black rounded-md h-[68vh] overflow-y-auto">
-          {jsonError && <div className="text-red-500 mt-2">{jsonError}</div>}
-          {form && <DynamicForm
-            form={form}
-            setData={setData}
-          />}
-        </div>
+      {jsonError && <div className="text-red-500 mb-2 text-sm">{jsonError}</div>}
+      <div className="w-full min-w-0 h-[75vh] overflow-hidden rounded-md border">
+        <CodeMirror
+          value={jsonText}
+          height="75vh"
+          theme="dark"
+          extensions={editorExtensions}
+          onChange={(value) => {
+            setJsonText(value)
+            setJsonError(null)
+          }}
+          basicSetup={{
+            lineNumbers: true,
+            foldGutter: true,
+            highlightActiveLine: true,
+            bracketMatching: true,
+            autocompletion: true,
+          }}
+        />
       </div>
-      <div className="w-full bg-black text-green-500 p-10 mt-4 rounded-md">
-        <h1>Data:</h1>
-        {JSON.stringify(data, null, 2)}
-      </div>
+
+      {/* Preview modal — content unmounts on close, so every open re-parses
+          the latest JSON and renders a fresh form */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Preview: {form?.title || formTemplate.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {previewOpen && form && <DynamicForm form={form} focusMode />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
