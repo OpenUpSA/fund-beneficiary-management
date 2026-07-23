@@ -456,9 +456,6 @@ export default async function FormPreviewPage({ params }: Props) {
   // No id means the API denied access (403) or the form is missing — block the page
   if (!ldaForm?.id) notFound()
 
-  // Block Draft forms
-  if (ldaForm.formStatus?.label === "Draft") notFound()
-
   // Check LDA access
   const ldaId = ldaForm.localDevelopmentAgencyId
   if (!permissions.canViewLDA(session.user, ldaId)) notFound()
@@ -503,7 +500,8 @@ export default async function FormPreviewPage({ params }: Props) {
   ]
 
   return (
-    <div className="min-h-screen flex bg-white print:block">
+    // print-color-adjust keeps backgrounds (radio dots, checkbox fills) in print output
+    <div className="min-h-screen flex bg-white print:block [print-color-adjust:exact] [-webkit-print-color-adjust:exact]">
       {/* ── Sidebar ── */}
       <aside className="w-64 shrink-0 border-r border-slate-100 flex flex-col sticky top-0 h-screen overflow-y-auto print:hidden">
         <div className="px-6 py-5 border-b border-slate-100">
