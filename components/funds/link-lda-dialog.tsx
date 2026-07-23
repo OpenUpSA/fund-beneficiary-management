@@ -106,8 +106,17 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!selectedLDA || !startDate || !endDate || !amount) {
+    if (!selectedLDA || !startDate || !endDate) {
       toast.error("Please fill in all required fields")
+      return
+    }
+
+    if (!amount) {
+      toast.error(
+        amountType === "USE_DEFAULT"
+          ? "This fund has no default amount set. Switch amount type to \"Ad hoc\" and enter an amount, or set a default amount on the fund."
+          : "Please enter an amount"
+      )
       return
     }
 
@@ -249,6 +258,9 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
                     <PopoverContent align="start" className="w-auto p-0">
                       <Calendar
                         mode="single"
+                        captionLayout="dropdown"
+                        startMonth={new Date(2000, 0)}
+                        endMonth={new Date(new Date().getFullYear() + 10, 11)}
                         selected={startDate}
                         onSelect={setStartDate}
                         initialFocus
@@ -273,6 +285,9 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
                     <PopoverContent align="start" className="w-auto p-0">
                       <Calendar
                         mode="single"
+                        captionLayout="dropdown"
+                        startMonth={new Date(2000, 0)}
+                        endMonth={new Date(new Date().getFullYear() + 10, 11)}
                         selected={endDate}
                         onSelect={setEndDate}
                         initialFocus
@@ -308,6 +323,12 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
                     disabled={amountType === "USE_DEFAULT"}
                     required
                   />
+                  {amountType === "USE_DEFAULT" && !fundDefaultAmount && (
+                    <p className="text-sm text-amber-600">
+                      This fund has no default amount. Switch to &quot;Ad hoc&quot; to enter
+                      one, or set a default amount on the fund.
+                    </p>
+                  )}
                 </div>
               </div>
 
