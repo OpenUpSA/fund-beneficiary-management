@@ -22,8 +22,35 @@ interface Props {
   funds: Promise<FundFull[]>
 }
 
+type FundAllocation = LocalDevelopmentAgencyFull["fundLocalDevelopmentAgencies"][number]
+
+// Same allocation rule as /api/dashboard/stats: an AD_HOC link uses its own
+// amount, otherwise the fund's current default applies.
+const allocationAmount = (funding: FundAllocation): number => {
+  if (funding.amountType === "AD_HOC" && funding.amount) return Number(funding.amount)
+  if (funding.fund.defaultAmount) return Number(funding.fund.defaultAmount)
+  return 0
+}
+
+const formatRand = (value: number): string => `R ${value.toLocaleString("en-ZA")}`
+
 export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
   const { canViewFunds } = usePermissions()
+
+  // Cancelled fund links don't count as funding received
+  const fundAllocations = (lda.fundLocalDevelopmentAgencies || [])
+    .filter(funding => funding.fundingStatus !== "Cancelled")
+  const fundingRounds = fundAllocations.length
+  const totalFunded = fundAllocations.reduce((sum, funding) => sum + allocationAmount(funding), 0)
+
+  const currentYear = new Date().getFullYear()
+  const currentYearFunding = fundAllocations
+    .filter(funding => {
+      const start = new Date(funding.fundingStart)
+      const end = new Date(funding.fundingEnd)
+      return start.getFullYear() <= currentYear && end.getFullYear() >= currentYear
+    })
+    .reduce((sum, funding) => sum + allocationAmount(funding), 0)
 
   // Format address from LDA details
   const formatAddress = (): string => {
@@ -81,7 +108,7 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             
             <div className="flex justify-between items-center">
               <span className="text-slate-900">Total funding rounds:</span>
-              <span>{lda.totalFundingRounds || 0}</span>
+              <span>{fundingRounds}</span>
             </div>
             
             <div className="flex justify-between items-center">
@@ -218,86 +245,38 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
-                <p className="text-sm text-gray-500">{lda.totalFundingRounds || 0} Funding rounds</p>
+                <h3 className="text-2xl font-bold">{formatRand(totalFunded)}</h3>
+                <p className="text-sm text-gray-500">{fundingRounds} Funding rounds</p>
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Current Year Funding */}
-          <Card>  
+          <Card>
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Current year funding</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
+                <h3 className="text-2xl font-bold">{formatRand(currentYearFunding)}</h3>
                 <p className="text-sm text-gray-500">Financial year {new Date().getFullYear()}</p>
               </div>
             </CardContent>
           </Card>
-          
-          {/* Funding by Fund Type */}
-          {lda.fundLocalDevelopmentAgencies.slice(0, 2).map((fund, index) => (
-            <Card key={fund.id || index}>
+
+          {/* Per-fund allocations — one card per funding round (an LDA can only
+              be linked once per fund, so these never duplicate a fund) */}
+          {fundAllocations.map((funding, index) => (
+            <Card key={funding.id || index}>
               <CardContent className="pt-6 pb-4">
                 <div className="space-y-1">
-                  <p className="text-sm text-gray-500">{fund.fund.name || 'Fund'} allocation</p>
-                  <h3 className="text-2xl font-bold">R 0</h3>
-                  <p className="text-sm text-gray-500">Estimated allocation</p>
+                  <p className="text-sm text-gray-500">{funding.fund.name || 'Fund'} allocation</p>
+                  <h3 className="text-2xl font-bold">{formatRand(allocationAmount(funding))}</h3>
+                  <p className="text-sm text-gray-500">
+                    {funding.amountType === "AD_HOC" ? "Ad hoc allocation" : "Default allocation"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
           ))}
-          
-          {/* Fill in with placeholder cards if needed */}
-          {(!lda.fundLocalDevelopmentAgencies || lda.fundLocalDevelopmentAgencies.length < 2) && 
-            [...Array(2 - (lda.fundLocalDevelopmentAgencies?.length || 0))].map((_, index) => (
-              <Card key={`placeholder-${index}`}>
-                <CardContent className="pt-6 pb-4">
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-500">Additional funding</p>
-                    <h3 className="text-2xl font-bold">R0</h3>
-                    <p className="text-sm text-gray-500">No additional funds</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          }
-          <Card>
-            <CardContent className="pt-6 pb-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
-                <p className="text-sm text-gray-500">0 Funding rounds</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6 pb-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
-                <p className="text-sm text-gray-500">0 Funding rounds</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6 pb-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
-                <p className="text-sm text-gray-500">0 Funding rounds</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6 pb-4">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Total funded amount</p>
-                <h3 className="text-2xl font-bold">R 0</h3>
-                <p className="text-sm text-gray-500">0 Funding rounds</p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
