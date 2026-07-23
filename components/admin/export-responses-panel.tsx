@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowLeft, DownloadIcon, FileDown, Loader2 } from "lucide-react"
+import { ArrowLeft, DownloadIcon, FileDown, FileJsonIcon, Loader2, PrinterIcon } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { FormTemplateWithRelations } from "@/types/models"
@@ -34,16 +34,16 @@ interface ResponseListItem {
   formStatus: { label: string }
 }
 
-async function downloadExport(ids: number[], onDone: () => void) {
+async function downloadExport(ids: number[], format: "csv" | "json", onDone: () => void) {
   try {
-    const res = await fetch(`/api/lda-form/export?ids=${ids.join(",")}`)
+    const res = await fetch(`/api/lda-form/export?ids=${ids.join(",")}&format=${format}`)
     if (!res.ok) {
       const error = await res.json().catch(() => null)
       throw new Error(error?.error || "Export failed")
     }
     const blob = await res.blob()
     const disposition = res.headers.get("Content-Disposition") || ""
-    const filename = /filename="([^"]+)"/.exec(disposition)?.[1] || "responses.csv"
+    const filename = /filename="([^"]+)"/.exec(disposition)?.[1] || `responses.${format}`
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
@@ -108,10 +108,10 @@ export function ExportResponsesPanel({ formTemplates, onBack }: ExportResponsesP
     [formTemplates]
   )
 
-  const handleExportSelected = () => {
+  const handleExportSelected = (format: "csv" | "json") => {
     if (selectedIds.size === 0) return
     setExporting(true)
-    downloadExport([...selectedIds], () => setExporting(false))
+    downloadExport([...selectedIds], format, () => setExporting(false))
   }
 
   return (
@@ -162,17 +162,27 @@ export function ExportResponsesPanel({ formTemplates, onBack }: ExportResponsesP
                 <p className="text-sm text-muted-foreground">
                   {selectedIds.size} of {responses.length} selected
                 </p>
-                <Button
-                  onClick={handleExportSelected}
-                  disabled={selectedIds.size === 0 || exporting}
-                >
-                  {exporting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <DownloadIcon className="mr-2 h-4 w-4" />
-                  )}
-                  Export selected ({selectedIds.size})
-                </Button>
+                <div className="space-x-2">
+                  <Button
+                    onClick={() => handleExportSelected("csv")}
+                    disabled={selectedIds.size === 0 || exporting}
+                  >
+                    {exporting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <DownloadIcon className="mr-2 h-4 w-4" />
+                    )}
+                    Export CSV ({selectedIds.size})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleExportSelected("json")}
+                    disabled={selectedIds.size === 0 || exporting}
+                  >
+                    <FileJsonIcon className="mr-2 h-4 w-4" />
+                    Export JSON ({selectedIds.size})
+                  </Button>
+                </div>
               </div>
 
               <div className="rounded-md border">
@@ -205,14 +215,24 @@ export function ExportResponsesPanel({ formTemplates, onBack }: ExportResponsesP
                           {response.submitted ? format(new Date(response.submitted), "d MMM yyyy") : "-"}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            title="Download this response"
-                            onClick={() => downloadExport([response.id], () => {})}
-                          >
-                            <DownloadIcon className="h-4 w-4" />
-                          </Button>
+                          <div className="flex">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Download this response as CSV"
+                              onClick={() => downloadExport([response.id], "csv", () => {})}
+                            >
+                              <DownloadIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Open printable preview (save as PDF)"
+                              onClick={() => window.open(`/form-preview/${response.id}?print=1`, "_blank")}
+                            >
+                              <PrinterIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

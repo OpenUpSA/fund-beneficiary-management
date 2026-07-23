@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { DownloadIcon, PrinterIcon } from "lucide-react"
 import { Form } from "@/types/forms"
 import { buildResponseRows, toCSV } from "@/lib/form-response-export"
@@ -28,6 +29,15 @@ interface Props {
 }
 
 export function FormPreviewActions({ data }: Props) {
+  // ?print=1 (e.g. from the admin Export Responses screen) opens the browser
+  // print dialog once the page has rendered, for direct save-as-PDF
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("print")) {
+      const timer = setTimeout(() => window.print(), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
   return (
     <div className="space-y-1">
       <button

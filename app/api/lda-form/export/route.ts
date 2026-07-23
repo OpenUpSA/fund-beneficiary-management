@@ -5,9 +5,11 @@ import { getServerSession } from "next-auth"
 import { permissions } from "@/lib/permissions"
 import { Form } from "@/types/forms"
 import {
+  buildJsonExport,
   buildMatrixHeader,
   buildMatrixRow,
   buildResponseRows,
+  repeatableMaxEntries,
   toCSV,
   FormData,
 } from "@/lib/form-response-export"
@@ -65,6 +67,29 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Form template has no structure" }, { status: 400 })
   }
 
+  const format = req.nextUrl.searchParams.get("format") ?? "csv"
+
+  if (format === "json") {
+    const doc = buildJsonExport(
+      form,
+      { id: template.id, name: template.name },
+      responses.map((r) => ({
+        ldaFormId: r.id,
+        ldaId: r.localDevelopmentAgencyId,
+        ldaName: r.localDevelopmentAgency.name,
+        status: r.formStatus.label,
+        submitted: r.submitted?.toISOString() ?? null,
+        formData: r.formData as FormData,
+      }))
+    )
+    return new NextResponse(JSON.stringify(doc, null, 2), {
+      headers: {
+        "Content-Type": "application/json;charset=utf-8",
+        "Content-Disposition": `attachment; filename="${template.name.replace(/\s+/g, "_")}_responses.json"`,
+      },
+    })
+  }
+
   let csv: string
   let filename: string
 
@@ -80,14 +105,17 @@ export async function GET(req: NextRequest) {
     ])
     filename = `${r.title.replace(/\s+/g, "_")}.csv`
   } else {
-    // Multiple responses: one row per response, one column per question
-    const header = [...META_COLUMNS, ...buildMatrixHeader(form)]
+    // Multiple responses: one row per response, one column per question.
+    // Repeatables expand into per-entry column groups sized by the largest
+    // entry count in this export.
+    const repeatCounts = repeatableMaxEntries(form, responses.map((r) => r.formData as FormData))
+    const header = [...META_COLUMNS, ...buildMatrixHeader(form, repeatCounts)]
     const rows = responses.map((r) => [
       r.localDevelopmentAgency.name,
       r.title,
       r.formStatus.label,
       r.submitted?.toISOString() ?? "",
-      ...buildMatrixRow(form, r.formData as FormData),
+      ...buildMatrixRow(form, r.formData as FormData, repeatCounts),
     ])
     csv = toCSV([header, ...rows])
     filename = `${template.name.replace(/\s+/g, "_")}_responses.csv`

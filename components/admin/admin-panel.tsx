@@ -74,7 +74,7 @@ const toolOptions: ToolOption[] = [
     title: 'Export Responses',
     description: 'Export individual or selected form responses as a spreadsheet',
     icon: FileDown,
-    category: 'forms',
+    category: 'bulk',
   },
   {
     id: 'report-schedules',
