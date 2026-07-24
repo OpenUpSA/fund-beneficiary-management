@@ -28,6 +28,7 @@ jobs:
               NEXT_PUBLIC_LOGO_PATH=${{ vars.NEXT_PUBLIC_LOGO_PATH }}
               NEXT_PUBLIC_FAVICON_PATH=${{ vars.NEXT_PUBLIC_FAVICON_PATH }}
               NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+              NEXT_PUBLIC_ENABLE_REPORTING=${{ vars.NEXT_PUBLIC_ENABLE_REPORTING }}
 
           # "ddi-gms" flavour -> deploys to ddi-gms-image (scat-data / Beneficiary branding).
           # NEXT_PUBLIC_* are baked into the client bundle at build time, so they are
@@ -44,6 +45,7 @@ jobs:
               NEXT_PUBLIC_LOGO_PATH=/images/gmslogo.png
               NEXT_PUBLIC_FAVICON_PATH=/images/favicon/favicon.ico
               NEXT_PUBLIC_API_BASE_URL=https://ddi-gms.openup.org.za
+              NEXT_PUBLIC_ENABLE_REPORTING=false
 
     steps:
       - uses: actions/checkout@v4
