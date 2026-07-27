@@ -22,5 +22,6 @@ declare module "next-auth" {
     role: string;
     avatar?: string | null;
     localDevelopmentAgencies?: Array<{ id: number }>;
+    ldaMembership?: { localDevelopmentAgencyId: number } | null;
   }
 }
