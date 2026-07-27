@@ -29,8 +29,6 @@ import {
 import { Link } from "@/i18n/routing"
 import { useTranslations } from "next-intl"
 import { signOut, useSession } from "next-auth/react"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 import { Skeleton } from "./ui/skeleton"
 import { getInitials, avatarUrl } from "@/lib/avatar"
 
@@ -38,7 +36,6 @@ export function NavUser() {
   const { isMobile } = useSidebar()
   const tN = useTranslations('navigation')
   const tC = useTranslations('common')
-  const router = useRouter()
   const { data: session } = useSession()
 
   if (!session?.user) {
@@ -104,9 +101,9 @@ export function NavUser() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <Link href="" onClick={async () => {
-              const data = await signOut({ redirect: false, callbackUrl: "/" })
-              router.push(data.url)
-              toast.warning("You are signed out")
+              // Full-page redirect: lands on sign-in and clears the client
+              // router cache so no protected page is served from cache.
+              await signOut({ callbackUrl: "/sign-in" })
             }}>
               <DropdownMenuItem>
                 <LogOut />
