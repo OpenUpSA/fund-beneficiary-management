@@ -233,7 +233,8 @@ export async function POST(req: NextRequest) {
             role: row.role,
             approved,
             passwordHash,
-            ...(lda ? { localDevelopmentAgencies: { connect: [{ id: lda.id }] } } : {}),
+            // Membership table, not programmeOfficerId — that slot is the PO's.
+            ...(lda ? { ldaMembership: { create: { localDevelopmentAgencyId: lda.id } } } : {}),
           },
           select: { id: true, email: true, name: true },
         })

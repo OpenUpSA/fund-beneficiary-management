@@ -43,6 +43,16 @@ export async function GET(req: NextRequest) {
             id: true,
             name: true
           }
+        },
+        ldaMembership: {
+          select: {
+            localDevelopmentAgency: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
         }
       }
     }
@@ -86,14 +96,17 @@ export async function POST(req: NextRequest) {
         role: data.role,
         approved: data.approved,
         passwordHash: hashedPassword,
-        ...(data.ldaId && {
-          localDevelopmentAgencies: {
-            connect: [{ id: parseInt(data.ldaId) }]
+        // LDA users belong to their LDA via the membership table — never via
+        // programmeOfficerId, which is reserved for the assigned PO.
+        ...(data.ldaId && data.role === 'USER' && {
+          ldaMembership: {
+            create: { localDevelopmentAgencyId: parseInt(data.ldaId) }
           }
         })
       },
       include: {
-        localDevelopmentAgencies: true
+        localDevelopmentAgencies: true,
+        ldaMembership: true
       }
     }
     const record = await prisma.user.create(query)

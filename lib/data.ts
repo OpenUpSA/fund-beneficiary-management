@@ -186,10 +186,10 @@ export async function fetchUsers(): Promise<UserWithLDAsBasic[]> {
 /**
  * Users eligible to be assigned as an LDA's programme officer.
  *
- * Note: LocalDevelopmentAgency.programmeOfficer is also the only User<->LDA
- * relation in the schema, and lib/auth.ts derives each session's `ldaIds` from
- * it. Changing an LDA's programme officer therefore moves that LDA's access
- * from the old user to the new one.
+ * Note: LocalDevelopmentAgency.programmeOfficer backs the PO side of a
+ * session's `ldaIds` (lib/auth.ts unions it with LocalDevelopmentAgencyUser
+ * membership). Changing an LDA's programme officer moves that LDA's access
+ * from the old officer to the new one; member users are unaffected.
  */
 export async function fetchProgrammeOfficers(): Promise<UserWithLDAsBasic[]> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user?role=PROGRAMME_OFFICER`, {

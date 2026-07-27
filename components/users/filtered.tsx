@@ -12,7 +12,7 @@ import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { Link } from "@/i18n/routing"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
-import { UserWithLDAsBasic } from "@/types/models"
+import { UserWithLDAsBasic, userLinkedLDAs } from "@/types/models"
 
 const ROLES = ['USER', 'PROGRAMME_OFFICER', 'ADMIN', 'SUPER_USER'] as const
 
@@ -35,12 +35,30 @@ export function FilteredUsers({ users }: FilteredUsersProps) {
     [tC]
   )
 
-  const filterConfigs = useMemo(
-    () => [
+  // Each user's linked LDAs: membership (LDA users) + PO assignments, deduped
+  const usersWithLdas = useMemo(
+    () => users.map((user) => ({ ...user, ldas: userLinkedLDAs(user) })),
+    [users]
+  )
+
+  const filterConfigs = useMemo(() => {
+    // LDA options: union of every LDA linked to any listed user
+    const ldaOptions = new Map<number, string>()
+    for (const user of usersWithLdas) {
+      for (const lda of user.ldas) ldaOptions.set(lda.id, lda.name)
+    }
+    return [
       {
         type: 'role',
         label: 'Role',
         options: ROLES.map((role) => ({ id: role, label: roleLabel(role) })),
+      },
+      {
+        type: 'lda',
+        label: LDA_TERMINOLOGY.shortName,
+        options: [...ldaOptions]
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([id, label]) => ({ id: String(id), label })),
       },
       {
         type: 'approved',
@@ -50,25 +68,28 @@ export function FilteredUsers({ users }: FilteredUsersProps) {
           { id: 'false', label: 'No' },
         ] as FilterOption[],
       },
-    ],
-    [roleLabel]
-  )
+    ]
+  }, [usersWithLdas, roleLabel])
 
   const filteredUsers = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase()
-    return users.filter((user) => {
+    return usersWithLdas.filter((user) => {
       // Search matches name, email or any linked LDA name
       const searchMatch =
         query === "" ||
         user.name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
-        user.localDevelopmentAgencies.some((lda) => lda.name.toLowerCase().includes(query))
+        user.ldas.some((lda) => lda.name.toLowerCase().includes(query))
 
       const filtersMatch = Object.entries(activeFilters).every(([filterKey, selectedOptions]) => {
         if (selectedOptions.length === 0) return true
         switch (filterKey) {
           case 'role':
             return selectedOptions.some((option) => String(option.id) === user.role)
+          case 'lda':
+            return selectedOptions.some((option) =>
+              user.ldas.some((lda) => String(lda.id) === String(option.id))
+            )
           case 'approved':
             return selectedOptions.some((option) => String(option.id) === String(user.approved))
           default:
@@ -78,7 +99,7 @@ export function FilteredUsers({ users }: FilteredUsersProps) {
 
       return searchMatch && filtersMatch
     })
-  }, [users, deferredSearch, activeFilters])
+  }, [usersWithLdas, deferredSearch, activeFilters])
 
   const handleSearch = useCallback((value: string) => {
     startTransition(() => setSearchTerm(value))
@@ -135,7 +156,7 @@ export function FilteredUsers({ users }: FilteredUsersProps) {
                   <TableCell className="text-nowrap">{user.email}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {user.localDevelopmentAgencies.slice(0, 2)?.map((lda) => (
+                      {user.ldas.slice(0, 2)?.map((lda) => (
                         <Badge
                           key={lda.id}
                           variant="outline"
@@ -144,9 +165,9 @@ export function FilteredUsers({ users }: FilteredUsersProps) {
                           <span className="max-w-[100px] overflow-hidden text-ellipsis whitespace-nowrap" title={lda.name}>{lda.name}</span>
                         </Badge>
                       ))}
-                      {user.localDevelopmentAgencies?.length > 2 && (
+                      {user.ldas?.length > 2 && (
                         <Badge variant="outline" className="px-2 py-1 text-xs rounded-sm">
-                          <span title={`${user.localDevelopmentAgencies.slice(2).map((lda) => lda.name).join(', ')}`}>{user.localDevelopmentAgencies.length - 2} more...</span>
+                          <span title={`${user.ldas.slice(2).map((lda) => lda.name).join(', ')}`}>{user.ldas.length - 2} more...</span>
                         </Badge>
                       )}
                     </div>
