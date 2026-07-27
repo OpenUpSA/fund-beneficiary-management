@@ -3,6 +3,9 @@ import { Prisma } from "@prisma/client"
 export type UserFull = Prisma.UserGetPayload<{
   include: {
     localDevelopmentAgencies: true
+    ldaMembership: {
+      include: { localDevelopmentAgency: { select: { id: true, name: true } } }
+    }
   }
 }>
 
@@ -19,8 +22,26 @@ export type UserWithLDAsBasic = Prisma.UserGetPayload<{
     localDevelopmentAgencies: {
       select: { id: true, name: true }
     }
+    ldaMembership: {
+      select: {
+        localDevelopmentAgency: { select: { id: true, name: true } }
+      }
+    }
   }
 }>
+
+// All LDAs a user is linked to: the one they belong to as a member plus any
+// they are programme officer of (deduped, membership first).
+export function userLinkedLDAs(user: {
+  localDevelopmentAgencies: { id: number; name: string }[]
+  ldaMembership?: { localDevelopmentAgency: { id: number; name: string } } | null
+}): { id: number; name: string }[] {
+  const ldas = [
+    ...(user.ldaMembership ? [user.ldaMembership.localDevelopmentAgency] : []),
+    ...user.localDevelopmentAgencies,
+  ]
+  return ldas.filter((lda, i) => ldas.findIndex((l) => l.id === lda.id) === i)
+}
 
 export type FunderFullWithoutFundFunders = Prisma.FunderGetPayload<{
   include: {

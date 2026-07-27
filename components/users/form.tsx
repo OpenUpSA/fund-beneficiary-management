@@ -67,7 +67,8 @@ export function FormDialog({ user, callback, ldas }: FormDialogProps) {
       email: user ? user.email : '',
       approved: user ? user.approved : false,
       role: user ? user.role : undefined,
-      ldaId: user?.localDevelopmentAgencies?.[0]?.id?.toString() || '',
+      ldaId: user?.ldaMembership?.localDevelopmentAgency?.id?.toString()
+        || user?.localDevelopmentAgencies?.[0]?.id?.toString() || '',
       password: '',
       passwordConfirm: '',
     },

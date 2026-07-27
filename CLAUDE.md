@@ -23,9 +23,12 @@ yarn assign-pos       # Assign programme officers to LDAs from a CSV (dry run by
 ```
 
 `yarn assign-pos` writes to the database — see [docs/ASSIGN_PROGRAMME_OFFICERS.md](docs/ASSIGN_PROGRAMME_OFFICERS.md).
-Note that `LocalDevelopmentAgency.programmeOfficerId` is also the only `User`↔`LDA` relation
-and backs the session's `ldaIds` (`lib/auth.ts`), so reassigning an LDA revokes the previous
-officer's access to it.
+There are two `User`↔`LDA` relations, and the session's `ldaIds` (`lib/auth.ts`) is the
+union of both: `LocalDevelopmentAgency.programmeOfficerId` (one PO per LDA, many LDAs per
+PO) and `LocalDevelopmentAgencyUser` (many member users per LDA, but each user belongs to
+at most one LDA — `userId` is unique). Reassigning an LDA's PO revokes the previous
+officer's access but leaves members untouched. `ldaIds` is baked into the JWT at sign-in,
+so membership/PO changes take effect on the affected user's next sign-in.
 
 There is no test suite configured. **Always run `yarn build` after making code changes** — it is the primary correctness check (TypeScript type errors only surface at build time, not during `yarn dev`).
 

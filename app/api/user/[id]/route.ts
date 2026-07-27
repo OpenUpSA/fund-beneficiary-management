@@ -31,7 +31,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
-      localDevelopmentAgencies: true
+      localDevelopmentAgencies: true,
+      ldaMembership: {
+        include: { localDevelopmentAgency: { select: { id: true, name: true } } }
+      }
     }
   })
 
@@ -69,7 +72,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     // First check if user exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
-      include: { localDevelopmentAgencies: true }
+      include: { localDevelopmentAgencies: true, ldaMembership: true }
     })
 
     if (!existingUser) {
@@ -138,20 +141,37 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       updateData.passwordHash = hashedPassword
     }
 
-    // Handle role changes and LDA connections
+    // Keep the two User<->LDA relations consistent with the role:
+    // - USER: belongs to one LDA via ldaMembership; must never occupy an
+    //   officer slot, so any PO assignments are cleared.
+    // - other roles: no membership; PO assignments (programmeOfficerId) are
+    //   managed from the LDA page and left untouched here.
     const ldaIdNum = ldaId !== undefined ? Number(ldaId) : undefined
-    const ldaRelation = rest.role === 'USER'
-      ? { set: ldaIdNum ? [{ id: ldaIdNum }] : [] }
-      : { set: [] }
+    const relationUpdates = rest.role === 'USER'
+      ? {
+        localDevelopmentAgencies: { set: [] },
+        ...(ldaIdNum && {
+          ldaMembership: {
+            upsert: {
+              create: { localDevelopmentAgencyId: ldaIdNum },
+              update: { localDevelopmentAgencyId: ldaIdNum }
+            }
+          }
+        })
+      }
+      : existingUser.ldaMembership
+        ? { ldaMembership: { delete: true } }
+        : {}
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
         ...updateData,
-        localDevelopmentAgencies: ldaRelation
+        ...relationUpdates
       },
       include: {
-        localDevelopmentAgencies: true
+        localDevelopmentAgencies: true,
+        ldaMembership: true
       }
     })
 

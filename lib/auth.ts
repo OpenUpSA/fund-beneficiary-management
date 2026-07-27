@@ -22,7 +22,12 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
         token.email = user.email
         token.role = user.role
         token.avatar = user.avatar
-        token.ldaIds = user.localDevelopmentAgencies?.map((lda: { id: number }) => lda.id) || []
+        // Union of both User<->LDA relations: LDAs the user is programme
+        // officer of, plus the LDA they belong to as a member.
+        token.ldaIds = [...new Set([
+          ...(user.localDevelopmentAgencies?.map((lda: { id: number }) => lda.id) || []),
+          ...(user.ldaMembership ? [user.ldaMembership.localDevelopmentAgencyId] : []),
+        ])]
       }
 
       if (trigger === "update" && data?.session?.updatedUser) {
@@ -64,7 +69,8 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
             email: credentials.email,
           },
           include: {
-            localDevelopmentAgencies: true
+            localDevelopmentAgencies: true,
+            ldaMembership: true
           }
         })
 
@@ -81,7 +87,8 @@ export const NEXT_AUTH_OPTIONS: AuthOptions = {
           email: user.email,
           role: user.role,
           avatar: user.avatar,
-          localDevelopmentAgencies: user.localDevelopmentAgencies
+          localDevelopmentAgencies: user.localDevelopmentAgencies,
+          ldaMembership: user.ldaMembership
         } as unknown as User
       },
     }),

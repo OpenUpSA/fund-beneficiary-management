@@ -3,7 +3,7 @@
 import { format } from "date-fns"
 import { Badge } from "../ui/badge"
 import { Card, CardContent } from "../ui/card"
-import { UserFull } from "@/types/models"
+import { UserFull, userLinkedLDAs } from "@/types/models"
 import { useTranslations } from "next-intl"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
@@ -13,6 +13,7 @@ interface Props {
 
 export const Overview: React.FC<Props> = ({ user }: Props) => {
   const tC = useTranslations('common')
+  const linkedLDAs = userLinkedLDAs(user)
 
   return (
     <div className="space-y-4">
@@ -35,10 +36,10 @@ export const Overview: React.FC<Props> = ({ user }: Props) => {
               <span className="font-medium">Role:</span>
               <Badge variant="outline">{user.role === 'USER' ? LDA_TERMINOLOGY.userRole : tC(`roles.${user.role}`)}</Badge>
             </div>
-            {user.localDevelopmentAgencies && user.localDevelopmentAgencies.length > 0 && (
+            {linkedLDAs.length > 0 && (
               <div className="flex justify-between">
                 <span className="font-medium">{LDA_TERMINOLOGY.shortName}:</span>
-                <Badge variant="outline">{user.localDevelopmentAgencies?.map((lda) => lda.name).join(', ')}</Badge>
+                <Badge variant="outline">{linkedLDAs.map((lda) => lda.name).join(', ')}</Badge>
               </div>
             )}
           </CardContent>

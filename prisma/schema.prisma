@@ -25,6 +25,7 @@ model User {
   documents                   Document[]
   Media                       Media[]
   passwordResetTokens         PasswordResetToken[]
+  ldaMembership               LocalDevelopmentAgencyUser?
 }
 
 model PasswordResetToken {
@@ -194,11 +195,28 @@ model LocalDevelopmentAgency {
   staffMembers               StaffMember[]
   userAccess                 UserAccess[]
   fundLocalDevelopmentAgencies FundLocalDevelopmentAgency[]
+  members                    LocalDevelopmentAgencyUser[]
 
   @@index([developmentStageId])
   @@index([fundingStatusId])
   @@index([locationId])
   @@index([programmeOfficerId])
+}
+
+// Membership of an LDA-level user (Role.USER) in an LDA. Distinct from the
+// programmeOfficer relation: an LDA has one PO but many members. `userId` is
+// unique so a user belongs to at most one LDA; both sides cascade because a
+// row is pure join data.
+model LocalDevelopmentAgencyUser {
+  id                       Int      @id @default(autoincrement())
+  userId                   Int      @unique
+  localDevelopmentAgencyId Int
+  createdAt                DateTime @default(now())
+
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  localDevelopmentAgency LocalDevelopmentAgency @relation(fields: [localDevelopmentAgencyId], references: [id], onDelete: Cascade)
+
+  @@index([localDevelopmentAgencyId])
 }
 
 model FormStatus {
