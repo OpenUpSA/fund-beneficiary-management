@@ -43,7 +43,7 @@ jobs:
               NEXT_PUBLIC_LDA_FULL_NAME_PLURAL=Beneficiaries
               NEXT_PUBLIC_LDA_URL_PATH=beneficiaries
               NEXT_PUBLIC_LOGO_PATH=/images/gmslogo.png
-              NEXT_PUBLIC_FAVICON_PATH=/images/favicon/favicon.ico
+              NEXT_PUBLIC_FAVICON_PATH=/images/favicon/gmsfavicon.ico
               NEXT_PUBLIC_API_BASE_URL=https://ddi-gms.openup.org.za
               NEXT_PUBLIC_ENABLE_REPORTING=false
 
