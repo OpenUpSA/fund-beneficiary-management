@@ -70,8 +70,10 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     () => fundingStatus.map(({ id, label }) => ({ id: String(id), label })),
     [fundingStatus]
   )
+  // Keyed by Province.code: LDAs carry the province as a code string in
+  // organisationDetail.physicalProvince (locationId is a legacy relation).
   const locationOptions = useMemo<FilterOption[]>(
-    () => provinces.map(({ id, name }) => ({ id: String(id), label: name })),
+    () => provinces.map(({ code, name }) => ({ id: code, label: name })),
     [provinces]
   )
   const stageOptions = useMemo<FilterOption[]>(
@@ -151,7 +153,7 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
       if (deferredSearch && !lda._lcName.includes(deferredSearch.toLowerCase())) return false
 
       const focusMatch = !focusSel.length || lda.focusAreas.some(f => focusSel.includes(String(f.id)))
-      const locMatch = !locSel.length || locSel.includes(String(lda.locationId))
+      const locMatch = !locSel.length || locSel.includes(lda.organisationDetail?.physicalProvince ?? '')
       const stageMatch = !stageSel.length || stageSel.includes(String(lda.developmentStageId))
       const statusMatch = !statusSel.length || statusSel.includes(String(lda.fundingStatusId))
       const poMatch = !poSel.length || (lda.programmeOfficerId && poSel.includes(String(lda.programmeOfficerId)))
