@@ -42,8 +42,8 @@ export const FormSchema = z.object({
   region: z.string().optional(),
 
   // Mapped location
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   mapAddress: z.string().optional(),
   funds: z.array(z.number()).optional(),
 })

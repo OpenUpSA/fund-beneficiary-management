@@ -131,12 +131,6 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
     districts
   ])
 
-  useEffect(() => {
-    if (physicalAddress) {
-      form.setValue('mapAddress', physicalAddress);
-    }
-  }, [physicalAddress, form]);
-
   return (
     <div className="space-y-4 mt-4">
 
@@ -402,7 +396,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
                   }))}
                   value={field.value?.toString()}
                   onChange={field.onChange}
-                  disabled={districts.length === 0}
+                  disabled={postalDistricts.length === 0}
                   placeholder="Select district"
                   searchPlaceholder="Search districts..."
                   emptyText="No district found."
@@ -417,7 +411,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
           render={() => (
             <FormItem>
               <FormLabel>Mapped location</FormLabel>
-              <Map form={form}/>
+              <Map form={form} findAddress={physicalAddress}/>
             </FormItem>
           )}
         />
