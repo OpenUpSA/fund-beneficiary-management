@@ -6,7 +6,9 @@ import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
+import Link from "next/link";
 import { LocalDevelopmentAgencyListItem } from "@/types/models";
+import { LDA_TERMINOLOGY } from "@/constants/lda";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -48,6 +50,20 @@ function FullscreenControl() {
   }, [map]);
   
   return null;
+}
+
+// Popup action that flies the map to the marker at street level
+function ZoomToPin({ position }: { position: [number, number] }) {
+  const map = useMap();
+  return (
+    <button
+      type="button"
+      onClick={() => map.flyTo(position, 15)}
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Zoom to location
+    </button>
+  );
 }
 
 // Component to fit map bounds to markers
@@ -198,6 +214,15 @@ export default function LDAMap({ ldas, width = "100%", height = "500px", onMinim
                       <span className="font-medium">Status:</span> {lda.fundingStatus.label}
                     </p>
                   )}
+                  <div className="mt-2 flex items-center gap-4">
+                    <Link
+                      href={`${LDA_TERMINOLOGY.dashboardPath}/${lda.id}`}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      View details
+                    </Link>
+                    <ZoomToPin position={[lat, lng]} />
+                  </div>
                 </div>
               </Popup>
             </Marker>
