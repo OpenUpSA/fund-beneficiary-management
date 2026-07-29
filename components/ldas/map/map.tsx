@@ -29,9 +29,15 @@ const isSouthAfricaView = !rawCountryCodes || rawCountryCodes.split(",").include
 const initialCenter = isSouthAfricaView ? southAfricaCenter : worldCenter;
 const initialZoom = isSouthAfricaView ? 5 : 2;
 
+// Restate the default icon geometry: without iconAnchor, Leaflet pins the
+// image's top-left corner to the coordinate and the tip renders ~41px off.
 const defaultIcon = L.icon({
   iconUrl: iconUrl.src,
   shadowUrl: iconShadow.src,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 L.Marker.prototype.options.icon = defaultIcon;
 

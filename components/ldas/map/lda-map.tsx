@@ -15,10 +15,16 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 const southAfricaCenter: [number, number] = [-30.5595, 22.9375];
 const defaultZoom = 5;
 
-// Set up the default icon for markers
+// Set up the default icon for markers. Restate the default geometry: without
+// iconAnchor, Leaflet pins the image's top-left corner to the coordinate and
+// the tip renders ~41px off — pins appear kilometres away at low zoom.
 const defaultIcon = L.icon({
   iconUrl: iconUrl.src,
   shadowUrl: iconShadow.src,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
