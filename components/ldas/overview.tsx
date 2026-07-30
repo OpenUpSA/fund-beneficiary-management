@@ -10,6 +10,7 @@ import dynamic from "next/dynamic"
 import { Suspense } from "react"
 import { AsyncFundList, FundListSkeleton } from "./fund-list"
 import { usePermissions } from "@/hooks/use-permissions"
+import { displayPlaceName } from "@/lib/place-names"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const LDAMap = dynamic(
@@ -68,9 +69,12 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
     if (details.physicalCity) 
       addressParts.push(details.physicalCity);
     
-    if (details.physicalProvince) 
-      addressParts.push(details.physicalProvince);
-    
+    if (details.physicalDistrict)
+      addressParts.push(displayPlaceName(details.physicalDistrict));
+
+    if (details.physicalProvince)
+      addressParts.push(displayPlaceName(details.physicalProvince));
+
     return addressParts.join(", ");
   };
 
@@ -190,7 +194,7 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
               <span className="text-slate-900">Province:</span>
               {lda.organisationDetail?.physicalProvince ? (
                 <Badge variant="outline">
-                  {lda.organisationDetail.physicalProvince}
+                  {displayPlaceName(lda.organisationDetail.physicalProvince)}
                 </Badge>
               ) : (
                 <span>-</span>

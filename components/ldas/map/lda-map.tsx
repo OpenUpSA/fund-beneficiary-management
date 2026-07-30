@@ -9,6 +9,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "rea
 import Link from "next/link";
 import { LocalDevelopmentAgencyListItem } from "@/types/models";
 import { LDA_TERMINOLOGY } from "@/constants/lda";
+import { displayPlaceName } from "@/lib/place-names";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -155,11 +156,11 @@ export default function LDAMap({ ldas, width = "100%", height = "500px", onMinim
     if (details.physicalCity) 
       addressParts.push(details.physicalCity);
     
-    if (details.physicalDistrict) 
-      addressParts.push(details.physicalDistrict);
-    
-    if (details.physicalProvince) 
-      addressParts.push(details.physicalProvince);
+    if (details.physicalDistrict)
+      addressParts.push(displayPlaceName(details.physicalDistrict));
+
+    if (details.physicalProvince)
+      addressParts.push(displayPlaceName(details.physicalProvince));
     
     if (details.physicalPostalCode) 
       addressParts.push(details.physicalPostalCode);
