@@ -14,7 +14,6 @@ import {
   MoreHorizontal,
   Trash2,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "./form"
@@ -335,7 +334,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredForms.map((ldaForm, index) => {
+            {filteredForms.map((ldaForm) => {
               // Generate demo data for the example
               const getStatusBadge = () => {
                 // Adding keys to each status badge element to prevent React key warnings
@@ -346,22 +345,12 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                 return <div key={`status-${ldaForm.id}-other`} className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-400"></span> {ldaForm.formStatus.label}</div>;
               };
               
-              const isLocked = index === 3 || index === 4 || index === 5;
-              
               return (
-                <TableRow key={`application-${ldaForm.id}`} className={cn(isLocked ? "text-gray-500" : "")}>
-                  
+                <TableRow key={`application-${ldaForm.id}`}>
                   <TableCell>
-                    {isLocked ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">🔒</span>
-                        {ldaForm.title}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        {ldaForm.title}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {ldaForm.title}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-between">
