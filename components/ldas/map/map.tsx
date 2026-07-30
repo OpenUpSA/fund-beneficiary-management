@@ -203,7 +203,11 @@ export default function Map({ form, findAddress }: MapProps) {
   }, []);
 
   const locateTypedAddress = useCallback(() => {
-    if (findAddress) runSearch(findAddress, true);
+    if (!findAddress) return;
+    // Show the query in the search box so the user can see what was searched
+    // and refine it manually if the address doesn't geocode well.
+    setSearch(findAddress);
+    runSearch(findAddress, true);
   }, [findAddress, runSearch]);
 
   const autoLocate = useCallback(() => {
