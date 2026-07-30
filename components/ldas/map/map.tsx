@@ -284,11 +284,11 @@ export default function Map({ form, findAddress }: MapProps) {
           <button
             onClick={resetToSavedLocation}
             type="button"
-            className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
-            title="Put the pin back where it was when this dialog opened"
+            aria-label="Reset to previous location"
+            className="flex items-center justify-center px-3 py-2 border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
+            title="Reset to previous location"
           >
             <RotateCcw className="h-4 w-4" />
-            Reset to saved location
           </button>
         )}
       </div>
