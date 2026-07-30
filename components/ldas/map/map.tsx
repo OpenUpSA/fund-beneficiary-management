@@ -7,7 +7,7 @@ import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomControl } from "react-leaflet";
-import { LocateFixed, LoaderCircle, MapPinX, MapPinned } from "lucide-react";
+import { LocateFixed, LoaderCircle, MapPinX, MapPinned, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -131,6 +131,12 @@ export default function Map({ form, findAddress }: MapProps) {
     return null;
   });
   const [markerText, setMarkerText] = useState<string | null>(() => form.getValues('mapAddress') || null);
+  // The location as it was when the dialog opened, so an accidental pin move
+  // can be undone without knowing the original coordinates.
+  const savedLocationRef = useRef<{ position: [number, number] | null; address: string | null } | null>(null);
+  if (savedLocationRef.current === null) {
+    savedLocationRef.current = { position, address: markerText };
+  }
   const [search, setSearch] = useState<string>("");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -142,6 +148,16 @@ export default function Map({ form, findAddress }: MapProps) {
     form.setValue('latitude', coords[0]);
     form.setValue('longitude', coords[1]);
     form.setValue('mapAddress', address);
+  }, [form]);
+
+  const resetToSavedLocation = useCallback(() => {
+    const saved = savedLocationRef.current;
+    if (!saved) return;
+    setPosition(saved.position);
+    setMarkerText(saved.address);
+    form.setValue('latitude', saved.position?.[0] ?? null);
+    form.setValue('longitude', saved.position?.[1] ?? null);
+    form.setValue('mapAddress', saved.address ?? '');
   }, [form]);
 
   const clearLocation = useCallback(() => {
@@ -258,6 +274,21 @@ export default function Map({ form, findAddress }: MapProps) {
           >
             <MapPinX className="h-4 w-4" />
             Clear location
+          </button>
+        )}
+        {savedLocationRef.current?.position && (
+          !position ||
+          position[0] !== savedLocationRef.current.position[0] ||
+          position[1] !== savedLocationRef.current.position[1]
+        ) && (
+          <button
+            onClick={resetToSavedLocation}
+            type="button"
+            className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
+            title="Put the pin back where it was when this dialog opened"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Reset to saved location
           </button>
         )}
       </div>
