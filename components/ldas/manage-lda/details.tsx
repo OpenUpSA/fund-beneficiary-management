@@ -105,13 +105,14 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
     const selectedDistrict = districts.find(d => d.code === selectedPhysicalDistrictCode);
     const districtName = selectedDistrict?.name || selectedPhysicalDistrictCode;
     
+    // Smallest to largest area: street ... city, district, province
     const parts = [
       selectedPhysicalStreet,
       selectedPhysicalComplexName,
       selectedPhysicalComplexNumber,
       selectedPhysicalCity,
-      provinceName,
-      districtName
+      districtName,
+      provinceName
     ].filter(part => part && part.trim() !== '');
     
     // Only add South Africa if we have at least one valid part
