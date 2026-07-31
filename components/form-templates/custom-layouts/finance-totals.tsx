@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Lock, CircleSmall } from "lucide-react"
 import { useFormValues } from "@/components/form-templates/form-values-context"
 import { useEffect, useRef } from "react"
+import { parseCurrency, formatCurrencyValue } from "@/lib/currency"
 
 interface FinanceTotalsLayoutProps {
   inputField: Field
@@ -14,16 +15,11 @@ interface FinanceTotalsLayoutProps {
 }
 
 function parseNumeric(val: string | undefined): number {
-  if (!val) return 0;
-  const str = String(val).trim();
-  const negative = str.startsWith('-');
-  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
-  if (isNaN(num)) return 0;
-  return negative ? -num : num;
+  return parseCurrency(val);
 }
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return formatCurrencyValue(value);
 }
 
 export function FinanceTotalsLayout({ inputField, isEditing, onValueChange }: FinanceTotalsLayoutProps) {

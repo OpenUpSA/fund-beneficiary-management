@@ -26,6 +26,7 @@ import { toast } from "sonner"
 import { Funder, Fund } from "@prisma/client"
 import { Decimal } from "@prisma/client/runtime/library"
 import { DocumentFull } from "@/types/models"
+import { normalizeCurrencyInput } from "@/lib/currency"
 
 interface EditingFund {
   id: number
@@ -285,10 +286,11 @@ export function LinkFunderDialog({ fundId, fundName, funderId, funderName, avail
               <Label htmlFor="amount">Amount contributed</Label>
               <Input
                 id="amount"
-                type="number"
-                placeholder="R 120,000"
+                type="text"
+                inputMode="decimal"
+                placeholder="R 120 000"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(normalizeCurrencyInput(e.target.value))}
                 required
               />
               </div>

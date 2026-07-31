@@ -9,6 +9,7 @@ import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import dynamic from "next/dynamic"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { formatRand } from "@/lib/currency"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const FunderMap = dynamic(
@@ -74,7 +75,7 @@ export const Overview: React.FC<Props> = ({ funder, ldaCount = 0 }: Props) => {
             
             <div className="flex justify-between items-center">
               <span className="text-slate-900">Total funding amount:</span>
-              <span className="font-medium">R {Number(funder.amount).toLocaleString()}</span>
+              <span className="font-medium">{formatRand(Number(funder.amount))}</span>
             </div>
             
             <div className="flex justify-between items-center">
@@ -206,7 +207,7 @@ export const Overview: React.FC<Props> = ({ funder, ldaCount = 0 }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total funding amount</p>
-                <h3 className="text-2xl font-bold">R {Number(funder.amount).toLocaleString()}</h3>
+                <h3 className="text-2xl font-bold">{formatRand(Number(funder.amount))}</h3>
                 <p className="text-sm text-gray-500">Committed funding</p>
               </div>
             </CardContent>

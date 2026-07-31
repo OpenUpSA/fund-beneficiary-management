@@ -35,6 +35,7 @@ import { AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { FundForFunder, FundFull } from "@/types/models";
 import { FocusArea, FundStatus, FundType } from "@prisma/client";
+import { formatRand } from "@/lib/currency"
 
 type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'amount' | 'status' | 'startDate' | 'endDate' | null
@@ -279,7 +280,7 @@ export const ContributedFunds: React.FC<ContributedFundsProps> = ({
           </Badge>
         </TableCell>
         <TableCell className="p-3">
-          <span className="text-nowrap">R{Number(ff.amount).toLocaleString()}</span>
+          <span className="text-nowrap">{formatRand(Number(ff.amount))}</span>
         </TableCell>
         <TableCell className="p-3">
           <Badge 
