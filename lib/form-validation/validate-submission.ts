@@ -13,6 +13,7 @@
  */
 
 import type { Field } from "@/types/forms"
+import { fieldAllowsNegative } from "@/lib/number-input"
 
 // ---------- Types ----------
 
@@ -569,6 +570,20 @@ const collectFieldIssues = (
         fieldLabel: field.label || effectiveName,
         sectionTitle,
         message: "is required",
+      })
+    }
+  }
+
+  // Number fields reject negative values unless the template opts in via
+  // config.allow_negative (mirrors the client-side input sanitizer)
+  if (field.type === "number" && !isFieldValueEmpty(formData[effectiveName], field.type)) {
+    const numeric = Number(formData[effectiveName])
+    if (!Number.isNaN(numeric) && numeric < 0 && !fieldAllowsNegative(field.config)) {
+      issues.push({
+        fieldName: effectiveName,
+        fieldLabel: field.label || effectiveName,
+        sectionTitle,
+        message: "cannot be negative",
       })
     }
   }
