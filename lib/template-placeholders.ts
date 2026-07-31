@@ -2,8 +2,10 @@ import { format } from "date-fns"
 
 // Form templates may reference the form's reporting period in human-readable
 // text via placeholders instead of hardcoded dates:
-//   {{period_start}} / {{period_end}} — the form's fundingStart/fundingEnd
-//   {{year}}                          — year of the period start (fallback: end)
+//   {{period_start}} / {{period_end}}           — full dates from fundingStart/fundingEnd
+//   {{start_month}} / {{end_month}}             — month names ("January", "September")
+//   {{start_month_short}} / {{end_month_short}} — abbreviated ("Jan", "Sep")
+//   {{year}}                                    — year of the period start (fallback: end)
 // Substitution happens server-side wherever a form instance's template is
 // served (form API, exports), so the renderer, previews, PDFs and CSVs all
 // see the resolved text. Without a form instance (e.g. bulk export across
@@ -12,12 +14,20 @@ import { format } from "date-fns"
 export interface PlaceholderValues {
   period_start: string
   period_end: string
+  start_month: string
+  end_month: string
+  start_month_short: string
+  end_month_short: string
   year: string
 }
 
 const NEUTRAL_VALUES: PlaceholderValues = {
   period_start: "start of the reporting period",
   period_end: "end of the reporting period",
+  start_month: "the first month",
+  end_month: "the last month",
+  start_month_short: "the first month",
+  end_month_short: "the last month",
   year: "the funding year",
 }
 
@@ -32,11 +42,16 @@ export function buildPlaceholderValues(dates?: {
   return {
     period_start: start ? format(start, "d MMMM yyyy") : NEUTRAL_VALUES.period_start,
     period_end: end ? format(end, "d MMMM yyyy") : NEUTRAL_VALUES.period_end,
+    start_month: start ? format(start, "MMMM") : NEUTRAL_VALUES.start_month,
+    end_month: end ? format(end, "MMMM") : NEUTRAL_VALUES.end_month,
+    start_month_short: start ? format(start, "MMM") : NEUTRAL_VALUES.start_month_short,
+    end_month_short: end ? format(end, "MMM") : NEUTRAL_VALUES.end_month_short,
     year: String(yearBasis!.getFullYear()),
   }
 }
 
-const PLACEHOLDER_RE = /\{\{\s*(period_start|period_end|year)\s*\}\}/g
+const PLACEHOLDER_RE =
+  /\{\{\s*(period_start|period_end|start_month|end_month|start_month_short|end_month_short|year)\s*\}\}/g
 
 export function substitutePlaceholders(text: string, values: PlaceholderValues): string {
   return text.replace(PLACEHOLDER_RE, (_, key: keyof PlaceholderValues) => values[key])
