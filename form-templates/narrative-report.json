@@ -529,7 +529,7 @@
           "name": "household_gardens_count",
           "type": "text",
           "label": "New household food gardens you helped establish",
-          "description": "During this reporting period (April 1, 2025 - July 31, 2025), how many new household food gardens (you must be able to verify that this garden exists) did you support in establishing through direct labour, seeds, equipment or other resources, or training/advice?",
+          "description": "During this reporting period ({{period_start}} - {{period_end}}), how many new household food gardens (you must be able to verify that this garden exists) did you support in establishing through direct labour, seeds, equipment or other resources, or training/advice?",
           "required": true,
           "placeholder": "Enter value"
         }
@@ -712,7 +712,7 @@
         {
           "name": "yields_guidance",
           "type": "info",
-          "label": "During this reporting period (1 April, 2025 - 31 July 2025), what food items did you plant and/or harvest in your community gardens?",
+          "label": "During this reporting period ({{period_start}} - {{period_end}}), what food items did you plant and/or harvest in your community gardens?",
           "notice": "<b>How should I answer this question?</b> Where possible, we have populated each farm with the items that were planted or harvest in the last reporting period. Please add or remove items from this list until it reflects accurately. If an item was planted in the last reporting period, please do not include that planted amount in your totals. However, please include any harvested amount in your harvested total."
         },
         {
@@ -969,7 +969,7 @@
         {
           "name": "successes_guidance",
           "type": "info",
-          "label": "During the last reporting period (1 April, 2025 - 31 July, 2025), across all your activities, operations and in the communities you work in, what successes did you have that helped your organisation or you community achieve growth, prosperity or impact?",
+          "label": "During this reporting period ({{period_start}} - {{period_end}}), across all your activities, operations and in the communities you work in, what successes did you have that helped your organisation or you community achieve growth, prosperity or impact?",
           "notice": "<strong>How should I answer this question?</strong> Please add any successes to the list below and describe them in no more than 50 words. If you have a noteworthy success that your organisation is particularly proud of, please rather add it to the \"High impact case studies\" section, as we would love to know more about these noteworthy successes."
         },
         {

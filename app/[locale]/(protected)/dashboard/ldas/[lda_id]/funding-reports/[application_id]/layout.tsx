@@ -1,6 +1,5 @@
-import { fetchFormTemplates, fetchLocalDevelopmentAgency, fetchLDAForm } from "@/lib/data"
+import { fetchLocalDevelopmentAgency, fetchLDAForm } from "@/lib/data"
 import { revalidateTag } from "next/cache"
-import { FormTemplateWithRelations } from "@/types/models"
 import { redirect } from "next/navigation"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { Button } from "@/components/ui/button"
@@ -31,9 +30,10 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
 
   const amount = ldaForm.amount ? Number(ldaForm.amount) : 0
 
-  // Find the form template for this application
-  const formTemplates: FormTemplateWithRelations[] = await fetchFormTemplates()
-  const formTemplate = formTemplates.find(t => t.id === ldaForm.formTemplateId)
+  // Use the template that came with the form: the form API resolves
+  // {{period_start}}/{{period_end}}/{{year}} placeholders against this form's
+  // reporting period — the raw template list does not.
+  const formTemplate = ldaForm.formTemplate
   
   if (!formTemplate || !formTemplate.form) {
     redirect(`${LDA_TERMINOLOGY.dashboardPath}/${lda_id}/funding-reports`)
