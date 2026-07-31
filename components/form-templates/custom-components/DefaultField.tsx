@@ -17,6 +17,12 @@ export function DefaultField({ field, isEditing, onValueChange }: DefaultFieldPr
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!onValueChange) return
     const value = isNumber ? sanitizeNumberInput(e.target.value, allowNegative) : e.target.value
+    // Keep the visible input in sync with the sanitized value: when stripping
+    // leaves the value unchanged (e.g. "-" typed into an empty field), React
+    // bails out of re-rendering and the rejected character would stay visible.
+    if (value !== e.target.value) {
+      e.target.value = value
+    }
     onValueChange(field, value)
   }
 

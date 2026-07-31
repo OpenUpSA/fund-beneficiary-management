@@ -35,6 +35,11 @@ export function CurrencyField({ field, isEditing, onValueChange }: CurrencyField
   // store the canonical "1234.56" form
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const numericValue = normalizeCurrencyInput(e.target.value)
+    // Sync the DOM when sanitizing left state unchanged (React bails out of
+    // re-rendering and a rejected character like "-" would stay visible)
+    if (numericValue !== e.target.value) {
+      e.target.value = numericValue
+    }
 
     // Ensure value is not negative
     const parsedValue = parseFloat(numericValue)

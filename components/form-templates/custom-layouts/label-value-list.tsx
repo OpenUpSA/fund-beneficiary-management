@@ -47,7 +47,7 @@ export function LabelValueListLayout({
     return Object.values(localValues).reduce((sum, val) => sum + parseCurrency(val), 0)
   }, [localValues])
 
-  const handleFieldChange = (field: Field, value: string) => {
+  const handleFieldChange = (field: Field, value: string): string => {
     // Currency fields accept "," or "." as decimal separator; store canonically.
     // Number fields block negatives unless config.allow_negative is set.
     const nextValue =
@@ -60,6 +60,7 @@ export function LabelValueListLayout({
     if (onValueChange) {
       onValueChange(field, nextValue)
     }
+    return nextValue
   }
   
   if (!inputField.show) return null
@@ -100,7 +101,12 @@ export function LabelValueListLayout({
                 min={field.min}
                 max={field.max}
                 className="text-right text-slate-900"
-                onChange={(e) => handleFieldChange(field, e.target.value)}
+                onChange={(e) => {
+                  const next = handleFieldChange(field, e.target.value)
+                  // Sync the DOM when sanitizing left state unchanged (React
+                  // bails out of re-rendering and the typed char would linger)
+                  if (next !== e.target.value) e.target.value = next
+                }}
               />
             </div>
           </div>
