@@ -46,6 +46,7 @@ import { Switch } from "@/components/ui/switch"
 import { useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { normalizeCurrencyInput } from "@/lib/currency"
 
 // Dynamically import Map component
 const Map = dynamic(
@@ -470,7 +471,14 @@ export function FormDialog({ fund, focusAreas, provinces, callback }: FormDialog
                             <FormItem className="flex-1">
                               <FormLabel>{LDA_TERMINOLOGY.defaultAmountLabel}</FormLabel>
                               <FormControl>
-                                <Input type="number" placeholder="R 0.00" {...field} />
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  placeholder="R 0.00"
+                                  {...field}
+                                  value={field.value ?? ''}
+                                  onChange={(e) => field.onChange(normalizeCurrencyInput(e.target.value))}
+                                />
                               </FormControl>
                             </FormItem>
                           )}

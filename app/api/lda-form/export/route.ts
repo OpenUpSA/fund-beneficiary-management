@@ -13,6 +13,7 @@ import {
   toCSV,
   FormData,
 } from "@/lib/form-response-export"
+import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -62,7 +63,10 @@ export async function GET(req: NextRequest) {
   }
 
   const template = responses[0].formTemplate
-  const form = template.form as unknown as Form
+  // Resolve period placeholders in labels: with a single response, use its
+  // reporting period; across responses (mixed periods) use neutral wording.
+  const placeholderValues = buildPlaceholderValues(responses.length === 1 ? responses[0] : undefined)
+  const form = substituteTemplatePlaceholders(template.form as unknown as Form, placeholderValues)
   if (!form?.sections) {
     return NextResponse.json({ error: "Form template has no structure" }, { status: 400 })
   }

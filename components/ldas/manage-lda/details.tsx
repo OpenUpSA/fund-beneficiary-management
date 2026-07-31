@@ -105,13 +105,14 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
     const selectedDistrict = districts.find(d => d.code === selectedPhysicalDistrictCode);
     const districtName = selectedDistrict?.name || selectedPhysicalDistrictCode;
     
+    // Smallest to largest area: street ... city, district, province
     const parts = [
       selectedPhysicalStreet,
       selectedPhysicalComplexName,
       selectedPhysicalComplexNumber,
       selectedPhysicalCity,
-      provinceName,
-      districtName
+      districtName,
+      provinceName
     ].filter(part => part && part.trim() !== '');
     
     // Only add South Africa if we have at least one valid part
@@ -130,12 +131,6 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
     provinces,
     districts
   ])
-
-  useEffect(() => {
-    if (physicalAddress) {
-      form.setValue('mapAddress', physicalAddress);
-    }
-  }, [physicalAddress, form]);
 
   return (
     <div className="space-y-4 mt-4">
@@ -402,7 +397,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
                   }))}
                   value={field.value?.toString()}
                   onChange={field.onChange}
-                  disabled={districts.length === 0}
+                  disabled={postalDistricts.length === 0}
                   placeholder="Select district"
                   searchPlaceholder="Search districts..."
                   emptyText="No district found."
@@ -417,7 +412,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
           render={() => (
             <FormItem>
               <FormLabel>Mapped location</FormLabel>
-              <Map form={form}/>
+              <Map form={form} findAddress={physicalAddress}/>
             </FormItem>
           )}
         />

@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { LucideIcon } from "lucide-react"
+import { formatRand } from "@/lib/currency"
 
 interface StatCardProps {
   title: string
@@ -11,8 +12,8 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, icon: Icon, format = "number" }: StatCardProps) {
-  const formattedValue = format === "currency" 
-    ? `R${Number(value).toLocaleString("en-ZA")}`
+  const formattedValue = format === "currency"
+    ? formatRand(Number(value))
     : typeof value === "number" ? value.toLocaleString("en-ZA") : value
 
   return (

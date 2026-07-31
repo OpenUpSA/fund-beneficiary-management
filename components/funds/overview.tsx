@@ -9,6 +9,7 @@ import { format } from "date-fns"
 import { DynamicIcon } from "../dynamicIcon"
 import dynamic from "next/dynamic"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { formatRand } from "@/lib/currency"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const FundMap = dynamic(
@@ -79,7 +80,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
             
             <div className="flex justify-between items-center">
               <span className="text-slate-900">Total fund amount:</span>
-              <span className="font-medium">R {Number(fund.amount).toLocaleString()}</span>
+              <span className="font-medium">{formatRand(Number(fund.amount))}</span>
             </div>
             
             <div className="flex justify-between items-center">
@@ -211,7 +212,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Total fund amount</p>
-                <h3 className="text-2xl font-bold">R {Number(fund.amount).toLocaleString()}</h3>
+                <h3 className="text-2xl font-bold">{formatRand(Number(fund.amount))}</h3>
                 <p className="text-sm text-gray-500">Available for allocation</p>
               </div>
             </CardContent>
@@ -222,7 +223,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
             <CardContent className="pt-6 pb-4">
               <div className="space-y-1">
                 <p className="text-sm text-gray-500">Current allocation</p>
-                <h3 className="text-2xl font-bold">R {totalAllocated.toLocaleString()}</h3>
+                <h3 className="text-2xl font-bold">{formatRand(totalAllocated)}</h3>
                 <p className="text-sm text-gray-500">Allocated to {LDA_TERMINOLOGY.shortNamePlural}</p>
               </div>
             </CardContent>
@@ -247,7 +248,7 @@ export const Overview: React.FC<Props> = ({ fund }: Props) => {
                   {remainingBalance >= 0 ? "Surplus" : "Shortfall"}
                 </p>
                 <h3 className={`text-2xl font-bold ${remainingBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  R {Math.abs(remainingBalance).toLocaleString()}
+                  {formatRand(Math.abs(remainingBalance))}
                 </h3>
                 <p className="text-sm text-gray-500">
                   {remainingBalance >= 0 ? "Unallocated funds" : "Over-allocated"}

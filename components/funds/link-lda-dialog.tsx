@@ -32,6 +32,7 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { FundedLDAs } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { normalizeCurrencyInput } from "@/lib/currency"
 
 interface LDA {
   id: number
@@ -316,10 +317,11 @@ export function LinkLDADialog({ fundId, fundName, fundDefaultAmount, availableLD
                   <Label htmlFor="amount">Amount <span className="text-red-500">*</span></Label>
                   <Input
                     id="amount"
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="R 0.00"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => setAmount(normalizeCurrencyInput(e.target.value))}
                     disabled={amountType === "USE_DEFAULT"}
                     required
                   />

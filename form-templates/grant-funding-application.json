@@ -2,7 +2,7 @@
   "title": "Grant Funding Application",
   "sections": [
     {
-      "title": "Results Achieved (2024)",
+      "title": "Results Achieved ({{year}})",
       "fields": [
         {
           "name": "progress_9_months",
@@ -27,28 +27,28 @@
         {
           "name": "budget_total_income_2025",
           "type": "currency",
-          "label": "What is the organisation’s total income budget for 2025?",
+          "label": "What is the organisation’s total income budget for {{year}}?",
           "required": true,
           "placeholder": "R 0.00"
         },
         {
           "name": "budget_total_expenditure_2025",
           "type": "currency",
-          "label": "What is the organisation’s total expenditure budget for 2025?",
+          "label": "What is the organisation’s total expenditure budget for {{year}}?",
           "required": true,
           "placeholder": "R 0.00"
         },
         {
           "name": "income_9_months_2025",
           "type": "currency",
-          "label": "What is the organisation’s income for the last nine (9) months? (Jan to Sep 2025)",
+          "label": "What is the organisation’s income for the last nine (9) months? ({{start_month_short}} to {{end_month_short}} {{year}})",
           "required": true,
           "placeholder": "R 0.00"
         },
         {
           "name": "expenditure_9_months_2025",
           "type": "currency",
-          "label": "What is the organisation’s expenditure for the last nine (9) months? (Jan to Sep 2025)",
+          "label": "What is the organisation’s expenditure for the last nine (9) months? ({{start_month_short}} to {{end_month_short}} {{year}})",
           "required": true,
           "placeholder": "R 0.00"
         }

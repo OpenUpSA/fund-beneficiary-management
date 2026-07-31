@@ -1,7 +1,7 @@
 "use client"
 
 import { FundFull } from "@/types/models"
-import React from "react"
+import React, { use } from "react"
 import Link from "next/link"
 import { buildReferrerUrl } from "@/lib/breadcrumb-utils"
 
@@ -59,9 +59,10 @@ interface AsyncFundListProps {
   ldaName?: string
 }
 
-// Async component that will suspend
-export async function AsyncFundList({ fundsPromise, canViewFunds, ldaId, ldaName }: AsyncFundListProps) {
-  const funds = await fundsPromise; // This will suspend until the promise resolves
-  
+// Suspends on the server-provided promise. Client components must unwrap
+// promises with use() — an async client component is unsupported and warns.
+export function AsyncFundList({ fundsPromise, canViewFunds, ldaId, ldaName }: AsyncFundListProps) {
+  const funds = use(fundsPromise)
+
   return <FundListRenderer funds={funds} canViewFunds={canViewFunds()} ldaId={ldaId} ldaName={ldaName} />
 }

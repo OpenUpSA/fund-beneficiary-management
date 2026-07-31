@@ -196,8 +196,10 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
       postalDistrict: lda?.organisationDetail?.postalDistrict ?? '',
       country: lda?.organisationDetail?.country ?? '',
       region: lda?.organisationDetail?.region ?? '',
-      latitude: lda?.organisationDetail?.latitude ?? 0,
-      longitude: lda?.organisationDetail?.longitude ?? 0,
+      // undefined (not 0): an LDA without coordinates must stay without
+      // coordinates on save — 0,0 is a real point in the Atlantic.
+      latitude: lda?.organisationDetail?.latitude ?? undefined,
+      longitude: lda?.organisationDetail?.longitude ?? undefined,
       mapAddress: lda?.organisationDetail?.mapAddress ?? '',
     },
   })

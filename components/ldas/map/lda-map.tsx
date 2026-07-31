@@ -6,7 +6,10 @@ import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
+import Link from "next/link";
 import { LocalDevelopmentAgencyListItem } from "@/types/models";
+import { LDA_TERMINOLOGY } from "@/constants/lda";
+import { displayPlaceName } from "@/lib/place-names";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
@@ -15,10 +18,16 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 const southAfricaCenter: [number, number] = [-30.5595, 22.9375];
 const defaultZoom = 5;
 
-// Set up the default icon for markers
+// Set up the default icon for markers. Restate the default geometry: without
+// iconAnchor, Leaflet pins the image's top-left corner to the coordinate and
+// the tip renders ~41px off — pins appear kilometres away at low zoom.
 const defaultIcon = L.icon({
   iconUrl: iconUrl.src,
   shadowUrl: iconShadow.src,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
@@ -42,6 +51,20 @@ function FullscreenControl() {
   }, [map]);
   
   return null;
+}
+
+// Popup action that flies the map to the marker at street level
+function ZoomToPin({ position }: { position: [number, number] }) {
+  const map = useMap();
+  return (
+    <button
+      type="button"
+      onClick={() => map.flyTo(position, 15)}
+      className="text-blue-600 hover:underline font-medium"
+    >
+      Zoom to location
+    </button>
+  );
 }
 
 // Component to fit map bounds to markers
@@ -133,11 +156,11 @@ export default function LDAMap({ ldas, width = "100%", height = "500px", onMinim
     if (details.physicalCity) 
       addressParts.push(details.physicalCity);
     
-    if (details.physicalDistrict) 
-      addressParts.push(details.physicalDistrict);
-    
-    if (details.physicalProvince) 
-      addressParts.push(details.physicalProvince);
+    if (details.physicalDistrict)
+      addressParts.push(displayPlaceName(details.physicalDistrict));
+
+    if (details.physicalProvince)
+      addressParts.push(displayPlaceName(details.physicalProvince));
     
     if (details.physicalPostalCode) 
       addressParts.push(details.physicalPostalCode);
@@ -192,6 +215,15 @@ export default function LDAMap({ ldas, width = "100%", height = "500px", onMinim
                       <span className="font-medium">Status:</span> {lda.fundingStatus.label}
                     </p>
                   )}
+                  <div className="mt-2 flex items-center gap-4">
+                    <Link
+                      href={`${LDA_TERMINOLOGY.dashboardPath}/${lda.id}`}
+                      className="text-blue-600 hover:underline font-medium"
+                    >
+                      View details
+                    </Link>
+                    <ZoomToPin position={[lat, lng]} />
+                  </div>
                 </div>
               </Popup>
             </Marker>

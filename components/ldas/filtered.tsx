@@ -6,7 +6,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { ChevronsUpDownIcon, ChevronUpIcon, ChevronDownIcon } from "lucide-react"
 import { Badge } from "../ui/badge"
 import Link from "next/link"
-import { availableReportingStatuses } from "@/app/data"
 import { LocalDevelopmentAgencyListItem, UserWithLDAsBasic } from "@/types/models"
 import { FocusArea, FundingStatus, Province, DevelopmentStage } from "@prisma/client"
 import { DynamicIcon } from "../dynamicIcon"
@@ -70,8 +69,10 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     () => fundingStatus.map(({ id, label }) => ({ id: String(id), label })),
     [fundingStatus]
   )
+  // Keyed by Province.code: LDAs carry the province as a code string in
+  // organisationDetail.physicalProvince (locationId is a legacy relation).
   const locationOptions = useMemo<FilterOption[]>(
-    () => provinces.map(({ id, name }) => ({ id: String(id), label: name })),
+    () => provinces.map(({ code, name }) => ({ id: code, label: name })),
     [provinces]
   )
   const stageOptions = useMemo<FilterOption[]>(
@@ -81,10 +82,6 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
   const focusOptions = useMemo<FilterOption[]>(
     () => focusAreas.map(({ id, label }) => ({ id: String(id), label })),
     [focusAreas]
-  )
-  const reportingOptions = useMemo<FilterOption[]>(
-    () => availableReportingStatuses.map(({ value, label }) => ({ id: String(value), label })),
-    []
   )
   const poOptions = useMemo<FilterOption[]>(
     () => programmeOfficers.map(({ id, name }) => ({ id: String(id), label: name })),
@@ -96,9 +93,8 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     { type: 'stage', label: 'Stage', options: stageOptions },
     { type: 'location', label: 'Province', options: locationOptions },
     { type: 'focus', label: 'Focus area', options: focusOptions },
-    { type: 'reporting', label: 'Reporting', options: reportingOptions },
     { type: 'po', label: 'PO', options: poOptions },
-  ]), [statusOptions, stageOptions, locationOptions, focusOptions, reportingOptions, poOptions])
+  ]), [statusOptions, stageOptions, locationOptions, focusOptions, poOptions])
 
   const handleSort = useCallback((column: SortableColumn) => {
     setSortColumn(prev => {
@@ -144,20 +140,18 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
     const locSel = sel('location')
     const stageSel = sel('stage')
     const statusSel = sel('status')
-    const reportingSel = sel('reporting') // unused for now
     const poSel = sel('po')
 
     let result = ldasIndexed.filter(lda => {
       if (deferredSearch && !lda._lcName.includes(deferredSearch.toLowerCase())) return false
 
       const focusMatch = !focusSel.length || lda.focusAreas.some(f => focusSel.includes(String(f.id)))
-      const locMatch = !locSel.length || locSel.includes(String(lda.locationId))
+      const locMatch = !locSel.length || locSel.includes(lda.organisationDetail?.physicalProvince ?? '')
       const stageMatch = !stageSel.length || stageSel.includes(String(lda.developmentStageId))
       const statusMatch = !statusSel.length || statusSel.includes(String(lda.fundingStatusId))
       const poMatch = !poSel.length || (lda.programmeOfficerId && poSel.includes(String(lda.programmeOfficerId)))
-      const reportingMatch = !reportingSel.length // TODO when model supports it
 
-      return focusMatch && locMatch && stageMatch && statusMatch && poMatch && reportingMatch
+      return focusMatch && locMatch && stageMatch && statusMatch && poMatch
     })
 
     if (sortColumn && sortDirection) {
@@ -219,7 +213,9 @@ export const FilteredLDAs: React.FC<FilteredLDAsProps> = ({
           <Link href={getLDAlink(lda.id)} prefetch={false}>{lda.name}</Link>
         </TableCell>
         <TableCell className="p-2">
-          {lda.fundingStatus && <Badge variant="outline">{lda.fundingStatus.label}</Badge>}
+          {lda.fundingStatus
+            ? <Badge variant="outline">{lda.fundingStatus.label}</Badge>
+            : <Badge variant="outline" className="border-dashed text-gray-400">No status</Badge>}
         </TableCell>
         <TableCell className="p-2">
           {lda.developmentStage && <Badge variant="outline">{lda.developmentStage.label}</Badge>}
