@@ -11,6 +11,7 @@ import {
   type FormTemplateInput,
 } from "@/lib/form-validation/validate-submission";
 import { applyPrefill } from "@/lib/lda-form-prefill";
+import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 
 
 export const dynamic = "force-dynamic"
@@ -62,6 +63,14 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     const savedFormData = (record.formData as Record<string, unknown>) ?? {}
     const { mergedData } = await applyPrefill(ldaFormId, savedFormData)
     record.formData = mergedData as Prisma.JsonValue
+
+    // Resolve {{period_start}}/{{period_end}}/{{year}} placeholders in the
+    // template text against this form's reporting period. Everything
+    // downstream (renderer, preview/PDF, response CSV) consumes this payload.
+    record.formTemplate.form = substituteTemplatePlaceholders(
+      record.formTemplate.form,
+      buildPlaceholderValues(record)
+    )
   }
 
   return NextResponse.json(record)
