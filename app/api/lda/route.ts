@@ -25,6 +25,7 @@ export async function GET() {
       id: true,
       name: true,
       fundingStatusId: true,
+      organisationStatus: true,
       developmentStageId: true,
       locationId: true,
       programmeOfficerId: true,

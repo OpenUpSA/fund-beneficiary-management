@@ -8,7 +8,7 @@ import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
 import Link from "next/link";
 import { LocalDevelopmentAgencyListItem } from "@/types/models";
-import { LDA_TERMINOLOGY } from "@/constants/lda";
+import { LDA_TERMINOLOGY, OrganisationStatus } from "@/constants/lda";
 import { displayPlaceName } from "@/lib/place-names";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -210,11 +210,10 @@ export default function LDAMap({ ldas, width = "100%", height = "500px", onMinim
                 <div className="text-sm">
                   <h3 className="font-semibold mb-1">{lda.name}</h3>
                   <p className="text-gray-600">{formatAddress(lda)}</p>
-                  {lda.fundingStatus && (
-                    <p className="mt-1">
-                      <span className="font-medium">Status:</span> {lda.fundingStatus.label}
-                    </p>
-                  )}
+                  <p className="mt-1">
+                    <span className="font-medium">Status:</span>{" "}
+                    {OrganisationStatus[lda.organisationStatus] ?? lda.organisationStatus}
+                  </p>
                   <div className="mt-2 flex items-center gap-4">
                     <Link
                       href={`${LDA_TERMINOLOGY.dashboardPath}/${lda.id}`}
