@@ -55,7 +55,6 @@ export function substituteTemplatePlaceholders<T>(node: T, values: PlaceholderVa
     for (const [key, value] of Object.entries(node)) {
       if (typeof value === "string" && TEXT_KEYS.has(key) && value.includes("{{")) {
         out[key] = substitutePlaceholders(value, values)
-        console.log(`[placeholders] ${key}: ${JSON.stringify(value)} -> ${JSON.stringify(out[key])}`)
       } else {
         out[key] = substituteTemplatePlaceholders(value, values)
       }

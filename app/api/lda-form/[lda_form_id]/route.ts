@@ -67,15 +67,9 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
     // Resolve {{period_start}}/{{period_end}}/{{year}} placeholders in the
     // template text against this form's reporting period. Everything
     // downstream (renderer, preview/PDF, response CSV) consumes this payload.
-    const placeholderValues = buildPlaceholderValues(record)
-    console.log(
-      `[placeholders] form ${ldaFormId} (${record.formTemplate.name}) ` +
-      `fundingStart=${record.fundingStart?.toISOString()} fundingEnd=${record.fundingEnd?.toISOString()} ` +
-      `-> ${JSON.stringify(placeholderValues)}`
-    )
     record.formTemplate.form = substituteTemplatePlaceholders(
       record.formTemplate.form,
-      placeholderValues
+      buildPlaceholderValues(record)
     )
   }
 
