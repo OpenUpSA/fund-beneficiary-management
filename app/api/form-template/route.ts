@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     };
     
     const record = await prisma.formTemplate.create(query);
-    revalidateTag('templates');
+    revalidateTag('form-templates:list');
     return NextResponse.json(record);
   } catch (error) {
     console.error("Failed to create form template:", error);

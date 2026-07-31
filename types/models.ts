@@ -140,6 +140,7 @@ export type LocalDevelopmentAgencyListItem = Prisma.LocalDevelopmentAgencyGetPay
     id: true
     name: true
     fundingStatusId: true
+    organisationStatus: true
     developmentStageId: true
     locationId: true
     programmeOfficerId: true

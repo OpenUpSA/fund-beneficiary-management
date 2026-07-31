@@ -83,7 +83,9 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
       where: { id: id },
       data: data
     })
-    revalidateTag('ldas')
+    revalidateTag('form-templates:list')
+    // Cached form payloads embed the template — flush them so edits show up
+    revalidateTag('lda-forms:list')
     return NextResponse.json(updated)
   } catch (error) {
     console.error("Failed to update form template:", error);
@@ -119,7 +121,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { form_temp
     const deletedFormTemplate = await prisma.formTemplate.delete({
       where: { id: formTemplateId }
     })
-    revalidateTag('ldas')
+    revalidateTag('form-templates:list')
+    revalidateTag('lda-forms:list')
     return NextResponse.json(deletedFormTemplate)
   } catch (error) {
     console.error("Failed to delete form template:", error);

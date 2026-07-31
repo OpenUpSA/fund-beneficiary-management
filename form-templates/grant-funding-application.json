@@ -7,7 +7,7 @@
         {
           "name": "progress_9_months",
           "type": "text",
-          "label": "Progress made on your plans for the nine (9) month period",
+          "label": "Progress made on your plans for the {{period_months_words}} month period",
           "required": true,
           "placeholder": "Share the key accomplishments and milestones achieved during this period."
         },
@@ -19,7 +19,7 @@
           "placeholder": "Describe the challenges encountered and the insights gained from them."
         }
       ],
-      "notice": "This section captures progress and lessons learned during the past 9 months of your programme implementation."
+      "notice": "This section captures progress and lessons learned during the past {{period_months}} months of your programme implementation."
     },
     {
       "title": "Budget & Expenditure",
@@ -41,14 +41,14 @@
         {
           "name": "income_9_months_2025",
           "type": "currency",
-          "label": "What is the organisation’s income for the last nine (9) months? ({{start_month_short}} to {{end_month_short}} {{year}})",
+          "label": "What is the organisation’s income for the last {{period_months_words}} months? ({{start_month_short}} to {{end_month_short}} {{year}})",
           "required": true,
           "placeholder": "R 0.00"
         },
         {
           "name": "expenditure_9_months_2025",
           "type": "currency",
-          "label": "What is the organisation’s expenditure for the last nine (9) months? ({{start_month_short}} to {{end_month_short}} {{year}})",
+          "label": "What is the organisation’s expenditure for the last {{period_months_words}} months? ({{start_month_short}} to {{end_month_short}} {{year}})",
           "required": true,
           "placeholder": "R 0.00"
         }

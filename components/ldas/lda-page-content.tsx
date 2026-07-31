@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Maximize2 } from "lucide-react"
 import { FilteredLDAs } from "@/components/ldas/filtered"
 import { LocalDevelopmentAgencyListItem, UserWithLDAsBasic } from "@/types/models"
-import { FocusArea, FundingStatus, Province, DevelopmentStage } from "@prisma/client"
+import { FocusArea, Province, DevelopmentStage } from "@prisma/client"
 
 const LDAMap = dynamic(
   () => import("@/components/ldas/map/lda-map"),
@@ -23,7 +23,6 @@ interface LDAPageContentProps {
   programmeOfficers: UserWithLDAsBasic[]
   assignableProgrammeOfficers: UserWithLDAsBasic[]
   provinces: Province[]
-  fundingStatus: FundingStatus[]
   callback?: (ldaId?: number) => void
 }
 
@@ -34,7 +33,6 @@ export function LDAPageContent({
   programmeOfficers,
   assignableProgrammeOfficers,
   provinces,
-  fundingStatus,
   callback,
 }: LDAPageContentProps) {
   const [mapMinimized, setMapMinimized] = useState(false)
@@ -88,7 +86,6 @@ export function LDAPageContent({
         programmeOfficers={programmeOfficers}
         assignableProgrammeOfficers={assignableProgrammeOfficers}
         provinces={provinces}
-        fundingStatus={fundingStatus}
         callback={callback}
         mapMinimized={mapMinimized}
       />

@@ -114,7 +114,7 @@ export async function POST(
       }))
     }
 
-    revalidateTag("templates")
+    revalidateTag("form-templates:list")
 
     return NextResponse.json({
       success: true,

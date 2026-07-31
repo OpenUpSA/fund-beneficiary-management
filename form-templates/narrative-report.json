@@ -987,10 +987,10 @@
           "template": [
             {
               "name": "title",
-              "type": "text",
+              "type": "textarea",
               "label": "Short summary of this success",
               "required": true,
-              "maxLength": 100,
+              "maxLength": 500,
               "placeholder": "Enter details here"
             },
             {
@@ -1014,7 +1014,7 @@
             {
               "name": "categories",
               "type": "multiselect",
-              "label": "Which categories best describe this challenge?",
+              "label": "Which categories best describe this success?",
               "required": true,
               "options": [
                 { "label": "Crime and security", "value": "crime_and_security" },

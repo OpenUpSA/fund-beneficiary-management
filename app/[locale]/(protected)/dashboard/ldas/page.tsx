@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
 
-import { fetchDevelopmentStages, fetchFocusAreas, fetchFundingStatuses, fetchLocalDevelopmentAgencies, fetchProgrammeOfficers, fetchProvinces, fetchUsers } from "@/lib/data"
+import { fetchDevelopmentStages, fetchFocusAreas, fetchLocalDevelopmentAgencies, fetchProgrammeOfficers, fetchProvinces, fetchUsers } from "@/lib/data"
 import { revalidateTag } from "next/cache"
 import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
@@ -40,7 +40,6 @@ export default async function Page() {
     programmeOfficers,
     assignableProgrammeOfficers,
     provinces,
-    fundingStatus,
   ] = await Promise.all([
     fetchFocusAreas(),
     fetchLocalDevelopmentAgencies(),
@@ -48,7 +47,6 @@ export default async function Page() {
     fetchUsers(),
     fetchProgrammeOfficers(),
     fetchProvinces(),
-    fetchFundingStatuses(),
   ])
 
   const dataChanged = async (ldaId?: number) => {
@@ -81,7 +79,6 @@ export default async function Page() {
         programmeOfficers={programmeOfficers}
         assignableProgrammeOfficers={assignableProgrammeOfficers}
         provinces={provinces}
-        fundingStatus={fundingStatus}
         callback={dataChanged}
       />
     </div>

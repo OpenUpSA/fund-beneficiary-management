@@ -4,11 +4,11 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
-import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomControl } from "react-leaflet";
 import Link from "next/link";
 import { LocalDevelopmentAgencyListItem } from "@/types/models";
-import { LDA_TERMINOLOGY } from "@/constants/lda";
+import { LDA_TERMINOLOGY, OrganisationStatus } from "@/constants/lda";
 import { displayPlaceName } from "@/lib/place-names";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -54,13 +54,30 @@ function FullscreenControl() {
 }
 
 // Popup action that flies the map to the marker at street level
+const PIN_ZOOM = 15;
+
 function ZoomToPin({ position }: { position: [number, number] }) {
   const map = useMap();
+  // Disabled when zooming would be a no-op: already at street zoom with the
+  // pin near the centre of the view
+  const [atLocation, setAtLocation] = useState(false);
+
+  const update = useCallback(() => {
+    const zoomedIn = map.getZoom() >= PIN_ZOOM;
+    const centered = map.getCenter().distanceTo(L.latLng(position[0], position[1])) < 250;
+    setAtLocation(zoomedIn && centered);
+  }, [map, position]);
+
+  useMapEvents({ zoomend: update, moveend: update });
+  useEffect(() => { update() }, [update]);
+
   return (
     <button
       type="button"
-      onClick={() => map.flyTo(position, 15)}
-      className="text-blue-600 hover:underline font-medium"
+      onClick={() => map.flyTo(position, PIN_ZOOM)}
+      disabled={atLocation}
+      title={atLocation ? "Already at this location" : undefined}
+      className={`font-medium ${atLocation ? "text-slate-400 cursor-default" : "text-blue-600 hover:underline"}`}
     >
       Zoom to location
     </button>
@@ -210,11 +227,10 @@ export default function LDAMap({ ldas, width = "100%", height = "500px", onMinim
                 <div className="text-sm">
                   <h3 className="font-semibold mb-1">{lda.name}</h3>
                   <p className="text-gray-600">{formatAddress(lda)}</p>
-                  {lda.fundingStatus && (
-                    <p className="mt-1">
-                      <span className="font-medium">Status:</span> {lda.fundingStatus.label}
-                    </p>
-                  )}
+                  <p className="mt-1">
+                    <span className="font-medium">Status:</span>{" "}
+                    {OrganisationStatus[lda.organisationStatus] ?? lda.organisationStatus}
+                  </p>
                   <div className="mt-2 flex items-center gap-4">
                     <Link
                       href={`${LDA_TERMINOLOGY.dashboardPath}/${lda.id}`}
