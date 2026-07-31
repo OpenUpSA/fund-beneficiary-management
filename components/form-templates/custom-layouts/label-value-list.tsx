@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { CircleSmall } from "lucide-react"
 import { DynamicIcon } from "@/components/form-templates/dynamic-icon"
 import { parseCurrency, normalizeCurrencyInput } from "@/lib/currency"
+import { sanitizeNumberInput, fieldAllowsNegative } from "@/lib/number-input"
 
 interface LabelValueListLayoutProps {
   inputField: Field
@@ -47,8 +48,12 @@ export function LabelValueListLayout({
   }, [localValues])
 
   const handleFieldChange = (field: Field, value: string) => {
-    // Currency fields accept "," or "." as decimal separator; store canonically
-    const nextValue = field.type === "currency" ? normalizeCurrencyInput(value) : value
+    // Currency fields accept "," or "." as decimal separator; store canonically.
+    // Number fields block negatives unless config.allow_negative is set.
+    const nextValue =
+      field.type === "currency" ? normalizeCurrencyInput(value)
+      : field.type === "number" ? sanitizeNumberInput(value, fieldAllowsNegative(field.config))
+      : value
     // Update local state immediately for responsive UI
     setLocalValues(prev => ({ ...prev, [field.name]: nextValue }))
     // Propagate to parent
