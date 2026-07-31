@@ -30,6 +30,12 @@ export function parseCurrency(value: string | number | null | undefined): number
   return negative ? -num : num
 }
 
+/** Rand display used across the app — "R12 345.67"; whole amounts drop the decimals. */
+export function formatRand(value: number | string | null | undefined): string {
+  const num = typeof value === "number" ? value : parseCurrency(value)
+  return "R" + formatCurrencyValue(isNaN(num) ? 0 : num, { minFractionDigits: 0 })
+}
+
 /** Format for display: space thousands separator, "." decimal — "12 345.67". */
 export function formatCurrencyValue(
   value: number,

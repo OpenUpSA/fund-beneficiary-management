@@ -11,6 +11,7 @@ import { Suspense } from "react"
 import { AsyncFundList, FundListSkeleton } from "./fund-list"
 import { usePermissions } from "@/hooks/use-permissions"
 import { displayPlaceName } from "@/lib/place-names"
+import { formatRand } from "@/lib/currency"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const LDAMap = dynamic(
@@ -33,7 +34,7 @@ const allocationAmount = (funding: FundAllocation): number => {
   return 0
 }
 
-const formatRand = (value: number): string => `R ${value.toLocaleString("en-ZA")}`
+
 
 export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
   const { canViewFunds } = usePermissions()
