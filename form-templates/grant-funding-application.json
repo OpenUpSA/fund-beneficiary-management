@@ -2,7 +2,7 @@
   "title": "Grant Funding Application",
   "sections": [
     {
-      "title": "Results Achieved ({{previous_year}})",
+      "title": "Results Achieved ({{year}})",
       "fields": [
         {
           "name": "progress_9_months",

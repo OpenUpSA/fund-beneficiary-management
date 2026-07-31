@@ -3,8 +3,7 @@ import { format } from "date-fns"
 // Form templates may reference the form's reporting period in human-readable
 // text via placeholders instead of hardcoded dates:
 //   {{period_start}} / {{period_end}} — the form's fundingStart/fundingEnd
-//   {{year}}                          — year of the period end (fallback: start)
-//   {{previous_year}}                 — the year before {{year}}
+//   {{year}}                          — year of the period start (fallback: end)
 // Substitution happens server-side wherever a form instance's template is
 // served (form API, exports), so the renderer, previews, PDFs and CSVs all
 // see the resolved text. Without a form instance (e.g. bulk export across
@@ -14,14 +13,12 @@ export interface PlaceholderValues {
   period_start: string
   period_end: string
   year: string
-  previous_year: string
 }
 
 const NEUTRAL_VALUES: PlaceholderValues = {
   period_start: "start of the reporting period",
   period_end: "end of the reporting period",
   year: "the funding year",
-  previous_year: "the previous year",
 }
 
 export function buildPlaceholderValues(dates?: {
@@ -31,17 +28,15 @@ export function buildPlaceholderValues(dates?: {
   const start = dates?.fundingStart ? new Date(dates.fundingStart) : null
   const end = dates?.fundingEnd ? new Date(dates.fundingEnd) : null
   if (!start && !end) return NEUTRAL_VALUES
-  const yearBasis = end ?? start
-  const year = yearBasis!.getFullYear()
+  const yearBasis = start ?? end
   return {
     period_start: start ? format(start, "d MMMM yyyy") : NEUTRAL_VALUES.period_start,
     period_end: end ? format(end, "d MMMM yyyy") : NEUTRAL_VALUES.period_end,
-    year: String(year),
-    previous_year: String(year - 1),
+    year: String(yearBasis!.getFullYear()),
   }
 }
 
-const PLACEHOLDER_RE = /\{\{\s*(period_start|period_end|year|previous_year)\s*\}\}/g
+const PLACEHOLDER_RE = /\{\{\s*(period_start|period_end|year)\s*\}\}/g
 
 export function substitutePlaceholders(text: string, values: PlaceholderValues): string {
   return text.replace(PLACEHOLDER_RE, (_, key: keyof PlaceholderValues) => values[key])
