@@ -41,14 +41,14 @@
         {
           "name": "income_9_months_2025",
           "type": "currency",
-          "label": "What is the organisation’s income for the last nine (9) months? (Jan to Sep {{year}})",
+          "label": "What is the organisation’s income for the last nine (9) months? ({{start_month_short}} to {{end_month_short}} {{year}})",
           "required": true,
           "placeholder": "R 0.00"
         },
         {
           "name": "expenditure_9_months_2025",
           "type": "currency",
-          "label": "What is the organisation’s expenditure for the last nine (9) months? (Jan to Sep {{year}})",
+          "label": "What is the organisation’s expenditure for the last nine (9) months? ({{start_month_short}} to {{end_month_short}} {{year}})",
           "required": true,
           "placeholder": "R 0.00"
         }
