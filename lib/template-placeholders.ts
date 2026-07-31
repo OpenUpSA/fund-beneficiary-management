@@ -31,12 +31,19 @@ const NEUTRAL_VALUES: PlaceholderValues = {
   year: "the funding year",
 }
 
+// Invalid dates are treated as absent — format() would throw on them
+const toValidDate = (value?: Date | string | null): Date | null => {
+  if (!value) return null
+  const date = new Date(value)
+  return isNaN(date.getTime()) ? null : date
+}
+
 export function buildPlaceholderValues(dates?: {
   fundingStart?: Date | string | null
   fundingEnd?: Date | string | null
 }): PlaceholderValues {
-  const start = dates?.fundingStart ? new Date(dates.fundingStart) : null
-  const end = dates?.fundingEnd ? new Date(dates.fundingEnd) : null
+  const start = toValidDate(dates?.fundingStart)
+  const end = toValidDate(dates?.fundingEnd)
   if (!start && !end) return NEUTRAL_VALUES
   const yearBasis = start ?? end
   return {
