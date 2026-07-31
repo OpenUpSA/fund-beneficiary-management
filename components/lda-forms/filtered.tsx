@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   Trash2,
 } from "lucide-react"
+import { formatCurrencyValue } from "@/lib/currency"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { FormDialog } from "./form"
@@ -200,7 +201,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
 
   const formatCurrency = (value: number) => {
     if (isNaN(value)) return "-"
-    return 'R' + value.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return 'R' + formatCurrencyValue(value)
   }
 
   const handleDeleteForm = async () => {

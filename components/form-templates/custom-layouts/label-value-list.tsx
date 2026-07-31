@@ -5,6 +5,7 @@ import { Field } from "@/types/forms"
 import { Input } from "@/components/ui/input"
 import { CircleSmall } from "lucide-react"
 import { DynamicIcon } from "@/components/form-templates/dynamic-icon"
+import { parseCurrency } from "@/lib/currency"
 
 interface LabelValueListLayoutProps {
   inputField: Field
@@ -41,10 +42,8 @@ export function LabelValueListLayout({
   }, [fields])
 
   const calculateTotal = useCallback((): number => {
-    return Object.values(localValues).reduce((sum, val) => {
-      const value = parseFloat(val || "0")
-      return sum + (isNaN(value) ? 0 : value)
-    }, 0)
+    // parseCurrency: stored values may use "," as the decimal separator
+    return Object.values(localValues).reduce((sum, val) => sum + parseCurrency(val), 0)
   }, [localValues])
 
   const handleFieldChange = (field: Field, value: string) => {
