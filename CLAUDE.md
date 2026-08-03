@@ -80,7 +80,7 @@ Form templates are JSON-defined schemas stored in `/form-templates/`. LDA form s
 
 - Components are in `/components/` grouped by domain (funders, funds, ldas, etc.)
 - shadcn/ui components live in `components/ui/`; add new ones via `npx shadcn@latest add <component>`
-- Translations go in `messages/en.json` and `messages/xh.json`; use `useTranslations` (client) or `getTranslations` (server)
+- Translations go in `messages/en.json` and `messages/xh.json`; use `useTranslations` (client) or `getTranslations` (server). Per-deployment overrides live in `messages/overrides/{APP_FLAVOR}/{locale}.json` (only differing keys), deep-merged in `i18n/request.ts` when the `APP_FLAVOR` runtime env var is set
 - Toast notifications via Sonner; charts via Recharts; maps via react-leaflet
 
 ### Form template system

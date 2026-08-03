@@ -72,6 +72,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Selects messages/overrides/{APP_FLAVOR}/ translation overrides. Read at
+# RUNTIME (not inlined at build), so it lives in the runner stage: the ENV
+# becomes the container's default and dokku config can still override it.
+ARG APP_FLAVOR=""
+ENV APP_FLAVOR=$APP_FLAVOR
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
