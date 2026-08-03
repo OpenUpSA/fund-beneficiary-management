@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useCallback, useRef } from "react"
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { CircleSmall, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { isScalarValueComplete, computeGroupValidity } from "@/lib/form-validation/field-completeness"
 import { FormField } from "@/components/form-templates/form-field"
 import { Section, Field, FormData, DependsOnRule } from "@/types/forms"
 import { useFormValuesStore } from "@/components/form-templates/form-values-context"
@@ -71,17 +72,7 @@ export default function FormAccordionItem({
 
   const isSectionVisible = isRoleVisible && isShowIfVisible;
 
-  const isValueValid = (value: string, field: Field) => {
-    if (field.type === "fileUpload") {
-      if (!value || value.trim() === "") return false;
-      try {
-        return JSON.parse(value).length > 0;
-      } catch {
-        return false;
-      }
-    }
-    return value.trim() !== "";
-  }
+  const isValueValid = (value: string, field: Field) => isScalarValueComplete(value, field.type)
 
   const createFieldFromTemplate = useCallback((field: Field, index: number) => {
     const fields = [...(field?.template || [])];
@@ -275,13 +266,10 @@ export default function FormAccordionItem({
             // Recursively process nested fields if they exist
             if (subfield.fields && subfield.fields.length > 0) {
               const nestedFields = processFieldsRecursively(subfield.fields, subfieldName, false);
-              const requiredNestedFields = nestedFields.filter(nf => nf.required);
-              const allNestedValid = requiredNestedFields.length > 0 ? 
-                requiredNestedFields.every(nf => nf.isValid) : true;
-              subFieldObj = { 
-                ...subFieldObj, 
-                fields: nestedFields,
-                isValid: subfield.required ? allNestedValid : true
+              subFieldObj = { ...subFieldObj, fields: nestedFields };
+              subFieldObj = {
+                ...subFieldObj,
+                isValid: subfield.required ? computeGroupValidity(subFieldObj) : true
               };
             }
             
@@ -599,11 +587,24 @@ export default function FormAccordionItem({
               const subFields = newFields.flat().map((subfield) => {
                 // Respect show: false from template, otherwise check show_if
                 const showField = subfield.show === false ? false : (subfield.show_if ? false : true);
-                const subFieldObj = {
+                let subFieldObj: Field = {
                   ...subfield,
                   show: showField,
                   isValid: subfield.required ? false : true
                 };
+                // Nested group children (e.g. attendance counts): initialize each
+                // child, then derive the group's validity from them — otherwise a
+                // required group starts isValid:false and can never flip true
+                if (subfield.fields && subfield.fields.length > 0) {
+                  const nestedFields = subfield.fields.map((nested: Field) => ({
+                    ...nested,
+                    show: nested.show === false ? false : (nested.show_if ? false : true),
+                    // ?? preserves isValid:true set for hydrated default values
+                    isValid: nested.isValid ?? (nested.required ? false : true),
+                  }));
+                  subFieldObj = { ...subFieldObj, fields: nestedFields };
+                  subFieldObj.isValid = subfield.required ? computeGroupValidity(subFieldObj) : true;
+                }
                 return subFieldObj;
               });
 
@@ -664,7 +665,7 @@ export default function FormAccordionItem({
               const matchingRule = subfield.depends_on.rules?.find((rule: DependsOnRule) => rule.when === value);
               const newOptions = matchingRule?.options || subfield.depends_on.default_options || subfield.options;
               subfield = { ...subfield, options: newOptions, value: "", isValid: subfield.required ? false : true };
-              
+
               // Save the cleared value to API after a delay to not interfere with the original field save
               const dependentSubfieldName = subfield.name;
               setTimeout(() => {
@@ -672,6 +673,35 @@ export default function FormAccordionItem({
                   debouncedSaveRef.current(dependentSubfieldName, "");
                 }
               }, 600);
+            }
+
+            // Nested group children (e.g. attendance counts inside a repeatable
+            // entry): the changed field lives one level deeper than this map
+            // reaches, so update it here and recompute the group's validity
+            if (subfield.fields && subfield.fields.length > 0) {
+              let nestedChanged = false;
+              const nestedFields = subfield.fields.map((nested: Field) => {
+                if (nested.name === field.name) {
+                  nestedChanged = true;
+                  return {
+                    ...nested,
+                    value,
+                    isValid: nested.required ? isScalarValueComplete(value, nested.type) : true,
+                  };
+                }
+                if (nested.show_if !== undefined && nested.show_if.field === field.name) {
+                  nestedChanged = true;
+                  return { ...nested, show: value === nested.show_if.value };
+                }
+                return nested;
+              });
+              if (nestedChanged) {
+                subfield = { ...subfield, fields: nestedFields };
+                subfield = {
+                  ...subfield,
+                  isValid: subfield.required ? computeGroupValidity(subfield) : true,
+                };
+              }
             }
             return subfield;
           }) as Field[];
