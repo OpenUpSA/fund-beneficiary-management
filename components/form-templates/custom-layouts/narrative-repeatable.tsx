@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { FormField } from "../form-field"
+import { isFieldComplete } from "@/lib/form-validation/field-completeness"
 import { useState } from "react"
 import { format } from "date-fns"
 
@@ -61,17 +62,11 @@ export function NarrativeRepeatableLayout({ inputField, isEditing, onValueChange
     return <span className="font-semibold">{`${defaultLabel} ${groupIndex}`}</span>
   }
 
-  // Check if a group is complete (all required fields have values)
+  // Check if a group is complete (all required fields have values).
+  // isFieldComplete recurses into nested group fields (e.g. the attendance
+  // count groups), which have no scalar value of their own.
   const isGroupComplete = (groupItems: Field[]): boolean => {
-    return groupItems.every(field => {
-      // Skip non-required fields
-      if (!field.required) return true
-      // Skip fields that are hidden via show_if
-      if (field.show === false) return true
-      // Check if field has a value
-      const value = field.value?.trim()
-      return value !== undefined && value !== ''
-    })
+    return groupItems.every(isFieldComplete)
   }
 
   const handleRemove = (groupIndex: number) => {

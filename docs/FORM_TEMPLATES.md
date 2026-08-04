@@ -133,7 +133,10 @@ Multi-line text input for longer content.
 ```
 
 #### number
-Numeric input with optional min/max constraints.
+Numeric input with optional min/max constraints. Negative values are rejected
+by default (typed minus signs are stripped and submission validation fails on
+negative values); set `"config": { "allow_negative": true }` on the field to
+permit them.
 
 ```json
 {

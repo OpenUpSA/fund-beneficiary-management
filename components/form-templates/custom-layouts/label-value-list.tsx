@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { CircleSmall } from "lucide-react"
 import { DynamicIcon } from "@/components/form-templates/dynamic-icon"
 import { parseCurrency, normalizeCurrencyInput } from "@/lib/currency"
+import { sanitizeNumberInput, fieldAllowsNegative } from "@/lib/number-input"
 
 interface LabelValueListLayoutProps {
   inputField: Field
@@ -46,15 +47,20 @@ export function LabelValueListLayout({
     return Object.values(localValues).reduce((sum, val) => sum + parseCurrency(val), 0)
   }, [localValues])
 
-  const handleFieldChange = (field: Field, value: string) => {
-    // Currency fields accept "," or "." as decimal separator; store canonically
-    const nextValue = field.type === "currency" ? normalizeCurrencyInput(value) : value
+  const handleFieldChange = (field: Field, value: string): string => {
+    // Currency fields accept "," or "." as decimal separator; store canonically.
+    // Number fields block negatives unless config.allow_negative is set.
+    const nextValue =
+      field.type === "currency" ? normalizeCurrencyInput(value)
+      : field.type === "number" ? sanitizeNumberInput(value, fieldAllowsNegative(field.config))
+      : value
     // Update local state immediately for responsive UI
     setLocalValues(prev => ({ ...prev, [field.name]: nextValue }))
     // Propagate to parent
     if (onValueChange) {
       onValueChange(field, nextValue)
     }
+    return nextValue
   }
   
   if (!inputField.show) return null
@@ -95,7 +101,12 @@ export function LabelValueListLayout({
                 min={field.min}
                 max={field.max}
                 className="text-right text-slate-900"
-                onChange={(e) => handleFieldChange(field, e.target.value)}
+                onChange={(e) => {
+                  const next = handleFieldChange(field, e.target.value)
+                  // Sync the DOM when sanitizing left state unchanged (React
+                  // bails out of re-rendering and the typed char would linger)
+                  if (next !== e.target.value) e.target.value = next
+                }}
               />
             </div>
           </div>

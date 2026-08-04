@@ -77,7 +77,7 @@ Every field requires at minimum: `name`, `type`, and `label`.
 |---|---|---|
 | `text` | Single-line text input | `placeholder`, `maxLength` |
 | `textarea` | Multi-line text input | `placeholder`, `maxLength` |
-| `number` | Numeric input | `min`, `max`, `placeholder` |
+| `number` | Numeric input | `min`, `max`, `placeholder`, `config.allow_negative` |
 | `currency` | Currency input | `min`, `max` |
 | `email` | Email input | `placeholder` |
 | `date` | Date picker | — |
@@ -271,6 +271,21 @@ The funding prefill sources (`core_grant_funding`, `fris_funding`, `dft_funding`
 3. **`dft_funding`** — Sums `amount` from all approved `dft_application` forms where `fundingStart ≤ report.fundingStart ≤ fundingEnd`
 
 > **Note:** "Approved" means the form's `approved` timestamp is not null.
+
+### Negative Numbers
+
+`number` fields reject negative input by default — the minus sign is stripped as the user types, and submissions containing a negative value fail server-side validation ("cannot be negative"). For fields that legitimately hold negative values (adjustments, variances), opt in with `config.allow_negative`:
+
+```json
+{
+  "name": "stock_adjustment",
+  "type": "number",
+  "label": "Stock adjustment",
+  "config": { "allow_negative": true }
+}
+```
+
+This applies to standalone `number` fields, group/repeatable subfields, and `label-value-list` rows. It does not apply to the count grids (data-grid, casework, gardens), which are always digits-only, nor to `currency` fields, which never accept negatives.
 
 ### Locked Fields
 

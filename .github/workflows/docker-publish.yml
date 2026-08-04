@@ -30,6 +30,7 @@ jobs:
               NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL }}
               NEXT_PUBLIC_ENABLE_REPORTING=${{ vars.NEXT_PUBLIC_ENABLE_REPORTING }}
               NEXT_PUBLIC_MAP_COUNTRY_CODES=za
+              APP_FLAVOR=soar
 
           # "ddi-gms" flavour -> deploys to ddi-gms-image (scat-data / Beneficiary branding).
           # NEXT_PUBLIC_* are baked into the client bundle at build time, so they are
@@ -48,6 +49,7 @@ jobs:
               NEXT_PUBLIC_API_BASE_URL=https://ddi-gms.openup.org.za
               NEXT_PUBLIC_MAP_COUNTRY_CODES=*
               NEXT_PUBLIC_ENABLE_REPORTING=false
+              APP_FLAVOR=ddi-gms
 
     steps:
       - uses: actions/checkout@v4
