@@ -89,6 +89,8 @@ export default async function Page({ params }: FunderTabPageProps) {
     revalidateTag('lda-forms:list')
     revalidateTag('media:list')
     revalidateTag(`media:funder:${funder_id}`)
+    revalidateTag('documents:list')
+    revalidateTag(`documents:funder:${funder_id}`)
   }
 
   return (
@@ -132,7 +134,8 @@ export default async function Page({ params }: FunderTabPageProps) {
               return (
                 <FilteredDocuments
                   dataChanged={dataChanged}
-                  documents={funderDocuments} />
+                  documents={funderDocuments}
+                  funder={{ id: parseInt(funder_id), name: funder.name }} />
               );
 
             case "media":

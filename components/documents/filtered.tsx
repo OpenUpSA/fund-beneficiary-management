@@ -28,11 +28,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface Props {
   documents: DocumentFull[],
   lda?: LocalDevelopmentAgency,
+  fund?: { id: number, name: string },
+  funder?: { id: number, name: string },
   dataChanged: () => void,
   navigatedFrom?: string
 }
 
-export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }: Props) {
+export function FilteredDocuments({ documents, dataChanged, lda, fund, funder, navigatedFrom }: Props) {
   const tC = useTranslations('common')
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -112,9 +114,11 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
             className="hidden md:flex"
           />
         </div>
-        {lda && (
+        {(lda || fund || funder) && (
           <DocumentFormDialog
             lda={lda}
+            fund={fund}
+            funder={funder}
             callback={dataChanged}
           />
         )}
@@ -138,7 +142,7 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
                   <TableRow key={document.id}>
                     <TableCell className="font-medium">
                       <Link href={getDocumentLink(document.id)} className="flex items-center space-x-1">
-                        <span>{document.filePath.replace(/^\//g, '')}</span>
+                        <span>{document.title || document.filePath.replace(/^\//g, '')}</span>
                       </Link>
                     </TableCell>
                     <TableCell className="text-nowrap">{format(document.createdAt, 'MMM d, yyyy')}</TableCell>
@@ -172,6 +176,8 @@ export function FilteredDocuments({ documents, dataChanged, lda, navigatedFrom }
                             <DocumentFormDialog
                               document={document}
                               lda={lda}
+                              fund={fund}
+                              funder={funder}
                               callback={dataChanged}
                             />
                           </DropdownMenuItem>

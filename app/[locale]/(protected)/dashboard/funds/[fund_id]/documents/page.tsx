@@ -46,6 +46,7 @@ export default async function Page({ params }: FundDocumentsPageProps) {
       <FilteredDocuments
         dataChanged={dataChanged}
         documents={fundDocuments}
+        fund={{ id: parseInt(fund_id), name: fund.name }}
       />
     </div>
   )

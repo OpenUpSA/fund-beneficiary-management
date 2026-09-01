@@ -29,6 +29,7 @@ const prisma = new PrismaClient()
 
 async function main() {
   await prisma.media.deleteMany()
+  await prisma.mediaSourceType.deleteMany()
   await prisma.localDevelopmentAgencyForm.deleteMany()
   await prisma.fundLocalDevelopmentAgency.deleteMany()
   await prisma.fundFunder.deleteMany()
@@ -43,6 +44,9 @@ async function main() {
   await prisma.formTemplate.deleteMany()
   await prisma.user.deleteMany()
   await prisma.province.deleteMany()
+
+  // Default source type preselected for manual uploads in the media form
+  await prisma.mediaSourceType.create({ data: { title: 'Uploaded' } })
 
   const userNala = await prisma.user.create(
     {

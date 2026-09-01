@@ -161,6 +161,10 @@ export async function POST(req: NextRequest) {
     revalidateTag(`fund:detail:${parsedFundId}`)
     revalidateTag('funders:list')
     revalidateTag('funds:list')
+    // Contract documents may have been created above — refresh document lists
+    revalidateTag('documents:list')
+    revalidateTag(`documents:fund:${parsedFundId}`)
+    revalidateTag(`documents:funder:${parsedFunderId}`)
 
     return NextResponse.json(fundFunder, { status: 201 })
   } catch (error) {
@@ -292,6 +296,10 @@ export async function PUT(req: NextRequest) {
     revalidateTag(`fund:detail:${parsedFundId}`)
     revalidateTag('funders:list')
     revalidateTag('funds:list')
+    // Contract documents may have been created above — refresh document lists
+    revalidateTag('documents:list')
+    revalidateTag(`documents:fund:${parsedFundId}`)
+    revalidateTag(`documents:funder:${parsedFunderId}`)
 
     return NextResponse.json(updatedFundFunder, { status: 200 })
   } catch (error) {

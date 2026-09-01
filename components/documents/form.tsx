@@ -43,11 +43,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { Calendar } from "../ui/calendar"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
-const getFormSchema = (document?: Document) => {
+const getFormSchema = (document?: Document, hasEntityContext?: boolean) => {
   return z.object({
     title: z.string().min(2, { message: "Title must be at least 2 characters." }),
     description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-    localDevelopmentAgencyId: z.coerce.number({ required_error: "Please select a local development agency." }),
+    localDevelopmentAgencyId: hasEntityContext
+      ? z.coerce.number().optional()
+      : z.coerce.number({ required_error: "Please select a local development agency." }),
     documentType: DocumentTypeEnum,
     validFromDate: z.date({ required_error: "Please select a valid from." }).refine(date => date !== undefined, {
       message: "Valid from is required."
@@ -92,22 +94,25 @@ interface FormDialogProps {
   document?: Document,
   lda?: LocalDevelopmentAgency,
   ldas?: LocalDevelopmentAgency[],
+  fund?: { id: number, name: string },
+  funder?: { id: number, name: string },
   callback: () => void
 }
 
-export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
+export function FormDialog({ document, lda, ldas, fund, funder, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false)
 
   const tC = useTranslations('common')
 
-  const FormSchema = getFormSchema(document)
+  const hasEntityContext = !!(fund || funder)
+  const FormSchema = getFormSchema(document, hasEntityContext)
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       title: document ? document.title : "",
       description: document ? document?.description : "",
-      localDevelopmentAgencyId: document?.localDevelopmentAgencyId ?? lda?.id ?? 0,
+      localDevelopmentAgencyId: document?.localDevelopmentAgencyId ?? lda?.id,
       documentType: document ? document.documentType : undefined,
       validFromDate: document && document.validFromDate ? new Date(document.validFromDate) : new Date(),
       validUntilDate: document && document.validUntilDate ? new Date(document.validUntilDate) : new Date()
@@ -121,7 +126,17 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
     formData.append("description", data.description)
     formData.append("validFromDate", data.validFromDate.toISOString())
     formData.append("validUntilDate", data.validUntilDate.toISOString())
-    formData.append("localDevelopmentAgencyId", data.localDevelopmentAgencyId.toString())
+    formData.append("documentType", data.documentType)
+
+    if (data.localDevelopmentAgencyId) {
+      formData.append("ldaId", data.localDevelopmentAgencyId.toString())
+    }
+    if (fund) {
+      formData.append("fundId", fund.id.toString())
+    }
+    if (funder) {
+      formData.append("funderId", funder.id.toString())
+    }
 
     if (data.file instanceof File) {
       formData.append("file", data.file)
@@ -132,12 +147,23 @@ export function FormDialog({ document, lda, ldas, callback }: FormDialogProps) {
 
     const toastId = toast.loading(document ? "Updating document..." : "Creating document...")
 
-    await fetch(endpoint, {
-      method,
-      body: formData,
-    })
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        body: formData,
+      })
 
-    toast.success(document ? "Document updated" : "Document created", { id: toastId })
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || "Failed to save document")
+      }
+
+      toast.success(document ? "Document updated" : "Document created", { id: toastId })
+    } catch (error) {
+      console.error("Error saving document:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to save document", { id: toastId })
+      return
+    }
     callback()
   }
 
