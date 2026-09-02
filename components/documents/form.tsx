@@ -33,14 +33,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { CalendarIcon, PencilIcon, PlusIcon } from "lucide-react"
+import { PencilIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
 import { LocalDevelopmentAgency, Document } from "@prisma/client"
 import { useTranslations } from "next-intl"
 import { DocumentTypeEnum } from "@/types/formSchemas"
-import { format } from "date-fns"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { Calendar } from "../ui/calendar"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 
 const getFormSchema = (document?: Document, hasEntityContext?: boolean) => {
@@ -51,12 +48,6 @@ const getFormSchema = (document?: Document, hasEntityContext?: boolean) => {
       ? z.coerce.number().optional()
       : z.coerce.number({ required_error: "Please select a local development agency." }),
     documentType: DocumentTypeEnum,
-    validFromDate: z.date({ required_error: "Please select a valid from." }).refine(date => date !== undefined, {
-      message: "Valid from is required."
-    }),
-    validUntilDate: z.date({ required_error: "Please select a valid until." }).refine(date => date !== undefined, {
-      message: "Valid until is required."
-    }),
     file: z
       .any()
       .optional()
@@ -114,8 +105,6 @@ export function FormDialog({ document, lda, ldas, fund, funder, callback }: Form
       description: document ? document?.description : "",
       localDevelopmentAgencyId: document?.localDevelopmentAgencyId ?? lda?.id,
       documentType: document ? document.documentType : undefined,
-      validFromDate: document && document.validFromDate ? new Date(document.validFromDate) : new Date(),
-      validUntilDate: document && document.validUntilDate ? new Date(document.validUntilDate) : new Date()
     },
   })
 
@@ -124,8 +113,6 @@ export function FormDialog({ document, lda, ldas, fund, funder, callback }: Form
     const formData = new FormData()
     formData.append("title", data.title)
     formData.append("description", data.description)
-    formData.append("validFromDate", data.validFromDate.toISOString())
-    formData.append("validUntilDate", data.validUntilDate.toISOString())
     formData.append("documentType", data.documentType)
 
     if (data.localDevelopmentAgencyId) {
@@ -258,72 +245,6 @@ export function FormDialog({ document, lda, ldas, fund, funder, callback }: Form
                 </FormItem>
               )}
             />
-
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="validFromDate"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Valid From</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="validUntilDate"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full">
-                    <FormLabel>Valid Until</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? format(field.value, "PPP") : "Pick a date"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent align="start" className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <FormField
               control={form.control}

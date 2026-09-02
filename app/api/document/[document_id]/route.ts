@@ -96,8 +96,6 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
 
   const title = form.get("title") as string
   const description = form.get("description") as string
-  const validFromDate = form.get("validFromDate") as string
-  const validUntilDate = form.get("validUntilDate") as string
   let uploadedBy = form.get("uploadedBy") as DocumentUploadType
   
   // Set default uploadedBy if not provided
@@ -173,15 +171,11 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
   const data: {
     title: string
     description: string
-    validFromDate: string
-    validUntilDate: string
     filePath?: string,
     uploadedBy: DocumentUploadType
   } = {
     title,
     description,
-    validFromDate,
-    validUntilDate,
     uploadedBy,
   }
 

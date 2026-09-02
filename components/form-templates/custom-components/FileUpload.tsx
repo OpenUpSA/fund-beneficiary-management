@@ -135,9 +135,6 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
 
       // Add destination-specific fields
       if (destination === 'document') {
-        // Document API requires these fields
-        formData.append('validFromDate', new Date().toISOString())
-        // Don't send validUntilDate if empty - Prisma expects valid ISO date or null
         formData.append('uploadedBy', 'LDA')
       }
       

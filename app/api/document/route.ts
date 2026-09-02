@@ -114,8 +114,6 @@ export async function POST(req: NextRequest) {
 
   const title = form.get("title") as string
   const description = form.get("description") as string
-  const validFromDate = form.get("validFromDate") as string
-  const validUntilDate = form.get("validUntilDate") as string
   const uploadedBy = form.get("uploadedBy") as DocumentUploadType
   const documentType = form.get("documentType") as string
 
@@ -192,14 +190,6 @@ export async function POST(req: NextRequest) {
   // Add document type only if it's a valid enum value
   if (documentType && Object.values(DocumentType).includes(documentType as DocumentType)) {
     data.documentType = documentType
-  }
-
-  // Add dates only if provided
-  if (validFromDate) {
-    data.validFromDate = validFromDate
-  }
-  if (validUntilDate) {
-    data.validUntilDate = validUntilDate
   }
 
   // Add entity connections
