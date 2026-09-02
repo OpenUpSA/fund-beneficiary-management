@@ -6,12 +6,27 @@ import { DocumentUploadType } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 const getFileNameFromPath = (filePath: string): string => {
   return filePath.split("/").pop() || filePath;
+}
+
+// Invalidate cached document lists for the entities a document is linked to
+const revalidateDocumentTags = (document: {
+  id: number
+  localDevelopmentAgencyId: number | null
+  fundId: number | null
+  funderId: number | null
+}) => {
+  revalidateTag('documents:list')
+  revalidateTag(`document:detail:${document.id}`)
+  if (document.localDevelopmentAgencyId) revalidateTag(`documents:lda:${document.localDevelopmentAgencyId}`)
+  if (document.fundId) revalidateTag(`documents:fund:${document.fundId}`)
+  if (document.funderId) revalidateTag(`documents:funder:${document.funderId}`)
 }
 
 export async function GET(req: NextRequest, { params }: { params: { document_id: string } }) {
@@ -184,6 +199,8 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
     return NextResponse.json({ error: "Record not found" }, { status: 404 })
   }
 
+  revalidateDocumentTags(record)
+
   return NextResponse.json(record)
 }
 
@@ -216,6 +233,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { document_
     const deletedDocument = await prisma.document.delete({
       where: { id: documentId }
     })
+
+    revalidateDocumentTags(deletedDocument)
 
     return NextResponse.json(deletedDocument)
   } catch {

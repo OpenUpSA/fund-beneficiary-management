@@ -10,6 +10,7 @@ import {
   FileCheck,
   Wallet,
   Calendar,
+  Camera,
   Database,
   MapPin,
   Upload,
@@ -40,6 +41,7 @@ type AdminTool =
   | 'focus-areas'
   | 'form-status'
   | 'funding-status'
+  | 'media-source-types'
   | 'report-schedules'
   | 'cache-management'
   | 'provinces'
@@ -112,6 +114,13 @@ const toolOptions: ToolOption[] = [
     category: 'data',
   },
   {
+    id: 'media-source-types',
+    title: 'Media Source Types',
+    description: 'Manage source type options for media',
+    icon: Camera,
+    category: 'data',
+  },
+  {
     id: 'provinces',
     title: 'Provinces & Districts',
     description: 'Manage provinces and their districts',
@@ -135,7 +144,7 @@ const toolOptions: ToolOption[] = [
 ]
 
 // Field configurations for CRUD panels
-const crudConfigs: Record<string, { apiEndpoint: string; fields: FieldConfig[]; title: string; description: string }> = {
+const crudConfigs: Record<string, { apiEndpoint: string; fields: FieldConfig[]; title: string; description: string; displayField?: string }> = {
   'development-stages': {
     apiEndpoint: '/api/development-stage',
     title: 'Development Stages',
@@ -173,6 +182,15 @@ const crudConfigs: Record<string, { apiEndpoint: string; fields: FieldConfig[]; 
       { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Description of this status' },
     ],
   },
+  'media-source-types': {
+    apiEndpoint: '/api/media-source-type',
+    title: 'Media Source Types',
+    description: 'Manage source type options for media (e.g. Uploaded, Report)',
+    displayField: 'title',
+    fields: [
+      { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'e.g., Uploaded' },
+    ],
+  },
 }
 
 export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
@@ -205,6 +223,7 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
       case 'focus-areas':
       case 'form-status':
       case 'funding-status':
+      case 'media-source-types':
         const config = crudConfigs[selectedTool]
         const toolOption = toolOptions.find(t => t.id === selectedTool)
         return (
@@ -214,6 +233,7 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
             icon={toolOption?.icon || Layers}
             apiEndpoint={config.apiEndpoint}
             fields={config.fields}
+            displayField={config.displayField}
             onBack={() => setSelectedTool(null)}
           />
         )

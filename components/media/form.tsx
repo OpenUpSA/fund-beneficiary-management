@@ -96,6 +96,10 @@ export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, c
   const hasEntityContext = !!(fund || funder)
   const FormSchema = getFormSchema(media, hasEntityContext)
 
+  // Manual uploads default to the "Uploaded" source type (created on demand by
+  // /api/media-source-type); the user can still pick a different one.
+  const uploadedSourceTypeId = mediaSourceTypes?.find((sourceType) => sourceType.title === "Uploaded")?.id
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -103,7 +107,9 @@ export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, c
       description: media ? media?.description : "",
       localDevelopmentAgencyId: media?.localDevelopmentAgencyId ?? lda?.id,
       mediaType: media ? media.mediaType : undefined,
-      mediaSourceTypeId: media && media.mediaSourceTypeId !== null ? media.mediaSourceTypeId : undefined,
+      mediaSourceTypeId: media
+        ? (media.mediaSourceTypeId !== null ? media.mediaSourceTypeId : undefined)
+        : uploadedSourceTypeId,
     },
   })
 
@@ -156,7 +162,7 @@ export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, c
         description: "",
         localDevelopmentAgencyId: lda?.id,
         mediaType: undefined,
-        mediaSourceTypeId: undefined,
+        mediaSourceTypeId: uploadedSourceTypeId,
       });
     }
   }

@@ -4,7 +4,8 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { DocumentUploadType } from "@prisma/client"
+import { DocumentType, DocumentUploadType } from "@prisma/client"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -116,6 +117,7 @@ export async function POST(req: NextRequest) {
   const validFromDate = form.get("validFromDate") as string
   const validUntilDate = form.get("validUntilDate") as string
   const uploadedBy = form.get("uploadedBy") as DocumentUploadType
+  const documentType = form.get("documentType") as string
 
   // Get entity IDs from form data
   const ldaIdStr = form.get("ldaId") as string
@@ -187,6 +189,11 @@ export async function POST(req: NextRequest) {
     createdBy: { connect: { id: parseInt(user.id as string) } }
   }
 
+  // Add document type only if it's a valid enum value
+  if (documentType && Object.values(DocumentType).includes(documentType as DocumentType)) {
+    data.documentType = documentType
+  }
+
   // Add dates only if provided
   if (validFromDate) {
     data.validFromDate = validFromDate
@@ -221,6 +228,12 @@ export async function POST(req: NextRequest) {
   if (!record) {
     return NextResponse.json({ error: "Record not found" }, { status: 404 })
   }
+
+  // Invalidate cached document lists for the linked entities
+  revalidateTag('documents:list')
+  if (ldaId) revalidateTag(`documents:lda:${ldaId}`)
+  if (fundId) revalidateTag(`documents:fund:${fundId}`)
+  if (funderId) revalidateTag(`documents:funder:${funderId}`)
 
   return NextResponse.json(record);
 }
