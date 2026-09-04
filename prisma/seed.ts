@@ -738,8 +738,6 @@ async function main() {
         filePath: await uploadFile('db/seed/documents/Chairpersons-Report-2021_v4_20June.pdf'),
         localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
         documentType: 'DOC',
-        validFromDate: new Date(new Date().setMonth(new Date().getMonth() - 3)),
-        validUntilDate: new Date(new Date().setMonth(new Date().getMonth() + 3))
       }
     })
 
