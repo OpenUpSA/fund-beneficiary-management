@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -54,6 +55,7 @@ const cacheTags: CacheTag[] = [
 ]
 
 export function CacheManagementPanel({ onBack }: CacheManagementPanelProps) {
+  const router = useRouter()
   const [flushing, setFlushing] = useState<string | null>(null)
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
@@ -73,6 +75,7 @@ export function CacheManagementPanel({ onBack }: CacheManagementPanelProps) {
         throw new Error(error.error || 'Failed to flush cache')
       }
 
+      router.refresh()
       toast.success(`Cache "${tag}" flushed successfully`)
     } catch (error) {
       console.error('Error flushing cache:', error)
@@ -98,6 +101,7 @@ export function CacheManagementPanel({ onBack }: CacheManagementPanelProps) {
         throw new Error(error.error || 'Failed to flush all caches')
       }
 
+      router.refresh()
       toast.success('All caches flushed successfully')
     } catch (error) {
       console.error('Error flushing all caches:', error)
