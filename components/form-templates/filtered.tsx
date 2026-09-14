@@ -8,6 +8,11 @@ import { Link } from "@/i18n/routing"
 import { FilterBar } from "@/components/ui/filter-bar"
 import { FilterOption } from "@/components/ui/filter-button"
 import { FormTemplateWithRelations } from "@/types/models"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreHorizontal, Trash2 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
+import { DeleteDialog } from "./delete"
 
 // Acronyms that should stay fully uppercased when formatting category slugs.
 const CATEGORY_ACRONYMS = new Set(["dft", "fris", "lda", "scat", "npo", "bpo", "fbo"])
@@ -31,6 +36,9 @@ interface Props {
 }
 
 export function FilteredFormTemplates({ formTemplates }: Props) {
+  const { isSuperUser } = usePermissions()
+  const canDelete = isSuperUser()
+  const [templateToDelete, setTemplateToDelete] = useState<FormTemplateWithRelations | null>(null)
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
 
   const typeOptions: FilterOption[] = useMemo(() => [
@@ -98,6 +106,7 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
                 <TableHead>Status</TableHead>
                 <TableHead>Usage</TableHead>
                 <TableHead>Submitted</TableHead>
+                {canDelete && <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,11 +130,33 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
                   <TableCell>
                     {formTemplate.localDevelopmentAgencyForms.filter((f) => f.submitted).length}
                   </TableCell>
+                  {canDelete && (
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Actions for {formTemplate.name}</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem onSelect={() => setTemplateToDelete(formTemplate)}>
+                              <span className="flex items-center gap-2 text-destructive hover:cursor-pointer">
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </span>
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
+                  <TableCell colSpan={canDelete ? 7 : 6} className="text-center text-muted-foreground py-6">
                     No form templates match the selected filters.
                   </TableCell>
                 </TableRow>
@@ -134,6 +165,14 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
           </Table>
         </CardContent>
       </Card>
+      {templateToDelete && (
+        <DeleteDialog
+          formTemplate={templateToDelete}
+          open
+          onOpenChange={(open) => !open && setTemplateToDelete(null)}
+          onDeleted={() => setTemplateToDelete(null)}
+        />
+      )}
     </div>
   )
 }
