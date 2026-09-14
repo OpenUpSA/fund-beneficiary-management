@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDownIcon, CopyIcon, PencilIcon, PlusIcon } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { FormTemplate } from "@prisma/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Combobox } from "@/components/ui/combobox"
@@ -155,6 +156,7 @@ interface FormDialogProps {
 // Edit Form Template Dialog (used when editing existing template)
 export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps) {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
 
   const defaultSidebarConfig = { amount: true, status: true, startDate: true, endDate: true, dueDate: true }
   const parsedSidebarConfig = formTemplate?.sidebarConfig
@@ -189,20 +191,34 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
 
     if (formTemplate) {
       const toastId = toast.loading('Updating form template...')
-      await fetch(`/api/form-template/${formTemplate?.id}`, {
+      const response = await fetch(`/api/form-template/${formTemplate?.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast.success('Form template updated', { id: toastId })
+
+      if (response.ok) {
+        router.refresh()
+        toast.success('Form template updated', { id: toastId })
+      } else {
+        const error = await response.json().catch(() => null)
+        toast.error(error?.error || 'Failed to update form template', { id: toastId })
+      }
     } else {
       const toastId = toast.loading('Creating form template...')
-      await fetch(`/api/form-template/`, {
+      const response = await fetch(`/api/form-template/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      toast.success('Form template created', { id: toastId })
+
+      if (response.ok) {
+        router.refresh()
+        toast.success('Form template created', { id: toastId })
+      } else {
+        const error = await response.json().catch(() => null)
+        toast.error(error?.error || 'Failed to create form template', { id: toastId })
+      }
     }
   }
 
@@ -424,6 +440,7 @@ interface CloneDialogProps {
 function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
   const [cloneName, setCloneName] = useState("")
+  const router = useRouter()
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId)
@@ -449,6 +466,7 @@ function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
     })
 
     if (res.ok) {
+      router.refresh()
       toast.success('Form template cloned', { id: toastId })
       setSelectedTemplate("")
       setCloneName("")
@@ -560,6 +578,7 @@ interface CreateNewTemplateFormProps {
 
 function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormProps) {
   const defaultSidebarConfig = { amount: true, status: true, startDate: true, endDate: true, dueDate: true }
+  const router = useRouter()
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -580,12 +599,19 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     onClose()
     const toastId = toast.loading('Creating form template...')
-    await fetch(`/api/form-template/`, {
+    const response = await fetch(`/api/form-template/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
-    toast.success('Form template created', { id: toastId })
+
+    if (response.ok) {
+      router.refresh()
+      toast.success('Form template created', { id: toastId })
+    } else {
+      const error = await response.json().catch(() => null)
+      toast.error(error?.error || 'Failed to create form template', { id: toastId })
+    }
   }
 
   return (
