@@ -18,6 +18,7 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { serializeFormPeriodDate } from "@/lib/form-period-dates"
 
 interface CreateFormPanelProps {
   ldas: LocalDevelopmentAgencyListItem[]
@@ -79,10 +80,10 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
         basePayload.dueDate = dueDate.toISOString()
       }
       if (sidebarConfig.startDate && fundingStart) {
-        basePayload.fundingStart = fundingStart.toISOString()
+        basePayload.fundingStart = serializeFormPeriodDate(fundingStart)
       }
       if (sidebarConfig.endDate && fundingEnd) {
-        basePayload.fundingEnd = fundingEnd.toISOString()
+        basePayload.fundingEnd = serializeFormPeriodDate(fundingEnd)
       }
 
       const results = await Promise.allSettled(

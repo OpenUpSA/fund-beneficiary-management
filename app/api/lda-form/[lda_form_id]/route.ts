@@ -12,6 +12,7 @@ import {
 } from "@/lib/form-validation/validate-submission";
 import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
+import { revalidateTag } from "next/cache";
 
 
 export const dynamic = "force-dynamic"
@@ -364,6 +365,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
         }
       }
     });
+
+    if (data.fundingStart || data.fundingEnd) {
+      revalidateTag('lda-forms:list')
+    }
 
     // Handle linked form based on status changes
     if (updatedRecord.formTemplate?.linkedFormTemplateId) {

@@ -52,54 +52,44 @@ export function getPeriodLabel(frequency: ReportFrequency, period: number): stri
   }
 }
 
+// Period boundaries are calendar days stored at UTC midnight (the same
+// convention as serializeFormPeriodDate), so they display and count the same
+// way regardless of the server or browser timezone. periodEnd is the last day
+// of the period, not an end-of-day timestamp.
+const utcDay = (year: number, month: number, day: number): Date =>
+  new Date(Date.UTC(year, month, day))
+
 /**
  * Get period date range for a given frequency, year, and period number
  */
 export function getPeriodDateRange(frequency: ReportFrequency, year: number, period: number): { start: Date; end: Date } {
   switch (frequency) {
     case "MONTHLY":
-      const monthStart = new Date(year, period - 1, 1)
-      const monthEnd = new Date(year, period, 0, 23, 59, 59, 999)
-      return { start: monthStart, end: monthEnd }
-    
+      return { start: utcDay(year, period - 1, 1), end: utcDay(year, period, 0) }
+
     case "QUARTERLY":
       const quarterStartMonth = (period - 1) * 3
-      const quarterStart = new Date(year, quarterStartMonth, 1)
-      const quarterEnd = new Date(year, quarterStartMonth + 3, 0, 23, 59, 59, 999)
-      return { start: quarterStart, end: quarterEnd }
-    
+      return { start: utcDay(year, quarterStartMonth, 1), end: utcDay(year, quarterStartMonth + 3, 0) }
+
     case "BIANNUALLY":
       if (period === 1) {
-        return {
-          start: new Date(year, 0, 1),
-          end: new Date(year, 6, 0, 23, 59, 59, 999)
-        }
+        return { start: utcDay(year, 0, 1), end: utcDay(year, 6, 0) }
       } else {
-        return {
-          start: new Date(year, 6, 1),
-          end: new Date(year, 12, 0, 23, 59, 59, 999)
-        }
+        return { start: utcDay(year, 6, 1), end: utcDay(year, 12, 0) }
       }
-    
+
     case "ANNUALLY":
-      return {
-        start: new Date(year, 0, 1),
-        end: new Date(year, 12, 0, 23, 59, 59, 999)
-      }
     default:
-      return {
-        start: new Date(year, 0, 1),
-        end: new Date(year, 12, 0, 23, 59, 59, 999)
-      }
+      return { start: utcDay(year, 0, 1), end: utcDay(year, 12, 0) }
   }
 }
 
 /**
- * Add days to a date
+ * Add days to a date (UTC arithmetic so UTC-midnight days stay at midnight)
  */
 export function addDays(date: Date, days: number): Date {
   const result = new Date(date)
-  result.setDate(result.getDate() + days)
+  result.setUTCDate(result.getUTCDate() + days)
   return result
 }
 

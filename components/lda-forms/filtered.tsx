@@ -6,6 +6,7 @@ import { useState, useCallback, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table"
 import { LocalDevelopmentAgencyFormListItem, LocalDevelopmentAgencyFull, FormTemplateWithRelations } from "@/types/models"
 import { format } from "date-fns"
+import { formPeriodDateForPicker } from "@/lib/form-period-dates"
 import {
   ChevronsUpDownIcon,
   ChevronUpIcon,
@@ -373,10 +374,10 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                     {getStatusBadge()}
                   </TableCell>
                   <TableCell>
-                    {ldaForm.fundingStart ? format(ldaForm.fundingStart, 'MMM d, yyyy') : "-"}
+                    {ldaForm.fundingStart ? format(formPeriodDateForPicker(ldaForm.fundingStart)!, 'MMM d, yyyy') : "-"}
                   </TableCell>
                   <TableCell>
-                    {ldaForm.fundingEnd ? format(ldaForm.fundingEnd, 'MMM d, yyyy') : "-"}
+                    {ldaForm.fundingEnd ? format(formPeriodDateForPicker(ldaForm.fundingEnd)!, 'MMM d, yyyy') : "-"}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

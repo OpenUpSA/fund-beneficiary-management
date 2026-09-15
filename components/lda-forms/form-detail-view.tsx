@@ -18,6 +18,7 @@ import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
 import { canFillForm, canApproveForm } from "@/lib/permissions"
+import { formPeriodDateForPicker, serializeFormPeriodDate } from "@/lib/form-period-dates"
 // import { usePermissions } from "@/hooks/use-permissions"
 import { Input } from "@/components/ui/input"
 import { 
@@ -119,8 +120,8 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     defaultValues: {
       formStatusLabel: ldaForm.formStatus?.label || '',
       amount: `R ${ldaForm.amount || 0}`,
-      fundingStart: ldaForm.fundingStart ? new Date(ldaForm.fundingStart) : undefined,
-      fundingEnd: ldaForm.fundingEnd ? new Date(ldaForm.fundingEnd) : undefined
+      fundingStart: formPeriodDateForPicker(ldaForm.fundingStart),
+      fundingEnd: formPeriodDateForPicker(ldaForm.fundingEnd)
     }
   })
 
@@ -141,6 +142,8 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
         // Find the status label from the formStatuses array
         const statusLabel = ldaForm.formStatus?.label || ''
         data.formStatus = statusLabel
+      } else if ((field === 'fundingStart' || field === 'fundingEnd') && value instanceof Date) {
+        data[field] = serializeFormPeriodDate(value)
       } else {
         data[field] = value
       }
@@ -162,7 +165,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
         }
         const displayName = fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1)
         toast.success(`${displayName} updated successfully`)
-        dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
+        await dataChanged(ldaForm.localDevelopmentAgencyId, ldaForm.id)
         return true
       } else {
         const errorData = await response.json()

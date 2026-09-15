@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { formPeriodDateForPicker, serializeFormPeriodDate } from "@/lib/form-period-dates"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -182,8 +183,8 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
   const handleEditSchedule = (schedule: PeriodSchedule) => {
     setEditingSchedule(schedule)
     setEditForm({
-      availableDate: new Date(schedule.availableDate),
-      dueDate: new Date(schedule.dueDate),
+      availableDate: formPeriodDateForPicker(schedule.availableDate),
+      dueDate: formPeriodDateForPicker(schedule.dueDate),
       note: schedule.note || ""
     })
     setEditDialogOpen(true)
@@ -205,8 +206,8 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          availableDate: editForm.availableDate?.toISOString(),
-          dueDate: editForm.dueDate?.toISOString(),
+          availableDate: editForm.availableDate ? serializeFormPeriodDate(editForm.availableDate) : undefined,
+          dueDate: editForm.dueDate ? serializeFormPeriodDate(editForm.dueDate) : undefined,
           note: editForm.note || null,
           isCustomized: true
         })
@@ -313,8 +314,8 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
                           <TableCell>
                             {schedule.config.frequency === 'QUARTERLY' ? `Q${schedule.period}` : `P${schedule.period}`} {schedule.year}
                           </TableCell>
-                          <TableCell>{format(new Date(schedule.availableDate), 'MMM d, yyyy')}</TableCell>
-                          <TableCell>{format(new Date(schedule.dueDate), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{format(formPeriodDateForPicker(schedule.availableDate)!, 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{format(formPeriodDateForPicker(schedule.dueDate)!, 'MMM d, yyyy')}</TableCell>
                           <TableCell>
                             {schedule.isCustomized ? (
                               <Badge variant="secondary">Customized</Badge>
@@ -356,9 +357,9 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
                             {schedule.config.frequency === 'QUARTERLY' ? `Q${schedule.period}` : `P${schedule.period}`} {schedule.year}
                           </TableCell>
                           <TableCell>
-                            {format(new Date(schedule.periodStart), 'MMM d')} - {format(new Date(schedule.periodEnd), 'MMM d, yyyy')}
+                            {format(formPeriodDateForPicker(schedule.periodStart)!, 'MMM d')} - {format(formPeriodDateForPicker(schedule.periodEnd)!, 'MMM d, yyyy')}
                           </TableCell>
-                          <TableCell>{format(new Date(schedule.dueDate), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{format(formPeriodDateForPicker(schedule.dueDate)!, 'MMM d, yyyy')}</TableCell>
                           <TableCell>
                             <Badge variant="outline">Completed</Badge>
                           </TableCell>
@@ -410,7 +411,7 @@ export function ReportSchedulesPanel({ ldas, onBack }: ReportSchedulesPanelProps
                           <TableCell>{report.localDevelopmentAgency?.name}</TableCell>
                           <TableCell>{report.title}</TableCell>
                           <TableCell>
-                            {format(new Date(report.fundingStart), 'MMM d')} - {format(new Date(report.fundingEnd), 'MMM d, yyyy')}
+                            {format(formPeriodDateForPicker(report.fundingStart)!, 'MMM d')} - {format(formPeriodDateForPicker(report.fundingEnd)!, 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell>{format(new Date(report.dueDate), 'MMM d, yyyy')}</TableCell>
                           <TableCell>

@@ -41,7 +41,10 @@ const NEUTRAL_VALUES: PlaceholderValues = {
 const toValidDate = (value?: Date | string | null): Date | null => {
   if (!value) return null
   const date = new Date(value)
-  return isNaN(date.getTime()) ? null : date
+  if (isNaN(date.getTime())) return null
+  // Funding dates are calendar days stored at UTC midnight. Materialize the UTC
+  // day locally so date-fns formatting and month arithmetic ignore server TZ.
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
 }
 
 const MONTH_WORDS = [

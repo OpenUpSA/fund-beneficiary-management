@@ -20,6 +20,8 @@ yarn db:studio        # Open Prisma Studio GUI
 # Utilities
 yarn create-superuser # Interactively create an admin user
 yarn assign-pos       # Assign programme officers to LDAs from a CSV (dry run by default)
+yarn normalize-period-dates # One-off: move legacy funding/schedule dates to UTC midnight (dry run by default)
+yarn test             # Run the script-based tests in scripts/tests/
 ```
 
 `yarn assign-pos` writes to the database — see [docs/ASSIGN_PROGRAMME_OFFICERS.md](docs/ASSIGN_PROGRAMME_OFFICERS.md).
@@ -30,7 +32,7 @@ at most one LDA — `userId` is unique). Reassigning an LDA's PO revokes the pre
 officer's access but leaves members untouched. `ldaIds` is baked into the JWT at sign-in,
 so membership/PO changes take effect on the affected user's next sign-in.
 
-There is no test suite configured. **Always run `yarn build` after making code changes** — it is the primary correctness check (TypeScript type errors only surface at build time, not during `yarn dev`).
+`yarn test` runs a handful of plain-Node assertion scripts in `scripts/tests/` (no test framework). **Always run `yarn build` after making code changes** — it is the primary correctness check (TypeScript type errors only surface at build time, not during `yarn dev`).
 
 ## Architecture
 
