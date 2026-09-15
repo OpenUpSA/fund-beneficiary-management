@@ -5,6 +5,7 @@ import { FormPreviewActions } from "@/components/lda-forms/form-preview-actions"
 import { RepeatablePreview, RepeatableItem, RepeatableSubField, SubFieldOption } from "@/components/lda-forms/repeatable-preview"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { format } from "date-fns"
+import { formPeriodDateForPicker } from "@/lib/form-period-dates"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { FileIcon } from "lucide-react"
@@ -469,10 +470,10 @@ export default async function FormPreviewPage({ params }: Props) {
   const logoPath = process.env.NEXT_PUBLIC_LOGO_PATH || "/images/soarlogo.svg"
 
   const fundingStart = ldaForm.fundingStart
-    ? format(new Date(ldaForm.fundingStart as unknown as string), "d MMM yyyy")
+    ? format(formPeriodDateForPicker(ldaForm.fundingStart)!, "d MMM yyyy")
     : null
   const fundingEnd = ldaForm.fundingEnd
-    ? format(new Date(ldaForm.fundingEnd as unknown as string), "d MMM yyyy")
+    ? format(formPeriodDateForPicker(ldaForm.fundingEnd)!, "d MMM yyyy")
     : null
   const dateRange = fundingStart && fundingEnd ? `${fundingStart} – ${fundingEnd}` : fundingStart ?? fundingEnd ?? null
   const heading = dateRange ? `${ldaForm.formTemplate.name} (${dateRange})` : ldaForm.formTemplate.name

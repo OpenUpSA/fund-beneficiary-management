@@ -29,6 +29,7 @@ Form templates are JSON files that define the structure, fields, and behavior of
 | DFT Report | `dft-report.json` | Development Fund Training report |
 | Field Visit Report | `field-visit-report.json` | Site visit documentation |
 | Grant Funding Application | `grant-funding-application.json` | Grant application form |
+| Grant Funding Application (2027) | `grant-funding-application-2027.json` | SOAR 2027 cycle; see [release notes](soar-grant-application-2027.md) |
 | Narrative Report | `narrative-report.json` | Periodic narrative reporting |
 
 ---

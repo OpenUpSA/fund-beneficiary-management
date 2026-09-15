@@ -32,6 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { format } from "date-fns"
 import { Calendar } from "../ui/calendar";
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { formPeriodDateForPicker, serializeFormPeriodDate } from "@/lib/form-period-dates"
 
 interface FormDialogProps {
   formTemplates: FormTemplateWithRelations[]
@@ -61,8 +62,8 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
       localDevelopmentAgencyId: ldaForm ? ldaForm.localDevelopmentAgencyId : lda ? lda.id : 0,
       formTemplateId: ldaForm ? ldaForm.formTemplateId : 0,
       dueDate: ldaForm?.dueDate ? new Date(ldaForm.dueDate) : undefined,
-      fundingStart: ldaForm?.fundingStart ? new Date(ldaForm.fundingStart) : undefined,
-      fundingEnd: ldaForm?.fundingEnd ? new Date(ldaForm.fundingEnd) : undefined,
+      fundingStart: formPeriodDateForPicker(ldaForm?.fundingStart),
+      fundingEnd: formPeriodDateForPicker(ldaForm?.fundingEnd),
       formData: ldaForm?.formData ? ldaForm.formData : {},
     },
   })
@@ -78,6 +79,11 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
   const endDateLabel = isReportType ? 'Reporting End' : 'Funding End'
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const payload = {
+      ...data,
+      fundingStart: data.fundingStart ? serializeFormPeriodDate(data.fundingStart) : data.fundingStart,
+      fundingEnd: data.fundingEnd ? serializeFormPeriodDate(data.fundingEnd) : data.fundingEnd,
+    }
     setOpen(false)
     let toastId: string | number | undefined
     
@@ -88,7 +94,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
         const response = await fetch(`/api/lda-form/${ldaForm.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         })
         
         if (!response.ok) {
@@ -104,7 +110,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
         const response = await fetch(`/api/lda-form`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         })
         if (!response.ok) {
           throw new Error('Failed to add form')
