@@ -18,6 +18,7 @@ try {
       process.env.TZ = serverTZ
       const values = buildPlaceholderValues({ fundingStart: start, fundingEnd: end })
       assert.equal(values.year, "2027", `${browserTZ} -> ${serverTZ}`)
+      assert.equal(values.previous_year, "2026")
       assert.equal(values.period_months, "12")
       assert.equal(values.period_months_words, "twelve (12)")
       assert.equal(values.period_start, "1 January 2027")
@@ -60,6 +61,7 @@ try {
     assert.equal(buildPlaceholderValues({ fundingStart: "invalid", fundingEnd: "2027-12-31" }).year, "2027")
     assert.equal(buildPlaceholderValues({ fundingStart: "2027-01-01" }).period_months, "several")
     assert.equal(buildPlaceholderValues().year, "the funding year")
+    assert.equal(buildPlaceholderValues().previous_year, "the previous year")
     assert.equal(formPeriodDateForPicker("invalid"), undefined)
     assert.equal(formPeriodDateForPicker(null), undefined)
   }

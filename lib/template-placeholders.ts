@@ -6,6 +6,7 @@ import { format, differenceInCalendarMonths } from "date-fns"
 //   {{start_month}} / {{end_month}}             — month names ("January", "September")
 //   {{start_month_short}} / {{end_month_short}} — abbreviated ("Jan", "Sep")
 //   {{year}}                                    — year of the period start (fallback: end)
+//   {{previous_year}}                           — the year before {{year}} ("amounts accessed in 2026")
 //   {{period_months}}                           — calendar months in the period, inclusive ("9")
 //   {{period_months_words}}                     — same count as word + digit ("nine (9)")
 // Substitution happens server-side wherever a form instance's template is
@@ -21,6 +22,7 @@ export interface PlaceholderValues {
   start_month_short: string
   end_month_short: string
   year: string
+  previous_year: string
   period_months: string
   period_months_words: string
 }
@@ -33,6 +35,7 @@ const NEUTRAL_VALUES: PlaceholderValues = {
   start_month_short: "the first month",
   end_month_short: "the last month",
   year: "the funding year",
+  previous_year: "the previous year",
   period_months: "several",
   period_months_words: "several",
 }
@@ -75,13 +78,14 @@ export function buildPlaceholderValues(dates?: {
     start_month_short: start ? format(start, "MMM") : NEUTRAL_VALUES.start_month_short,
     end_month_short: end ? format(end, "MMM") : NEUTRAL_VALUES.end_month_short,
     year: String(yearBasis!.getFullYear()),
+    previous_year: String(yearBasis!.getFullYear() - 1),
     period_months: monthCount !== null ? String(monthCount) : NEUTRAL_VALUES.period_months,
     period_months_words: monthCount !== null ? monthsAsWords(monthCount) : NEUTRAL_VALUES.period_months_words,
   }
 }
 
 const PLACEHOLDER_RE =
-  /\{\{\s*(period_start|period_end|start_month|end_month|start_month_short|end_month_short|year|period_months|period_months_words)\s*\}\}/g
+  /\{\{\s*(period_start|period_end|start_month|end_month|start_month_short|end_month_short|year|previous_year|period_months|period_months_words)\s*\}\}/g
 
 export function substitutePlaceholders(text: string, values: PlaceholderValues): string {
   return text.replace(PLACEHOLDER_RE, (_, key: keyof PlaceholderValues) => values[key])
