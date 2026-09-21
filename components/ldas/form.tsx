@@ -36,6 +36,7 @@ import { OperationsTab } from "./manage-lda/operations"
 import { StaffTab } from "./manage-lda/staff"
 import { AccessTab } from "./manage-lda/access"
 import { ManageTab } from "./manage-lda/manage"
+import { LogoUpload, LogoChange } from "./manage-lda/logo-upload"
 
 
 interface FormDialogProps {
@@ -51,6 +52,7 @@ interface FormDialogProps {
 
 export function FormDialog({ lda, focusAreas, developmentStages, programmeOfficers, provinces, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false);
+  const [logoChange, setLogoChange] = useState<LogoChange>({});
 
   const { canCreateLDA, canManageLDA, isSuperUser } = usePermissions()
   
@@ -205,16 +207,25 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
   })
 
   async function onSubmit(data: FormValues) {
-    setOpen(false)
     let toastId;
 
     try {
       if (lda) {
         toastId = toast.loading(LDA_TERMINOLOGY.updatingMessage)
+        let body: BodyInit = JSON.stringify(data)
+        let headers: HeadersInit | undefined = { "Content-Type": "application/json" }
+        if (logoChange.file || logoChange.remove) {
+          const multipart = new FormData()
+          multipart.set("data", JSON.stringify(data))
+          if (logoChange.file) multipart.set("logo", logoChange.file)
+          if (logoChange.remove) multipart.set("removeLogo", "true")
+          body = multipart
+          headers = undefined
+        }
         const response = await fetch(`/api/lda/${lda.id}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          headers,
+          body,
         })
         
         if (!response.ok) {
@@ -224,7 +235,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         
         toast.dismiss(toastId)
         toast.success(LDA_TERMINOLOGY.updatedSuccess)
-        callback(lda.id)
+        await callback(lda.id)
       } else {
         toastId = toast.loading(LDA_TERMINOLOGY.creatingMessage)
         const response = await fetch(`/api/lda`, {
@@ -240,14 +251,22 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
 
         toast.dismiss(toastId)
         toast.success(LDA_TERMINOLOGY.createdSuccess)
-        callback()
+        await callback()
       }
+      setLogoChange({})
+      setOpen(false)
       
     } catch (error) {
       toast.dismiss(toastId)
       toast.error(error instanceof Error ? error.message : 'An unexpected error occurred')
       setOpen(true) // Reopen the dialog to allow corrections
     }
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (form.formState.isSubmitting) return
+    setLogoChange({})
+    setOpen(nextOpen)
   }
 
   // Permission checks
@@ -262,7 +281,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="gap-2 items-center" size="default">
           {lda ? <>
@@ -321,6 +340,15 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
                       focusAreas={focusAreas}
                       developmentStages={developmentStages}
                       programmeOfficers={programmeOfficers}
+                      logoField={lda && (
+                        <LogoUpload
+                          currentLogo={lda.logo}
+                          name={lda.name}
+                          value={logoChange}
+                          onChange={setLogoChange}
+                          disabled={form.formState.isSubmitting}
+                        />
+                      )}
                     />
                   </TabsContent>
                   <TabsContent value="details">
@@ -355,8 +383,8 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
               </Tabs>
             </div>
             <DialogFooter className="flex sm:justify-between flex-col sm:flex-row gap-2 px-4 pb-4 pt-2 border-t mt-auto">
-              <Button type="button" onClick={() => setOpen(false)} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
-              <Button type="submit" className="sm:order-2 order-1">{lda ? "Save and close" : LDA_TERMINOLOGY.createLabel}</Button>
+              <Button type="button" onClick={() => handleOpenChange(false)} disabled={form.formState.isSubmitting} variant="secondary" className="sm:order-1 order-2">Cancel</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting} className="sm:order-2 order-1">{form.formState.isSubmitting ? "Saving…" : lda ? "Save and close" : LDA_TERMINOLOGY.createLabel}</Button>
             </DialogFooter>
           </form>
         </Form>

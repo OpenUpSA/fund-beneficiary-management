@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { 
   FormControl, 
   FormField, 
@@ -34,13 +35,15 @@ interface AdminTabProps {
   focusAreas: FocusArea[]
   developmentStages: DevelopmentStage[]
   programmeOfficers: UserWithLDAsBasic[]
+  logoField?: ReactNode
 }
 
 export function AdminTab({ 
   form, 
   focusAreas, 
   developmentStages, 
-  programmeOfficers 
+  programmeOfficers,
+  logoField,
 }: AdminTabProps) {
 
   return (
@@ -74,6 +77,8 @@ export function AdminTab({
           </FormItem>
         )}
       />
+      {logoField}
+
     <div className="space-y-2">
         <FormField
             control={form.control}

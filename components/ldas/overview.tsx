@@ -2,16 +2,15 @@
 
 import { Badge } from "../ui/badge"
 import { Card, CardContent, CardHeader } from "../ui/card"
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 import { LocalDevelopmentAgencyFull, FundFull } from "@/types/models"
 import { format } from "date-fns"
-import { DynamicIcon } from "../dynamicIcon"
 import dynamic from "next/dynamic"
 import { Suspense } from "react"
 import { AsyncFundList, FundListSkeleton } from "./fund-list"
 import { usePermissions } from "@/hooks/use-permissions"
 import { displayPlaceName } from "@/lib/place-names"
 import { formatRand } from "@/lib/currency"
+import { LDADetailsCard } from "./details-card"
 
 // Dynamically import the map component to avoid SSR issues with Leaflet
 const LDAMap = dynamic(
@@ -83,161 +82,135 @@ export const Overview: React.FC<Props> = ({ lda, funds }: Props) => {
     <div className="space-y-8">
       <h2 className="text-xl font-semibold">Organisational Overview</h2>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Focus & Funding Card */}
-        <Card className="border border-slate-300">
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-medium">Focus & Funding</h3>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Funding status:</span>
-              <Badge variant="outline" className="bg-blue-50">{lda.fundingStatus?.label || "Unknown"}</Badge>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Funding types:</span>
-              <div className="space-x-2">
-                <Badge variant="outline">Core</Badge>
-                <Badge variant="outline">Project</Badge>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Current core funding period:</span>
-              <span>{lda.fundingStart && lda.fundingEnd ? 
-                `${format(lda.fundingStart, 'dd/MM/yyyy')} - ${format(lda.fundingEnd, 'dd/MM/yyyy')}` : 
-                "Not specified"}
-              </span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Total funding rounds:</span>
-              <span>{fundingRounds}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Project funders:</span>
-              <div>
-                <Suspense fallback={<FundListSkeleton />}>
-                  <AsyncFundList 
-                    fundsPromise={funds} 
-                    canViewFunds={canViewFunds}
-                    ldaId={lda.id}
-                    ldaName={lda.name}
-                  />
-                </Suspense>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Focus area(s):</span>
-              <div className="flex gap-2">
-                {lda.focusAreas?.length > 0 ?
-                  lda.focusAreas.map(area => (
-                    <Tooltip key={area.id}>
-                      <TooltipTrigger asChild>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <DynamicIcon name={area.icon} size={16} />
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>{area.label}</TooltipContent>
-                    </Tooltip>
-                  )) :
-                  "None specified"}
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Development stage:</span>
-              <Badge variant="outline">{lda.developmentStage?.label || "Unknown"}</Badge>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Number of staff members:</span>
-              <span>{lda.staffMembers?.filter(sm => !sm.isCommittee).length || "0"}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Number of board members:</span>
-              <span>{lda.staffMembers?.filter(sm => sm.isCommittee).length || "0"}</span>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        <div className="min-w-0">
+          <LDADetailsCard lda={lda} />
+        </div>
 
-        {/* Location & Contact Card */}
-        <Card className="border border-slate-300">
-          <CardHeader className="pb-2">
-            <h3 className="text-lg font-medium">Location & Contact</h3>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            {/* Map */}
-            <div className="h-[200px] w-full rounded-md overflow-hidden border">
-              {lda.organisationDetail?.latitude && lda.organisationDetail?.longitude ? (
-                <LDAMap 
-                  ldas={[lda]} 
-                  height="200px" 
-                  width="100%" 
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center bg-gray-100 text-gray-500">
-                  No location data available
+        <div className="flex min-w-0 flex-col gap-6">
+          {/* Funding Card */}
+          <Card className="border border-slate-300">
+            <CardHeader className="pb-2">
+              <h3 className="text-lg font-medium">Funding</h3>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Funding status:</span>
+                <Badge variant="outline" className="bg-blue-50">{lda.fundingStatus?.label || "Unknown"}</Badge>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Funding types:</span>
+                <div className="space-x-2">
+                  <Badge variant="outline">Core</Badge>
+                  <Badge variant="outline">Project</Badge>
                 </div>
-              )}
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Address:</span>
-              <span className="text-right text-slate-700 underline">{formatAddress()}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Province:</span>
-              {lda.organisationDetail?.physicalProvince ? (
-                <Badge variant="outline">
-                  {displayPlaceName(lda.organisationDetail.physicalProvince)}
-                </Badge>
-              ) : (
-                <span>-</span>
-              )}
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Telephone:</span>
-              <span className="text-right text-slate-700">{lda.organisationDetail?.contactNumber || "-"}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Website:</span>
-              {lda.organisationDetail?.website ? (
-                <a 
-                  href={lda.organisationDetail.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-slate-700 underline"
-                >
-                  {lda.organisationDetail.website}
-                </a>
-              ) : (
-                <span>-</span>
-              )}
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-slate-900">Email:</span>
-              {lda.organisationDetail?.email ? (
-                <a 
-                  href={`mailto:${lda.organisationDetail.email}`} 
-                  className="text-slate-700 underline"
-                >
-                  {lda.organisationDetail.email}
-                </a>
-              ) : (
-                <span>-</span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Current core funding period:</span>
+                <span>{lda.fundingStart && lda.fundingEnd ?
+                  `${format(lda.fundingStart, 'dd/MM/yyyy')} - ${format(lda.fundingEnd, 'dd/MM/yyyy')}` :
+                  "Not specified"}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Total funding rounds:</span>
+                <span>{fundingRounds}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Project funders:</span>
+                <div className="min-w-0 break-words text-right">
+                  <Suspense fallback={<FundListSkeleton />}>
+                    <AsyncFundList
+                      fundsPromise={funds}
+                      canViewFunds={canViewFunds}
+                      ldaId={lda.id}
+                      ldaName={lda.name}
+                    />
+                  </Suspense>
+                </div>
+              </div>
+
+            </CardContent>
+          </Card>
+
+          {/* Location & Contact Card */}
+          <Card className="border border-slate-300">
+            <CardHeader className="pb-2">
+              <h3 className="text-lg font-medium">Location & Contact</h3>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              {/* Map */}
+              <div className="h-[200px] w-full rounded-md overflow-hidden border">
+                {lda.organisationDetail?.latitude && lda.organisationDetail?.longitude ? (
+                  <LDAMap
+                    ldas={[lda]}
+                    height="200px"
+                    width="100%"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-gray-100 text-gray-500">
+                    No location data available
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Address:</span>
+                <span className="text-right text-slate-700 underline">{formatAddress()}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Province:</span>
+                {lda.organisationDetail?.physicalProvince ? (
+                  <Badge variant="outline">
+                    {displayPlaceName(lda.organisationDetail.physicalProvince)}
+                  </Badge>
+                ) : (
+                  <span>-</span>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Telephone:</span>
+                <span className="text-right text-slate-700">{lda.organisationDetail?.contactNumber || "-"}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Website:</span>
+                {lda.organisationDetail?.website ? (
+                  <a
+                    href={lda.organisationDetail.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-slate-700 underline"
+                  >
+                    {lda.organisationDetail.website}
+                  </a>
+                ) : (
+                  <span>-</span>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-slate-900">Email:</span>
+                {lda.organisationDetail?.email ? (
+                  <a
+                    href={`mailto:${lda.organisationDetail.email}`}
+                    className="text-slate-700 underline"
+                  >
+                    {lda.organisationDetail.email}
+                  </a>
+                ) : (
+                  <span>-</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
       {/* Funding Overview Section */}

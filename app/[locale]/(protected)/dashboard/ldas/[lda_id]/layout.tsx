@@ -70,7 +70,7 @@ export default async function Layout({ children, params }: LDALayoutProps) {
       />
       
       <div className="flex flex-wrap items-center justify-between">
-        <h1 className="text-xl md:text-2xl font-semibold">{lda.name}</h1>
+        <h1 className="break-words text-xl md:text-2xl font-semibold">{lda.name}</h1>
         <div className="space-x-2">
           <FormDialog
             lda={lda}
