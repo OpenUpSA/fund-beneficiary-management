@@ -1,5 +1,9 @@
+"use client"
+
+import { useId, useState } from "react"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { DynamicIcon } from "@/components/dynamicIcon"
@@ -7,7 +11,18 @@ import { LDA_TERMINOLOGY, OrganisationStatus, RegistrationStatus } from "@/const
 import { LocalDevelopmentAgencyFull } from "@/types/models"
 import { LDALogo } from "./logo"
 
+const DESCRIPTION_PREVIEW_LENGTH = 250
+
 export function LDADetailsCard({ lda }: { lda: LocalDevelopmentAgencyFull }) {
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const descriptionId = useId()
+  const description = lda.about?.trim() ?? ""
+  const descriptionCharacters = Array.from(description)
+  const hasLongDescription = descriptionCharacters.length > DESCRIPTION_PREVIEW_LENGTH
+  const displayedDescription = hasLongDescription && !descriptionExpanded
+    ? `${descriptionCharacters.slice(0, DESCRIPTION_PREVIEW_LENGTH).join("").trimEnd()}…`
+    : description
+
   return (
     <Card className="border border-slate-300">
       <CardHeader className="pb-4">
@@ -24,9 +39,24 @@ export function LDADetailsCard({ lda }: { lda: LocalDevelopmentAgencyFull }) {
           </div>
         </div>
 
-        {lda.about?.trim() && (
+        {description && (
           <p className="whitespace-pre-line break-words text-sm leading-relaxed text-muted-foreground">
-            {lda.about}
+            <span id={descriptionId}>{displayedDescription}</span>
+            {hasLongDescription && (
+              <>
+                {" "}
+                <Button
+                  type="button"
+                  variant="link"
+                  className="inline h-auto p-0 align-baseline font-normal leading-[inherit] text-muted-foreground underline decoration-muted-foreground/50 underline-offset-4 hover:text-foreground"
+                  aria-expanded={descriptionExpanded}
+                  aria-controls={descriptionId}
+                  onClick={() => setDescriptionExpanded(expanded => !expanded)}
+                >
+                  {descriptionExpanded ? "View less" : "View more"}
+                </Button>
+              </>
+            )}
           </p>
         )}
 
