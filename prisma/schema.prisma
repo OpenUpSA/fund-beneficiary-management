@@ -166,6 +166,7 @@ model LocalDevelopmentAgency {
   id                         Int                          @id @default(autoincrement())
   name                       String                       @unique
   about                      String                       @default("")
+  logo                       String?
   totalFundingRounds         Int                          @default(0)
   amount                     Decimal?                     @db.Money
   fundingStart               DateTime                     @default(now())

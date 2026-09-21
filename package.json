@@ -18,7 +18,7 @@
     "create-superuser": "tsx ./scripts/create-superuser.ts",
     "assign-pos": "tsx ./scripts/assign-programme-officers.ts",
     "normalize-period-dates": "tsx ./scripts/normalize-period-dates.ts",
-    "test": "node -r tsx/cjs scripts/tests/form-period-dates.test.ts && node -r tsx/cjs scripts/tests/form-period-api.test.ts",
+    "test": "node -r tsx/cjs scripts/tests/form-period-dates.test.ts && node -r tsx/cjs scripts/tests/form-period-api.test.ts && node -r tsx/cjs scripts/tests/lda-logo-api.test.ts",
     "postinstall": "prisma generate",
     "next-build": "npx prisma generate && next build"
   },

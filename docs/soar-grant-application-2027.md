@@ -14,6 +14,11 @@ The existing `grant-funding-application.json` is unchanged.
   local government accountability questions as required textareas, consistent
   with the existing Strategic Focus Areas questions.
 - Retained the climate question and all existing prefills.
+- Added two Sustainability questions: whether the organisation has successfully
+  applied for FRIS and DFT (with FRIS and DFT amounts accessed in the previous
+  year shown when "Yes"), and whether it has accessed other SCAT funding (RACR,
+  micro and macro funds; YACC Funds; YAFA Funds shown when "Yes"). The amount
+  labels use `{{previous_year}}`, so a 2027 application asks for 2026 amounts.
 - Removed year suffixes from the four budget and expenditure field names.
   Renamed the two address `city` fields to `physicalCity` and `postalCity` so
   every field name in the new template is unique.

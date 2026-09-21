@@ -561,9 +561,87 @@
           },
           "required": true,
           "placeholder": "Describe your efforts to diversify funding sources beyond SCAT"
+        },
+        {
+          "name": "fris_dft_applied",
+          "type": "radio",
+          "label": "Has your organisation successfully applied for FRIS and DFT, as required by the SCAT funding agreement?",
+          "required": true,
+          "options": [
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
+          ]
+        },
+        {
+          "name": "fris_amount_accessed",
+          "type": "currency",
+          "label": "FRIS amount accessed in {{previous_year}}",
+          "required": true,
+          "placeholder": "R 0.00",
+          "show_if": {
+            "field": "fris_dft_applied",
+            "value": "yes"
+          }
+        },
+        {
+          "name": "dft_amount_accessed",
+          "type": "currency",
+          "label": "DFT amount accessed in {{previous_year}}",
+          "required": true,
+          "placeholder": "R 0.00",
+          "show_if": {
+            "field": "fris_dft_applied",
+            "value": "yes"
+          }
+        },
+        {
+          "name": "other_scat_funding_accessed",
+          "type": "radio",
+          "label": "Has your organisation accessed other SCAT funding?",
+          "required": true,
+          "options": [
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
+          ]
+        },
+        {
+          "name": "other_scat_funding_types",
+          "type": "multiselect",
+          "label": "Which other SCAT funding has your organisation accessed?",
+          "required": true,
+          "options": [
+            {
+              "label": "RACR, micro and macro funds",
+              "value": "racr_micro_macro"
+            },
+            {
+              "label": "YACC Funds",
+              "value": "yacc"
+            },
+            {
+              "label": "YAFA Funds",
+              "value": "yafa"
+            }
+          ],
+          "show_if": {
+            "field": "other_scat_funding_accessed",
+            "value": "yes"
+          }
         }
       ],
-      "notice": "This information has been automatically pulled from the information we have for your organisation in our system. If the details below are not correct, please get in touch with your programme officer to correct them."
+      "notice": "Where available, information has been prefilled from your organisation’s profile. Review these details and complete all remaining questions. If the prefilled details are incorrect, please contact your programme officer."
     },
     {
       "title": "Monitoring & Learning",

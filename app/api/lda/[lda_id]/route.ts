@@ -4,6 +4,9 @@ import { Prisma } from "@prisma/client";
 import { permissions } from "@/lib/permissions"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
+import imagekit from "@/lib/imagekit"
+import { hasLogoSignature, logoFileError } from "@/lib/lda-logo"
+import { revalidateTag } from "next/cache"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -57,6 +60,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { lda_id: string } }) {
+  let uploadedLogoId: string | undefined
+  let saved = false
   try {
     const ldaId = parseInt(params.lda_id, 10);
     if (Number.isNaN(ldaId)) {
@@ -71,7 +76,56 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
       return NextResponse.json({ error: "Permission denied" }, { status: 403 })
     }
 
-    const data = await req.json();
+    let data;
+    let logoFile: File | undefined;
+    let removeLogo = false;
+    try {
+      if (req.headers.get("content-type")?.includes("multipart/form-data")) {
+        const form = await req.formData();
+        const fields = form.get("data");
+        if (typeof fields !== "string") {
+          return NextResponse.json({ error: "Missing LDA form data" }, { status: 400 });
+        }
+        data = JSON.parse(fields);
+        const file = form.get("logo");
+        if (file !== null) {
+          if (typeof file === "string") {
+            return NextResponse.json({ error: "Invalid logo file" }, { status: 400 });
+          }
+          logoFile = file;
+        }
+        removeLogo = form.get("removeLogo") === "true";
+      } else {
+        data = await req.json();
+      }
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return NextResponse.json({ error: "Invalid LDA form data" }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: "Invalid LDA form data" }, { status: 400 });
+    }
+
+    if (logoFile && removeLogo) {
+      return NextResponse.json({ error: "Choose either a new logo or removal" }, { status: 400 });
+    }
+
+    let logoBuffer: Buffer | undefined;
+    if (logoFile) {
+      const error = logoFileError(logoFile);
+      if (error) return NextResponse.json({ error }, { status: 400 });
+      logoBuffer = Buffer.from(await logoFile.arrayBuffer());
+      if (!hasLogoSignature(logoBuffer, logoFile.type)) {
+        return NextResponse.json({ error: "Choose a valid PNG, JPEG or WebP image." }, { status: 400 });
+      }
+    }
+
+    if (logoFile || removeLogo) {
+      const lda = await prisma.localDevelopmentAgency.findUnique({
+        where: { id: ldaId },
+        select: { id: true },
+      });
+      if (!lda) return NextResponse.json({ error: "LDA not found" }, { status: 404 });
+    }
 
     const ldaData: Prisma.LocalDevelopmentAgencyUpdateArgs["data"] = {};
     const orgDetailData: Prisma.OrganisationDetailUpdateArgs["data"] = {};
@@ -159,13 +213,35 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_id: stri
       };
     }
 
+    if (logoFile && logoBuffer) {
+      const uploaded = await imagekit().upload({
+        file: logoBuffer.toString("base64"),
+        fileName: logoFile.name,
+        folder: "/lda-logos",
+      });
+      uploadedLogoId = uploaded.fileId;
+      ldaData.logo = uploaded.filePath;
+    } else if (removeLogo) {
+      ldaData.logo = null;
+    }
+
     const updated = await prisma.localDevelopmentAgency.update({
       where: { id: ldaId },
       data: ldaData,
     });
+    saved = true;
+    revalidateTag(`lda:detail:${ldaId}`);
+    revalidateTag("ldas:list");
 
     return NextResponse.json(updated);
   } catch (err) {
+    if (uploadedLogoId && !saved) {
+      try {
+        await imagekit().deleteFile(uploadedLogoId);
+      } catch (cleanupError) {
+        console.error("Failed to clean up unsaved LDA logo:", cleanupError);
+      }
+    }
     console.error("Failed to update LDA:", err);
     return NextResponse.json({ error: "Failed to update", detail: (err as Error).message }, { status: 500 });
   }
