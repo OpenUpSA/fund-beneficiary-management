@@ -259,7 +259,7 @@ export default function FormAccordionItem({
             if (defaultValues && subfieldName in defaultValues) {
               const value = String(defaultValues[subfieldName]);
               // A field is valid if it has a value (for required fields) or is optional
-              const isValid = subfield.required ? isValueValid(value, subfield) : true;
+              const isValid = subfield.required && show_subfield ? isValueValid(value, subfield) : true;
               subFieldObj = { ...subFieldObj, value, isValid };
             }
             
@@ -280,14 +280,16 @@ export default function FormAccordionItem({
         const subFields = processFieldsRecursively(field.fields, field.name, isRepeatableLayout);
         // For a field with subfields, check if all required subfields are valid
         const requiredSubfields = subFields.filter(sf => sf.required);
-        const allRequiredSubfieldsValid = requiredSubfields.length > 0 ? 
+        const allRequiredSubfieldsValid = requiredSubfields.length > 0 ?
           requiredSubfields.every(sf => sf.isValid) : true;
         
+        const ownValueValid = field.type === "group" || isValueValid(fieldObj.value ?? "", field);
+
         // Update the parent field's validity based on its subfields
-        fieldObj = { 
-          ...fieldObj, 
+        fieldObj = {
+          ...fieldObj,
           fields: subFields,
-          isValid: field.required ? allRequiredSubfieldsValid : true
+          isValid: field.required ? allRequiredSubfieldsValid && ownValueValid : true
         };
       }
       return fieldObj;
