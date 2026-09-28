@@ -7,6 +7,7 @@ import {
   validateFormSubmission,
   type FormTemplateInput,
 } from "@/lib/form-validation/validate-submission";
+import { applyPrefill } from "@/lib/lda-form-prefill";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_form_id: string }> }) {
   try {
@@ -49,8 +50,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
     // Locked fields (prefill.config.locked) are excluded from required checks
     // because they are system-populated on approval, not at submission time.
     const savedFormData = (existingForm.formData ?? {}) as Record<string, unknown>;
+    const { mergedData } = await applyPrefill(ldaFormId, savedFormData);
     const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
-    const issues = validateFormSubmission(template, savedFormData, session.user.role);
+    const issues = validateFormSubmission(template, mergedData, session.user.role);
 
     if (issues.length > 0) {
       return NextResponse.json(
