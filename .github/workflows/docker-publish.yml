@@ -88,6 +88,7 @@ jobs:
             NEXT_PUBLIC_ENVIRONMENT=${{ vars.NEXT_PUBLIC_ENVIRONMENT }}
             NEXT_PUBLIC_ENABLE_COUNTRY_REGION=${{ vars.NEXT_PUBLIC_ENABLE_COUNTRY_REGION }}
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            NODE_MAX_OLD_SPACE_SIZE=4096
 
       - name: Configure SSH deploy key
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
