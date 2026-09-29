@@ -39,6 +39,7 @@ import { LocalDevelopmentAgency, Document } from "@prisma/client"
 import { useTranslations } from "next-intl"
 import { DocumentTypeEnum } from "@/types/formSchemas"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { getUploadErrorMessage } from "@/lib/upload-error"
 
 const getFormSchema = (document?: Document, hasEntityContext?: boolean) => {
   return z.object({
@@ -141,8 +142,7 @@ export function FormDialog({ document, lda, ldas, fund, funder, callback }: Form
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
-        throw new Error(errorData?.error || "Failed to save document")
+        throw new Error(await getUploadErrorMessage(response, "Failed to save document"))
       }
 
       toast.success(document ? "Document updated" : "Document created", { id: toastId })

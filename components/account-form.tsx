@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react"
 import { Skeleton } from "./ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { getInitials, avatarUrl } from "@/lib/avatar"
+import { getUploadErrorMessage } from "@/lib/upload-error"
 
 interface Props {
   callback: (tag: string) => void
@@ -91,7 +92,7 @@ export function AccountForm({ callback }: Props) {
 
     if (!response.ok) {
       setPreviewUrl(null)
-      toast.error("Failed to upload avatar", { id: toastId })
+      toast.error(await getUploadErrorMessage(response, "Failed to upload avatar"), { id: toastId })
       return
     }
 

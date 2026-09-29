@@ -40,6 +40,7 @@ import { useTranslations } from "next-intl"
 import { MediaTypeEnum } from "@/types/formSchemas"
 import { MediaSourceType } from "@prisma/client"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { getUploadErrorMessage } from "@/lib/upload-error"
 
 const getFormSchema = (media?: Media, hasEntityContext?: boolean) => {
   return z.object({
@@ -144,15 +145,19 @@ export function FormDialog({ media, lda, ldas, fund, funder, mediaSourceTypes, c
     toast.loading(media ? "Updating media..." : "Creating media...", { id: toastId });
 
     try {
-      await fetch(endpoint, {
+      const response = await fetch(endpoint, {
         method,
         body: formData,
       });
 
+      if (!response.ok) {
+        throw new Error(await getUploadErrorMessage(response, "Failed to save media"));
+      }
+
       toast.success(media ? "Media updated" : "Media created", { id: toastId });
     } catch (error) {
       console.error(`Error saving media:`, error);
-      toast.error("Failed to save media", { id: toastId });
+      toast.error(error instanceof Error ? error.message : "Failed to save media", { id: toastId });
       return;
     }
     callback(media?.id?.toString());
