@@ -37,6 +37,7 @@ import { StaffTab } from "./manage-lda/staff"
 import { AccessTab } from "./manage-lda/access"
 import { ManageTab } from "./manage-lda/manage"
 import { LogoUpload, LogoChange } from "./manage-lda/logo-upload"
+import { getUploadErrorMessage } from "@/lib/upload-error"
 
 
 interface FormDialogProps {
@@ -229,8 +230,7 @@ export function FormDialog({ lda, focusAreas, developmentStages, programmeOffice
         })
         
         if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || LDA_TERMINOLOGY.updateError)
+          throw new Error(await getUploadErrorMessage(response, LDA_TERMINOLOGY.updateError))
         }
         
         toast.dismiss(toastId)

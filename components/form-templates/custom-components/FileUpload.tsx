@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Field } from '@/types/forms'
+import { getUploadErrorMessage } from '@/lib/upload-error'
 
 interface FileUploadProps {
   field: Field
@@ -148,7 +149,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
       })
       
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`)
+        throw new Error(await getUploadErrorMessage(response, `Failed to upload ${file.name}`))
       }
       
       const result = await response.json()
@@ -165,7 +166,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
       }
     } catch (error) {
       console.error('File upload error:', error)
-      toast.error(`Failed to upload ${file.name}`)
+      toast.error(error instanceof Error ? error.message : `Failed to upload ${file.name}`)
       return null
     }
   }
