@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import prisma from "@/db";
 import { permissions, canFillForm } from "@/lib/permissions";
-import { applyPrefill } from "@/lib/lda-form-prefill";
 import {
   validateFormSubmission,
   type FormTemplateInput,
