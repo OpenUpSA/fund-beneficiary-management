@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import prisma from "@/db";
 import { permissions, canFillForm } from "@/lib/permissions";
+import { applyPrefill } from "@/lib/lda-form-prefill";
 import {
   validateFormSubmission,
   type FormTemplateInput,
@@ -45,12 +46,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       return NextResponse.json({ error: "Permission denied - no access to this LDA" }, { status: 403 });
     }
 
-    // Server-side completeness check — runs for all users including super users.
-    // Locked fields (prefill.config.locked) are excluded from required checks
-    // because they are system-populated on approval, not at submission time.
+    // Validate the same saved answers + prefills shown by GET. Prefills remain
+    // display-only until approval; locked fields are still excluded here.
     const savedFormData = (existingForm.formData ?? {}) as Record<string, unknown>;
+    const { mergedData } = await applyPrefill(ldaFormId, savedFormData);
     const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
-    const issues = validateFormSubmission(template, savedFormData, session.user.role);
+    const issues = validateFormSubmission(template, mergedData, session.user.role);
 
     if (issues.length > 0) {
       return NextResponse.json(
