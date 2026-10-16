@@ -224,10 +224,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
     const data = await req.json();
 
+    // Prefills shown by GET may not be stored yet. Resolve the same values
+    // before validation, then persist them with a successful approval.
+    let formDataForValidation = (existingForm.formData ?? {}) as Record<string, unknown>;
+    let approvalPrefills: Record<string, Prisma.JsonValue> = {};
+    if (data.formStatusLabel === "Approved") {
+      const { mergedData, newPrefills } = await applyPrefill(ldaFormId, formDataForValidation);
+      formDataForValidation = mergedData;
+      approvalPrefills = newPrefills;
+    }
+
     // Validate admin feedback sections are complete before allowing Approved/Rejected status
     if (data.formStatusLabel === "Approved" || data.formStatusLabel === "Rejected") {
       const formTemplate = existingForm.formTemplate?.form as { sections?: Array<{ admin_feedback?: boolean; fields: Array<{ name: string; required?: boolean }> }> } | null;
-      const formData = existingForm.formData as Record<string, unknown> | null;
+      const formData = formDataForValidation;
       
       if (formTemplate?.sections) {
         const adminFeedbackSections = formTemplate.sections.filter(section => section.admin_feedback);
@@ -250,8 +260,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     // Validate form data completeness before allowing Approved status
     if (data.formStatusLabel === "Approved") {
       const template = (existingForm.formTemplate?.form ?? null) as FormTemplateInput | null;
-      const formDataObj = (existingForm.formData ?? {}) as Record<string, unknown>;
-      const issues = validateFormSubmission(template, formDataObj, user.role);
+      const issues = validateFormSubmission(template, formDataForValidation, user.role);
 
       if (issues.length > 0) {
         return NextResponse.json(
@@ -272,7 +281,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       fundingEnd?: Date;
       approved?: Date | null;
       submitted?: Date | null;
+      formData?: Prisma.InputJsonObject;
     } = {};
+
+    if (Object.keys(approvalPrefills).length > 0) {
+      updateData.formData = formDataForValidation as Prisma.InputJsonObject;
+    }
     
     // Process form status (needs to map from label to ID)
     if (data.formStatusLabel) {
@@ -289,22 +303,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
         updateData.approved = new Date();
       } else {
         updateData.approved = null;
-      }
-
-      // Trigger form event asynchronously (don't await to avoid blocking)
-      if (data.formStatusLabel === "Approved") {
-        // Get the full form record for the event trigger
-        prisma.localDevelopmentAgencyForm.findUnique({
-          where: { id: ldaFormId }
-        }).then(fullForm => {
-          if (fullForm) {
-            triggerFormEvent(
-              'approved',
-              fullForm,
-              user?.id ? parseInt(user.id, 10) : undefined
-            ).catch(err => console.error('Form event trigger error:', err))
-          }
-        })
       }
 
       if (data.formStatusLabel === "Draft") {
@@ -365,6 +363,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
         }
       }
     });
+
+    // Only dispatch approval events after the status and prefills are saved.
+    if (data.formStatusLabel === "Approved") {
+      prisma.localDevelopmentAgencyForm.findUnique({
+        where: { id: ldaFormId }
+      }).then(fullForm => {
+        if (fullForm) {
+          return triggerFormEvent(
+            'approved',
+            fullForm,
+            user?.id ? parseInt(user.id, 10) : undefined
+          );
+        }
+      }).catch(err => console.error('Form event trigger error:', err));
+    }
 
     if (data.fundingStart || data.fundingEnd) {
       revalidateTag('lda-forms:list')
