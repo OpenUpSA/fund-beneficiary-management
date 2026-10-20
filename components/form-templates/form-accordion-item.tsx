@@ -84,7 +84,25 @@ export default function FormAccordionItem({
       }
 
       const newFieldName = `${field.name}_${templateField.name}_${index+1}`;
-      
+
+      // Remap depends_on the same way as show_if so it watches this item's
+      // copy of the field, and seed the options from any saved value.
+      let depends_on = templateField.depends_on;
+      let initialOptions: Field["options"] | undefined;
+      let initialLabel: string | undefined;
+      if (depends_on) {
+        const watchedName = `${field.name}_${depends_on.field}_${index+1}`;
+        depends_on = { ...depends_on, field: watchedName };
+        const watchedValue = defaultValues?.[watchedName];
+        if (watchedValue) {
+          const rule = depends_on.rules?.find((r: DependsOnRule) => r.when === String(watchedValue));
+          initialOptions = rule?.options || depends_on.default_options;
+          initialLabel = rule?.label;
+        } else if (depends_on.default_options) {
+          initialOptions = depends_on.default_options;
+        }
+      }
+
       // Also transform nested subfields if they exist
       let transformedSubfields;
       if (templateField.fields && templateField.fields.length > 0) {
@@ -110,6 +128,9 @@ export default function FormAccordionItem({
         name: newFieldName,
         groupIndex: index + 1,
         show_if,
+        ...(depends_on && { depends_on }),
+        ...(initialOptions && { options: initialOptions }),
+        ...(initialLabel && { label: initialLabel }),
         ...(transformedSubfields && { fields: transformedSubfields })
       };
     });
