@@ -718,8 +718,7 @@
           "multiple": true,
           "required": false,
           "config": {
-            "destination": "document",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+            "destination": "document"
           }
         },
         {
@@ -728,9 +727,9 @@
           "label": "Upload photos from visit",
           "multiple": true,
           "required": true,
-          "accepted_file_types": [
-            "image/*"
-          ]
+          "config": {
+            "destination": "document"
+          }
         }
       ]
     }

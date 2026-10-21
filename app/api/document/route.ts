@@ -6,6 +6,7 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { DocumentType, DocumentUploadType } from "@prisma/client"
 import { revalidateTag } from "next/cache"
+import { formUploadFileError, hasFormUploadSignature } from "@/lib/form-upload"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -167,8 +168,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Permission denied" }, { status: 403 });
   }
 
+  if (!file || typeof file === "string") {
+    return NextResponse.json({ error: "A file is required" }, { status: 400 })
+  }
+  const fileError = formUploadFileError(file)
+  if (fileError) {
+    return NextResponse.json({ error: fileError }, { status: 400 })
+  }
+
   // Upload file to ImageKit
   const fileBuffer = Buffer.from(await file.arrayBuffer())
+  if (!hasFormUploadSignature(fileBuffer, file.name)) {
+    return NextResponse.json({ error: `${file.name}: file contents do not match its type.` }, { status: 400 })
+  }
   const fileBase64 = fileBuffer.toString("base64")
   const fileName = file.name
 

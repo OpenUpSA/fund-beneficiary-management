@@ -129,8 +129,7 @@
               "required": true,
               "multiple": true,
               "config": {
-                "destination": "media",
-                "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+                "destination": "document"
               },
               "show_if": {
                 "field": "did_not_take_attendance",
@@ -241,8 +240,7 @@
               "required": false,
               "multiple": true,
               "config": {
-                "destination": "media",
-                "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+                "destination": "document"
               }
             }
           ]
@@ -1065,7 +1063,7 @@
               "label": "Do you have images relating to this success?",
               "required": false,
               "config": {
-                "accept": "image/*",
+                "destination": "document",
                 "multiple": true
               }
             }
@@ -1331,7 +1329,7 @@
               "label": "Do you have any images to share relating to this case study?",
               "required": false,
               "config": {
-                "accept": "image/*",
+                "destination": "document",
                 "multiple": true
               }
             }
@@ -1385,7 +1383,7 @@
               "label": "Do you have any images to share relating to this case study?",
               "required": false,
               "config": {
-                "accept": "image/*",
+                "destination": "document",
                 "multiple": true
               }
             }
@@ -1445,7 +1443,7 @@
               "label": "Do you have any images to share relating to this case study?",
               "required": false,
               "config": {
-                "accept": "image/*",
+                "destination": "document",
                 "multiple": true
               }
             }
@@ -1505,7 +1503,7 @@
               "label": "Do you have any images to share relating to this case study?",
               "required": false,
               "config": {
-                "accept": "image/*",
+                "destination": "document",
                 "multiple": true
               }
             }
