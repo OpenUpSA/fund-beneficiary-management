@@ -3,36 +3,33 @@
   "sections": [
     {
       "title": "Activity information",
-      "editable_by": [],
       "fields": [
         {
           "name": "activity_name",
           "type": "text",
           "label": "Name of activity",
-          "required": true,
-          "disabled": true,
           "prefill": {
             "path": "activity_name",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true
         },
         {
           "name": "activity_date",
           "type": "date",
           "label": "Date of activity",
-          "required": true,
-          "disabled": true,
           "prefill": {
             "path": "activity_date",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true
         },
         {
           "name": "activity_type",
           "type": "select",
           "label": "Type of activity",
-          "required": true,
-          "disabled": true,
           "options": [
             {
               "label": "Campaigns",
@@ -54,18 +51,20 @@
           "prefill": {
             "path": "activity_type",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true
         },
         {
           "name": "training_type",
           "type": "multiselect",
           "label": "Type of training to be given",
           "options": [],
-          "required": true,
           "prefill": {
             "path": "training_type",
             "source": "linkedForm"
           },
+          "required": true,
           "depends_on": {
             "field": "activity_type",
             "rules": [
@@ -199,61 +198,65 @@
           "name": "focus_areas",
           "type": "multiselect",
           "label": "Which of your focus areas does this activity relate to?",
-          "config": { "dynamicOptionTable": "focus_areas" },
-          "required": true,
+          "config": {
+            "dynamicOptionTable": "focus_areas"
+          },
           "prefill": {
             "path": "focus_areas",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true
         },
         {
           "name": "expected_participants",
           "type": "number",
           "label": "Expected number of participants",
-          "required": true,
-          "disabled": true,
           "prefill": {
             "path": "expected_participants",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true
         },
         {
           "name": "why_activity_needed",
           "type": "textarea",
           "label": "Why is the activity needed?",
-          "description": "Describe the need or opportunity sparked the organising of this event",
-          "required": true,
-          "disabled": true,
           "prefill": {
             "path": "why_activity_needed",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true,
+          "description": "Describe the need or opportunity sparked the organising of this event"
         },
         {
           "name": "who_will_facilitate",
           "type": "textarea",
           "label": "Who will facilitate this activity?",
-          "description": "Provide the names of any individuals or organisations that assisted with this activity",
-          "required": true,
-          "disabled": true,
           "prefill": {
             "path": "who_will_facilitate",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true,
+          "description": "Provide the names of any individuals or organisations that assisted with this activity"
         },
         {
           "name": "activity_venue",
           "type": "textarea",
           "label": "Where will the activity be held?",
-          "description": "What venue will you be using and where is that venue situated?",
-          "required": true,
-          "disabled": true,
           "prefill": {
             "path": "activity_venue",
             "source": "linkedForm"
-          }
+          },
+          "disabled": true,
+          "required": true,
+          "description": "What venue will you be using and where is that venue situated?"
         }
-      ]
+      ],
+      "editable_by": []
     },
     {
       "title": "Attendance",
@@ -261,39 +264,37 @@
         {
           "name": "did_not_take_attendance",
           "type": "toggle",
-          "layout": "toggle",
           "label": "We did not take attendance for this activity",
-          "required": false,
+          "layout": "toggle",
           "prefill": {
             "path": "false",
             "source": "defaultValue"
-          }
+          },
+          "required": false
         },
         {
           "name": "attendance_register",
           "type": "fileUpload",
-          "label": "Upload your attendance register",
-          "required": true,
-          "multiple": true,
+          "label": "Upload an image of your attendance register",
           "config": {
-            "destination": "document",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+            "destination": "media",
+            "accepted_file_types": [
+              "image/png",
+              "image/jpeg",
+              "image/jpg"
+            ]
           },
           "show_if": {
             "field": "did_not_take_attendance",
             "value": "false"
-          }
+          },
+          "multiple": true,
+          "required": true
         },
         {
           "name": "overall_attendance",
           "type": "group",
-          "layout": "label-value-list",
           "label": "Overall attendance for this activity",
-          "required": true,
-          "show_if": {
-            "field": "did_not_take_attendance",
-            "value": "false"
-          },
           "config": {
             "showTotal": true,
             "totalLabel": "Total attendees"
@@ -303,72 +304,78 @@
               "name": "non_lda_attendees",
               "type": "number",
               "label": "Non-LDA attendees",
-              "placeholder": "Value",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             },
             {
               "name": "lda_staff_attendees",
               "type": "number",
               "label": "LDA staff attendees",
-              "placeholder": "Value",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             },
             {
               "name": "lda_board_member_attendees",
               "type": "number",
               "label": "LDA board member attendees",
-              "placeholder": "Value",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             }
-          ]
-        },
-        {
-          "name": "demographics_of_attendees",
-          "type": "group",
+          ],
           "layout": "label-value-list",
-          "label": "Demographics of attendees",
-          "required": true,
           "show_if": {
             "field": "did_not_take_attendance",
             "value": "false"
           },
+          "required": true
+        },
+        {
+          "name": "demographics_of_attendees",
+          "type": "group",
+          "label": "Demographics of attendees",
           "config": {
             "showTotal": false
           },
           "fields": [
             {
+              "icon": "PersonStanding",
               "name": "youth_aged_attendees",
               "type": "number",
               "label": "Youth aged attendees (below 35)",
-              "placeholder": "Value",
-              "icon": "PersonStanding",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             },
             {
+              "icon": "Venus",
               "name": "male_attendees",
               "type": "number",
               "label": "Male attendees",
-              "placeholder": "Value",
-              "icon": "Venus",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             },
             {
+              "icon": "Venus",
               "name": "female_attendees",
               "type": "number",
               "label": "Female attendees",
-              "placeholder": "Value",
-              "icon": "Venus",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             },
             {
+              "icon": "Venus",
               "name": "other_attendees",
               "type": "number",
               "label": "\"Other\" attendees",
-              "placeholder": "Value",
-              "icon": "Venus",
-              "required": true
+              "required": true,
+              "placeholder": "Value"
             }
-          ]
+          ],
+          "layout": "label-value-list",
+          "show_if": {
+            "field": "did_not_take_attendance",
+            "value": "false"
+          },
+          "required": true
         },
         {
           "name": "attendance_not_taken",
@@ -389,25 +396,31 @@
           "name": "activity_impact",
           "type": "textarea",
           "label": "Describe the impact of this activity",
+          "required": true,
           "description": "Did participants find the training valuable and how will this training help improve their lives",
-          "placeholder": "Enter details here",
-          "required": true
+          "placeholder": "Enter details here"
         },
         {
           "name": "activity_learnings",
           "type": "textarea",
           "label": "Describe any learnings from this activity",
+          "required": true,
           "description": "What worked well and what would you change or do differently?",
-          "placeholder": "Enter details here",
-          "required": true
+          "placeholder": "Enter details here"
         },
         {
           "name": "major_deviations",
           "type": "radio",
           "label": "Where there any major deviations from what was planned in your application?",
           "options": [
-            { "label": "No", "value": "no" },
-            { "label": "Yes", "value": "yes" }
+            {
+              "label": "No",
+              "value": "no"
+            },
+            {
+              "label": "Yes",
+              "value": "yes"
+            }
           ],
           "required": true
         },
@@ -415,27 +428,31 @@
           "name": "deviations_description",
           "type": "textarea",
           "label": "Please describe these deviations and how they were managed",
-          "placeholder": "Enter details here",
           "show_if": {
             "field": "major_deviations",
             "value": "yes"
           },
-          "required": true
+          "required": true,
+          "placeholder": "Enter details here"
         },
         {
           "name": "activity_photos",
           "type": "fileUpload",
           "label": "Upload photos from this activity",
-          "required": false,
-          "multiple": true,
+          "config": {
+            "destination": "media",
+            "accepted_file_types": [
+              "image/png",
+              "image/jpeg",
+              "image/jpg"
+            ]
+          },
           "show_if": {
             "field": "major_deviations",
             "value": "yes"
           },
-          "config": {
-            "destination": "media",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
-          }
+          "multiple": true,
+          "required": false
         }
       ]
     },
@@ -452,20 +469,22 @@
           "name": "cost_slips",
           "type": "fileUpload",
           "label": "Please attach all slips for costs incurred",
-          "required": false,
-          "multiple": true,
           "config": {
             "destination": "document",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
-          }
+            "accepted_file_types": [
+              "image/png",
+              "image/jpeg",
+              "image/jpg",
+              "application/pdf"
+            ]
+          },
+          "multiple": true,
+          "required": false
         }
       ]
     },
     {
       "title": "SCAT Admin",
-      "visible_to": ["PROGRAMME_OFFICER", "ADMIN", "SUPER_USER"],
-      "editable_by": ["PROGRAMME_OFFICER", "ADMIN", "SUPER_USER"],
-      "admin_feedback": true,
       "fields": [
         {
           "name": "po_monitoring_indicators",
@@ -474,7 +493,18 @@
           "required": true,
           "placeholder": "Enter details here"
         }
-      ]
+      ],
+      "visible_to": [
+        "PROGRAMME_OFFICER",
+        "ADMIN",
+        "SUPER_USER"
+      ],
+      "editable_by": [
+        "PROGRAMME_OFFICER",
+        "ADMIN",
+        "SUPER_USER"
+      ],
+      "admin_feedback": true
     }
   ]
 }
