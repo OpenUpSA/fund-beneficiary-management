@@ -75,8 +75,8 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
   const isReportType = selectedTemplate?.templateType === 'REPORT'
   
   // Context-aware labels based on form type
-  const startDateLabel = isReportType ? 'Reporting Start' : 'Funding Start'
-  const endDateLabel = isReportType ? 'Reporting End' : 'Funding End'
+  const startDateLabel = isReportType ? 'Reporting period start' : 'Funding Start'
+  const endDateLabel = isReportType ? 'Reporting period end' : 'Funding End'
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const payload = {

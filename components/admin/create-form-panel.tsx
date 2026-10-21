@@ -55,8 +55,8 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   const isReportType = selectedTemplateData?.templateType === 'REPORT'
   
   // Context-aware labels based on form type
-  const startDateLabel = isReportType ? 'Reporting Start Date' : 'Funding Start Date'
-  const endDateLabel = isReportType ? 'Reporting End Date' : 'Funding End Date'
+  const startDateLabel = isReportType ? 'Reporting period start' : 'Funding start date'
+  const endDateLabel = isReportType ? 'Reporting period end' : 'Funding end date'
 
   const handleSubmit = async () => {
     if (selectedLDAs.length === 0 || !selectedTemplate) {
@@ -242,7 +242,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {fundingStart ? format(fundingStart, "PPP") : "Select start date"}
+                        {fundingStart ? format(fundingStart, "PPP") : (isReportType ? "Select reporting period start" : "Select start date")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -268,7 +268,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {fundingEnd ? format(fundingEnd, "PPP") : "Select end date"}
+                        {fundingEnd ? format(fundingEnd, "PPP") : (isReportType ? "Select reporting period end" : "Select end date")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
