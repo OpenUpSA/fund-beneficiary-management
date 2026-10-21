@@ -476,6 +476,7 @@ export default async function FormPreviewPage({ params }: Props) {
     ? format(formPeriodDateForPicker(ldaForm.fundingEnd)!, "d MMM yyyy")
     : null
   const dateRange = fundingStart && fundingEnd ? `${fundingStart} – ${fundingEnd}` : fundingStart ?? fundingEnd ?? null
+  const isReportType = ldaForm.formTemplate.templateType === "REPORT"
   const heading = dateRange ? `${ldaForm.formTemplate.name} (${dateRange})` : ldaForm.formTemplate.name
 
   const previewData = {
@@ -489,8 +490,8 @@ export default async function FormPreviewPage({ params }: Props) {
   const metaItems = [
     { label: LDA_TERMINOLOGY.fullName, value: ldaForm.localDevelopmentAgency.name },
     { label: "Status", value: humanizeStatus(ldaForm.formStatus.label) },
-    { label: "Funding start", value: fundingStart ?? "—" },
-    { label: "Funding end", value: fundingEnd ?? "—" },
+    { label: isReportType ? "Reporting period start" : "Funding start", value: fundingStart ?? "—" },
+    { label: isReportType ? "Reporting period end" : "Funding end", value: fundingEnd ?? "—" },
     { label: "Due date", value: ldaForm.dueDate ? format(new Date(ldaForm.dueDate as unknown as string), "d MMM yyyy") : "—" },
     {
       label: "Submitted",

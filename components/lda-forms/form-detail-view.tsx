@@ -160,8 +160,8 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
         // Context-aware field labels for toast messages
         const isReportType = ldaForm.formTemplate.templateType === 'REPORT'
         const fieldLabels: Record<string, string> = {
-          fundingStart: isReportType ? 'Reporting start date' : 'Funding start date',
-          fundingEnd: isReportType ? 'Reporting end date' : 'Funding end date',
+          fundingStart: isReportType ? 'Reporting period start' : 'Funding start date',
+          fundingEnd: isReportType ? 'Reporting period end' : 'Funding end date',
         }
         const displayName = fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1)
         toast.success(`${displayName} updated successfully`)
@@ -521,7 +521,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
               
               {ldaForm.formTemplate.sidebarConfig?.startDate && (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{ldaForm.formTemplate.templateType === 'REPORT' ? 'Reporting start date:' : 'Funding start date:'}</p>
+                  <p className="text-sm text-muted-foreground">{ldaForm.formTemplate.templateType === 'REPORT' ? 'Reporting period start:' : 'Funding start date:'}</p>
                   <Controller
                     name="fundingStart"
                     control={control}
@@ -558,7 +558,7 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
               
               {ldaForm.formTemplate.sidebarConfig?.endDate && (
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{ldaForm.formTemplate.templateType === 'REPORT' ? 'Reporting end date:' : 'Funding end date:'}</p>
+                  <p className="text-sm text-muted-foreground">{ldaForm.formTemplate.templateType === 'REPORT' ? 'Reporting period end:' : 'Funding end date:'}</p>
                   <Controller
                     name="fundingEnd"
                     control={control}
