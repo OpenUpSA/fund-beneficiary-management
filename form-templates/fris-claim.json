@@ -160,8 +160,7 @@
           "label": "Upload an image of your attendance register",
           "required": true,
           "config": {
-            "destination": "media",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+            "destination": "document"
           },
           "show_if": {
             "field": "did_not_take_attendance",
@@ -281,8 +280,7 @@
           "label": "Upload photos from this activity",
           "required": false,
           "config": {
-            "destination": "media",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg"]
+            "destination": "document"
           }
         }
       ]
@@ -309,8 +307,7 @@
           "label": "Upload a copy of your budget",
           "required": true,
           "config": {
-            "destination": "media",
-            "accepted_file_types": ["application/pdf", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"]
+            "destination": "document"
           }
         }
       ]
@@ -345,8 +342,7 @@
           "label": "Please attach all slips for costs incurred",
           "required": false,
           "config": {
-            "destination": "media",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+            "destination": "document"
           }
         }
       ]
@@ -367,8 +363,7 @@
           "label": "Upload a signed board approval form",
           "required": true,
           "config": {
-            "destination": "media",
-            "accepted_file_types": ["image/png", "image/jpeg", "image/jpg", "application/pdf"]
+            "destination": "document"
           }
         }
       ]

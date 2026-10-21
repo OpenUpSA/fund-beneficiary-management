@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { revalidateTag } from "next/cache"
+import { formUploadFileError, hasFormUploadSignature } from "@/lib/form-upload"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -156,7 +157,14 @@ export async function PUT(req: NextRequest, { params }: { params: { document_id:
   let filePath: string | undefined
 
   if (file && file.size > 0) {
+    const fileError = formUploadFileError(file)
+    if (fileError) {
+      return NextResponse.json({ error: fileError }, { status: 400 })
+    }
     const fileBuffer = Buffer.from(await file.arrayBuffer())
+    if (!hasFormUploadSignature(fileBuffer, file.name)) {
+      return NextResponse.json({ error: `${file.name}: file contents do not match its type.` }, { status: 400 })
+    }
     const fileBase64 = fileBuffer.toString("base64")
     const fileName = file.name
 

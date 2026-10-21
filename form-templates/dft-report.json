@@ -277,12 +277,7 @@
           "type": "fileUpload",
           "label": "Upload an image of your attendance register",
           "config": {
-            "destination": "media",
-            "accepted_file_types": [
-              "image/png",
-              "image/jpeg",
-              "image/jpg"
-            ]
+            "destination": "document"
           },
           "show_if": {
             "field": "did_not_take_attendance",
@@ -440,12 +435,7 @@
           "type": "fileUpload",
           "label": "Upload photos from this activity",
           "config": {
-            "destination": "media",
-            "accepted_file_types": [
-              "image/png",
-              "image/jpeg",
-              "image/jpg"
-            ]
+            "destination": "document"
           },
           "show_if": {
             "field": "major_deviations",
@@ -470,13 +460,7 @@
           "type": "fileUpload",
           "label": "Please attach all slips for costs incurred",
           "config": {
-            "destination": "document",
-            "accepted_file_types": [
-              "image/png",
-              "image/jpeg",
-              "image/jpg",
-              "application/pdf"
-            ]
+            "destination": "document"
           },
           "multiple": true,
           "required": false
