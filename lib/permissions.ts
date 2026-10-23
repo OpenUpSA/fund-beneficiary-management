@@ -247,13 +247,6 @@ export const permissions = {
     return false
   },
 
-  // Form permissions
-  canCreateNewApplication: (user: User): boolean => {
-    if (permissions.isSuperUser(user)) return true
-    if (permissions.isLDAUser(user)) return true // LDA Users can create new applications (DFT and FRIS only)
-    return false
-  },
-
   canViewDashboardStats: (user: User): boolean => {
     if (permissions.isSuperUser(user)) return true
     if (permissions.isAdmin(user)) return true
@@ -284,6 +277,10 @@ const userHasFormRole = (user: User | null, allowedRoles?: Role[] | string[] | n
   if (!allowedRoles || allowedRoles.length === 0) return false
   return (allowedRoles as string[]).includes(user.role)
 }
+
+// Can the user create a form from this template (FormTemplate.createRoles)
+export const canCreateForm = (user: User | null, createRoles?: Role[] | string[] | null): boolean =>
+  userHasFormRole(user, createRoles)
 
 // Can the user view/read a form built from this template (FormTemplate.readRoles)
 export const canReadForm = (user: User | null, readRoles?: Role[] | string[] | null): boolean =>

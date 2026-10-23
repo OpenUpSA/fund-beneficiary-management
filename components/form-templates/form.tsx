@@ -56,6 +56,8 @@ type FormRole = 'USER' | 'PROGRAMME_OFFICER' | 'ADMIN'
 // Roles pre-selected when creating a new template. Existing templates show whatever
 // is stored (empty at the DB level until set).
 const defaultRoleSelection = [...ASSIGNABLE_FORM_ROLES] as FormRole[]
+// Creating is staff-only unless an admin opts LDA users in (matches the data migration)
+const defaultCreateRoleSelection: FormRole[] = ['PROGRAMME_OFFICER', 'ADMIN']
 
 const formCategoryOptions = [
   { value: 'dft_application', label: 'DFT Application' },
@@ -83,6 +85,7 @@ const FormSchema = z.object({
     endDate: z.boolean(),
     dueDate: z.boolean(),
   }),
+  createRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])),
   readRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])).min(1, { message: "Select at least one role." }),
   fillRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])).min(1, { message: "Select at least one role." }),
   approveRoles: z.array(z.enum(['USER', 'PROGRAMME_OFFICER', 'ADMIN'])).min(1, { message: "Select at least one role." }),
@@ -97,7 +100,7 @@ function FormPermissionRow({
   label,
 }: {
   control: Control<FormTemplateFormValues>
-  name: 'readRoles' | 'fillRoles' | 'approveRoles'
+  name: 'createRoles' | 'readRoles' | 'fillRoles' | 'approveRoles'
   label: string
 }) {
   return (
@@ -142,9 +145,10 @@ function FormPermissionsSection({ control }: { control: Control<FormTemplateForm
       <div>
         <Label className="text-sm font-medium">Form Permissions</Label>
         <p className="text-xs text-muted-foreground">
-          Choose which roles can read, fill in and approve forms built from this template. Super Users always have full access.
+          Choose which roles can create, read, fill in and approve forms built from this template. Super Users always have full access.
         </p>
       </div>
+      <FormPermissionRow control={control} name="createRoles" label="Created by" />
       <FormPermissionRow control={control} name="readRoles" label="Read by" />
       <FormPermissionRow control={control} name="fillRoles" label="Filled by" />
       <FormPermissionRow control={control} name="approveRoles" label="Approved by" />
@@ -290,6 +294,7 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       linkedFormDueDays: formTemplate?.linkedFormDueDays ?? null,
       sidebarConfig: parsedSidebarConfig,
       // Existing templates use stored roles; a brand-new template pre-selects all roles.
+      createRoles: (formTemplate?.createRoles as FormRole[] | undefined) ?? defaultCreateRoleSelection,
       readRoles: (formTemplate?.readRoles as FormRole[] | undefined) ?? defaultRoleSelection,
       fillRoles: (formTemplate?.fillRoles as FormRole[] | undefined) ?? defaultRoleSelection,
       approveRoles: (formTemplate?.approveRoles as FormRole[] | undefined) ?? defaultRoleSelection,
@@ -711,6 +716,7 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
       linkedFormTriggerStatusId: null,
       linkedFormDueDays: null,
       sidebarConfig: defaultSidebarConfig,
+      createRoles: defaultCreateRoleSelection,
       readRoles: defaultRoleSelection,
       fillRoles: defaultRoleSelection,
       approveRoles: defaultRoleSelection,

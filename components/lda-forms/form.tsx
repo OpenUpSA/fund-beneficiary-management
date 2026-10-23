@@ -33,6 +33,8 @@ import { format } from "date-fns"
 import { Calendar } from "../ui/calendar";
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { formPeriodDateForPicker, serializeFormPeriodDate } from "@/lib/form-period-dates"
+import { usePermissions } from "@/hooks/use-permissions"
+import { canApproveForm } from "@/lib/permissions"
 
 interface FormDialogProps {
   formTemplates: FormTemplateWithRelations[]
@@ -54,6 +56,7 @@ const FormSchema = z.object({
 
 export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: FormDialogProps) {
   const [open, setOpen] = useState(false)
+  const { currentUser, canCreateForm } = usePermissions()
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -73,6 +76,8 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
   const selectedTemplate = formTemplates.find(t => t.id === Number(selectedTemplateId))
   const sidebarConfig = selectedTemplate?.sidebarConfig as { startDate?: boolean; endDate?: boolean; dueDate?: boolean } | null
   const isReportType = selectedTemplate?.templateType === 'REPORT'
+  // Amount/dates are approver fields; when creating, only approvers of the template may preset them
+  const canSetDates = !!ldaForm || canApproveForm(currentUser, selectedTemplate?.approveRoles)
   
   // Context-aware labels based on form type
   const startDateLabel = isReportType ? 'Reporting period start' : 'Funding Start'
@@ -136,7 +141,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
           </>
             : <>
               <PlusIcon />
-              <span className="hidden md:inline">New Application</span>
+              <span className="hidden md:inline">New form</span>
               
             </>}
         </Button>
@@ -181,7 +186,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                   <FormControl>
                     <Combobox
                       options={formTemplates
-                        .filter(template => template.active === true && template.templateType !== 'REPORT')
+                        .filter(template => template.active === true && canCreateForm(template.createRoles))
                         .map((template) => ({
                           value: template.id.toString(),
                           label: template.name,
@@ -197,7 +202,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                 </FormItem>
               )} />}
 
-            {(sidebarConfig?.startDate || sidebarConfig?.endDate || sidebarConfig?.dueDate) && (
+            {canSetDates && (sidebarConfig?.startDate || sidebarConfig?.endDate || sidebarConfig?.dueDate) && (
               <div className="flex flex-col gap-4 md:flex-row">
                 {sidebarConfig?.startDate && (
                   <FormField

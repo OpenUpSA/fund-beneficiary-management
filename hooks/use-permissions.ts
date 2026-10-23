@@ -1,5 +1,5 @@
 import { useSession } from 'next-auth/react'
-import { permissions, canViewFunders, canViewFunds, canManageFund, canManageFunder, type User, type LDA, type Document, type Media } from '@/lib/permissions'
+import { permissions, canCreateForm, canViewFunders, canViewFunds, canManageFund, canManageFunder, type User, type LDA, type Document, type Media } from '@/lib/permissions'
 import { Role } from '@prisma/client'
 
 export function usePermissions() {
@@ -47,7 +47,7 @@ export function usePermissions() {
     canCreateMedia: () => currentUser ? permissions.canCreateMedia(currentUser) : false,
 
     // Form permissions
-    canCreateNewApplication: () => currentUser ? permissions.canCreateNewApplication(currentUser) : false,
+    canCreateForm: (createRoles?: Role[] | string[] | null) => canCreateForm(currentUser, createRoles),
     canViewDashboardStats: () => currentUser ? permissions.canViewDashboardStats(currentUser) : false,
 
     // Fund & Funder permissions
