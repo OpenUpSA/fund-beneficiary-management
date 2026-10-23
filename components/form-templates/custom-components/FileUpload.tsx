@@ -8,7 +8,6 @@ import { getUploadErrorMessage } from '@/lib/upload-error'
 import {
   FORM_UPLOAD_MAX_LABEL,
   FORM_UPLOAD_MIME_TYPES,
-  describeAllowedTypes,
   formUploadAccept,
   formUploadFileError,
 } from '@/lib/form-upload'
@@ -243,7 +242,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
             <>
               <span className="font-medium text-primary">Click to upload</span> or drag and drop
               <br />
-              <span className="text-xs text-gray-500">{describeAllowedTypes(acceptedTypes)} (max {FORM_UPLOAD_MAX_LABEL})</span>
+              <span className="text-xs text-gray-500">Max file size {FORM_UPLOAD_MAX_LABEL}</span>
             </>
           )}
         </p>
