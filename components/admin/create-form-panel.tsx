@@ -19,6 +19,7 @@ import { toast } from "sonner"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { serializeFormPeriodDate } from "@/lib/form-period-dates"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface CreateFormPanelProps {
   ldas: LocalDevelopmentAgencyListItem[]
@@ -36,6 +37,8 @@ interface SidebarConfig {
 
 export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanelProps) {
   const [loading, setLoading] = useState(false)
+  const { canCreateForm } = usePermissions()
+  const creatableTemplates = formTemplates.filter(t => t.active && canCreateForm(t.createRoles))
   
   // LDA selection state
   const [selectedLDAs, setSelectedLDAs] = useState<string[]>([])
@@ -172,7 +175,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
           <div className="space-y-2">
             <Label>Form Template</Label>
             <Combobox
-              options={formTemplates.map((template) => ({
+              options={creatableTemplates.map((template) => ({
                 value: String(template.id),
                 label: template.name,
                 description: template.description ?? undefined,
