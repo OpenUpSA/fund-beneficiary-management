@@ -535,6 +535,7 @@ enum FundAmountType {
 enum FormTemplateType {
   APPLICATION
   REPORT
+  SURVEY
 }
 
 enum ReportFrequency {

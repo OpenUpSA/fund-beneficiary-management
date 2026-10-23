@@ -33,6 +33,7 @@ import { format } from "date-fns"
 import { Calendar } from "../ui/calendar";
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { formPeriodDateForPicker, serializeFormPeriodDate } from "@/lib/form-period-dates"
+import { formDateLabels } from "@/lib/form-template-type"
 import { usePermissions } from "@/hooks/use-permissions"
 import { canApproveForm } from "@/lib/permissions"
 
@@ -75,13 +76,11 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
   const selectedTemplateId = form.watch('formTemplateId')
   const selectedTemplate = formTemplates.find(t => t.id === Number(selectedTemplateId))
   const sidebarConfig = selectedTemplate?.sidebarConfig as { startDate?: boolean; endDate?: boolean; dueDate?: boolean } | null
-  const isReportType = selectedTemplate?.templateType === 'REPORT'
   // Amount/dates are approver fields; when creating, only approvers of the template may preset them
   const canSetDates = !!ldaForm || canApproveForm(currentUser, selectedTemplate?.approveRoles)
   
   // Context-aware labels based on form type
-  const startDateLabel = isReportType ? 'Reporting period start' : 'Funding Start'
-  const endDateLabel = isReportType ? 'Reporting period end' : 'Funding End'
+  const { start: startDateLabel, end: endDateLabel } = formDateLabels(selectedTemplate?.templateType)
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const payload = {

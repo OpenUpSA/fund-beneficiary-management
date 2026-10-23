@@ -43,6 +43,7 @@ import { Control, UseFormReturn } from "react-hook-form"
 import { ASSIGNABLE_FORM_ROLES, getRoleDisplayName } from "@/lib/permissions"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
+import { FORM_TEMPLATE_TYPE_OPTIONS, FORM_TEMPLATE_TYPE_VALUES, formTemplateTypeLabel } from "@/lib/form-template-type"
 
 // Roles selectable in the form-permission pickers. SUPER_USER is excluded — it
 // always has full access. Labels use the configured terminology (e.g. "LDA User").
@@ -73,7 +74,7 @@ const FormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   active: z.boolean(),
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
-  templateType: z.enum(['APPLICATION', 'REPORT']),
+  templateType: z.enum(FORM_TEMPLATE_TYPE_VALUES),
   formCategory: z.string().nullable().optional(),
   linkedFormTemplateId: z.number().nullable().optional(),
   linkedFormTriggerStatusId: z.number().nullable().optional(),
@@ -395,8 +396,9 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="APPLICATION">Application</SelectItem>
-                        <SelectItem value="REPORT">Report</SelectItem>
+                        {FORM_TEMPLATE_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormItem>
@@ -612,7 +614,7 @@ function CloneDialog({ allTemplates, open, onOpenChange }: CloneDialogProps) {
             <Combobox
               options={allTemplates.map((t) => ({
                 value: t.id.toString(),
-                label: `${t.name} (${t.templateType})`,
+                label: `${t.name} (${formTemplateTypeLabel(t.templateType)})`,
               }))}
               value={selectedTemplate}
               onChange={handleTemplateSelect}
@@ -788,8 +790,9 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="APPLICATION">Application</SelectItem>
-                      <SelectItem value="REPORT">Report</SelectItem>
+                      {FORM_TEMPLATE_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </FormItem>
