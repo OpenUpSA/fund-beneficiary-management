@@ -53,6 +53,8 @@ async function request(options: {
   canView?: boolean
   failSave?: boolean
   status?: string
+  body?: Record<string, unknown>
+  linkedTemplate?: { linkedFormTemplateId: number; linkedFormTriggerStatusId: number | null }
 } = {}) {
   const saved = options.saved ?? reportData
   const record = {
@@ -60,7 +62,15 @@ async function request(options: {
     localDevelopmentAgencyId: 1,
     formTemplateId: 1,
     formData: { ...saved },
-    formTemplate: { form: template, approveRoles: [], fillRoles: [], linkedFormTemplateId: null },
+    formTemplate: {
+      form: template,
+      approveRoles: [],
+      fillRoles: [],
+      linkedFormTemplateId: null as number | null,
+      linkedFormTriggerStatusId: null as number | null,
+      ...options.linkedTemplate,
+    },
+    formStatus: undefined as { id: number; label: string } | undefined,
     linkedForm: options.linked === null ? null : { formData: options.linked ?? applicationData },
     localDevelopmentAgency: { staffMembers: [] },
   }
@@ -72,6 +82,7 @@ async function request(options: {
   }
   const updates: UpdateData[] = []
   const sequence: string[] = []
+  const linkedCalls: string[] = []
   let prefillReads = 0
   const db = { default: {
     localDevelopmentAgencyForm: {
@@ -83,6 +94,9 @@ async function request(options: {
         if (options.failSave) throw new Error("Database unavailable")
         updates.push(data)
         Object.assign(record, data)
+        if (data.formStatusId) {
+          record.formStatus = { id: data.formStatusId, label: options.submit ? "UnderReview" : options.status ?? "Approved" }
+        }
         sequence.push("saved")
         return record
       },
@@ -113,6 +127,18 @@ async function request(options: {
   dependencies["@/lib/lda-form-prefill"] = loadModule("lib/lda-form-prefill.ts", dependencies)
   dependencies["@/lib/number-input"] = loadModule("lib/number-input.ts", dependencies)
   dependencies["@/lib/form-validation/validate-submission"] = loadModule("lib/form-validation/validate-submission.ts", dependencies)
+  // Real trigger decision; creation/status moves are recorded (covered in linked-form.test.ts)
+  const linkedForm = loadModule("lib/linked-form.ts", dependencies)
+  dependencies["@/lib/linked-form"] = {
+    isLinkedFormTrigger: linkedForm.isLinkedFormTrigger,
+    ensureLinkedForm: async (id: number) => {
+      linkedCalls.push(`ensure:${id}`)
+      return null
+    },
+    setLinkedFormStatus: async (_id: number, label: string) => {
+      linkedCalls.push(`set:${label}`)
+    },
+  }
   const route = loadModule(options.submit
     ? "app/api/lda-form/[lda_form_id]/submit/route.ts"
     : "app/api/lda-form/[lda_form_id]/route.ts", dependencies)
@@ -121,11 +147,11 @@ async function request(options: {
     context: { params: { lda_form_id: string } },
   ) => Promise<Response>
   const response = await handler({
-    json: async () => ({ formStatusLabel: options.status ?? "Approved" }),
+    json: async () => options.body ?? ({ formStatusLabel: options.status ?? "Approved" }),
   }, { params: { lda_form_id: "1" } })
   // Let the asynchronous approval event finish before checking its effects.
   await new Promise(resolve => setImmediate(resolve))
-  return { response, body: await response.json(), updates, sequence, prefillReads }
+  return { response, body: await response.json(), updates, sequence, prefillReads, linkedCalls }
 }
 
 async function main() {
@@ -192,7 +218,27 @@ async function main() {
   assert.equal(incompleteSubmission.response.status, 400)
   assert.deepEqual(incompleteSubmission.sequence, [])
 
-  console.log("form-approval-prefill: approval persistence, submission, validation, permissions and event ordering checks passed")
+  // Linked forms: created on the template's trigger status (Approved when unset)
+  const linkedTemplate = { linkedFormTemplateId: 9, linkedFormTriggerStatusId: null }
+  assert.deepEqual(approved.linkedCalls, [], "No linked template, nothing to create")
+  assert.deepEqual((await request({ linkedTemplate })).linkedCalls, ["ensure:1"])
+  assert.deepEqual((await request({ linkedTemplate, submit: true })).linkedCalls, [], "Submission is not the default trigger")
+  assert.deepEqual(
+    (await request({ linkedTemplate: { linkedFormTemplateId: 9, linkedFormTriggerStatusId: 2 }, submit: true })).linkedCalls,
+    ["ensure:1"],
+    "UnderReview trigger creates the linked form on submission",
+  )
+  assert.deepEqual(
+    (await request({ linkedTemplate: { linkedFormTemplateId: 9, linkedFormTriggerStatusId: 2 } })).linkedCalls,
+    ["ensure:1"],
+    "Approval still ensures the linked form exists",
+  )
+  assert.deepEqual((await request({ linkedTemplate, status: "Rejected" })).linkedCalls, ["set:Rejected"])
+  const amountOnly = await request({ linkedTemplate, body: { amount: "500" } })
+  assert.equal(amountOnly.response.status, 200)
+  assert.deepEqual(amountOnly.linkedCalls, [], "Editing the amount must not pause the linked form")
+
+  console.log("form-approval-prefill: approval persistence, submission, validation, permissions, event ordering and linked-form trigger checks passed")
 }
 
 main().catch(error => {
