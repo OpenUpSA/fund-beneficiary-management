@@ -49,9 +49,11 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
         // Cast to unknown first, then to District[] to satisfy TypeScript
         const districtsArray = selectedProvince.districts as unknown as District[];
         setDistricts(districtsArray);
-        
-        if (districtsArray.length > 0) {
-          form.setValue('physicalDistrict', districtsArray[0].code);
+
+        // This also runs on mount (the tab remounts when revisited), so keep the
+        // saved/picked district; only clear it when it isn't in this province
+        if (!districtsArray.some(d => d.code === form.getValues('physicalDistrict'))) {
+          form.setValue('physicalDistrict', '');
         }
       } else {
         setDistricts([]);
@@ -70,9 +72,9 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
         // Cast to unknown first, then to District[] to satisfy TypeScript
         const districtsArray = selectedProvince.districts as unknown as District[];
         setPostalDistricts(districtsArray);
-        
-        if (districtsArray.length > 0) {
-          form.setValue('postalDistrict', districtsArray[0].code);
+
+        if (!districtsArray.some(d => d.code === form.getValues('postalDistrict'))) {
+          form.setValue('postalDistrict', '');
         }
       } else {
         setPostalDistricts([]);
