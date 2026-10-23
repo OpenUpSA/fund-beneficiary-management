@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { MoreHorizontal, Trash2 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { DeleteDialog } from "./delete"
+import { FORM_TEMPLATE_TYPE_OPTIONS, formTemplateTypeLabel } from "@/lib/form-template-type"
 
 // Acronyms that should stay fully uppercased when formatting category slugs.
 const CATEGORY_ACRONYMS = new Set(["dft", "fris", "lda", "scat", "npo", "bpo", "fbo"])
@@ -41,10 +42,10 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
   const [templateToDelete, setTemplateToDelete] = useState<FormTemplateWithRelations | null>(null)
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
 
-  const typeOptions: FilterOption[] = useMemo(() => [
-    { id: "APPLICATION", label: "Application" },
-    { id: "REPORT", label: "Report" },
-  ], [])
+  const typeOptions: FilterOption[] = useMemo(
+    () => FORM_TEMPLATE_TYPE_OPTIONS.map((o) => ({ id: o.value, label: o.label })),
+    []
+  )
 
   const statusOptions: FilterOption[] = useMemo(() => [
     { id: "active", label: "Active" },
@@ -117,7 +118,7 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
                       {formTemplate.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-nowrap">{formTemplate.templateType}</TableCell>
+                  <TableCell className="text-nowrap">{formTemplateTypeLabel(formTemplate.templateType)}</TableCell>
                   <TableCell className="text-nowrap">{formatCategory(formTemplate.formCategory)}</TableCell>
                   <TableCell>
                     <Badge variant={formTemplate.active ? "default" : "secondary"}>
