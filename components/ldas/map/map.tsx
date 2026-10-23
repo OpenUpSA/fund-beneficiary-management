@@ -5,15 +5,23 @@ import L from "leaflet";
 // Import fullscreen control
 import "leaflet.fullscreen/Control.FullScreen.css";
 import "leaflet.fullscreen/Control.FullScreen.js";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents, ZoomControl } from "react-leaflet";
-import { LocateFixed, LoaderCircle, MapPinX, MapPinned, RotateCcw } from "lucide-react";
+import { LocateFixed, LoaderCircle, MapPin, MapPinX, MapPinned, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 
 import iconUrl from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "../manage-lda/form-schema";
+import {
+  type AddressParts,
+  type GeocodeResult,
+  type MatchPrecision,
+  PRECISION_NOTES,
+  buildAddressQueries,
+  filterToProvince,
+} from "@/lib/geocode-address";
 
 const southAfricaCenter: [number, number] = [-30.5595, 22.9375];
 const worldCenter: [number, number] = [5, 20];
@@ -41,11 +49,18 @@ const defaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
-interface NominatimResult {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
+const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+// Nominatim's usage policy allows at most one request per second
+const NOMINATIM_REQUEST_GAP_MS = 1100;
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function nominatimSearch(params: Record<string, string>): Promise<GeocodeResult[]> {
+  const search = new URLSearchParams({ format: "jsonv2", limit: "5", addressdetails: "1", ...params });
+  if (searchCountryCodes) search.set("countrycodes", searchCountryCodes);
+  const res = await fetch(`${NOMINATIM_SEARCH_URL}?${search}`);
+  if (!res.ok) throw new Error(`Nominatim responded ${res.status}`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 async function reverseGeocode(coords: [number, number]): Promise<string | null> {
@@ -115,11 +130,11 @@ function ClickHandler({
 
 interface MapProps {
   form: UseFormReturn<FormValues>,
-  /** Address composed from the physical-address fields; enables "Locate address on map". */
-  findAddress?: string,
+  /** Physical-address fields; enables "Locate address on map". */
+  addressParts?: AddressParts,
 }
 
-export default function Map({ form, findAddress }: MapProps) {
+export default function Map({ form, addressParts }: MapProps) {
 
   const [position, setPosition] = useState<[number, number] | null>(() => {
     const lat = form.getValues('latitude');
@@ -138,9 +153,16 @@ export default function Map({ form, findAddress }: MapProps) {
     savedLocationRef.current = { position, address: markerText };
   }
   const [search, setSearch] = useState<string>("");
-  const [results, setResults] = useState<NominatimResult[]>([]);
+  const [results, setResults] = useState<GeocodeResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [searchStatus, setSearchStatus] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [matchPrecision, setMatchPrecision] = useState<MatchPrecision | null>(null);
+  // Bumped by every new search so a slower, older search can't overwrite its results
+  const searchIdRef = useRef(0);
+
+  const addressQueries = useMemo(() => buildAddressQueries(addressParts ?? {}), [addressParts]);
 
   const handleLocationSelect = useCallback((coords: [number, number], address: string) => {
     setPosition(coords);
@@ -168,40 +190,47 @@ export default function Map({ form, findAddress }: MapProps) {
     form.setValue('mapAddress', '');
   }, [form]);
 
-  const selectResult = useCallback((result: NominatimResult) => {
-    handleLocationSelect([parseFloat(result.lat), parseFloat(result.lon)], result.display_name);
+  const dismissResults = useCallback(() => {
     setResults([]);
     setHasSearched(false);
-  }, [handleLocationSelect]);
+    setMatchPrecision(null);
+  }, []);
 
-  // Geocode a query and show up to 5 candidates; optionally pin the first hit
-  const runSearch = useCallback(async (query: string, autoSelectFirst = false) => {
+  const selectResult = useCallback((result: GeocodeResult) => {
+    handleLocationSelect([parseFloat(result.lat), parseFloat(result.lon)], result.display_name);
+    dismissResults();
+  }, [handleLocationSelect, dismissResults]);
+
+  // Free-text search for what the user types in the search box
+  const runSearch = useCallback(async (query: string) => {
     const q = query.trim();
+    const searchId = ++searchIdRef.current;
+    setLocating(false);
     if (q.length < 3) {
-      setResults([]);
-      setHasSearched(false);
+      dismissResults();
+      setSearching(false);
       return;
     }
     setSearching(true);
-    setHasSearched(true);
+    setSearchStatus(`Searching for “${q}”…`);
+    setMatchPrecision(null);
     try {
-      const params = new URLSearchParams({ format: "json", limit: "5", q });
-      if (searchCountryCodes) params.set("countrycodes", searchCountryCodes);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
-      const data: NominatimResult[] = await res.json();
-      const found = Array.isArray(data) ? data : [];
+      const found = await nominatimSearch({ q });
+      if (searchId !== searchIdRef.current) return;
       setResults(found);
-      if (autoSelectFirst && found[0]) {
-        handleLocationSelect([parseFloat(found[0].lat), parseFloat(found[0].lon)], found[0].display_name);
-      }
+      setHasSearched(true);
     } catch (err) {
+      if (searchId !== searchIdRef.current) return;
       console.error("Geocoding failed", err);
       setResults([]);
       toast.error("Address search failed — please try again");
     } finally {
-      setSearching(false);
+      if (searchId === searchIdRef.current) {
+        setSearching(false);
+        setSearchStatus(null);
+      }
     }
-  }, [handleLocationSelect]);
+  }, [dismissResults]);
 
   // Debounced search on the query the user is CURRENTLY typing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -218,13 +247,46 @@ export default function Map({ form, findAddress }: MapProps) {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
   }, []);
 
-  const locateTypedAddress = useCallback(() => {
-    if (!findAddress) return;
-    // Show the query in the search box so the user can see what was searched
-    // and refine it manually if the address doesn't geocode well.
-    setSearch(findAddress);
-    runSearch(findAddress, true);
-  }, [findAddress, runSearch]);
+  // Try the address from most to least precise and list the first tier that
+  // finds places in the selected province. Nothing is pinned until the user picks.
+  const locateTypedAddress = useCallback(async () => {
+    if (addressQueries.length === 0) return;
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    const searchId = ++searchIdRef.current;
+    setSearching(true);
+    setLocating(true);
+    setResults([]);
+    setHasSearched(false);
+    setMatchPrecision(null);
+    try {
+      for (const [index, query] of addressQueries.entries()) {
+        if (index > 0) await wait(NOMINATIM_REQUEST_GAP_MS);
+        if (searchId !== searchIdRef.current) return;
+        setSearch(query.label);
+        setSearchStatus(`Searching for “${query.label}”…`);
+        const found = filterToProvince(await nominatimSearch(query.params), addressParts?.province);
+        if (searchId !== searchIdRef.current) return;
+        if (found.length > 0) {
+          setResults(found);
+          setMatchPrecision(query.precision);
+          setHasSearched(true);
+          return;
+        }
+      }
+      setResults([]);
+      setHasSearched(true);
+    } catch (err) {
+      if (searchId !== searchIdRef.current) return;
+      console.error("Geocoding failed", err);
+      toast.error("Address search failed — please try again");
+    } finally {
+      if (searchId === searchIdRef.current) {
+        setSearching(false);
+        setLocating(false);
+        setSearchStatus(null);
+      }
+    }
+  }, [addressQueries, addressParts?.province]);
 
   const autoLocate = useCallback(() => {
     if (!navigator.geolocation) {
@@ -249,12 +311,14 @@ export default function Map({ form, findAddress }: MapProps) {
         <button
           onClick={locateTypedAddress}
           type="button"
-          disabled={!findAddress || searching}
+          disabled={addressQueries.length === 0 || locating}
           className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title={findAddress ? `Locate: ${findAddress}` : "Fill in the physical address first"}
+          title={addressQueries.length > 0 ? "Find the physical address entered above" : "Fill in the physical address first"}
         >
-          <MapPinned className="h-4 w-4" />
-          Locate address on map
+          {locating
+            ? <LoaderCircle className="h-4 w-4 animate-spin" />
+            : <MapPinned className="h-4 w-4" />}
+          {locating ? "Locating…" : "Locate address on map"}
         </button>
         <button
           onClick={autoLocate}
@@ -265,6 +329,21 @@ export default function Map({ form, findAddress }: MapProps) {
           <LocateFixed className="h-4 w-4" />
           Auto locate
         </button>
+        {savedLocationRef.current?.position && (
+          !position ||
+          position[0] !== savedLocationRef.current.position[0] ||
+          position[1] !== savedLocationRef.current.position[1]
+        ) && (
+          <button
+            onClick={resetToSavedLocation}
+            type="button"
+            className="flex items-center justify-center gap-2 px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
+            title="Put the pin back where it was when you opened this dialog"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Revert to saved location
+          </button>
+        )}
         {position && (
           <button
             onClick={clearLocation}
@@ -276,21 +355,6 @@ export default function Map({ form, findAddress }: MapProps) {
             Clear location
           </button>
         )}
-        {savedLocationRef.current?.position && (
-          !position ||
-          position[0] !== savedLocationRef.current.position[0] ||
-          position[1] !== savedLocationRef.current.position[1]
-        ) && (
-          <button
-            onClick={resetToSavedLocation}
-            type="button"
-            aria-label="Reset to previous location"
-            className="flex items-center justify-center px-3 py-2 border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
-            title="Reset to previous location"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
-        )}
       </div>
 
       <div className="relative">
@@ -299,28 +363,64 @@ export default function Map({ form, findAddress }: MapProps) {
           value={search}
           placeholder="Search for an address..."
           onChange={handleSearchChange}
-          className="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-base"
+          className="w-full px-4 py-2 pr-10 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-base"
         />
         {searching && (
           <LoaderCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-slate-400" />
         )}
       </div>
 
+      {searching && searchStatus && (
+        <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
+          <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
+          {searchStatus}
+        </div>
+      )}
+
       {!searching && hasSearched && (
         results.length > 0 ? (
-          <ul className="border border-slate-200 rounded-md divide-y divide-slate-100 bg-white shadow-sm">
-            {results.map((result) => (
-              <li key={result.place_id}>
-                <button
-                  type="button"
-                  onClick={() => selectResult(result)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
-                >
-                  {result.display_name}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="rounded-lg border-2 border-slate-900/80 bg-white shadow-md">
+            <div className="flex items-start justify-between gap-2 border-b border-slate-200 px-3 py-2">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  Select the correct location ({results.length} found)
+                </p>
+                {matchPrecision && PRECISION_NOTES[matchPrecision] && (
+                  <p className="mt-0.5 text-xs text-amber-700">{PRECISION_NOTES[matchPrecision]}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={dismissResults}
+                aria-label="Close results"
+                className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <ul className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
+              {results.map((result) => {
+                const [title, ...rest] = result.display_name.split(", ");
+                return (
+                  <li key={result.place_id}>
+                    <button
+                      type="button"
+                      onClick={() => selectResult(result)}
+                      className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+                    >
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-slate-900">{title}</span>
+                        {rest.length > 0 && (
+                          <span className="block truncate text-xs text-slate-500">{rest.join(", ")}</span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         ) : (
           <p className="text-sm text-amber-700">No locations found — refine the search or click the map to place the marker manually.</p>
         )
