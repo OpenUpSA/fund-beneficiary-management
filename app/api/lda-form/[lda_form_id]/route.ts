@@ -13,6 +13,7 @@ import {
 import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 import { revalidateTag } from "next/cache";
+import { ensureLinkedForm, isLinkedFormTrigger, setLinkedFormStatus } from "@/lib/linked-form";
 
 
 export const dynamic = "force-dynamic"
@@ -353,12 +354,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
         formTemplate: {
           select: {
             linkedFormTemplateId: true,
-            linkedFormTemplate: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
+            linkedFormTriggerStatusId: true
           }
         }
       }
@@ -383,51 +379,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       revalidateTag('lda-forms:list')
     }
 
-    // Handle linked form based on status changes
-    if (updatedRecord.formTemplate?.linkedFormTemplateId) {
-      // Fetch existingLinkedForm and target status in parallel
-      const targetStatusLabel = data.formStatusLabel === "Approved" ? "Draft"
-        : data.formStatusLabel === "Rejected" ? "Rejected"
-        : "Paused"
-
-      const [existingLinkedForm, targetStatus] = await Promise.all([
-        prisma.localDevelopmentAgencyForm.findFirst({ where: { linkedFormId: ldaFormId } }),
-        prisma.formStatus.findFirst({ where: { label: targetStatusLabel } }),
-      ])
-
-      if (data.formStatusLabel === "Approved") {
-        if (!existingLinkedForm) {
-          if (targetStatus) {
-            // Create the linked form (e.g., Report form linked to Application)
-            const linkedForm = await prisma.localDevelopmentAgencyForm.create({
-              data: {
-                localDevelopmentAgencyId: updatedRecord.localDevelopmentAgencyId,
-                formTemplateId: updatedRecord.formTemplate.linkedFormTemplateId,
-                formStatusId: targetStatus.id,
-                formData: {},
-                title: `${updatedRecord.formTemplate.linkedFormTemplate?.name || 'Linked Form'} - ${new Date().getFullYear()}`,
-                linkedFormId: ldaFormId,
-                dueDate: updatedRecord.dueDate,
-                fundingStart: updatedRecord.fundingStart,
-                fundingEnd: updatedRecord.fundingEnd,
-              }
-            });
-
-            return NextResponse.json({ ...updatedRecord, createdLinkedForm: linkedForm });
-          }
-        } else if (targetStatus) {
-          // Linked form exists, move it to Draft
-          await prisma.localDevelopmentAgencyForm.update({
-            where: { id: existingLinkedForm.id },
-            data: { formStatusId: targetStatus.id }
-          });
+    // Handle the linked form (e.g. Report for an Application) — only on status
+    // changes, so editing the amount or dates leaves it alone
+    if (data.formStatusLabel && updatedRecord.formTemplate?.linkedFormTemplateId) {
+      if (isLinkedFormTrigger(updatedRecord.formTemplate, updatedRecord.formStatus)) {
+        const linkedForm = await ensureLinkedForm(ldaFormId);
+        if (linkedForm) {
+          return NextResponse.json({ ...updatedRecord, createdLinkedForm: linkedForm });
         }
-      } else if (existingLinkedForm && targetStatus) {
-        // Move linked form to Rejected or Paused
-        await prisma.localDevelopmentAgencyForm.update({
-          where: { id: existingLinkedForm.id },
-          data: { formStatusId: targetStatus.id }
-        });
+      } else {
+        await setLinkedFormStatus(ldaFormId, data.formStatusLabel === "Rejected" ? "Rejected" : "Paused");
       }
     }
     

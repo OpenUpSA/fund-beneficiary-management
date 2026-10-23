@@ -227,6 +227,7 @@ model FormStatus {
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @updatedAt
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
+  linkedFormTriggerTemplates  FormTemplate[]               @relation("LinkedFormTriggerStatus")
 }
 
 model FormTemplate {
@@ -240,6 +241,11 @@ model FormTemplate {
   linkedFormTemplateId        Int?
   linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
   linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
+  // Status of a form from this template that creates its linked form (null = Approved)
+  linkedFormTriggerStatusId   Int?
+  linkedFormTriggerStatus     FormStatus?                  @relation("LinkedFormTriggerStatus", fields: [linkedFormTriggerStatusId], references: [id])
+  // Days from that moment until the linked form is due (null = copy this form's due date)
+  linkedFormDueDays           Int?
   sidebarConfig               Json                         @default("{\"amount\": true, \"status\": true, \"startDate\": true, \"endDate\": true, \"dueDate\": true}")
   // Role-based permissions for forms built from this template. Each list holds the roles
   // allowed to perform that action; SUPER_USER is always implicitly allowed and never stored.

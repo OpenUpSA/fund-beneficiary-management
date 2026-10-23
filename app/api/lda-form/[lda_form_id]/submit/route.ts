@@ -8,6 +8,7 @@ import {
   type FormTemplateInput,
 } from "@/lib/form-validation/validate-submission";
 import { applyPrefill } from "@/lib/lda-form-prefill";
+import { ensureLinkedForm, isLinkedFormTrigger } from "@/lib/linked-form";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_form_id: string }> }) {
   try {
@@ -28,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       select: {
         localDevelopmentAgencyId: true,
         formData: true,
-        formTemplate: { select: { form: true, fillRoles: true } },
+        formTemplate: { select: { form: true, fillRoles: true, linkedFormTemplateId: true, linkedFormTriggerStatusId: true } },
       },
     });
 
@@ -84,7 +85,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
         formStatus: true
       }
     });
-    
+
+    // Create the linked form now if the template is set to do so on submission.
+    // The submission is already saved, so a failure here must not fail the request.
+    if (isLinkedFormTrigger(existingForm.formTemplate, underReviewStatus)) {
+      try {
+        await ensureLinkedForm(ldaFormId);
+      } catch (error) {
+        console.error("Failed to create linked form on submission:", error);
+      }
+    }
+
     return NextResponse.json(updatedForm);
   } catch (error) {
     console.log("Error submitting form:", error);
