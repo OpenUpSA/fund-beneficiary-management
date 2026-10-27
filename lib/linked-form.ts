@@ -34,7 +34,6 @@ export async function ensureLinkedForm(formId: number) {
     where: { id: formId },
     select: {
       localDevelopmentAgencyId: true,
-      dueDate: true,
       fundingStart: true,
       fundingEnd: true,
       formTemplate: {
@@ -68,8 +67,8 @@ export async function ensureLinkedForm(formId: number) {
     return null
   }
 
-  // Due N days from today (UTC calendar day), or the parent's due date when unset
-  let dueDate = parent.dueDate
+  // Due N days from today (UTC calendar day), or no due date when unset
+  let dueDate: Date | null = null
   if (template.linkedFormDueDays != null) {
     const today = new Date()
     today.setUTCHours(0, 0, 0, 0)

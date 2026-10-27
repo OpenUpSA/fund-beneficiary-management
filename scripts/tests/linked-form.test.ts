@@ -23,7 +23,6 @@ function load(options: {
   linkedFormDueDays?: number | null
   existingStatus?: string
 } = {}) {
-  const parentDue = new Date("2026-01-31T00:00:00.000Z")
   const created: Array<Record<string, unknown>> = []
   const updated: Array<{ id: number; formStatusId: number }> = []
   const existing: Form | null = options.existingStatus
@@ -35,7 +34,6 @@ function load(options: {
     localDevelopmentAgencyForm: {
       findUnique: async () => ({
         localDevelopmentAgencyId: 7,
-        dueDate: parentDue,
         fundingStart: null,
         fundingEnd: null,
         formTemplate: {
@@ -66,7 +64,7 @@ function load(options: {
       return { default: prisma }
     },
   })
-  return { lib: exports as unknown as typeof import("../../lib/linked-form"), created, updated, parentDue }
+  return { lib: exports as unknown as typeof import("../../lib/linked-form"), created, updated }
 }
 
 async function main() {
@@ -96,10 +94,10 @@ async function main() {
   today.setUTCHours(0, 0, 0, 0)
   assert.equal((data.dueDate as Date).toISOString(), new Date(today.getTime() + 14 * 86400000).toISOString())
 
-  // Without days, the parent's due date is copied
+  // Without days, the linked form has no due date
   const noDays = load()
   await noDays.lib.ensureLinkedForm(1)
-  assert.equal((noDays.created[0].dueDate as Date).toISOString(), noDays.parentDue.toISOString())
+  assert.equal(noDays.created[0].dueDate, null)
 
   // Existing linked form: reopen Paused/Rejected, leave anything else alone, never duplicate
   for (const status of ["Paused", "Rejected"]) {

@@ -271,7 +271,7 @@ model LocalDevelopmentAgencyForm {
   title                    String
   createdById              Int?
   amount                   Decimal                      @default(0) @db.Money
-  dueDate                  DateTime                     @default(now())
+  dueDate                  DateTime?
   fundingStart             DateTime                     @default(now())
   fundingEnd               DateTime                     @default(now())
   submitted                DateTime?

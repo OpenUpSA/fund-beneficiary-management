@@ -236,7 +236,7 @@ function LinkedFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFo
             <div className="flex items-center gap-1.5">
               <FormLabel>Days to complete linked form</FormLabel>
               <FieldInfo
-                text={`Number of days the ${LDA_TERMINOLOGY.shortName} has to complete the linked form, counted from the day it is created. Leave empty to use this form's due date.`}
+                text={`Number of days the ${LDA_TERMINOLOGY.shortName} has to complete the linked form, counted from the day it is created. Leave empty for no due date.`}
               />
             </div>
             <FormControl>
@@ -245,7 +245,7 @@ function LinkedFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFo
                 min={0}
                 max={365}
                 step={1}
-                placeholder="Use this form's due date"
+                placeholder="No due date"
                 value={field.value ?? ''}
                 onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
               />
