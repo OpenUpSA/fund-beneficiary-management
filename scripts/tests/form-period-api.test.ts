@@ -28,6 +28,12 @@ async function request(canApprove = true, failSave = false) {
     "@/lib/form-validation/validate-submission": {},
     "@/lib/lda-form-prefill": {},
     "@/lib/template-placeholders": {},
+    // Date edits are not status changes: the linked form must be left alone
+    "@/lib/linked-form": {
+      isLinkedFormTrigger: () => assert.fail("Date edit must not check the linked-form trigger"),
+      ensureLinkedForm: () => assert.fail("Date edit must not create a linked form"),
+      setLinkedFormStatus: () => assert.fail("Date edit must not move the linked form"),
+    },
     "@/db": { default: { localDevelopmentAgencyForm: {
       findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [] } }),
       update: async ({ data }: { data: Record<string, Date> }) => {

@@ -19,6 +19,8 @@ import { toast } from "sonner"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { serializeFormPeriodDate } from "@/lib/form-period-dates"
+import { formDateLabels } from "@/lib/form-template-type"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface CreateFormPanelProps {
   ldas: LocalDevelopmentAgencyListItem[]
@@ -36,6 +38,8 @@ interface SidebarConfig {
 
 export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanelProps) {
   const [loading, setLoading] = useState(false)
+  const { canCreateForm } = usePermissions()
+  const creatableTemplates = formTemplates.filter(t => t.active && canCreateForm(t.createRoles))
   
   // LDA selection state
   const [selectedLDAs, setSelectedLDAs] = useState<string[]>([])
@@ -52,11 +56,8 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
   // Get selected items for display
   const selectedTemplateData = formTemplates.find(t => String(t.id) === selectedTemplate)
   const sidebarConfig: SidebarConfig = selectedTemplateData?.sidebarConfig as SidebarConfig || {}
-  const isReportType = selectedTemplateData?.templateType === 'REPORT'
-  
   // Context-aware labels based on form type
-  const startDateLabel = isReportType ? 'Reporting Start Date' : 'Funding Start Date'
-  const endDateLabel = isReportType ? 'Reporting End Date' : 'Funding End Date'
+  const { start: startDateLabel, end: endDateLabel } = formDateLabels(selectedTemplateData?.templateType)
 
   const handleSubmit = async () => {
     if (selectedLDAs.length === 0 || !selectedTemplate) {
@@ -172,7 +173,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
           <div className="space-y-2">
             <Label>Form Template</Label>
             <Combobox
-              options={formTemplates.map((template) => ({
+              options={creatableTemplates.map((template) => ({
                 value: String(template.id),
                 label: template.name,
                 description: template.description ?? undefined,
@@ -242,7 +243,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {fundingStart ? format(fundingStart, "PPP") : "Select start date"}
+                        {fundingStart ? format(fundingStart, "PPP") : `Select ${startDateLabel.toLowerCase()}`}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -268,7 +269,7 @@ export function CreateFormPanel({ ldas, formTemplates, onBack }: CreateFormPanel
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {fundingEnd ? format(fundingEnd, "PPP") : "Select end date"}
+                        {fundingEnd ? format(fundingEnd, "PPP") : `Select ${endDateLabel.toLowerCase()}`}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">

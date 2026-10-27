@@ -54,7 +54,9 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'amount' | 'status' | 'startDate' | 'endDate' | null
 
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
-  const { isLDAUser, isSuperUser } = usePermissions()
+  const { isSuperUser, canCreateForm } = usePermissions()
+  // Offer "New form" only when the user can create at least one active template
+  const canCreateAnyForm = formTemplates.some(t => t.active && canCreateForm(t.createRoles))
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilters, setActiveFilters] = useState<Record<string, FilterOption[]>>({})
   const [sortColumn, setSortColumn] = useState<SortableColumn>(null)
@@ -262,7 +264,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           />
         </div>
         
-        {lda && !isLDAUser() && (
+        {lda && canCreateAnyForm && (
           // open form dialog 
           <FormDialog
             formTemplates={formTemplates}

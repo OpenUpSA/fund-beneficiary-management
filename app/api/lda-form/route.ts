@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
-import { permissions, canReadForm } from "@/lib/permissions";
+import { permissions, canApproveForm, canCreateForm, canReadForm } from "@/lib/permissions";
 import { triggerFormEvent } from "@/lib/form-events";
 
 export const dynamic = "force-dynamic"
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Permission check: Can view LDA
-    if (permissions.isLDAUser(session.user)) {
+    if (!permissions.canViewLDA(session.user, ldaId)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
@@ -67,8 +67,13 @@ export async function POST(req: NextRequest) {
       where: { id: data.formTemplateId },
     })
 
-    if (!formTemplate) {
+    if (!formTemplate || !formTemplate.active) {
       return NextResponse.json({ error: "Form template not found" }, { status: 404 })
+    }
+
+    // Permission check: template must grant this user's role create access
+    if (!canCreateForm(session.user, formTemplate.createRoles)) {
+      return NextResponse.json({ error: "Permission denied - your role cannot create this form" }, { status: 403 });
     }
 
     // Find the "pending" form status
@@ -97,9 +102,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
+    // Only take the fields a new form may set. The amount and dates are approver
+    // fields (same as the form sidebar), so other roles can't preset them.
+    const canSetApproverFields = canApproveForm(session.user, formTemplate.approveRoles)
     const query = {
       data: {
-        ...data,
+        localDevelopmentAgencyId: ldaId,
+        formTemplateId: formTemplate.id,
+        formData: data.formData && typeof data.formData === "object" ? data.formData : {},
+        ...(canSetApproverFields && {
+          ...(data.amount !== undefined && { amount: data.amount }),
+          ...(data.dueDate && { dueDate: data.dueDate }),
+          ...(data.fundingStart && { fundingStart: data.fundingStart }),
+          ...(data.fundingEnd && { fundingEnd: data.fundingEnd }),
+        }),
         title: formTemplate.name,
         formStatusId: pendingStatus.id,
         createdById: userId,

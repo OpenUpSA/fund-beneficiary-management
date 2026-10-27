@@ -76,7 +76,13 @@ export async function POST(
         active: true,
         templateType: sourceTemplate.templateType,
         linkedFormTemplateId: sourceTemplate.linkedFormTemplateId,
+        linkedFormTriggerStatusId: sourceTemplate.linkedFormTriggerStatusId,
+        linkedFormDueDays: sourceTemplate.linkedFormDueDays,
         sidebarConfig: sourceTemplate.sidebarConfig as object,
+        createRoles: sourceTemplate.createRoles,
+        readRoles: sourceTemplate.readRoles,
+        fillRoles: sourceTemplate.fillRoles,
+        approveRoles: sourceTemplate.approveRoles,
       },
     })
 

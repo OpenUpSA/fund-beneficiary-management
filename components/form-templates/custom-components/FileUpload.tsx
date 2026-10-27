@@ -5,6 +5,12 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Field } from '@/types/forms'
 import { getUploadErrorMessage } from '@/lib/upload-error'
+import {
+  FORM_UPLOAD_MAX_LABEL,
+  FORM_UPLOAD_MIME_TYPES,
+  formUploadAccept,
+  formUploadFileError,
+} from '@/lib/form-upload'
 
 interface FileUploadProps {
   field: Field
@@ -24,41 +30,15 @@ interface UploadedFile {
   dbId?: number
 }
 
-// Default accepted file types for different destinations
+// Default accepted file types for different destinations. Documents take the
+// full form-upload allowlist; a template's accepted_file_types can only narrow it.
 const DEFAULT_MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
-const DEFAULT_DOCUMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
-
-// Helper to get accept string for input
-const getAcceptString = (types: string[]): string => {
-  return types.join(',')
-}
-
-// Map MIME types to human-readable extensions
-const MIME_TO_EXTENSION: Record<string, string> = {
-  'image/png': 'PNG',
-  'image/jpeg': 'JPEG',
-  'image/jpg': 'JPG',
-  'image/webp': 'WEBP',
-  'image/gif': 'GIF',
-  'application/pdf': 'PDF',
-  'application/msword': 'DOC',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
-  'application/vnd.ms-excel': 'XLS',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
-}
-
-// Helper to get display text for accepted types
-const getAcceptedTypesDisplay = (types: string[]): string => {
-  const extensions = types.map(type => MIME_TO_EXTENSION[type] || type.split('/')[1]?.toUpperCase() || type)
-  // Remove duplicates and join
-  return [...new Set(extensions)].join(', ')
-}
 
 export function FileUpload({ field, isEditing = false, onValueChange, lda_id, lda_form_id }: FileUploadProps) {
   // Get config from field
   const destination = (field.config?.destination as 'media' | 'document') || 'media'
   const configAcceptedTypes = field.config?.accepted_file_types as string[] | undefined
-  const acceptedTypes = configAcceptedTypes || (destination === 'document' ? DEFAULT_DOCUMENT_TYPES : DEFAULT_MEDIA_TYPES)
+  const acceptedTypes = configAcceptedTypes || (destination === 'document' ? FORM_UPLOAD_MIME_TYPES : DEFAULT_MEDIA_TYPES)
 
   const [files, setFiles] = useState<UploadedFile[]>(() => {
     if (field.value) {
@@ -108,9 +88,10 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
 
   const uploadFile = async (file: File): Promise<UploadedFile | null> => {
     try {
-      // Validate file type
-      if (!acceptedTypes.includes(file.type)) {
-        toast.error(`File type not allowed: ${file.type}`)
+      // Validate file type and size
+      const fileError = formUploadFileError(file, acceptedTypes)
+      if (fileError) {
+        toast.error(fileError)
         return null
       }
 
@@ -154,9 +135,10 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
       
       const result = await response.json()
       
-      // Return uploaded file info
+      // Return uploaded file info. Media and documents number their rows
+      // separately, so prefix the id to keep it unique within the field.
       return {
-        id: String(result.id),
+        id: `${destination}-${result.id}`,
         name: file.name,
         size: file.size,
         type: file.type,
@@ -244,7 +226,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
           ref={fileInputRef}
           className="hidden"
           multiple
-          accept={getAcceptString(acceptedTypes)}
+          accept={formUploadAccept(acceptedTypes)}
           onChange={handleFileChange}
           disabled={!isEditing || isUploading}
         />
@@ -260,7 +242,7 @@ export function FileUpload({ field, isEditing = false, onValueChange, lda_id, ld
             <>
               <span className="font-medium text-primary">Click to upload</span> or drag and drop
               <br />
-              <span className="text-xs text-gray-500">{getAcceptedTypesDisplay(acceptedTypes)}</span>
+              <span className="text-xs text-gray-500">Max file size {FORM_UPLOAD_MAX_LABEL}</span>
             </>
           )}
         </p>

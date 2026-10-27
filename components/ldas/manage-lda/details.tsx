@@ -32,8 +32,6 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
   
   // Watch for changes to the physicalProvince field
   const selectedPhysicalStreet = form.watch('physicalStreet');
-  const selectedPhysicalComplexName = form.watch('physicalComplexName');
-  const selectedPhysicalComplexNumber = form.watch('physicalComplexNumber');
   const selectedPhysicalCity = form.watch('physicalCity');
   const selectedPhysicalProvinceCode = form.watch('physicalProvince');
   const selectedPhysicalDistrictCode = form.watch('physicalDistrict');
@@ -49,9 +47,11 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
         // Cast to unknown first, then to District[] to satisfy TypeScript
         const districtsArray = selectedProvince.districts as unknown as District[];
         setDistricts(districtsArray);
-        
-        if (districtsArray.length > 0) {
-          form.setValue('physicalDistrict', districtsArray[0].code);
+
+        // This also runs on mount (the tab remounts when revisited), so keep the
+        // saved/picked district; only clear it when it isn't in this province
+        if (!districtsArray.some(d => d.code === form.getValues('physicalDistrict'))) {
+          form.setValue('physicalDistrict', '');
         }
       } else {
         setDistricts([]);
@@ -70,9 +70,9 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
         // Cast to unknown first, then to District[] to satisfy TypeScript
         const districtsArray = selectedProvince.districts as unknown as District[];
         setPostalDistricts(districtsArray);
-        
-        if (districtsArray.length > 0) {
-          form.setValue('postalDistrict', districtsArray[0].code);
+
+        if (!districtsArray.some(d => d.code === form.getValues('postalDistrict'))) {
+          form.setValue('postalDistrict', '');
         }
       } else {
         setPostalDistricts([]);
@@ -97,34 +97,15 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
     form,
   ]);
 
-  const physicalAddress = useMemo(() => {
-    // Find province and district names from their codes
-    const selectedProvince = provinces.find(p => p.code === selectedPhysicalProvinceCode);
-    const provinceName = selectedProvince?.name || selectedPhysicalProvinceCode;
-    
-    const selectedDistrict = districts.find(d => d.code === selectedPhysicalDistrictCode);
-    const districtName = selectedDistrict?.name || selectedPhysicalDistrictCode;
-    
-    // Smallest to largest area: street ... city, district, province
-    const parts = [
-      selectedPhysicalStreet,
-      selectedPhysicalComplexName,
-      selectedPhysicalComplexNumber,
-      selectedPhysicalCity,
-      districtName,
-      provinceName
-    ].filter(part => part && part.trim() !== '');
-    
-    // Only add South Africa if we have at least one valid part
-    if (parts.length > 0) {
-      return parts.join(', ') + ', South Africa';
-    }
-    
-    return '';
-  }, [
+  // Address parts for "Locate address on map". Complex name/number are left out:
+  // OpenStreetMap doesn't know them and they stop the address from matching.
+  const physicalAddressParts = useMemo(() => ({
+    street: selectedPhysicalStreet,
+    city: selectedPhysicalCity,
+    district: districts.find(d => d.code === selectedPhysicalDistrictCode)?.name,
+    province: provinces.find(p => p.code === selectedPhysicalProvinceCode)?.name,
+  }), [
     selectedPhysicalStreet,
-    selectedPhysicalComplexName,
-    selectedPhysicalComplexNumber,
     selectedPhysicalCity,
     selectedPhysicalProvinceCode,
     selectedPhysicalDistrictCode,
@@ -412,7 +393,7 @@ export function DetailsTab({ form, provinces }: DetailsTabProps) {
           render={() => (
             <FormItem>
               <FormLabel>Mapped location</FormLabel>
-              <Map form={form} findAddress={physicalAddress}/>
+              <Map form={form} addressParts={physicalAddressParts}/>
             </FormItem>
           )}
         />

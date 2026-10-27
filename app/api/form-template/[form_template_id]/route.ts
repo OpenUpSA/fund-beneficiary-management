@@ -4,6 +4,7 @@ import { revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { linkedFormSettingsError } from "@/lib/linked-form"
 import { Prisma } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
@@ -64,6 +65,11 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
     }
 
     const data = await req.json()
+
+    const settingsError = await linkedFormSettingsError(data)
+    if (settingsError) {
+      return NextResponse.json({ error: settingsError }, { status: 400 })
+    }
 
     // Validate linkedFormTemplateId if provided
     if (data.linkedFormTemplateId) {
