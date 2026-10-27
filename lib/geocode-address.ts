@@ -39,10 +39,15 @@ export function buildAddressQueries(parts: AddressParts): AddressQuery[] {
   const city = clean(parts.city)
   const district = clean(parts.district)
   const province = clean(parts.province)
+  // Nominatim's structured `street` only takes "<number> <street name>", so a
+  // street like "39 Roeland St, Cape Town City Centre" finds nothing. Also try
+  // the part before the first comma.
+  const streetOnly = clean(street.split(",")[0])
+  const streets = street ? [street, streetOnly] : []
 
   const candidates: Array<AddressQuery | null> = [
-    street && city ? query({ street, city, state: province }, "street") : null,
-    street ? query({ street, state: province }, "street") : null,
+    ...streets.map((s) => (city ? query({ street: s, city, state: province }, "street") : null)),
+    ...streets.map((s) => query({ street: s, state: province }, "street")),
     city ? query({ city, state: province }, "city") : null,
     district ? query({ county: district, state: province }, "district") : null,
   ]

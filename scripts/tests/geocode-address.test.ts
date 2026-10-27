@@ -23,6 +23,18 @@ assert.deepEqual(
   [{ street: "Main Road", city: "Sasolburg" }, { street: "Main Road" }, { city: "Sasolburg" }],
   "Without a province the state is simply left out",
 )
+assert.deepEqual(
+  buildAddressQueries({ street: "39 Roeland St, Cape Town City Centre", city: "Cape Town", province: "Western Cape" })
+    .map(q => q.params),
+  [
+    { street: "39 Roeland St, Cape Town City Centre", city: "Cape Town", state: "Western Cape" },
+    { street: "39 Roeland St", city: "Cape Town", state: "Western Cape" },
+    { street: "39 Roeland St, Cape Town City Centre", state: "Western Cape" },
+    { street: "39 Roeland St", state: "Western Cape" },
+    { city: "Cape Town", state: "Western Cape" },
+  ],
+  "A street with a suburb after a comma is also tried without it",
+)
 assert.deepEqual(buildAddressQueries({}), [], "Nothing to search without an address")
 assert.deepEqual(buildAddressQueries({ province: "Free State" }), [], "A province alone is too broad to locate")
 
