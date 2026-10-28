@@ -42,6 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { lda_form_id:
       formTemplate: true,
       formStatus: true,
       createdBy: true,
+      approvedBy: { select: { id: true, name: true } },
       linkedForm: true,
     },
   })
@@ -281,6 +282,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       fundingStart?: Date;
       fundingEnd?: Date;
       approved?: Date | null;
+      approvedById?: number | null;
       submitted?: Date | null;
       formData?: Prisma.InputJsonObject;
     } = {};
@@ -302,8 +304,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
       if (data.formStatusLabel === "Approved") {
         updateData.approved = new Date();
+        updateData.approvedById = parseInt(user.id, 10);
       } else {
         updateData.approved = null;
+        updateData.approvedById = null;
       }
 
       if (data.formStatusLabel === "Draft") {
