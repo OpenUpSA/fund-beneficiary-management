@@ -15,6 +15,8 @@ import {
   MoreHorizontal,
   Trash2,
   Download,
+  ChevronRightIcon,
+  ExternalLinkIcon,
 } from "lucide-react"
 import { formatCurrencyValue } from "@/lib/currency"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -41,6 +43,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import { buildFormTree, formPeriodLabel } from "@/lib/form-tree"
+import { formTemplateTypeLabel } from "@/lib/form-template-type"
 
 interface Props {
   ldaForms: LocalDevelopmentAgencyFormListItem[]
@@ -64,6 +70,15 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [formToDelete, setFormToDelete] = useState<LocalDevelopmentAgencyFormListItem | null>(null)
+  // Rows whose grouped forms are hidden; everything starts expanded
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
+  const toggleCollapsed = (id: number) =>
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   // Only offer template types this LDA actually has forms for, ordered by name
   const typeOptions: FilterOption[] = useMemo(() => {
@@ -142,6 +157,12 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
     })
   }, [])
 
+  // Paused reports are never listed
+  const listedForms = useMemo(
+    () => ldaForms.filter(f => !(f.formTemplate?.templateType === 'REPORT' && f.formStatus?.label === 'Paused')),
+    [ldaForms]
+  )
+
   const filteredForms = useMemo(() => {
     const sel = (k: string) => (activeFilters[k] || []).map(o => String(o.id))
     const typeSel = sel('type')
@@ -150,14 +171,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
     const submittedSel = sel('submitted')
     const approvedSel = sel('approved')
 
-    let result = ldaForms.filter((ldaForm) => {
-      // Hide REPORT type forms that are Paused
-      const isReportType = ldaForm.formTemplate?.templateType === 'REPORT'
-      const isPaused = ldaForm.formStatus?.label === 'Paused'
-      if (isReportType && isPaused) {
-        return false
-      }
-
+    let result = listedForms.filter((ldaForm) => {
       const searchMatch =
         searchTerm === "" ||
         ldaForm.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -201,7 +215,13 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
       })
     }
     return result
-  }, [ldaForms, searchTerm, activeFilters, sortColumn, sortDirection])
+  }, [listedForms, searchTerm, activeFilters, sortColumn, sortDirection])
+
+  // Primary forms with their grouped forms and linked reports nested underneath
+  const rows = useMemo(
+    () => buildFormTree(listedForms, filteredForms, collapsed, Boolean(sortColumn && sortDirection)),
+    [listedForms, filteredForms, collapsed, sortColumn, sortDirection]
+  )
 
   const formatCurrency = (value: number) => {
     if (isNaN(value)) return "-"
@@ -290,7 +310,8 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                   </span>
                 </div>
               </TableHead>
-              <TableHead className="font-medium">View</TableHead>
+              <TableHead className="font-medium">Year / Quarter</TableHead>
+              <TableHead className="font-medium">Type</TableHead>
               <TableHead className="font-medium text-right cursor-pointer select-none" onClick={() => handleSort('amount')}>
                 <div className="flex items-center justify-end">
                   <span>Amount</span>
@@ -339,7 +360,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredForms.map((ldaForm) => {
+            {rows.map(({ form: ldaForm, depth, hasChildren, isContext }) => {
               // Generate demo data for the example
               const getStatusBadge = () => {
                 // Adding keys to each status badge element to prevent React key warnings
@@ -351,24 +372,43 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
               };
               
               return (
-                <TableRow key={`application-${ldaForm.id}`}>
+                <TableRow
+                  key={`application-${ldaForm.id}`}
+                  className={cn(
+                    depth === 0 && hasChildren && "bg-slate-50 font-semibold",
+                    depth > 0 && "bg-slate-50/40",
+                    isContext && "text-muted-foreground"
+                  )}
+                >
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {ldaForm.title}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-between">
-                      <Link href={`${LDA_TERMINOLOGY.dashboardPath}/${lda?.id}/funding-reports/${ldaForm.id}`}>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-500 hover:text-gray-700"
+                    <div className="flex items-center gap-2" style={{ paddingLeft: `${depth * 1.5}rem` }}>
+                      {hasChildren ? (
+                        <button
+                          type="button"
+                          onClick={() => toggleCollapsed(ldaForm.id)}
+                          className="text-gray-500 hover:text-gray-800"
+                          aria-label={collapsed.has(ldaForm.id) ? `Show forms under ${ldaForm.title}` : `Hide forms under ${ldaForm.title}`}
+                          aria-expanded={!collapsed.has(ldaForm.id)}
                         >
-                          View Form
-                        </Button>
+                          {collapsed.has(ldaForm.id) ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                        </button>
+                      ) : (
+                        <span className="w-4 shrink-0" />
+                      )}
+                      <Link
+                        href={`${LDA_TERMINOLOGY.dashboardPath}/${ldaForm.localDevelopmentAgencyId}/funding-reports/${ldaForm.id}`}
+                        className="flex items-center gap-2 hover:underline"
+                      >
+                        {ldaForm.title}
+                        <ExternalLinkIcon className="h-3.5 w-3.5 shrink-0 text-gray-400" />
                       </Link>
                     </div>
+                  </TableCell>
+                  <TableCell>{formPeriodLabel(ldaForm.fundingStart, depth)}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-normal">
+                      {formTemplateTypeLabel(ldaForm.formTemplate?.templateType)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(Number(ldaForm.amount ?? 0))}
@@ -433,7 +473,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
             })}
             {filteredForms.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center text-gray-500 text-lg">
+                <TableCell colSpan={8} className="h-24 text-center text-gray-500 text-lg">
                   No applications found
                 </TableCell>
               </TableRow>
