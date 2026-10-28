@@ -239,6 +239,10 @@ model FormTemplate {
   active                      Boolean                      @default(true)
   templateType                FormTemplateType             @default(APPLICATION)
   formCategory                String?
+  // Primary forms (e.g. Grant Funding) group the other forms of their funding period
+  isPrimary                   Boolean                      @default(false)
+  // Category of the primary form that forms from this template are grouped under
+  primaryCategory             String?
   linkedFormTemplateId        Int?
   linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
   linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
@@ -281,6 +285,10 @@ model LocalDevelopmentAgencyForm {
   linkedFormId             Int?
   linkedForm               LocalDevelopmentAgencyForm?  @relation("LinkedForm", fields: [linkedFormId], references: [id])
   linkedForms              LocalDevelopmentAgencyForm[] @relation("LinkedForm")
+  // The primary form (e.g. that year's Grant Funding Application) this form is grouped under
+  primaryFormId            Int?
+  primaryForm              LocalDevelopmentAgencyForm?  @relation("PrimaryForm", fields: [primaryFormId], references: [id], onDelete: SetNull)
+  secondaryForms           LocalDevelopmentAgencyForm[] @relation("PrimaryForm")
   createdAt                DateTime                     @default(now())
   updatedAt                DateTime                     @updatedAt
   formStatus               FormStatus                   @relation(fields: [formStatusId], references: [id])
@@ -295,6 +303,7 @@ model LocalDevelopmentAgencyForm {
   @@index([formStatusId])
   @@index([formTemplateId])
   @@index([linkedFormId])
+  @@index([primaryFormId])
 }
 
 model OrganisationDetail {
