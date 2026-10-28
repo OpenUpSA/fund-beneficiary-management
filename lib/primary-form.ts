@@ -115,6 +115,72 @@ export async function placeForm(formId: number): Promise<void> {
   else await assignPrimaryForm(formId)
 }
 
+export interface RegroupChange {
+  id: number
+  title: string
+  from: number | null
+  to: number | null
+}
+
+/**
+ * Work out where every form belongs, from scratch — used when template settings
+ * change and by the backfill script. Returns only the forms that would move.
+ */
+export async function planRegroup(): Promise<RegroupChange[]> {
+  const forms = await prisma.localDevelopmentAgencyForm.findMany({
+    select: {
+      id: true,
+      title: true,
+      localDevelopmentAgencyId: true,
+      fundingStart: true,
+      fundingEnd: true,
+      primaryFormId: true,
+      linkedFormId: true,
+      formStatus: { select: { label: true } },
+      formTemplate: { select: { isPrimary: true, formCategory: true, primaryCategory: true } },
+    },
+  })
+  type Row = (typeof forms)[number]
+  const byId = new Map(forms.map((f) => [f.id, f]))
+  const primaries = forms
+    .filter((f) => f.formTemplate.isPrimary && f.formTemplate.formCategory && !INACTIVE_PRIMARY_STATUSES.includes(f.formStatus.label))
+    .sort((a, b) => b.fundingStart.getTime() - a.fundingStart.getTime())
+
+  const targets = new Map<number, number | null>()
+  const resolve = (form: Row, depth = 0): number | null => {
+    const known = targets.get(form.id)
+    if (known !== undefined) return known
+    let target: number | null = null
+    const parent = form.linkedFormId ? byId.get(form.linkedFormId) : undefined
+    if (form.formTemplate.isPrimary) {
+      target = null
+    } else if (parent && depth < 10) {
+      target = parent.formTemplate.isPrimary ? parent.id : resolve(parent, depth + 1)
+    } else if (form.formTemplate.primaryCategory) {
+      const primary = primaries.find((p) =>
+        p.localDevelopmentAgencyId === form.localDevelopmentAgencyId &&
+        p.formTemplate.formCategory === form.formTemplate.primaryCategory &&
+        p.fundingStart <= form.fundingStart &&
+        p.fundingEnd >= form.fundingStart
+      )
+      target = primary?.id ?? null
+    }
+    targets.set(form.id, target)
+    return target
+  }
+
+  return forms
+    .map((f) => ({ id: f.id, title: f.title, from: f.primaryFormId, to: resolve(f) }))
+    .filter((change) => change.from !== change.to)
+}
+
+/** Save the moves from `planRegroup`. */
+export async function applyRegroup(changes: RegroupChange[]): Promise<void> {
+  await prisma.$transaction(
+    changes.map(({ id, to }) => prisma.localDevelopmentAgencyForm.update({ where: { id }, data: { primaryFormId: to } }))
+  )
+}
+
 /** Error when another primary form of the same category overlaps the given period for this LDA. */
 export async function primaryOverlapError(
   ldaId: number,

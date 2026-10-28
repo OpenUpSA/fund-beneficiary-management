@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { linkedFormSettingsError } from "@/lib/linked-form"
+import { primaryFormSettingsError } from "@/lib/primary-form"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await req.json();
-    const settingsError = await linkedFormSettingsError(data);
+    const settingsError = await linkedFormSettingsError(data) ?? primaryFormSettingsError(data);
     if (settingsError) {
       return NextResponse.json({ error: settingsError }, { status: 400 });
     }

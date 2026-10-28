@@ -79,7 +79,8 @@ function load(rows: Array<Partial<FormRow> & { id: number; template: Template }>
         if (orderBy) found.sort((a, b) => b.fundingStart.getTime() - a.fundingStart.getTime())
         return found[0] ? view(found[0]) : null
       },
-      findMany: async ({ where }: { where: Record<string, unknown> }) => forms.filter((f) => matches(f, where)).map(view),
+      findMany: async ({ where }: { where?: Record<string, unknown> }) =>
+        forms.filter((f) => !where || matches(f, where)).map((f) => ({ ...view(f), formStatus: { label: f.status } })),
       update: async ({ where, data }: { where: { id: number }; data: Partial<FormRow> }) => Object.assign(byId(where.id)!, data),
       updateMany: async ({ where, data }: { where: Record<string, unknown>; data: Partial<FormRow> }) => {
         const hit = forms.filter((f) => matches(f, where))
@@ -185,6 +186,25 @@ async function main() {
     assert.equal(await lib.primaryOverlapError(1, "fris_application", d("2026-01-01"), d("2026-12-31")), undefined)
     assert.equal(await lib.primaryOverlapError(2, "grant_funding", d("2026-01-01"), d("2026-12-31")), undefined)
     assert.equal(await lib.primaryOverlapError(1, "grant_funding", d("2026-01-01"), d("2026-12-31"), 1), undefined, "Editing itself")
+  }
+
+  // Regrouping everything from scratch matches the per-form rules and only reports moves
+  {
+    const { lib } = load([
+      { id: 1, template: TEMPLATES.grant },
+      { id: 2, template: TEMPLATES.grant, status: "Rejected", fundingStart: d("2027-01-01"), fundingEnd: d("2027-12-31") },
+      { id: 10, template: TEMPLATES.dft, fundingStart: d("2026-05-01") },
+      { id: 11, template: TEMPLATES.dft, fundingStart: d("2027-05-01"), primaryFormId: 1 },
+      { id: 12, template: TEMPLATES.dft, fundingStart: d("2026-06-01"), primaryFormId: 1 },
+      { id: 20, template: TEMPLATES.dftReport, linkedFormId: 10 },
+      { id: 21, template: TEMPLATES.narrative, linkedFormId: 1 },
+      { id: 30, template: TEMPLATES.grant, primaryFormId: 1 },
+    ])
+    const plan = await lib.planRegroup()
+    assert.deepEqual(
+      plan.map(({ id, from, to }) => [id, from, to]).sort((a, b) => (a[0] as number) - (b[0] as number)),
+      [[10, null, 1], [11, 1, null], [20, null, 1], [21, null, 1], [30, 1, null]],
+    )
   }
 
   // Template settings validation

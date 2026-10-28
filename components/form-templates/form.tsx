@@ -76,6 +76,8 @@ const FormSchema = z.object({
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   templateType: z.enum(FORM_TEMPLATE_TYPE_VALUES),
   formCategory: z.string().nullable().optional(),
+  isPrimary: z.boolean(),
+  primaryCategory: z.string().nullable().optional(),
   linkedFormTemplateId: z.number().nullable().optional(),
   linkedFormTriggerStatusId: z.number().nullable().optional(),
   linkedFormDueDays: z.number().int().min(0).max(365, { message: "Must be 365 days or fewer." }).nullable().optional(),
@@ -259,6 +261,80 @@ function LinkedFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFo
   )
 }
 
+// Whether forms from this template are primary (e.g. Grant Funding), or which
+// primary form category they're grouped under. Shared by the create and edit dialogs.
+function PrimaryFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFormValues> }) {
+  const isPrimary = form.watch('isPrimary')
+  const formCategory = form.watch('formCategory')
+  // Only categories other than this template's own can be grouped under
+  const groupUnderOptions = formCategoryOptions.filter((option) => option.value !== formCategory)
+
+  return (
+    <div className="rounded-md border p-4 space-y-4">
+      <FormField
+        control={form.control}
+        name="isPrimary"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-2">
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  disabled={!formCategory && !field.value}
+                  onCheckedChange={(checked) => {
+                    field.onChange(checked)
+                    if (checked) form.setValue('primaryCategory', null)
+                  }}
+                />
+              </FormControl>
+              <FormLabel className="!mt-0">Primary form</FormLabel>
+              <FieldInfo
+                text={`A primary form (e.g. a Grant Funding Application) groups the other forms of its funding period underneath it in each ${LDA_TERMINOLOGY.shortName}'s list. An ${LDA_TERMINOLOGY.shortName} can't have two primary forms of the same category with overlapping dates. Needs a form category, which yearly copies of the template keep.`}
+              />
+            </div>
+            {!formCategory && <p className="text-xs text-muted-foreground">Choose a form category to make this a primary form.</p>}
+          </FormItem>
+        )}
+      />
+
+      {!isPrimary && (
+        <FormField
+          control={form.control}
+          name="primaryCategory"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center gap-1.5">
+                <FormLabel>Group under primary form</FormLabel>
+                <FieldInfo
+                  text={`Forms from this template are listed under the ${LDA_TERMINOLOGY.shortName}'s primary form of this category whose start and end dates include the form's start date.`}
+                />
+              </div>
+              <Select
+                value={field.value || 'none'}
+                onValueChange={(val) => field.onChange(val === 'none' ? null : val)}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">None (not grouped)</SelectItem>
+                  {groupUnderOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
+      )}
+    </div>
+  )
+}
+
 // Picking "None" as the linked template also clears its settings
 const clearLinkedFormSettings = (form: UseFormReturn<FormTemplateFormValues>) => {
   form.setValue('linkedFormTriggerStatusId', null)
@@ -290,6 +366,8 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       description: formTemplate ? formTemplate.description : "",
       templateType: formTemplate?.templateType || 'APPLICATION',
       formCategory: formTemplate?.formCategory || null,
+      isPrimary: formTemplate?.isPrimary ?? false,
+      primaryCategory: formTemplate?.primaryCategory ?? null,
       linkedFormTemplateId: formTemplate?.linkedFormTemplateId || null,
       linkedFormTriggerStatusId: formTemplate?.linkedFormTriggerStatusId ?? null,
       linkedFormDueDays: formTemplate?.linkedFormDueDays ?? null,
@@ -432,6 +510,8 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                   </FormItem>
                 )}
               />
+
+              <PrimaryFormSettingsFields form={form} />
 
               <FormField
                 control={form.control}
@@ -714,6 +794,8 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
       description: "",
       templateType: 'APPLICATION',
       formCategory: null,
+      isPrimary: false,
+      primaryCategory: null,
       linkedFormTemplateId: null,
       linkedFormTriggerStatusId: null,
       linkedFormDueDays: null,
@@ -826,6 +908,8 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
                 </FormItem>
               )}
             />
+
+            <PrimaryFormSettingsFields form={form} />
 
             <FormField
               control={form.control}

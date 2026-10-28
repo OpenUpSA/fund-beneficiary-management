@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { linkedFormSettingsError } from "@/lib/linked-form"
+import { applyRegroup, planRegroup, primaryFormSettingsError } from "@/lib/primary-form"
 import { Prisma } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
@@ -66,7 +67,13 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
 
     const data = await req.json()
 
-    const settingsError = await linkedFormSettingsError(data)
+    // Primary settings are checked against the template as it will be after this (partial) update
+    const primarySettings = {
+      isPrimary: data.isPrimary ?? existingTemplate.isPrimary,
+      primaryCategory: data.primaryCategory !== undefined ? data.primaryCategory : existingTemplate.primaryCategory,
+      formCategory: data.formCategory !== undefined ? data.formCategory : existingTemplate.formCategory,
+    }
+    const settingsError = await linkedFormSettingsError(data) ?? primaryFormSettingsError(primarySettings)
     if (settingsError) {
       return NextResponse.json({ error: settingsError }, { status: 400 })
     }
@@ -90,6 +97,15 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
       where: { id: id },
       data: data
     })
+
+    // Changing which forms are primary, or what they group under, regroups existing forms
+    const groupingChanged =
+      primarySettings.isPrimary !== existingTemplate.isPrimary ||
+      primarySettings.primaryCategory !== existingTemplate.primaryCategory ||
+      primarySettings.formCategory !== existingTemplate.formCategory
+    if (groupingChanged) {
+      await applyRegroup(await planRegroup())
+    }
     revalidateTag('form-templates:list')
     // Cached form payloads embed the template — flush them so edits show up
     revalidateTag('lda-forms:list')
