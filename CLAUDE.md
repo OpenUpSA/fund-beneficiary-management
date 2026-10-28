@@ -21,6 +21,7 @@ yarn db:studio        # Open Prisma Studio GUI
 yarn create-superuser # Interactively create an admin user
 yarn assign-pos       # Assign programme officers to LDAs from a CSV (dry run by default)
 yarn normalize-period-dates # One-off: move legacy funding/schedule dates to UTC midnight (dry run by default)
+yarn link-primary-forms # Group existing forms under their primary forms (dry run by default)
 yarn test             # Run the script-based tests in scripts/tests/
 ```
 
@@ -66,6 +67,8 @@ The `[locale]` segment is `en` or `xh` (Xhosa). Route protection is handled by `
 - After any schema change, run `yarn db:migrate` then `yarn db:generate`
 
 Key model relationships: `Funder` → `Fund` → `LocalDevelopmentAgency` → `LocalDevelopmentAgencyForm` (submitted against a `FormTemplate`).
+
+Forms are grouped under a **primary form** (`primaryFormId`, e.g. that year's Grant Funding Application) by template category and date; linked forms (`linkedFormId`) sit under their parent. See [docs/PRIMARY_FORMS.md](docs/PRIMARY_FORMS.md) and `lib/primary-form.ts`.
 
 ### Auth & permissions
 
