@@ -77,6 +77,7 @@ async function request(options: {
   type UpdateData = {
     formStatusId?: number
     approved?: Date | null
+    approvedById?: number | null
     submitted?: Date | null
     formData?: Record<string, unknown>
   }
@@ -161,6 +162,7 @@ async function main() {
   assert.deepEqual(JSON.parse(JSON.stringify(approved.updates[0].formData)), approved.body.formData)
   assert.equal(approved.updates[0].formStatusId, 3)
   assert.ok(Number.isFinite(Date.parse(approved.updates[0].approved!.toISOString())))
+  assert.equal(approved.updates[0].approvedById, 1, "The approver is recorded")
   assert.deepEqual(approved.sequence, ["saved", "event"])
 
   const preserved = await request({ saved: { ...reportData, activity_name: "Saved name" } })
@@ -206,6 +208,7 @@ async function main() {
   assert.equal(rejected.response.status, 200)
   assert.equal(rejected.prefillReads, 0)
   assert.equal(rejected.updates[0].formData, undefined)
+  assert.equal(rejected.updates[0].approvedById, null, "Leaving Approved clears the approver")
   assert.deepEqual(rejected.sequence, ["saved"])
 
   const submitted = await request({ submit: true })

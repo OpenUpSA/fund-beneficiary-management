@@ -1,7 +1,7 @@
 import { fetchLDAForm } from "@/lib/data"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
 import { Form, Field, Section } from "@/types/forms"
-import { FormPreviewActions } from "@/components/lda-forms/form-preview-actions"
+import { FormPreviewActions, PrintDownloadDate } from "@/components/lda-forms/form-preview-actions"
 import { RepeatablePreview, RepeatableItem, RepeatableSubField, SubFieldOption } from "@/components/lda-forms/repeatable-preview"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { format } from "date-fns"
@@ -447,6 +447,8 @@ function SectionContent({ section, formData, focusAreas }: { section: Section; f
 export default async function FormPreviewPage({ params }: Props) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
   if (!session?.user) notFound()
+  // The preview is the printable/PDF view — programme officers, admins and super users only
+  if (!permissions.isProgrammeOfficer(session.user)) notFound()
 
   let ldaForm: LocalDevelopmentAgencyFormFull
   try {
@@ -489,7 +491,6 @@ export default async function FormPreviewPage({ params }: Props) {
   }
 
   const metaItems = [
-    { label: LDA_TERMINOLOGY.fullName, value: ldaForm.localDevelopmentAgency.name },
     { label: "Status", value: humanizeStatus(ldaForm.formStatus.label) },
     { label: dateLabels.start, value: fundingStart ?? "—" },
     { label: dateLabels.end, value: fundingEnd ?? "—" },
@@ -501,6 +502,17 @@ export default async function FormPreviewPage({ params }: Props) {
         : ldaForm.submitted === true ? "Yes" : "—",
     },
   ]
+  // Forms approved before the approver was recorded (or seeded as Approved) show "—"
+  const approvedBy = (ldaForm as { approvedBy?: { name: string } | null }).approvedBy
+  if (ldaForm.formStatus.label === "Approved") {
+    metaItems.push(
+      {
+        label: "Approved",
+        value: ldaForm.approved ? format(new Date(ldaForm.approved as unknown as string), "d MMM yyyy, HH:mm") : "—",
+      },
+      { label: "Approved by", value: approvedBy?.name ?? "—" },
+    )
+  }
 
   return (
     // print-color-adjust keeps backgrounds (radio dots, checkbox fills) in print output
@@ -525,6 +537,7 @@ export default async function FormPreviewPage({ params }: Props) {
               <span className="font-medium text-slate-600">{LDA_TERMINOLOGY.fullName}:</span>{" "}
               {ldaForm.localDevelopmentAgency.name}
             </p>
+            <PrintDownloadDate />
           </div>
 
           <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-8 p-4 bg-slate-50 rounded-lg border border-slate-100">

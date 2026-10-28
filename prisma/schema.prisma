@@ -21,7 +21,8 @@ model User {
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @updatedAt
   localDevelopmentAgencies    LocalDevelopmentAgency[]
-  localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
+  localDevelopmentAgencyForms LocalDevelopmentAgencyForm[] @relation("FormCreatedBy")
+  approvedForms               LocalDevelopmentAgencyForm[] @relation("FormApprovedBy")
   documents                   Document[]
   Media                       Media[]
   passwordResetTokens         PasswordResetToken[]
@@ -276,6 +277,7 @@ model LocalDevelopmentAgencyForm {
   fundingEnd               DateTime                     @default(now())
   submitted                DateTime?
   approved                 DateTime?
+  approvedById             Int?
   linkedFormId             Int?
   linkedForm               LocalDevelopmentAgencyForm?  @relation("LinkedForm", fields: [linkedFormId], references: [id])
   linkedForms              LocalDevelopmentAgencyForm[] @relation("LinkedForm")
@@ -284,7 +286,8 @@ model LocalDevelopmentAgencyForm {
   formStatus               FormStatus                   @relation(fields: [formStatusId], references: [id])
   formTemplate             FormTemplate                 @relation(fields: [formTemplateId], references: [id])
   localDevelopmentAgency   LocalDevelopmentAgency       @relation(fields: [localDevelopmentAgencyId], references: [id])
-  createdBy                User?                        @relation(fields: [createdById], references: [id])
+  createdBy                User?                        @relation("FormCreatedBy", fields: [createdById], references: [id])
+  approvedBy               User?                        @relation("FormApprovedBy", fields: [approvedById], references: [id])
   documents                Document[]
   media                    Media[]
 

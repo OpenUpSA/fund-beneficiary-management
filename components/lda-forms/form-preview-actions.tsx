@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { DownloadIcon, PrinterIcon } from "lucide-react"
+import { format } from "date-fns"
 import { Form } from "@/types/forms"
 import { buildResponseRows, toCSV } from "@/lib/form-response-export"
 
@@ -24,19 +25,29 @@ function downloadCSV(data: PreviewData) {
   URL.revokeObjectURL(url)
 }
 
+// Browsers name a saved PDF after document.title, e.g.
+// "DFT Report - 2026 - Zanoncedo Empowerment Centre - 2026-10-28"
+function pdfFileName(data: PreviewData) {
+  return [data.title, data.ldaName, format(new Date(), "yyyy-MM-dd")]
+    .map((part) => part.replace(/[\\/:*?"<>|]+/g, " ").trim())
+    .join(" - ")
+}
+
 interface Props {
   data: PreviewData
 }
 
 export function FormPreviewActions({ data }: Props) {
-  // ?print=1 (e.g. from the admin Export Responses screen) opens the browser
-  // print dialog once the page has rendered, for direct save-as-PDF
+  // ?print=1 (e.g. from the admin Export Responses screen or the Download PDF
+  // buttons) opens the browser print dialog once the page has rendered, for
+  // direct save-as-PDF
   useEffect(() => {
+    document.title = pdfFileName(data)
     if (new URLSearchParams(window.location.search).get("print")) {
       const timer = setTimeout(() => window.print(), 600)
       return () => clearTimeout(timer)
     }
-  }, [])
+  }, [data])
 
   return (
     <div className="space-y-1">
@@ -56,4 +67,12 @@ export function FormPreviewActions({ data }: Props) {
       </button>
     </div>
   )
+}
+
+/** Print-only line with the viewer's local date, so a saved PDF shows when it was downloaded. */
+export function PrintDownloadDate() {
+  const [date, setDate] = useState<string | null>(null)
+  useEffect(() => setDate(format(new Date(), "d MMM yyyy, HH:mm")), [])
+  if (!date) return null
+  return <p className="hidden print:block text-xs text-slate-500 mt-1">Downloaded on {date}</p>
 }
