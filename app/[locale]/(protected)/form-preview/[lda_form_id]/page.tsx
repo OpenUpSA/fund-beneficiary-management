@@ -489,7 +489,6 @@ export default async function FormPreviewPage({ params }: Props) {
   }
 
   const metaItems = [
-    { label: LDA_TERMINOLOGY.fullName, value: ldaForm.localDevelopmentAgency.name },
     { label: "Status", value: humanizeStatus(ldaForm.formStatus.label) },
     { label: dateLabels.start, value: fundingStart ?? "—" },
     { label: dateLabels.end, value: fundingEnd ?? "—" },
@@ -501,11 +500,14 @@ export default async function FormPreviewPage({ params }: Props) {
         : ldaForm.submitted === true ? "Yes" : "—",
     },
   ]
-  // Approval details only exist once a form is approved
+  // Forms approved before the approver was recorded (or seeded as Approved) show "—"
   const approvedBy = (ldaForm as { approvedBy?: { name: string } | null }).approvedBy
-  if (ldaForm.approved) {
+  if (ldaForm.formStatus.label === "Approved") {
     metaItems.push(
-      { label: "Approved", value: format(new Date(ldaForm.approved as unknown as string), "d MMM yyyy, HH:mm") },
+      {
+        label: "Approved",
+        value: ldaForm.approved ? format(new Date(ldaForm.approved as unknown as string), "d MMM yyyy, HH:mm") : "—",
+      },
       { label: "Approved by", value: approvedBy?.name ?? "—" },
     )
   }
