@@ -1,7 +1,7 @@
 import { fetchLDAForm } from "@/lib/data"
 import { LocalDevelopmentAgencyFormFull } from "@/types/models"
 import { Form, Field, Section } from "@/types/forms"
-import { FormPreviewActions } from "@/components/lda-forms/form-preview-actions"
+import { FormPreviewActions, PrintDownloadDate } from "@/components/lda-forms/form-preview-actions"
 import { RepeatablePreview, RepeatableItem, RepeatableSubField, SubFieldOption } from "@/components/lda-forms/repeatable-preview"
 import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { format } from "date-fns"
@@ -501,6 +501,14 @@ export default async function FormPreviewPage({ params }: Props) {
         : ldaForm.submitted === true ? "Yes" : "—",
     },
   ]
+  // Approval details only exist once a form is approved
+  const approvedBy = (ldaForm as { approvedBy?: { name: string } | null }).approvedBy
+  if (ldaForm.approved) {
+    metaItems.push(
+      { label: "Approved", value: format(new Date(ldaForm.approved as unknown as string), "d MMM yyyy, HH:mm") },
+      { label: "Approved by", value: approvedBy?.name ?? "—" },
+    )
+  }
 
   return (
     // print-color-adjust keeps backgrounds (radio dots, checkbox fills) in print output
@@ -525,6 +533,7 @@ export default async function FormPreviewPage({ params }: Props) {
               <span className="font-medium text-slate-600">{LDA_TERMINOLOGY.fullName}:</span>{" "}
               {ldaForm.localDevelopmentAgency.name}
             </p>
+            <PrintDownloadDate />
           </div>
 
           <div className="grid grid-cols-3 gap-x-6 gap-y-4 mb-8 p-4 bg-slate-50 rounded-lg border border-slate-100">

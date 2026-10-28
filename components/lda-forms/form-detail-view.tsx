@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Form, FormData } from "@/types/forms"
-import { PenLine, Send, CalendarIcon, Maximize2, Minimize2, Check, Clock } from "lucide-react"
+import { PenLine, Send, CalendarIcon, Maximize2, Minimize2, Check, Clock, Download } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { useSearchParams } from "next/navigation"
@@ -132,6 +133,10 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
   // Whether the current user's role is allowed to approve this form — drives the admin
   // sidebar controls (status, approved amount, funding dates), per template approveRoles
   const canApprove = canApproveForm(session?.user ?? null, ldaForm.formTemplate.approveRoles)
+
+  // Approved forms can be downloaded as a PDF by programme officers and admins
+  const { isProgrammeOfficer } = usePermissions()
+  const canDownloadPdf = ldaForm.formStatus?.label === "Approved" && isProgrammeOfficer()
 
   const updateField = async (field: string, value: string | Date | number | undefined): Promise<boolean> => {
     if (value === undefined) return false; // Don't update if value is undefined
@@ -336,6 +341,14 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
               >
                 <Send className="h-4 w-4" />
                 <span>Submit form</span>
+              </Button>
+            )}
+            {canDownloadPdf && (
+              <Button variant="outline" asChild>
+                <a href={`/form-preview/${ldaForm.id}?print=1`} target="_blank" rel="noopener noreferrer">
+                  <Download className="h-4 w-4" />
+                  <span>Download PDF</span>
+                </a>
               </Button>
             )}
             {focusMode && isEditing && (
