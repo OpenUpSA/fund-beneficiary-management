@@ -447,8 +447,6 @@ function SectionContent({ section, formData, focusAreas }: { section: Section; f
 export default async function FormPreviewPage({ params }: Props) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
   if (!session?.user) notFound()
-  // The preview is the printable/PDF view — programme officers, admins and super users only
-  if (!permissions.isProgrammeOfficer(session.user)) notFound()
 
   let ldaForm: LocalDevelopmentAgencyFormFull
   try {

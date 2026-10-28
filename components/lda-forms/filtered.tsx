@@ -55,7 +55,7 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'amount' | 'status' | 'startDate' | 'endDate' | null
 
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
-  const { isSuperUser, isProgrammeOfficer, canCreateForm } = usePermissions()
+  const { isSuperUser, canCreateForm } = usePermissions()
   // Offer "New form" only when the user can create at least one active template
   const canCreateAnyForm = formTemplates.some(t => t.active && canCreateForm(t.createRoles))
   const [searchTerm, setSearchTerm] = useState("")
@@ -406,19 +406,17 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                           </DropdownMenuItem>
                         )}
                         */}
-                        {ldaForm.formStatus?.label === "Approved" && isProgrammeOfficer() && (
-                          <DropdownMenuItem asChild>
-                            <a
-                              href={`/form-preview/${ldaForm.id}?print=1`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <Download className="h-4 w-4" />
-                              Download PDF
-                            </a>
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem asChild>
+                          <a
+                            href={`/form-preview/${ldaForm.id}?print=1`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <Download className="h-4 w-4" />
+                            Download PDF
+                          </a>
+                        </DropdownMenuItem>
                         {isSuperUser() && (
                           <DropdownMenuItem onSelect={() => setFormToDelete(ldaForm)}>
                             <div className="flex items-center gap-2 text-destructive hover:cursor-pointer">
