@@ -14,6 +14,7 @@ import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 import { revalidateTag } from "next/cache";
 import { ensureLinkedForm, isLinkedFormTrigger, setLinkedFormStatus } from "@/lib/linked-form";
+import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 
 
 export const dynamic = "force-dynamic"
@@ -201,10 +202,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       select: {
         localDevelopmentAgencyId: true,
         formData: true,
+        fundingStart: true,
+        fundingEnd: true,
         formTemplate: {
           select: {
             form: true,
-            approveRoles: true
+            approveRoles: true,
+            isPrimary: true,
+            formCategory: true
           }
         }
       }
@@ -334,7 +339,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ message: "No valid fields to update" }, { status: 400 });
     }
-    
+
+    // A primary form's new period can't overlap another primary of the same kind
+    const datesChanged = Boolean(updateData.fundingStart || updateData.fundingEnd);
+    const { isPrimary, formCategory } = existingForm.formTemplate;
+    if (datesChanged && isPrimary && formCategory) {
+      const overlap = await primaryOverlapError(
+        existingForm.localDevelopmentAgencyId,
+        formCategory,
+        updateData.fundingStart ?? existingForm.fundingStart,
+        updateData.fundingEnd ?? existingForm.fundingEnd,
+        ldaFormId
+      );
+      if (overlap) {
+        return NextResponse.json({ error: overlap }, { status: 400 });
+      }
+    }
+
     // Update the record
     const updatedRecord = await prisma.localDevelopmentAgencyForm.update({
       where: { id: ldaFormId },
@@ -380,6 +401,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     }
 
     if (data.fundingStart || data.fundingEnd) {
+      // New dates can move the form to another primary (or, for a primary, change what's under it)
+      await placeForm(ldaFormId).catch((error) => console.error("Failed to regroup form:", error));
       revalidateTag('lda-forms:list')
     }
 

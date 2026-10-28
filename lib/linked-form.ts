@@ -36,8 +36,10 @@ export async function ensureLinkedForm(formId: number) {
       localDevelopmentAgencyId: true,
       fundingStart: true,
       fundingEnd: true,
+      primaryFormId: true,
       formTemplate: {
         select: {
+          isPrimary: true,
           linkedFormTemplateId: true,
           linkedFormDueDays: true,
           linkedFormTemplate: { select: { name: true } },
@@ -83,6 +85,8 @@ export async function ensureLinkedForm(formId: number) {
       formData: {},
       title: `${template.linkedFormTemplate?.name || "Linked Form"} - ${new Date().getFullYear()}`,
       linkedFormId: formId,
+      // Grouped with its parent: under it when the parent is primary, else under the parent's primary
+      primaryFormId: template.isPrimary ? formId : parent.primaryFormId,
       dueDate,
       fundingStart: parent.fundingStart,
       fundingEnd: parent.fundingEnd,

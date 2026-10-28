@@ -128,6 +128,7 @@ async function request(options: {
   dependencies["@/lib/lda-form-prefill"] = loadModule("lib/lda-form-prefill.ts", dependencies)
   dependencies["@/lib/number-input"] = loadModule("lib/number-input.ts", dependencies)
   dependencies["@/lib/form-validation/validate-submission"] = loadModule("lib/form-validation/validate-submission.ts", dependencies)
+  dependencies["@/lib/primary-form"] = { placeForm: async () => undefined, primaryOverlapError: async () => undefined }
   // Real trigger decision; creation/status moves are recorded (covered in linked-form.test.ts)
   const linkedForm = loadModule("lib/linked-form.ts", dependencies)
   dependencies["@/lib/linked-form"] = {

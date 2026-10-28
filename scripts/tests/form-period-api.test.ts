@@ -12,6 +12,7 @@ const source = ts.transpileModule(
 async function request(canApprove = true, failSave = false) {
   const tags: string[] = []
   const updates: Array<Record<string, Date>> = []
+  const placed: number[] = []
   const body = { fundingStart: "2027-01-01T00:00:00.000Z", fundingEnd: "2027-12-31T00:00:00.000Z" }
   const dependencies: Record<string, unknown> = {
     "next/server": { NextResponse: { json: (data: unknown, init?: ResponseInit) => Response.json(data, init) } },
@@ -34,8 +35,13 @@ async function request(canApprove = true, failSave = false) {
       ensureLinkedForm: () => assert.fail("Date edit must not create a linked form"),
       setLinkedFormStatus: () => assert.fail("Date edit must not move the linked form"),
     },
+    // Date edits regroup the form; a non-primary template never checks overlaps
+    "@/lib/primary-form": {
+      placeForm: async (id: number) => { placed.push(id) },
+      primaryOverlapError: () => assert.fail("Only primary forms check for overlapping periods"),
+    },
     "@/db": { default: { localDevelopmentAgencyForm: {
-      findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [] } }),
+      findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [], isPrimary: false, formCategory: null } }),
       update: async ({ data }: { data: Record<string, Date> }) => {
         updates.push(data)
         if (failSave) throw new Error("Database unavailable")
@@ -53,7 +59,7 @@ async function request(canApprove = true, failSave = false) {
     console: { error: () => undefined },
   })
   const response = await exports.PATCH({ json: async () => body }, { params: { lda_form_id: "1" } })
-  return { response, updates, tags, body }
+  return { response, updates, tags, body, placed }
 }
 
 async function main() {
@@ -63,6 +69,7 @@ async function main() {
   assert.equal(saved.updates[0].fundingStart.toISOString(), saved.body.fundingStart)
   assert.equal(saved.updates[0].fundingEnd.toISOString(), saved.body.fundingEnd)
   assert.deepEqual(saved.tags, ["lda-forms:list"])
+  assert.deepEqual(saved.placed, [1], "New dates regroup the form under its primary")
 
   const denied = await request(false)
   assert.equal(denied.response.status, 403)
@@ -72,6 +79,7 @@ async function main() {
   const failed = await request(true, true)
   assert.equal(failed.response.status, 500)
   assert.deepEqual(failed.tags, [])
+  assert.deepEqual(failed.placed, [])
   console.log("form-period-api: PATCH date persistence, permissions and cache checks passed")
 }
 

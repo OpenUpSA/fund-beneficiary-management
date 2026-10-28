@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/db"
+import { placeForm } from "@/lib/primary-form"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -160,8 +161,10 @@ export async function GET(req: NextRequest) {
     // Create all reports in parallel
     await Promise.all(reportsToCreate.map(async ({ data, ldaId, period, year }) => {
       try {
-        await prisma.localDevelopmentAgencyForm.create({ data })
+        const report = await prisma.localDevelopmentAgencyForm.create({ data })
         results.created++
+        // Group the report with its application (under the application's primary form)
+        await placeForm(report.id).catch((error) => console.error(`Failed to group report ${report.id}:`, error))
       } catch (error) {
         const errorMsg = `Failed to create report for LDA ${ldaId}, period ${period}/${year}: ${error}`
         console.error(errorMsg)

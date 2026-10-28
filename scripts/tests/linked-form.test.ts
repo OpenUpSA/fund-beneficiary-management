@@ -36,7 +36,9 @@ function load(options: {
         localDevelopmentAgencyId: 7,
         fundingStart: null,
         fundingEnd: null,
+        primaryFormId: 40,
         formTemplate: {
+          isPrimary: false,
           linkedFormTemplateId: options.linkedFormTemplateId === undefined ? 9 : options.linkedFormTemplateId,
           linkedFormDueDays: options.linkedFormDueDays ?? null,
           linkedFormTemplate: { name: "DFT Report" },
@@ -89,6 +91,7 @@ async function main() {
   assert.equal(data.formTemplateId, 9)
   assert.equal(data.linkedFormId, 1)
   assert.equal(data.localDevelopmentAgencyId, 7)
+  assert.equal(data.primaryFormId, 40, "Grouped under the parent's primary form")
   assert.match(String(data.title), /^DFT Report - \d{4}$/)
   const today = new Date()
   today.setUTCHours(0, 0, 0, 0)

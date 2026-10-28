@@ -4,6 +4,7 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { permissions, canApproveForm, canCreateForm, canReadForm } from "@/lib/permissions";
 import { triggerFormEvent } from "@/lib/form-events";
+import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -105,6 +106,17 @@ export async function POST(req: NextRequest) {
     // Only take the fields a new form may set. The amount and dates are approver
     // fields (same as the form sidebar), so other roles can't preset them.
     const canSetApproverFields = canApproveForm(session.user, formTemplate.approveRoles)
+
+    // An LDA's primary forms of one kind (e.g. Grant Funding) can't overlap in dates
+    if (formTemplate.isPrimary && formTemplate.formCategory) {
+      const start = canSetApproverFields && data.fundingStart ? new Date(data.fundingStart) : new Date()
+      const end = canSetApproverFields && data.fundingEnd ? new Date(data.fundingEnd) : new Date()
+      const overlap = await primaryOverlapError(ldaId, formTemplate.formCategory, start, end)
+      if (overlap) {
+        return NextResponse.json({ error: overlap }, { status: 400 })
+      }
+    }
+
     const query = {
       data: {
         localDevelopmentAgencyId: ldaId,
@@ -122,6 +134,10 @@ export async function POST(req: NextRequest) {
       },
     }
     const record = await prisma.localDevelopmentAgencyForm.create(query)
+
+    // Group it under its primary form (or, for a primary, gather the forms in its period).
+    // The form is already saved, so a failure here must not fail the request.
+    await placeForm(record.id).catch((error) => console.error("Failed to group new form:", error))
 
     // Trigger form created event (handles data copying, notifications, etc.)
     await triggerFormEvent('created', record, parseInt(session.user.id, 10))
