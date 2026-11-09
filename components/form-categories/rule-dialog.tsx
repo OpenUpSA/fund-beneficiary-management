@@ -21,12 +21,12 @@ interface ReportCategory extends Option {
   reportDueDaysAfterPeriodEnd: number
 }
 
-// "after" = one report after a status; a number = periodic every N months; "custom" = periodic, months typed in
-type When = "after" | "custom" | `${number}`
+// "after" = one report after a status; a number = quarterly / half-yearly / yearly
+type When = "after" | `${number}`
 
 function initialWhen(category: ReportCategory): When {
   if (category.reportKind !== "PERIODIC") return "after"
-  return FREQUENCY_OPTIONS.some((o) => o.months === category.reportPeriodMonths) ? (`${category.reportPeriodMonths}` as When) : "custom"
+  return FREQUENCY_OPTIONS.some((o) => o.months === category.reportPeriodMonths) ? (`${category.reportPeriodMonths}` as When) : "3"
 }
 
 const toNumber = (value: string) => (value.trim() === "" ? null : Number(value))
@@ -54,7 +54,6 @@ export function TimingDialog({
 }) {
   const router = useRouter()
   const [when, setWhen] = useState<When>(initialWhen(category))
-  const [customMonths, setCustomMonths] = useState(category.reportPeriodMonths?.toString() ?? "4")
   const [triggerStatusId, setTriggerStatusId] = useState<number | null>(category.reportTriggerStatusId)
   const [dueDays, setDueDays] = useState(category.reportDueDays?.toString() ?? "30")
   const [opensDaysBefore, setOpensDaysBefore] = useState(category.reportOpensDaysBefore.toString())
@@ -69,7 +68,7 @@ export function TimingDialog({
       reportKind: periodic ? "PERIODIC" : "AFTER_STATUS",
       reportTriggerStatusId: triggerStatusId,
       reportDueDays: periodic ? null : toNumber(dueDays),
-      reportPeriodMonths: periodic ? (when === "custom" ? toNumber(customMonths) : Number(when)) : null,
+      reportPeriodMonths: periodic ? Number(when) : null,
       ...(periodic && {
         reportOpensDaysBefore: toNumber(opensDaysBefore) ?? 0,
         reportDueDaysAfterPeriodEnd: toNumber(dueAfterEnd) ?? 0,
@@ -89,8 +88,8 @@ export function TimingDialog({
         <DialogHeader>
           <DialogTitle>Timing for {category.label}</DialogTitle>
           <DialogDescription>
-            The default for every form this report is attached to; a template can change it. Changes apply to forms
-            created from now on; existing forms keep their planned dates until an approver recalculates them.
+            Applies to every form this report is attached to; a template can only switch it off or change the status.
+            Changes apply to forms created from now on; existing forms keep their dates until an approver recalculates them.
           </DialogDescription>
         </DialogHeader>
 
@@ -104,7 +103,6 @@ export function TimingDialog({
                 {FREQUENCY_OPTIONS.map((o) => (
                   <SelectItem key={o.months} value={`${o.months}`}>{o.label}</SelectItem>
                 ))}
-                <SelectItem value="custom">Every N months</SelectItem>
               </SelectContent>
             </Select>
             {periodic && (
@@ -113,13 +111,6 @@ export function TimingDialog({
               </p>
             )}
           </div>
-
-          {when === "custom" && (
-            <div className="space-y-1.5">
-              <Label htmlFor="timing-months">Every (months)</Label>
-              <Input id="timing-months" type="number" min={1} max={60} value={customMonths} onChange={(e) => setCustomMonths(e.target.value)} />
-            </div>
-          )}
 
           <div className="space-y-1.5">
             <Label>{periodic ? "Start once the form is" : "Create when the form is"}</Label>

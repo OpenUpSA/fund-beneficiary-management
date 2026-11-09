@@ -23,25 +23,7 @@ async function loadLink(ruleId: string) {
   return { link }
 }
 
-// Switching a report on or off applies to forms created from now on
-export async function PUT(req: NextRequest, { params }: { params: { rule_id: string } }) {
-  const { link, response } = await loadLink(params.rule_id)
-  if (!link) return response
-
-  try {
-    const data = await req.json()
-    if (typeof data.active !== "boolean") {
-      return NextResponse.json({ error: "Active must be true or false" }, { status: 400 })
-    }
-    const updated = await prisma.reportRule.update({ where: { id: link.id }, data: { active: data.active } })
-    return NextResponse.json(updated)
-  } catch (error) {
-    console.error("Failed to update report:", error)
-    return NextResponse.json({ error: "Failed to update" }, { status: 500 })
-  }
-}
-
-// Forms already planned keep their reports (they become one-off reports on those forms)
+// New forms stop getting the report; forms that already have it planned keep it
 export async function DELETE(_req: NextRequest, { params }: { params: { rule_id: string } }) {
   const { link, response } = await loadLink(params.rule_id)
   if (!link) return response

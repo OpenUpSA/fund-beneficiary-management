@@ -1,5 +1,5 @@
-// Report timing maths. No database access, so client components (e.g. the
-// template's example timeline) can use it too.
+// Report timing maths. No database access, so it can be tested on its own and
+// used by client components.
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -21,15 +21,10 @@ export interface CategoryTiming {
   reportDueDaysAfterPeriodEnd: number
 }
 
-/** A template's changes to the timing (`ReportRuleOverride`); null fields inherit. */
+/** A template's change to an attached report (`ReportRuleOverride`): switch it off, or a different trigger status. */
 export interface OverrideSettings {
-  enabled: boolean | null
+  enabled: boolean
   triggerStatusId: number | null
-  dueDays: number | null
-  periodMonths: number | null
-  opensDaysBefore: number | null
-  dueDaysAfterPeriodEnd: number | null
-  reportTemplateId: number | null
 }
 
 export interface EffectiveTiming {
@@ -40,28 +35,22 @@ export interface EffectiveTiming {
   periodMonths: number | null
   opensDaysBefore: number
   dueDaysAfterPeriodEnd: number
-  reportTemplateId: number | null
 }
 
 /**
- * The timing as it applies to one template: each override field wins when it's
- * set. Null when the report category has no timing yet.
+ * The report category's timing as it applies to one template. Null when the
+ * report category has no timing yet.
  */
-export function effectiveTiming(
-  category: CategoryTiming,
-  override?: OverrideSettings | null,
-  linkActive = true,
-): EffectiveTiming | null {
+export function effectiveTiming(category: CategoryTiming, override?: OverrideSettings | null): EffectiveTiming | null {
   if (!category.reportKind) return null
   return {
     kind: category.reportKind,
-    enabled: linkActive && (override?.enabled ?? true),
+    enabled: override?.enabled ?? true,
     triggerStatusId: override?.triggerStatusId ?? category.reportTriggerStatusId,
-    dueDays: override?.dueDays ?? category.reportDueDays,
-    periodMonths: override?.periodMonths ?? category.reportPeriodMonths,
-    opensDaysBefore: override?.opensDaysBefore ?? category.reportOpensDaysBefore,
-    dueDaysAfterPeriodEnd: override?.dueDaysAfterPeriodEnd ?? category.reportDueDaysAfterPeriodEnd,
-    reportTemplateId: override?.reportTemplateId ?? null,
+    dueDays: category.reportDueDays,
+    periodMonths: category.reportPeriodMonths,
+    opensDaysBefore: category.reportOpensDaysBefore,
+    dueDaysAfterPeriodEnd: category.reportDueDaysAfterPeriodEnd,
   }
 }
 
@@ -93,17 +82,18 @@ function addMonths(date: Date, months: number): Date {
   return new Date(Date.UTC(year, month, Math.min(date.getUTCDate(), lastDay)))
 }
 
+// Quarters and halves count from the form's start and restart every 12 months;
+// the year is the one the period starts in. A two-year grant from April 2026:
+// Q1 2026 (Apr–Jun), Q2 2026, Q3 2026, Q4 2027 (Jan–Mar), Q1 2027 (Apr–Jun), …
 function periodLabel(periodMonths: number, index: number, start: Date): string {
   const year = start.getUTCFullYear()
-  if (periodMonths === 3) return `Q${index} ${year}`
-  if (periodMonths === 6) return `H${index} ${year}`
-  if (periodMonths === 12) return `Year ${index}`
-  if (periodMonths === 1) return start.toLocaleString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" })
-  return `Period ${index}`
+  if (periodMonths === 3) return `Q${((index - 1) % 4) + 1} ${year}`
+  if (periodMonths === 6) return `H${((index - 1) % 2) + 1} ${year}`
+  return `Year ${index}`
 }
 
-// More than enough for monthly reports on a multi-year grant
-const MAX_PERIODS = 120
+// Ten years of quarterly reports
+const MAX_PERIODS = 40
 
 /** Split a parent form's funding period into report periods of `periodMonths`; the last one ends with the funding period. */
 export function reportPeriods(

@@ -265,8 +265,6 @@ model FormTemplate {
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
   
   reportOverrides             ReportRuleOverride[]         @relation("TemplateReportOverrides")
-  pinnedAsReportIn            ReportRuleOverride[]         @relation("PinnedReportTemplate")
-  plannedWith                 PlannedReport[]              @relation("PlannedReportTemplate")
 
   // Report scheduling relations
   reportConfigs               ReportScheduleConfig[]       @relation("ApplicationReportConfigs")
@@ -602,14 +600,14 @@ enum ReportRuleKind {
 }
 
 // Forms of `parentCategory` get reports of `reportCategory`, timed by the report
-// category. Templates can change the timing through a ReportRuleOverride.
+// category. A template can switch the report off or change its trigger status
+// through a ReportRuleOverride.
 model ReportRule {
   id               Int                  @id @default(autoincrement())
   parentCategoryId Int
   parentCategory   FormCategory         @relation("ParentCategoryReportRules", fields: [parentCategoryId], references: [id], onDelete: Cascade)
   reportCategoryId Int
   reportCategory   FormCategory         @relation("ReportCategoryReportRules", fields: [reportCategoryId], references: [id], onDelete: Cascade)
-  active           Boolean              @default(true)
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   overrides        ReportRuleOverride[]
@@ -625,21 +623,19 @@ enum PlannedReportStatus {
 }
 
 // A report a form will get, with real dates. Worked out from the settings when
-// the form is created; approvers can edit, skip, add or create them early. The
-// daily job turns opened ones into report forms.
+// the form is created; approvers can edit its dates, skip it or create it early.
+// The daily job turns opened ones into report forms, filled in with the newest
+// active template of the report category.
 model PlannedReport {
   id               Int                         @id @default(autoincrement())
   parentFormId     Int
   parentForm       LocalDevelopmentAgencyForm  @relation("PlannedReportParent", fields: [parentFormId], references: [id], onDelete: Cascade)
-  // Null for one-off reports added by hand
+  // Null once the report is detached from the category (the form keeps its rows)
   reportRuleId     Int?
   reportRule       ReportRule?                 @relation(fields: [reportRuleId], references: [id], onDelete: SetNull)
   reportCategoryId Int
   reportCategory   FormCategory                @relation(fields: [reportCategoryId], references: [id], onDelete: Cascade)
-  // Pinned template; null = the newest active template in the category when created
-  reportTemplateId Int?
-  reportTemplate   FormTemplate?               @relation("PlannedReportTemplate", fields: [reportTemplateId], references: [id], onDelete: SetNull)
-  // 0 = after a status, 1… = periodic, null = one-off
+  // 0 = after a status, 1… = periodic
   period           Int?
   label            String
   // Status the parent must reach (null = Approved)
@@ -664,23 +660,19 @@ model PlannedReport {
   @@index([status, opensOn])
 }
 
-// A template's changes to a category's report rule. Null fields inherit the rule.
+// One template's change to an attached report: switch it off, or create it at a
+// different status (e.g. on submission instead of approval). Everything else
+// comes from the report category.
 model ReportRuleOverride {
   id                    Int           @id @default(autoincrement())
   reportRuleId          Int
   reportRule            ReportRule    @relation(fields: [reportRuleId], references: [id], onDelete: Cascade)
   formTemplateId        Int
   formTemplate          FormTemplate  @relation("TemplateReportOverrides", fields: [formTemplateId], references: [id], onDelete: Cascade)
-  enabled               Boolean?
+  enabled               Boolean       @default(true)
+  // Null = the report category's trigger status
   triggerStatusId       Int?
   triggerStatus         FormStatus?   @relation("ReportOverrideTriggerStatus", fields: [triggerStatusId], references: [id], onDelete: SetNull)
-  dueDays               Int?
-  periodMonths          Int?
-  opensDaysBefore       Int?
-  dueDaysAfterPeriodEnd Int?
-  // Create reports from this template instead of the active one in the report category
-  reportTemplateId      Int?
-  reportTemplate        FormTemplate? @relation("PinnedReportTemplate", fields: [reportTemplateId], references: [id], onDelete: SetNull)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 

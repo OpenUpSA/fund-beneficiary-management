@@ -5,10 +5,11 @@
  *    report schedule config (quarterly, … on an application template) say that
  *    forms of one template get reports of another.
  *  - The report template's category gets that timing as its base (the newest
- *    setting wins), the two categories are linked, and any template whose
- *    setting differs gets a template override. Templates in the parent category
- *    that never had the report get an "off" override, so every template keeps
- *    behaving as before.
+ *    setting wins), the two categories are linked, and a template whose trigger
+ *    status differs gets that status as its change. Templates in the parent
+ *    category that never had the report have it switched off, so every template
+ *    keeps behaving as before. Other differences (due days, frequency) can't be
+ *    set per template any more; they're listed to check by hand.
  *  - Reports those settings already created are recorded as created planned
  *    reports, so they aren't created again.
  *
@@ -135,6 +136,11 @@ async function main() {
       continue
     }
 
+    if (source.timing.reportPeriodMonths === 1) {
+      problems.push(`${source.description}: monthly reports aren't supported any more; set this up by hand`)
+      continue
+    }
+
     if (!baseTiming.has(report.formCategoryId)) {
       baseTiming.set(report.formCategoryId, source.timing)
       const categoryId = report.formCategoryId
@@ -170,24 +176,26 @@ async function main() {
       if (existing?.overrides.some((o) => o.formTemplateId === t.id)) continue
       const source = link.templates.get(t.id)
       const had = source?.timing
-      const diff: Record<string, unknown> = had
-        ? {
-            ...(had.reportTriggerStatusId !== base.reportTriggerStatusId && { triggerStatusId: had.reportTriggerStatusId }),
-            ...(had.reportDueDays !== base.reportDueDays && { dueDays: had.reportDueDays }),
-            ...(had.reportPeriodMonths !== base.reportPeriodMonths && { periodMonths: had.reportPeriodMonths }),
-            ...(had.reportOpensDaysBefore !== base.reportOpensDaysBefore && { opensDaysBefore: had.reportOpensDaysBefore }),
-            ...(had.reportDueDaysAfterPeriodEnd !== base.reportDueDaysAfterPeriodEnd && { dueDaysAfterPeriodEnd: had.reportDueDaysAfterPeriodEnd }),
-            ...(!source.active && { enabled: false }),
-          }
-        : { enabled: false }
-      // A blank old setting ("no due date", "Approved") can't be an override value
-      if (Object.entries(diff).some(([, v]) => v === null)) {
-        problems.push(`${name}: "${t.name}" had a blank setting that differs from the category; check its report settings`)
+      if (had && (
+        had.reportDueDays !== base.reportDueDays ||
+        had.reportPeriodMonths !== base.reportPeriodMonths ||
+        had.reportOpensDaysBefore !== base.reportOpensDaysBefore ||
+        had.reportDueDaysAfterPeriodEnd !== base.reportDueDaysAfterPeriodEnd
+      )) {
+        problems.push(`${name}: "${t.name}" had different due/opening days or frequency; it now uses the category's`)
       }
-      const data = Object.fromEntries(Object.entries(diff).filter(([, v]) => v !== null))
-      if (Object.keys(data).length === 0) continue
+      // A blank old trigger ("Approved") can't be a change value
+      if (had && had.reportTriggerStatusId === null && base.reportTriggerStatusId !== null) {
+        problems.push(`${name}: "${t.name}" was created on Approved but the category uses another status; check its report settings`)
+      }
+      const data = !had || !source.active
+        ? { enabled: false }
+        : had.reportTriggerStatusId !== null && had.reportTriggerStatusId !== base.reportTriggerStatusId
+          ? { triggerStatusId: had.reportTriggerStatusId }
+          : null
+      if (!data) continue
       actions.push({
-        describe: had ? `  "${t.name}": change ${JSON.stringify(data)}` : `  "${t.name}": switch off (it didn't have this report)`,
+        describe: "triggerStatusId" in data ? `  "${t.name}": created at status #${data.triggerStatusId}` : `  "${t.name}": switch off${had ? " (it was off)" : " (it didn't have this report)"}`,
         run: async () => {
           await prisma.reportRuleOverride.create({ data: { ...data, reportRuleId: await getLinkId(), formTemplateId: t.id } })
         },

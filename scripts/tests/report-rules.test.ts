@@ -205,8 +205,8 @@ const grantForm = (id: number, extra: Row = {}): Row => ({
   primaryFormId: null,
   ...extra,
 })
-const narrativeLink = { id: 1, parentCategoryId: 1, reportCategoryId: 5, active: true, overrides: [] as Row[] }
-const dftLink = { id: 2, parentCategoryId: 1, reportCategoryId: 6, active: true, overrides: [] as Row[] }
+const narrativeLink = { id: 1, parentCategoryId: 1, reportCategoryId: 5, overrides: [] as Row[] }
+const dftLink = { id: 2, parentCategoryId: 1, reportCategoryId: 6, overrides: [] as Row[] }
 const rowsOf = (db: World, parentFormId: number) =>
   db.planned.filter((p) => p.parentFormId === parentFormId).sort((a, b) => (a.period ?? 99) - (b.period ?? 99))
 
@@ -223,20 +223,21 @@ async function main() {
   ])
   same(reportPeriods(d("2026-01-01"), d("2026-08-15"), { periodMonths: 6, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 })
     .map((p) => [iso(p.start), iso(p.end), p.label]), [["2026-01-01", "2026-06-30", "H1 2026"], ["2026-07-01", "2026-08-15", "H2 2026"]])
-  same(reportPeriods(d("2026-01-01"), d("2026-12-31"), { periodMonths: 4, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }).map((p) => p.label), ["Period 1", "Period 2", "Period 3"])
-  same(reportPeriods(d("2026-01-31"), d("2026-04-29"), { periodMonths: 1, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }).map((p) => iso(p.start)), ["2026-01-31", "2026-02-28", "2026-03-31"])
+  // Quarter numbers restart every 12 months of the form; the year is the period's start
+  same(reportPeriods(d("2026-04-01"), d("2028-03-31"), { periodMonths: 3, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }).map((p) => p.label),
+    ["Q1 2026", "Q2 2026", "Q3 2026", "Q4 2027", "Q1 2027", "Q2 2027", "Q3 2027", "Q4 2028"])
+  same(reportPeriods(d("2026-01-01"), d("2027-12-31"), { periodMonths: 6, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }).map((p) => p.label), ["H1 2026", "H2 2026", "H1 2027", "H2 2027"])
+  same(reportPeriods(d("2026-01-01"), d("2027-12-31"), { periodMonths: 12, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }).map((p) => p.label), ["Year 1", "Year 2"])
+  // 31 Jan + 3 months keeps the day where it can: 30 Apr, then 31 Jul
+  same(reportPeriods(d("2026-01-31"), d("2026-10-29"), { periodMonths: 3, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }).map((p) => iso(p.start)), ["2026-01-31", "2026-04-30", "2026-07-31"])
   same(reportPeriods(d("2026-12-31"), d("2026-01-01"), { periodMonths: 3, opensDaysBefore: 0, dueDaysAfterPeriodEnd: 0 }), [], "End before start")
 
-  // Template overrides win field by field; no timing on the category means no reports
+  // A template can only switch a report off or change its trigger status; no timing on the category means no reports
   const base = effectiveTiming(QUARTERLY)!
-  same(base, { kind: "PERIODIC", enabled: true, triggerStatusId: null, dueDays: null, periodMonths: 3, opensDaysBefore: 14, dueDaysAfterPeriodEnd: 15, reportTemplateId: null })
-  const changed = effectiveTiming(QUARTERLY, { enabled: null, triggerStatusId: 8, dueDays: null, periodMonths: 6, opensDaysBefore: 0, dueDaysAfterPeriodEnd: null, reportTemplateId: 60 })!
-  assert.equal(changed.periodMonths, 6)
-  assert.equal(changed.opensDaysBefore, 0, "Zero is a real override, not 'unset'")
-  assert.equal(changed.dueDaysAfterPeriodEnd, 15)
-  assert.equal(changed.reportTemplateId, 60)
-  assert.equal(effectiveTiming(QUARTERLY, { ...changed, enabled: false })!.enabled, false)
-  assert.equal(effectiveTiming(QUARTERLY, { ...changed, enabled: true }, false)!.enabled, false, "A switched-off link can't be switched on by a template")
+  same(base, { kind: "PERIODIC", enabled: true, triggerStatusId: null, dueDays: null, periodMonths: 3, opensDaysBefore: 14, dueDaysAfterPeriodEnd: 15 })
+  same(effectiveTiming(QUARTERLY, { enabled: true, triggerStatusId: 8 }), { ...base, triggerStatusId: 8 })
+  same(effectiveTiming(QUARTERLY, { enabled: true, triggerStatusId: null }), base, "No status change keeps the category's")
+  assert.equal(effectiveTiming(QUARTERLY, { enabled: false, triggerStatusId: null })!.enabled, false)
   assert.equal(effectiveTiming({ ...QUARTERLY, reportKind: null }), null)
 
   // Rows: one per period, or one after-status row that opens on the trigger
@@ -271,20 +272,22 @@ async function main() {
     assert.equal(await lib.planReports(100), 0, "Planning twice adds nothing")
   }
 
-  // Template changes: half-yearly from submission with a pinned template; switched-off links and templates plan nothing
+  // Template changes: a different trigger status; a report switched off for the template plans nothing
   {
-    const link = { ...narrativeLink, overrides: [{ formTemplateId: 11, periodMonths: 6, triggerStatusId: STATUS.UnderReview.id, reportTemplateId: 60 }] }
-    const { lib, db } = load({ forms: [grantForm(101, { formTemplateId: 11 })], links: [link, { ...dftLink, active: false }] })
+    const link = { ...narrativeLink, overrides: [{ formTemplateId: 11, enabled: true, triggerStatusId: STATUS.UnderReview.id }] }
+    const { lib, db } = load({ forms: [grantForm(101, { formTemplateId: 11 })], links: [link, { ...dftLink, overrides: [{ formTemplateId: 11, enabled: false, triggerStatusId: null }] }] })
     await lib.planReports(101)
-    same(rowsOf(db, 101).map((r) => [r.label, r.triggerStatusId, r.reportTemplateId]), [
-      ["H1 2026", STATUS.UnderReview.id, 60],
-      ["H2 2026", STATUS.UnderReview.id, 60],
-    ])
-    const off = load({ forms: [grantForm(102)], links: [{ ...narrativeLink, overrides: [{ formTemplateId: 10, enabled: false }] }] })
+    same(rowsOf(db, 101).map((r) => [r.reportCategoryId, r.label, r.triggerStatusId]), [
+      [5, "Q1 2026", STATUS.UnderReview.id],
+      [5, "Q2 2026", STATUS.UnderReview.id],
+      [5, "Q3 2026", STATUS.UnderReview.id],
+      [5, "Q4 2027", STATUS.UnderReview.id],
+    ], "Narrative Report keeps the category's quarters at the template's status; DFT Report is off")
+    const off = load({ forms: [grantForm(102)], links: [{ ...narrativeLink, overrides: [{ formTemplateId: 10, enabled: false, triggerStatusId: null }] }] })
     assert.equal(await off.lib.planReports(102), 0)
   }
 
-  // Recalculating after a date change keeps created, skipped, edited and one-off rows, and doesn't overlap them
+  // Recalculating after a date change keeps created, skipped, edited and detached rows, and doesn't overlap them
   {
     const { lib, db } = load({ forms: [grantForm(103)], links: [narrativeLink] })
     await lib.planReports(103)
@@ -292,19 +295,20 @@ async function main() {
     Object.assign(q1, { status: "CREATED", reportFormId: 5000 })
     Object.assign(q2, { status: "SKIPPED" })
     Object.assign(q3, { edited: true, dueOn: d("2027-02-01") })
-    db.planned.push({ id: 900, parentFormId: 103, reportRuleId: null, reportCategoryId: 5, period: null, label: "Extra",
-      periodStart: d("2026-05-01"), periodEnd: d("2026-05-31"), opensOn: d("2026-05-20"), status: "PLANNED", edited: false })
+    // Left behind when a report was detached from the category
+    db.planned.push({ id: 900, parentFormId: 103, reportRuleId: null, reportCategoryId: 6, period: 0, label: "",
+      periodStart: d("2026-04-01"), periodEnd: d("2027-03-31"), opensOn: null, status: "PLANNED", edited: false })
     db.forms[0].fundingEnd = d("2027-09-30") // the grant is extended by six months
 
     same(await lib.recalculateReports(103), { removed: 1, added: 3 }, "Untouched Q4 is replaced; Q4–Q6 are added")
     same(rowsOf(db, 103).map((r) => [r.period, r.label, r.status, r.edited]), [
+      [0, "", "PLANNED", false],
       [1, "Q1 2026", "CREATED", false],
       [2, "Q2 2026", "SKIPPED", false],
       [3, "Q3 2026", "PLANNED", true],
       [4, "Q4 2027", "PLANNED", false],
-      [5, "Q5 2027", "PLANNED", false],
-      [6, "Q6 2027", "PLANNED", false],
-      [null, "Extra", "PLANNED", false],
+      [5, "Q1 2027", "PLANNED", false],
+      [6, "Q2 2027", "PLANNED", false],
     ])
   }
 
@@ -356,16 +360,16 @@ async function main() {
     same(db.forms.filter((f) => f.linkedFormId).map((f) => [f.linkedFormId, f.title]), [[112, "Narrative Report 2026 – Q2 2026"]])
   }
 
-  // Create now ignores the opening date; edited dates and pinned templates are used; a missing template releases the row
+  // Create now ignores the opening date and uses edited dates; a missing template releases the row
   {
     const { lib, db } = load({ forms: [grantForm(113)], links: [narrativeLink] })
     await lib.planReports(113)
     const q4 = rowsOf(db, 113)[3]
-    Object.assign(q4, { dueOn: d("2027-05-01"), edited: true, reportTemplateId: 60 })
+    Object.assign(q4, { dueOn: d("2027-05-01"), edited: true })
     const created = await lib.createReport(q4.id, d("2026-05-01"))
     assert.ok(created.ok)
     const report = db.forms.find((f) => f.linkedFormId === 113)!
-    same([report.title, report.formTemplateId, iso(report.dueDate)], ["Short Narrative Report – Q4 2027", 60, "2027-05-01"])
+    same([report.title, report.formTemplateId, iso(report.dueDate)], ["Narrative Report 2026 – Q4 2027", 51, "2027-05-01"])
     same(await lib.createReport(q4.id, d("2026-05-01")), { ok: false, error: "Already created or skipped" })
 
     const empty = load({ forms: [grantForm(114)], links: [narrativeLink], templates: [{ id: 10, formCategoryId: 1, name: "Grant", active: true, createdAt: d("2026-01-01") }] })
@@ -436,7 +440,8 @@ async function main() {
     const { lib } = load({})
     assert.equal(await lib.reportTimingInputError({ reportKind: null }), undefined, "No timing yet is allowed")
     assert.equal(await lib.reportTimingInputError({ reportKind: "PERIODIC", reportPeriodMonths: 3, reportOpensDaysBefore: 14, reportDueDaysAfterPeriodEnd: -10 }), undefined)
-    assert.match((await lib.reportTimingInputError({ reportKind: "PERIODIC", reportPeriodMonths: null }))!, /frequency/)
+    assert.match((await lib.reportTimingInputError({ reportKind: "PERIODIC", reportPeriodMonths: null }))!, /quarterly/)
+    assert.match((await lib.reportTimingInputError({ reportKind: "PERIODIC", reportPeriodMonths: 4 }))!, /quarterly/, "Only quarterly, half-yearly or yearly")
     assert.ok(await lib.reportTimingInputError({ reportKind: "WEEKLY" }))
     assert.ok(await lib.reportTimingInputError({ reportKind: "AFTER_STATUS", reportDueDays: 1.5 }))
     assert.ok(await lib.reportTimingInputError({ reportKind: "AFTER_STATUS", reportTriggerStatusId: 404 }))
@@ -445,9 +450,10 @@ async function main() {
     assert.match((await lib.reportLinkInputError({ parentCategoryId: 5, reportCategoryId: 6 }))!, /primary or secondary/)
     assert.match((await lib.reportLinkInputError({ parentCategoryId: 1, reportCategoryId: 3 }))!, /report category/)
 
-    assert.equal(await lib.reportOverrideInputError({ enabled: false, periodMonths: 6, reportTemplateId: 60 }, { reportCategoryId: 5 }), undefined)
-    assert.match((await lib.reportOverrideInputError({ reportTemplateId: 60 }, { reportCategoryId: 6 }))!, /report category/)
-    assert.ok(await lib.reportOverrideInputError({ dueDays: -1 }, { reportCategoryId: 5 }))
+    assert.equal(await lib.reportOverrideInputError({ enabled: false, triggerStatusId: null }), undefined)
+    assert.equal(await lib.reportOverrideInputError({ enabled: true, triggerStatusId: 8 }), undefined)
+    assert.ok(await lib.reportOverrideInputError({ enabled: "yes", triggerStatusId: null }))
+    assert.ok(await lib.reportOverrideInputError({ enabled: true, triggerStatusId: 404 }))
 
     const current = { periodStart: d("2026-04-01"), periodEnd: d("2026-06-30") }
     same(lib.parsePlannedReportEdit({ dueOn: "2026-07-30", opensOn: null }, current), { edit: { opensOn: null, dueOn: "2026-07-30T00:00:00.000Z" } })

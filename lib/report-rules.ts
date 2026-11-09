@@ -1,16 +1,17 @@
 import prisma from "@/db"
-import { REPORT_RULE_LIMITS, type ReportRuleNumberField } from "@/lib/report-rule-format"
+import { FREQUENCY_OPTIONS, REPORT_RULE_LIMITS, type ReportRuleNumberField } from "@/lib/report-rule-format"
 import { addDays, effectiveTiming, plannedRows, triggerReached, utcDay } from "@/lib/report-timing"
 
 export * from "@/lib/report-timing"
 
 // Reports a form gets come from the report categories attached to its category.
-// Each report category has a base timing (e.g. Narrative Report: quarterly, opens
-// 14 days before the period ends) that a template can override (e.g. one DFT
-// Application template creates its DFT Report on submission). When a form is
-// created its reports are planned with real dates (PlannedReport); approvers can
-// edit, skip, add or create them early, and the daily job creates the rest as
-// they open. Settings changes only affect forms created afterwards.
+// Each report category has its timing (e.g. Narrative Report: quarterly, opens
+// 14 days before the period ends). A template can switch an attached report off
+// or change its trigger status (e.g. one DFT Application template creates its
+// DFT Report on submission). When a form is created its reports are planned with
+// real dates (PlannedReport); approvers can edit their dates, skip them or create
+// them early, and the daily job creates the rest as they open. Settings changes
+// only affect forms created afterwards, or recalculated.
 
 // After-status reports in these statuses were parked by an earlier status change
 // on the parent and are reopened when the parent reaches the trigger again
@@ -45,18 +46,17 @@ async function rowsFromSettings(formId: number) {
     where: { parentCategoryId: categoryId },
     include: {
       reportCategory: { select: { id: true, ...TIMING_SELECT } },
-      overrides: { where: { formTemplateId: form.formTemplateId } },
+      overrides: { where: { formTemplateId: form.formTemplateId }, select: { enabled: true, triggerStatusId: true } },
     },
   })
   return links.flatMap((link) => {
-    const timing = effectiveTiming(link.reportCategory, link.overrides[0], link.active)
+    const timing = effectiveTiming(link.reportCategory, link.overrides[0])
     if (!timing) return []
     return plannedRows(form, timing).map((row) => ({
       ...row,
       parentFormId: form.id,
       reportRuleId: link.id,
       reportCategoryId: link.reportCategory.id,
-      reportTemplateId: timing.reportTemplateId,
     }))
   })
 }
@@ -74,7 +74,8 @@ export async function planReports(formId: number): Promise<number> {
 /**
  * Re-plan a form's reports from the current settings and its current dates.
  * Rows that were created, skipped or edited by hand stay as they are, and no new
- * row is added where it would overlap one of them. One-off rows are never touched.
+ * row is added where it would overlap one of them. Rows of a detached report are
+ * never touched.
  */
 export async function recalculateReports(formId: number): Promise<{ removed: number; added: number }> {
   const rows = await rowsFromSettings(formId)
@@ -94,13 +95,10 @@ export async function recalculateReports(formId: number): Promise<{ removed: num
 
 // ─── Creating reports ────────────────────────────────────────────────────────
 
-/** The template a planned report is filled in with: the pinned one, else the newest active template in its category. */
-export async function reportTemplateFor(row: { reportTemplateId: number | null; reportCategoryId: number }) {
-  if (row.reportTemplateId) {
-    return prisma.formTemplate.findUnique({ where: { id: row.reportTemplateId }, select: { id: true, name: true } })
-  }
+/** The template a report is filled in with: the newest active template in its report category. */
+export async function reportTemplateFor(reportCategoryId: number) {
   return prisma.formTemplate.findFirst({
-    where: { formCategoryId: row.reportCategoryId, active: true },
+    where: { formCategoryId: reportCategoryId, active: true },
     orderBy: { createdAt: "desc" },
     select: { id: true, name: true },
   })
@@ -134,7 +132,7 @@ export async function createReport(rowId: number, today: Date): Promise<CreateRe
       },
     })
     const [template, draft] = await Promise.all([
-      reportTemplateFor(row),
+      reportTemplateFor(row.reportCategoryId),
       prisma.formStatus.findFirst({ where: { label: "Draft" }, select: { id: true } }),
     ])
     if (!template) return release(`No active ${row.reportCategory.label} template`)
@@ -339,10 +337,11 @@ export const TIMING_FIELDS = [
 export async function reportTimingInputError(timing: Record<string, unknown>): Promise<string | undefined> {
   if (timing.reportKind == null) return
   if (timing.reportKind !== "AFTER_STATUS" && timing.reportKind !== "PERIODIC") return "Choose when the report is created"
-  if (timing.reportKind === "PERIODIC" && timing.reportPeriodMonths == null) return "Periodic reports need a frequency"
+  if (timing.reportKind === "PERIODIC" && !FREQUENCY_OPTIONS.some((o) => o.months === timing.reportPeriodMonths)) {
+    return "Choose quarterly, half-yearly or yearly"
+  }
   return numbersError(timing, {
     reportDueDays: "dueDays",
-    reportPeriodMonths: "periodMonths",
     reportOpensDaysBefore: "opensDaysBefore",
     reportDueDaysAfterPeriodEnd: "dueDaysAfterPeriodEnd",
   }) ?? (await statusError(timing.reportTriggerStatusId))
@@ -360,39 +359,13 @@ export async function reportLinkInputError(data: Record<string, unknown>): Promi
   ])
   if (!parent || parent.role === "REPORT") return "Reports belong to a primary or secondary category"
   if (report?.role !== "REPORT") return "Choose a report category"
-  if (data.active !== undefined && typeof data.active !== "boolean") return "Active must be true or false"
 }
 
-/** Validate a template's override; a pinned report template must be in the report category. */
-export async function reportOverrideInputError(
-  data: Record<string, unknown>,
-  link: { reportCategoryId: number },
-): Promise<string | undefined> {
-  if (data.enabled != null && typeof data.enabled !== "boolean") return "Enabled must be true or false"
-  const error = numbersError(data, {
-    dueDays: "dueDays",
-    periodMonths: "periodMonths",
-    opensDaysBefore: "opensDaysBefore",
-    dueDaysAfterPeriodEnd: "dueDaysAfterPeriodEnd",
-  }) ?? (await statusError(data.triggerStatusId))
-  if (error) return error
-  if (data.reportTemplateId != null) {
-    const template = Number.isInteger(data.reportTemplateId)
-      ? await prisma.formTemplate.findUnique({ where: { id: data.reportTemplateId as number }, select: { formCategoryId: true } })
-      : null
-    if (template?.formCategoryId !== link.reportCategoryId) return "The report template must be in the report category"
-  }
+/** Validate a template's change to an attached report. */
+export async function reportOverrideInputError(data: Record<string, unknown>): Promise<string | undefined> {
+  if (typeof data.enabled !== "boolean") return "Enabled must be true or false"
+  return statusError(data.triggerStatusId)
 }
-
-export const OVERRIDE_FIELDS = [
-  "enabled",
-  "triggerStatusId",
-  "dueDays",
-  "periodMonths",
-  "opensDaysBefore",
-  "dueDaysAfterPeriodEnd",
-  "reportTemplateId",
-] as const
 
 const parseDay = (value: unknown): Date | null | undefined => {
   if (value === undefined) return undefined
@@ -406,7 +379,6 @@ export interface PlannedReportEdit {
   periodEnd?: Date
   opensOn?: Date | null
   dueOn?: Date | null
-  label?: string
 }
 
 /**
@@ -424,10 +396,6 @@ export function parsePlannedReportEdit(
     if (day === undefined) return { error: `${field} isn't a valid date` }
     if (day === null && (field === "periodStart" || field === "periodEnd")) return { error: "A report needs a start and end date" }
     ;(edit as Record<string, Date | null>)[field] = day
-  }
-  if (data.label !== undefined) {
-    if (typeof data.label !== "string") return { error: "Label must be text" }
-    edit.label = data.label.trim()
   }
   if ((edit.periodStart ?? current.periodStart) > (edit.periodEnd ?? current.periodEnd)) {
     return { error: "The period must start before it ends" }

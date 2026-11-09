@@ -13,7 +13,7 @@ yarn lint             # Run ESLint
 # Database (Docker is NOT used for local dev — connect to a remote/existing PostgreSQL via env vars)
 yarn db:migrate       # Create and apply new migrations
 yarn db:generate      # Regenerate Prisma client after schema changes
-yarn db:seed          # Seed initial data
+yarn db:seed          # Wipe and seed test data: users per role (password test12345), categories with report timing, templates from form-templates/, example forms
 yarn db:reset         # Drop and re-migrate (destructive)
 yarn db:studio        # Open Prisma Studio GUI
 
@@ -70,7 +70,7 @@ The `[locale]` segment is `en` or `xh` (Xhosa). Route protection is handled by `
 
 Key model relationships: `Funder` → `Fund` → `LocalDevelopmentAgency` → `LocalDevelopmentAgencyForm` (submitted against a `FormTemplate`).
 
-Each `FormTemplate` belongs to a `FormCategory` (role PRIMARY / SECONDARY / REPORT). Forms are grouped under a **primary form** (`primaryFormId`) by category and date; reports sit under the form they were created for (`linkedFormId`). Report timing lives on REPORT categories (after a status, or every N months of the parent's funding period); `ReportRule` attaches a report category to a primary/secondary one, and a template can change the timing via `ReportRuleOverride`. Each form's reports are planned with real dates when it's created (`PlannedReport`, editable by approvers on the form), and a daily Dokku cron (`app.json`) runs `/api/cron/generate-reports` to create them as they open. See [docs/FORM_CATEGORIES.md](docs/FORM_CATEGORIES.md), `lib/primary-form.ts` and `lib/report-rules.ts`.
+Each `FormTemplate` belongs to a `FormCategory` (role PRIMARY / SECONDARY / REPORT). Forms are grouped under a **primary form** (`primaryFormId`) by category and date; reports sit under the form they were created for (`linkedFormId`). Report timing lives on REPORT categories (after a status, or quarterly / half-yearly / yearly over the parent's funding period); `ReportRule` attaches a report category to a primary/secondary one, and a template can only switch it off or change its trigger status via `ReportRuleOverride`. Each form's reports are planned with real dates when it's created (`PlannedReport`; approvers can edit dates, skip, create now or recalculate on the form), and a daily Dokku cron (`app.json`) runs `/api/cron/generate-reports` to create them as they open. See [docs/FORM_CATEGORIES.md](docs/FORM_CATEGORIES.md), `lib/primary-form.ts` and `lib/report-rules.ts`.
 
 ### Auth & permissions
 

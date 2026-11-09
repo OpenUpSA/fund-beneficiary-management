@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const link = await prisma.reportRule.create({
-      data: { parentCategoryId: data.parentCategoryId, reportCategoryId: data.reportCategoryId, active: data.active ?? true },
+      data: { parentCategoryId: data.parentCategoryId, reportCategoryId: data.reportCategoryId },
     })
     return NextResponse.json(link)
   } catch (error) {

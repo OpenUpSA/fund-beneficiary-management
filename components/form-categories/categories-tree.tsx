@@ -255,10 +255,6 @@ function CategoryNode({
     if (await send(`/api/form-category/${category.id}`, "PUT", { active })) router.refresh()
   }
 
-  async function setRuleActive(ruleId: number, active: boolean) {
-    if (await send(`/api/report-rule/${ruleId}`, "PUT", { active })) router.refresh()
-  }
-
   async function removeRule(ruleId: number, name: string) {
     if (!window.confirm(`Detach ${name}? New forms won't get it; forms that already have it planned keep it.`)) return
     if (await send(`/api/report-rule/${ruleId}`, "DELETE")) {
@@ -352,8 +348,8 @@ function CategoryNode({
                             >
                               <FileClockIcon className="h-3.5 w-3.5" />
                               {t._count.reportOverrides > 0
-                                ? `${t._count.reportOverrides} report change${t._count.reportOverrides === 1 ? "" : "s"}`
-                                : "uses category reports"}
+                                ? `${t._count.reportOverrides} report${t._count.reportOverrides === 1 ? "" : "s"} changed`
+                                : "Reports as category"}
                             </button>
                           )}
                           <button
@@ -406,7 +402,7 @@ function CategoryNode({
                         const reportTiming = reportCategory ? categoryTiming(reportCategory) : null
                         const templateName = reportTemplateName(rule.reportCategoryId)
                         return (
-                          <li key={rule.id} className={cn("flex flex-wrap items-start justify-between gap-2 p-3 text-sm", !rule.active && "bg-muted/40")}>
+                          <li key={rule.id} className="flex flex-wrap items-start justify-between gap-2 p-3 text-sm">
                             <div className="min-w-0 space-y-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-medium">{name}</span>
@@ -415,9 +411,6 @@ function CategoryNode({
                                     {reportTiming.kind === "AFTER_STATUS" ? "After a status" : frequencyLabel(reportTiming.periodMonths)}
                                   </Badge>
                                 )}
-                                <Badge variant={rule.active ? "outline" : "secondary"} className="font-normal">
-                                  {rule.active ? "Active" : "Off"}
-                                </Badge>
                               </div>
                               <p className={cn("text-muted-foreground", !reportTiming && "text-destructive")}>
                                 {reportTiming
@@ -432,15 +425,10 @@ function CategoryNode({
                                 )}
                                 {" · "}planned on forms {rule._count.plannedReports} time{rule._count.plannedReports === 1 ? "" : "s"}
                                 {rule._count.overrides > 0 &&
-                                  ` · changed by ${rule._count.overrides} template${rule._count.overrides === 1 ? "" : "s"}`}
+                                  ` · changed for ${rule._count.overrides} template${rule._count.overrides === 1 ? "" : "s"}`}
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Switch
-                                checked={rule.active}
-                                onCheckedChange={(active) => setRuleActive(rule.id, active)}
-                                aria-label={`Switch ${name} on or off`}
-                              />
                               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRule(rule.id, name)} aria-label={`Detach ${name}`}>
                                 <XIcon className="h-4 w-4" />
                               </Button>

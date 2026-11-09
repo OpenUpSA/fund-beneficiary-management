@@ -131,11 +131,6 @@ export async function POST(
           formTemplateId: clonedTemplate.id,
           enabled: override.enabled,
           triggerStatusId: override.triggerStatusId,
-          dueDays: override.dueDays,
-          periodMonths: override.periodMonths,
-          opensDaysBefore: override.opensDaysBefore,
-          dueDaysAfterPeriodEnd: override.dueDaysAfterPeriodEnd,
-          reportTemplateId: override.reportTemplateId,
         })),
       })
     }

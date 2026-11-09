@@ -9,8 +9,7 @@ export const runtime = "nodejs"
 
 /**
  * A template's report settings: the report categories attached to its category
- * (with their base timing), this template's changes to each, and the report
- * templates a change may pin.
+ * (with their timing) and this template's change to each.
  */
 export async function GET(_req: NextRequest, { params }: { params: { form_template_id: string } }) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
@@ -48,10 +47,9 @@ export async function GET(_req: NextRequest, { params }: { params: { form_templa
                 reportPeriodMonths: true,
                 reportOpensDaysBefore: true,
                 reportDueDaysAfterPeriodEnd: true,
-                templates: { select: { id: true, name: true, active: true, createdAt: true }, orderBy: { name: "asc" } },
               },
             },
-            overrides: { where: { formTemplateId: id } },
+            overrides: { where: { formTemplateId: id }, select: { enabled: true, triggerStatusId: true } },
           },
         })
       : [],

@@ -3,7 +3,7 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { OVERRIDE_FIELDS, reportOverrideInputError } from "@/lib/report-rules"
+import { reportOverrideInputError } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -37,8 +37,9 @@ async function load({ params }: Params) {
 }
 
 /**
- * Save this template's changes to a rule. Every field is sent: a value overrides
- * the rule, null inherits it. All nulls removes the override.
+ * Save this template's change to an attached report: `enabled` (false switches
+ * it off) and `triggerStatusId` (null = the report category's). Saving the
+ * category's own settings removes the change.
  */
 export async function PUT(req: NextRequest, context: Params) {
   const { template, rule, response } = await load(context)
@@ -46,14 +47,14 @@ export async function PUT(req: NextRequest, context: Params) {
 
   try {
     const body = await req.json()
-    const data = Object.fromEntries(OVERRIDE_FIELDS.map((field) => [field, body[field] ?? null]))
-    const error = await reportOverrideInputError(data, rule)
+    const data = { enabled: body.enabled ?? true, triggerStatusId: body.triggerStatusId ?? null }
+    const error = await reportOverrideInputError(data)
     if (error) {
       return NextResponse.json({ error }, { status: 400 })
     }
 
     const where = { reportRuleId_formTemplateId: { reportRuleId: rule.id, formTemplateId: template.id } }
-    if (Object.values(data).every((value) => value === null)) {
+    if (data.enabled && data.triggerStatusId === null) {
       await prisma.reportRuleOverride.deleteMany({ where: { reportRuleId: rule.id, formTemplateId: template.id } })
       return NextResponse.json({ override: null })
     }

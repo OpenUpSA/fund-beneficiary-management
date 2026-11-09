@@ -9,7 +9,7 @@ export const runtime = "nodejs"
 type Params = { params: { lda_form_id: string; row_id: string } }
 
 /**
- * Change a planned report's dates or label (it then keeps them when the form is
+ * Change a planned report's dates (it then keeps them when the form is
  * recalculated), or skip / unskip it with `status`.
  */
 export async function PUT(req: NextRequest, { params }: Params) {
@@ -45,17 +45,4 @@ export async function PUT(req: NextRequest, { params }: Params) {
     console.error("Failed to update planned report:", error)
     return NextResponse.json({ error: "Failed to update" }, { status: 500 })
   }
-}
-
-/** Remove a one-off report that hasn't been created. Planned ones from settings are skipped instead. */
-export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { formId, response } = await authorisePlannedReports(params.lda_form_id)
-  if (!formId) return response
-  const { row, response: notFound } = await findPlannedReport(formId, params.row_id)
-  if (!row) return notFound
-  if (row.reportRuleId !== null || row.status === "CREATED") {
-    return NextResponse.json({ error: "Only one-off reports that haven't been created can be removed; skip this one instead" }, { status: 400 })
-  }
-  await prisma.plannedReport.delete({ where: { id: row.id } })
-  return NextResponse.json({ success: true })
 }

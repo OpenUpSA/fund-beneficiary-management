@@ -2,7 +2,6 @@
 
 export const REPORT_RULE_LIMITS = {
   dueDays: [0, 365],
-  periodMonths: [1, 60],
   opensDaysBefore: [0, 365],
   dueDaysAfterPeriodEnd: [-365, 365],
 } as const
@@ -25,7 +24,7 @@ const days = (n: number) => `${n} day${n === 1 ? "" : "s"}`
 
 export function frequencyLabel(months: number | null): string {
   if (!months) return "—"
-  return FREQUENCY_OPTIONS.find((o) => o.months === months)?.label ?? `Every ${months} month${months === 1 ? "" : "s"}`
+  return FREQUENCY_OPTIONS.find((o) => o.months === months)?.label ?? `Every ${months} months`
 }
 
 /** One-line summary, e.g. "When Approved · due 30 days after" or "Quarterly · opens 14 days before period end · due 15 days after". */
