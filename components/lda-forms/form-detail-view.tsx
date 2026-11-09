@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Form, FormData } from "@/types/forms"
 import { PenLine, Send, CalendarIcon, Maximize2, Minimize2, Check, Clock, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { PlannedReportsPanel } from "@/components/lda-forms/planned-reports-panel"
 import DynamicForm from "@/components/form-templates/dynamicForm"
 import { useSearchParams } from "next/navigation"
 import { toast } from "sonner"
@@ -603,6 +604,9 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
           )}
         </CardContent>
       </Card>
+
+      {/* Reports this form will get, for approvers to adjust */}
+      {canApprove && !focusMode && <PlannedReportsPanel ldaFormId={Number(ldaForm.id)} />}
     </div>
   )
 }
