@@ -15,7 +15,8 @@ Grant Funding Application (2027)       2027  Application  Under review
 ```
 
 Set up on **Form templates → Categories** (super users). Code: `lib/primary-form.ts`
-(placement), `lib/report-rules.ts` (reports), `lib/form-tree.ts` (the list).
+(placement), `lib/report-timing.ts` (period maths), `lib/report-rules.ts`
+(planning and creating reports), `lib/form-tree.ts` (the list).
 
 ## Categories
 
@@ -29,46 +30,79 @@ A category's **key** is fixed once created: code looks some categories up by it
 (e.g. `grant_funding` for prefills). Changing a category's role or parent, or a
 template's category, regroups existing forms straight away.
 
-## Report rules
+## Reports
 
-Rules sit on a primary or secondary category and are the default for all its
-templates:
+Reports are set up in three layers, and each form then has its own planned
+reports with real dates:
+
+```
+Report category timing  →  template changes  →  the form's planned reports  →  report forms
+(Reports tab)              (template → Reports)  (Reports panel on the form)
+```
+
+### Timing on the report category
+
+Each report category (Reports tab) has a base timing:
 
 | When | Creates | Dates |
 |---|---|---|
-| **After a status** (e.g. Approved, Under review = on submission) | One report as soon as the form reaches the status | Due N days after that day; same start/end as the parent |
-| **Quarterly / Half-yearly / Yearly / every N months** | One report per period of the parent form's **own** start–end dates (an April–March grant's Q1 is April–June) | Opens N days before the period ends, due N days after it ends |
+| **Once, after a status** (e.g. Approved; Under review = on submission) | One report when the form reaches the status | Due N days after that day; same start/end as the form |
+| **Quarterly / Half-yearly / Yearly / every N months** | One report per period of the form's **own** start–end dates (an April–March grant's Q1 is April–June) | Opens N days before the period ends, due N days after it ends |
+
+A primary or secondary category gets a report by **attaching** the report
+category (Applications tab → Reports → Attach report). The link has no timing of
+its own and can be switched off or detached.
 
 - "Reached" means the status itself or any approved status after it
-  (Approved, Underway). Draft, Rejected and Paused parents never get new reports.
-- Rejecting the parent rejects its after-status reports; moving it back pauses
-  them; reaching the status again reopens them. Approved reports are left alone.
-- Reports use the **active template in the report category** (the newest if
-  several are active). For a new year, activate the new template and deactivate
-  the old one.
-- Changing a rule only affects reports not created yet. On a report itself, the
-  due date and start/end dates can still be edited as usual.
-- A rule that has created reports can be switched off but not deleted.
+  (Approved, Underway). Draft, Rejected and Paused forms never get new reports.
+- Reports use the **newest active template in the report category** unless a
+  template pins one. For a new year, add the new template to the report
+  category and deactivate the old one.
 
 ### Per-template changes
 
-A template can change any rule setting for its own forms (Categories page → the
-template's report link, or **Reports** in the template editor): switch the
-report off, use a different trigger status, frequency or number of days, or pin
-a specific report template. Unchanged settings keep following the category.
-Cloning a template copies its changes.
+A template can change the timing for its own forms (Categories page → the
+template's report link, or **Reports** in the template editor): switch a report
+off, use a different trigger status, frequency or number of days, or pin a
+report template. The dialog shows an example timeline for an editable example
+start/end date. Cloning a template copies its changes.
 
-Example: the DFT Application category's DFT Report is created on approval. For a
-few LDAs it should come on submission, so clone the template as "DFT Application
-– on submission", change the trigger to "Under review (submitted)", and create
-those LDAs' forms from it.
+Example: DFT Report is created on approval. For a few LDAs it should come on
+submission, so clone the DFT Application template as "DFT Application – on
+submission", change the trigger to "Under review (submitted)", and create those
+LDAs' forms from it.
+
+### Planned reports on each form
+
+When a form is created, its reports are **planned** from the settings above:
+one row per period (or one after-status row) with its period, opening date and
+due date. Approvers see them in the **Reports** panel at the bottom of the form
+and can, for that form only:
+
+- **edit** a planned report's period, opening and due dates (it's then marked
+  edited);
+- **skip** or unskip it;
+- **add** a one-off report (any report category, optional template, own dates);
+- **create now**, without waiting for the opening date or the trigger;
+- **recalculate from settings**.
+
+Settings changes only affect forms created afterwards. Existing forms keep
+their planned dates until an approver recalculates. Recalculating (and changing
+the form's start/end dates, which recalculates automatically) replaces only the
+untouched planned rows: reports already created, skipped, edited or added by
+hand stay, and no new period is planned over them.
+
+Once created, a planned report links to its report form, which is edited like
+any form. Rejecting the parent rejects its after-status reports; moving it back
+pauses them; reaching the status again reopens them. Approved reports are left
+alone.
 
 ## The daily job
 
-Periodic reports are created by `/api/cron/generate-reports`. It creates every
-period that has opened and has no report yet, so missed days are caught up and
-running it twice creates nothing new. Reaching a periodic rule's trigger also
-creates the periods already open straight away.
+`/api/cron/generate-reports` creates every planned report whose opening date
+has passed and whose form has reached its trigger. Missed days are caught up and
+running it twice creates nothing new. After-status reports are also created
+straight away when the form's status changes.
 
 - **Production:** `app.json` declares a Dokku cron (02:00 UTC daily) that calls
   the endpoint with `Authorization: Bearer $CRON_SECRET`. Set the secret with
@@ -79,13 +113,14 @@ creates the periods already open straight away.
 ## Moving from the old settings
 
 The old "Linked form template" setting and the per-template report schedules
-are replaced by rules. After deploying:
+are replaced. After deploying:
 
 1. Give every template a category on the Categories page (templates without one
-   are listed at the bottom).
-2. `yarn migrate-report-rules` — dry run: prints the rules, template changes and
-   report tags it would create, and anything still missing a category.
-3. `yarn migrate-report-rules --commit` once the dry run looks right.
+   are listed at the bottom of each tab).
+2. `yarn migrate-report-rules` — dry run: prints the report category timing,
+   links, template changes and existing reports it would record, and anything
+   still missing a category. Then `--commit`.
+3. `yarn plan-reports` (dry run, then `--commit`) to plan existing forms' reports.
 4. `yarn link-primary-forms` (dry run, then `--commit`) to group existing forms.
 
 The old tables and columns stay until a follow-up release removes them.
