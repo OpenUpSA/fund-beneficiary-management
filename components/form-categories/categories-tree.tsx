@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { FileClockIcon, FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import { Link } from "@/i18n/routing"
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FormCategoryWithTemplates } from "@/types/models"
 import { cn } from "@/lib/utils"
 import { describeRule } from "@/lib/report-rule-format"
@@ -38,6 +39,7 @@ interface TemplateOption {
   id: number
   name: string
   formCategoryId: number | null
+  templateType: string
 }
 
 async function send(url: string, method: string, body?: unknown): Promise<boolean> {
@@ -64,17 +66,19 @@ function CategoryDialog({
   onOpenChange,
   category,
   categories,
+  defaultRole = "SECONDARY",
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   category?: FormCategoryWithTemplates
   categories: FormCategoryWithTemplates[]
+  defaultRole?: Role
 }) {
   const router = useRouter()
   const [label, setLabel] = useState(category?.label ?? "")
   const [key, setKey] = useState(category?.key ?? "")
   const [keyEdited, setKeyEdited] = useState(false)
-  const [role, setRole] = useState<Role>((category?.role as Role) ?? "SECONDARY")
+  const [role, setRole] = useState<Role>((category?.role as Role) ?? defaultRole)
   const [parentId, setParentId] = useState<number | null>(category?.parentCategoryId ?? null)
   const [saving, setSaving] = useState(false)
 
@@ -177,15 +181,23 @@ function CategoryDialog({
   )
 }
 
-export function NewCategoryButton({ categories }: { categories: FormCategoryWithTemplates[] }) {
+function NewCategoryButton({
+  categories,
+  defaultRole,
+  label,
+}: {
+  categories: FormCategoryWithTemplates[]
+  defaultRole: Role
+  label: string
+}) {
   const [open, setOpen] = useState(false)
   return (
     <>
       <Button onClick={() => setOpen(true)}>
         <PlusIcon className="h-4 w-4" />
-        New category
+        {label}
       </Button>
-      {open && <CategoryDialog open={open} onOpenChange={setOpen} categories={categories} />}
+      {open && <CategoryDialog open={open} onOpenChange={setOpen} categories={categories} defaultRole={defaultRole} />}
     </>
   )
 }
@@ -370,6 +382,9 @@ function CategoryNode({
   )
 }
 
+type Tab = "applications" | "reports"
+
+/** Categories in two tabs: applications (primary/secondary, with their report rules) and report types. */
 export function CategoriesTree({
   categories,
   templates,
@@ -379,6 +394,20 @@ export function CategoriesTree({
   templates: TemplateOption[]
   statuses: StatusOption[]
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const tab: Tab = searchParams.get("tab") === "reports" ? "reports" : "applications"
+
+  // Keep the tab in the URL so a refresh or a shared link opens the same tab
+  const changeTab = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (value === "reports") params.set("tab", "reports")
+    else params.delete("tab")
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
+
   const ids = new Set(categories.map((c) => c.id))
   const primaries = categories.filter((c) => c.role === "PRIMARY")
   // Secondary categories not placed under a primary still need a home in the tree
@@ -388,37 +417,75 @@ export function CategoriesTree({
   const reports = categories.filter((c) => c.role === "REPORT")
   const uncategorised = templates.filter((t) => !t.formCategoryId)
 
-  const group = (title: string, items: FormCategoryWithTemplates[]) =>
+  const group = (title: string | null, items: FormCategoryWithTemplates[]) =>
     items.length > 0 && (
       <section className="space-y-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+        {title && <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>}
         {items.map((c) => (
           <CategoryNode key={c.id} category={c} categories={categories} templates={templates} statuses={statuses} depth={0} />
         ))}
       </section>
     )
 
-  return (
-    <div className="mt-6 space-y-6">
-      {categories.length === 0 && (
-        <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
-          <FolderTreeIcon className="h-8 w-8" />
-          No categories yet.
-        </div>
-      )}
-      {group("Primary forms", primaries)}
-      {group("Secondary forms not under a primary", looseSecondaries)}
-      {group("Reports", reports)}
-      {uncategorised.length > 0 && (
-        <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-            Templates without a category
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {uncategorised.map((t) => t.name).join(", ")}. Add them to a category above; until then their forms aren&apos;t grouped and get no reports.
-          </p>
-        </section>
-      )}
+  const empty = (text: string) => (
+    <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+      <FolderTreeIcon className="h-8 w-8" />
+      {text}
     </div>
+  )
+
+  const withoutCategory = (items: TemplateOption[], hint: string) =>
+    items.length > 0 && (
+      <section>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+          Templates without a category
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {items.map((t) => t.name).join(", ")}. {hint}
+        </p>
+      </section>
+    )
+
+  return (
+    <Tabs value={tab} onValueChange={changeTab} className="mt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <TabsList>
+          <TabsTrigger value="applications">Applications ({primaries.length + categories.filter((c) => c.role === "SECONDARY").length})</TabsTrigger>
+          <TabsTrigger value="reports">Reports ({reports.length})</TabsTrigger>
+        </TabsList>
+        {tab === "applications" ? (
+          <NewCategoryButton categories={categories} defaultRole="PRIMARY" label="New application category" />
+        ) : (
+          <NewCategoryButton categories={categories} defaultRole="REPORT" label="New report category" />
+        )}
+      </div>
+
+      <TabsContent value="applications" className="mt-4 space-y-6">
+        <p className="text-sm text-muted-foreground">
+          Primary forms group a funding period; secondary forms sit under the primary covering their start date.
+          Each category&apos;s reports say when reports are created for its forms.
+        </p>
+        {primaries.length + looseSecondaries.length === 0 && empty("No application categories yet.")}
+        {group(null, primaries)}
+        {group("Secondary forms not under a primary", looseSecondaries)}
+        {withoutCategory(
+          uncategorised.filter((t) => t.templateType !== "REPORT"),
+          "Add them to a category; until then their forms aren't grouped and get no reports."
+        )}
+      </TabsContent>
+
+      <TabsContent value="reports" className="mt-4 space-y-6">
+        <p className="text-sm text-muted-foreground">
+          The kinds of report the application categories create. A report is filled in using the newest active
+          template of its kind, so next year&apos;s template only needs to be added here and the old one deactivated.
+        </p>
+        {reports.length === 0 && empty("No report categories yet.")}
+        {group(null, reports)}
+        {withoutCategory(
+          uncategorised.filter((t) => t.templateType === "REPORT"),
+          "Add them to a report category to use them for reports."
+        )}
+      </TabsContent>
+    </Tabs>
   )
 }
