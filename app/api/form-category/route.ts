@@ -31,7 +31,10 @@ export async function GET() {
         },
         orderBy: { name: "asc" },
       },
-      reportRules: { orderBy: { id: "asc" } },
+      reportRules: {
+        orderBy: { id: "asc" },
+        include: { _count: { select: { overrides: true, reports: true } } },
+      },
     },
   })
   return NextResponse.json(categories)

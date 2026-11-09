@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FormCategoryWithTemplates } from "@/types/models"
 import { cn } from "@/lib/utils"
-import { describeRule } from "@/lib/report-rule-format"
+import { describeRule, frequencyLabel } from "@/lib/report-rule-format"
 import { formTemplateTypeLabel } from "@/lib/form-template-type"
 import { RuleDialog } from "./rule-dialog"
 import { ReportSettingsDialog } from "./report-settings-dialog"
@@ -225,6 +225,7 @@ function CategoryNode({
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
   // The template list is hidden until asked for; the header always shows the count
   const [showTemplates, setShowTemplates] = useState(false)
+  const [showReports, setShowReports] = useState(false)
   // Reports are filled in with the newest active template of a report category
   const inUseId = category.role === "REPORT"
     ? [...category.templates]
@@ -234,6 +235,11 @@ function CategoryNode({
   const getsReports = category.role !== "REPORT"
   const reportCategories = categories.filter((c) => c.role === "REPORT")
   const categoryLabel = (id: number) => categories.find((c) => c.id === id)?.label ?? "Unknown category"
+  // The template a report category's reports are filled in with: its newest active one
+  const reportTemplateName = (reportCategoryId: number) =>
+    [...(categories.find((c) => c.id === reportCategoryId)?.templates ?? [])]
+      .filter((t) => t.active)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.name
   const children = categories.filter((c) => c.parentCategoryId === category.id)
   const assignable = templates.filter((t) => t.formCategoryId !== category.id)
 
@@ -370,31 +376,71 @@ function CategoryNode({
           </div>
           {getsReports && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Reports</p>
-              {category.reportRules.length === 0 && <p className="text-sm text-muted-foreground">No reports.</p>}
-              <ul className="space-y-1">
-                {category.reportRules.map((rule) => (
-                  <li key={rule.id} className={cn("flex flex-wrap items-center gap-2 text-sm", !rule.active && "text-muted-foreground")}>
-                    <span className="font-medium">{categoryLabel(rule.reportCategoryId)}</span>
-                    <span className="text-muted-foreground">{describeRule(rule, statuses)}</span>
-                    <Switch
-                      checked={rule.active}
-                      onCheckedChange={(active) => setRuleActive(rule.id, active)}
-                      aria-label={`Switch ${categoryLabel(rule.reportCategoryId)} on or off`}
-                    />
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRuleDialog({ rule })} aria-label="Edit report rule">
-                      <PencilIcon className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRule(rule.id)} aria-label="Delete report rule">
-                      <Trash2Icon className="h-3.5 w-3.5" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-              <Button variant="outline" size="sm" className="mt-2" onClick={() => setRuleDialog({})} disabled={reportCategories.length === 0}>
-                <PlusIcon className="h-4 w-4" />
-                Add report
-              </Button>
+              <button
+                type="button"
+                onClick={() => setShowReports((v) => !v)}
+                className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+                aria-expanded={showReports}
+              >
+                {showReports ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
+                Reports ({category.reportRules.length})
+              </button>
+              {showReports && (
+                <div className="mt-2 space-y-2">
+                  {category.reportRules.length === 0 && <p className="text-sm text-muted-foreground">No reports yet.</p>}
+                  {category.reportRules.length > 0 && (
+                    <ul className="divide-y rounded-md border">
+                      {category.reportRules.map((rule) => {
+                        const name = categoryLabel(rule.reportCategoryId)
+                        const templateName = reportTemplateName(rule.reportCategoryId)
+                        return (
+                          <li key={rule.id} className={cn("flex flex-wrap items-start justify-between gap-2 p-3 text-sm", !rule.active && "bg-muted/40")}>
+                            <div className="min-w-0 space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-medium">{name}</span>
+                                <Badge variant="outline" className="font-normal">
+                                  {rule.kind === "AFTER_STATUS" ? "After a status" : frequencyLabel(rule.periodMonths)}
+                                </Badge>
+                                <Badge variant={rule.active ? "outline" : "secondary"} className="font-normal">
+                                  {rule.active ? "Active" : "Off"}
+                                </Badge>
+                              </div>
+                              <p className="text-muted-foreground">{describeRule(rule, statuses)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {templateName ? (
+                                  <>Filled in with {templateName}</>
+                                ) : (
+                                  <span className="text-destructive">No active {name} template: these reports can&apos;t be created</span>
+                                )}
+                                {" · "}{rule._count.reports} report{rule._count.reports === 1 ? "" : "s"} created
+                                {rule._count.overrides > 0 &&
+                                  ` · changed by ${rule._count.overrides} template${rule._count.overrides === 1 ? "" : "s"}`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Switch
+                                checked={rule.active}
+                                onCheckedChange={(active) => setRuleActive(rule.id, active)}
+                                aria-label={`Switch ${name} on or off`}
+                              />
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setRuleDialog({ rule })} aria-label={`Edit ${name}`}>
+                                <PencilIcon className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRule(rule.id)} aria-label={`Delete ${name}`}>
+                                <Trash2Icon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setRuleDialog({})} disabled={reportCategories.length === 0}>
+                    <PlusIcon className="h-4 w-4" />
+                    Add report
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
