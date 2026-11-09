@@ -10,19 +10,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface UpcomingReport {
+  id: number
   parentId: number
   parentTitle: string
-  ldaId: number
   ldaName: string
   reportName: string
   label: string
   opensOn: string
-  dueOn: string
+  dueOn: string | null
 }
 
 interface RunResult {
   created: number
-  skipped: number
   errors: string[]
   createdReports: Array<{ id: number; title: string }>
 }
@@ -77,10 +76,10 @@ export function ReportsPanel({ onBack }: { onBack: () => void }) {
                 Reports
               </CardTitle>
               <CardDescription>
-                Reports come from the report rules on each{" "}
+                Each form&apos;s reports are planned when it&apos;s created, from the reports attached to its{" "}
                 <Link href="/dashboard/form-templates/categories" className="underline">form category</Link>.
-                A daily job creates periodic reports as they open and catches up any it missed;
-                reports after a status are created when the status changes.
+                A daily job creates them as they open and catches up any it missed; reports after a status are
+                created when the status changes.
               </CardDescription>
             </div>
             <Button onClick={runNow} variant="outline" className="gap-2" disabled={running}>
@@ -94,7 +93,6 @@ export function ReportsPanel({ onBack }: { onBack: () => void }) {
             <div className="rounded-md border p-3 text-sm space-y-1">
               <p className="font-medium">
                 Created {lastRun.created} report{lastRun.created === 1 ? "" : "s"}
-                {lastRun.skipped > 0 && `, skipped ${lastRun.skipped} already created`}
               </p>
               {lastRun.createdReports.length > 0 && (
                 <p className="text-muted-foreground">{lastRun.createdReports.map((r) => r.title).join(", ")}</p>
@@ -125,14 +123,14 @@ export function ReportsPanel({ onBack }: { onBack: () => void }) {
                 </TableHeader>
                 <TableBody>
                   {upcoming.map((u) => (
-                    <TableRow key={`${u.parentId}-${u.reportName}-${u.label}`}>
-                      <TableCell>{u.reportName} – {u.label}</TableCell>
+                    <TableRow key={u.id}>
+                      <TableCell>{u.label ? `${u.reportName} – ${u.label}` : u.reportName}</TableCell>
                       <TableCell>
                         <span className="font-medium">{u.ldaName}</span>
                         <span className="text-muted-foreground"> · {u.parentTitle}</span>
                       </TableCell>
                       <TableCell>{day(u.opensOn)}</TableCell>
-                      <TableCell>{day(u.dueOn)}</TableCell>
+                      <TableCell>{u.dueOn ? day(u.dueOn) : "—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

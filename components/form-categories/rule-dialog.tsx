@@ -9,115 +9,102 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FREQUENCY_OPTIONS, statusLabel } from "@/lib/report-rule-format"
-import type { ReportRule } from "@prisma/client"
 
 interface Option { id: number; label: string }
+
+interface ReportCategory extends Option {
+  reportKind: string | null
+  reportTriggerStatusId: number | null
+  reportDueDays: number | null
+  reportPeriodMonths: number | null
+  reportOpensDaysBefore: number
+  reportDueDaysAfterPeriodEnd: number
+}
 
 // "after" = one report after a status; a number = periodic every N months; "custom" = periodic, months typed in
 type When = "after" | "custom" | `${number}`
 
-function initialWhen(rule?: ReportRule): When {
-  if (!rule) return "after"
-  if (rule.kind === "AFTER_STATUS") return "after"
-  return FREQUENCY_OPTIONS.some((o) => o.months === rule.periodMonths) ? (`${rule.periodMonths}` as When) : "custom"
+function initialWhen(category: ReportCategory): When {
+  if (category.reportKind !== "PERIODIC") return "after"
+  return FREQUENCY_OPTIONS.some((o) => o.months === category.reportPeriodMonths) ? (`${category.reportPeriodMonths}` as When) : "custom"
 }
 
 const toNumber = (value: string) => (value.trim() === "" ? null : Number(value))
 
-/** Add or edit a category's report rule. */
-export function RuleDialog({
+async function send(url: string, method: string, body: unknown): Promise<boolean> {
+  const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    toast.error(error?.error || "Something went wrong")
+  }
+  return response.ok
+}
+
+/** Set a report category's base timing: when its reports are created and when they're due. */
+export function TimingDialog({
   open,
   onOpenChange,
-  parentCategory,
-  reportCategories,
+  category,
   statuses,
-  rule,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  parentCategory: Option
-  reportCategories: Option[]
+  category: ReportCategory
   statuses: Option[]
-  rule?: ReportRule
 }) {
   const router = useRouter()
-  const [reportCategoryId, setReportCategoryId] = useState<number | null>(rule?.reportCategoryId ?? null)
-  const [when, setWhen] = useState<When>(initialWhen(rule))
-  const [customMonths, setCustomMonths] = useState(rule?.periodMonths?.toString() ?? "4")
-  const [triggerStatusId, setTriggerStatusId] = useState<number | null>(rule?.triggerStatusId ?? null)
-  const [dueDays, setDueDays] = useState(rule?.dueDays?.toString() ?? "30")
-  const [opensDaysBefore, setOpensDaysBefore] = useState(rule?.opensDaysBefore.toString() ?? "14")
-  const [dueAfterEnd, setDueAfterEnd] = useState(rule?.dueDaysAfterPeriodEnd.toString() ?? "15")
+  const [when, setWhen] = useState<When>(initialWhen(category))
+  const [customMonths, setCustomMonths] = useState(category.reportPeriodMonths?.toString() ?? "4")
+  const [triggerStatusId, setTriggerStatusId] = useState<number | null>(category.reportTriggerStatusId)
+  const [dueDays, setDueDays] = useState(category.reportDueDays?.toString() ?? "30")
+  const [opensDaysBefore, setOpensDaysBefore] = useState(category.reportOpensDaysBefore.toString())
+  const [dueAfterEnd, setDueAfterEnd] = useState(category.reportDueDaysAfterPeriodEnd.toString())
   const [saving, setSaving] = useState(false)
 
   const periodic = when !== "after"
-  // Changing the kind of an existing rule means a new rule (its reports are tracked per rule)
-  const kindLocked = !!rule
 
   async function save() {
     setSaving(true)
-    const periodMonths = when === "custom" ? toNumber(customMonths) : periodic ? Number(when) : null
-    const body = {
-      ...(!rule && { parentCategoryId: parentCategory.id, reportCategoryId, kind: periodic ? "PERIODIC" : "AFTER_STATUS" }),
-      triggerStatusId,
-      ...(periodic
-        ? { periodMonths, opensDaysBefore: toNumber(opensDaysBefore), dueDaysAfterPeriodEnd: toNumber(dueAfterEnd) }
-        : { dueDays: toNumber(dueDays) }),
-    }
-    const response = await fetch(rule ? `/api/report-rule/${rule.id}` : "/api/report-rule", {
-      method: rule ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+    const ok = await send(`/api/form-category/${category.id}`, "PUT", {
+      reportKind: periodic ? "PERIODIC" : "AFTER_STATUS",
+      reportTriggerStatusId: triggerStatusId,
+      reportDueDays: periodic ? null : toNumber(dueDays),
+      reportPeriodMonths: periodic ? (when === "custom" ? toNumber(customMonths) : Number(when)) : null,
+      ...(periodic && {
+        reportOpensDaysBefore: toNumber(opensDaysBefore) ?? 0,
+        reportDueDaysAfterPeriodEnd: toNumber(dueAfterEnd) ?? 0,
+      }),
     })
     setSaving(false)
-    if (!response.ok) {
-      const error = await response.json().catch(() => null)
-      toast.error(error?.error || "Failed to save report")
-      return
+    if (ok) {
+      toast.success("Timing saved")
+      onOpenChange(false)
+      router.refresh()
     }
-    toast.success(rule ? "Report updated" : "Report added")
-    onOpenChange(false)
-    router.refresh()
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{rule ? "Edit report" : `Add a report to ${parentCategory.label}`}</DialogTitle>
+          <DialogTitle>Timing for {category.label}</DialogTitle>
           <DialogDescription>
-            The default for every {parentCategory.label} template; a template can change it under its report settings.
-            Changes apply to reports created from now on.
+            The default for every form this report is attached to; a template can change it. Changes apply to forms
+            created from now on; existing forms keep their planned dates until an approver recalculates them.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Report</Label>
-            <Select
-              value={reportCategoryId?.toString() ?? ""}
-              onValueChange={(value) => setReportCategoryId(parseInt(value, 10))}
-              disabled={kindLocked}
-            >
-              <SelectTrigger><SelectValue placeholder="Choose a report category" /></SelectTrigger>
-              <SelectContent>
-                {reportCategories.map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
             <Label>When</Label>
-            <Select value={when} onValueChange={(value) => setWhen(value as When)} disabled={kindLocked && !periodic}>
+            <Select value={when} onValueChange={(value) => setWhen(value as When)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(!kindLocked || !periodic) && <SelectItem value="after">Once, after a status</SelectItem>}
-                {(!kindLocked || periodic) && FREQUENCY_OPTIONS.map((o) => (
+                <SelectItem value="after">Once, after a status</SelectItem>
+                {FREQUENCY_OPTIONS.map((o) => (
                   <SelectItem key={o.months} value={`${o.months}`}>{o.label}</SelectItem>
                 ))}
-                {(!kindLocked || periodic) && <SelectItem value="custom">Every N months</SelectItem>}
+                <SelectItem value="custom">Every N months</SelectItem>
               </SelectContent>
             </Select>
             {periodic && (
@@ -129,8 +116,8 @@ export function RuleDialog({
 
           {when === "custom" && (
             <div className="space-y-1.5">
-              <Label htmlFor="rule-months">Every (months)</Label>
-              <Input id="rule-months" type="number" min={1} max={60} value={customMonths} onChange={(e) => setCustomMonths(e.target.value)} />
+              <Label htmlFor="timing-months">Every (months)</Label>
+              <Input id="timing-months" type="number" min={1} max={60} value={customMonths} onChange={(e) => setCustomMonths(e.target.value)} />
             </div>
           )}
 
@@ -152,18 +139,18 @@ export function RuleDialog({
 
           {!periodic ? (
             <div className="space-y-1.5">
-              <Label htmlFor="rule-due">Due (days after)</Label>
-              <Input id="rule-due" type="number" min={0} max={365} placeholder="No due date" value={dueDays} onChange={(e) => setDueDays(e.target.value)} />
+              <Label htmlFor="timing-due">Due (days after)</Label>
+              <Input id="timing-due" type="number" min={0} max={365} placeholder="No due date" value={dueDays} onChange={(e) => setDueDays(e.target.value)} />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="rule-opens">Opens (days before period end)</Label>
-                <Input id="rule-opens" type="number" min={0} max={365} value={opensDaysBefore} onChange={(e) => setOpensDaysBefore(e.target.value)} />
+                <Label htmlFor="timing-opens">Opens (days before period end)</Label>
+                <Input id="timing-opens" type="number" min={0} max={365} value={opensDaysBefore} onChange={(e) => setOpensDaysBefore(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rule-due-end">Due (days after period end)</Label>
-                <Input id="rule-due-end" type="number" min={-365} max={365} value={dueAfterEnd} onChange={(e) => setDueAfterEnd(e.target.value)} />
+                <Label htmlFor="timing-due-end">Due (days after period end)</Label>
+                <Input id="timing-due-end" type="number" min={-365} max={365} value={dueAfterEnd} onChange={(e) => setDueAfterEnd(e.target.value)} />
               </div>
             </div>
           )}
@@ -171,7 +158,66 @@ export function RuleDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !reportCategoryId}>{rule ? "Save" : "Add report"}</Button>
+          <Button onClick={save} disabled={saving}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+/** Attach a report category to a primary or secondary category. */
+export function AttachReportDialog({
+  open,
+  onOpenChange,
+  parentCategory,
+  reportCategories,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  parentCategory: Option
+  reportCategories: Array<Option & { timing: string }>
+}) {
+  const router = useRouter()
+  const [reportCategoryId, setReportCategoryId] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const chosen = reportCategories.find((c) => c.id === reportCategoryId)
+
+  async function save() {
+    setSaving(true)
+    const ok = await send("/api/report-rule", "POST", { parentCategoryId: parentCategory.id, reportCategoryId })
+    setSaving(false)
+    if (ok) {
+      toast.success("Report attached")
+      onOpenChange(false)
+      router.refresh()
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Attach a report to {parentCategory.label}</DialogTitle>
+          <DialogDescription>
+            New {parentCategory.label} forms get this report, timed as set on the Reports tab. Forms that already exist
+            get it when an approver recalculates their reports.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label>Report</Label>
+          <Select value={reportCategoryId?.toString() ?? ""} onValueChange={(value) => setReportCategoryId(parseInt(value, 10))}>
+            <SelectTrigger><SelectValue placeholder="Choose a report category" /></SelectTrigger>
+            <SelectContent>
+              {reportCategories.map((c) => (
+                <SelectItem key={c.id} value={c.id.toString()}>{c.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {chosen && <p className="text-xs text-muted-foreground">{chosen.timing}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={save} disabled={saving || !reportCategoryId}>Attach</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -52,3 +52,23 @@ export function describeRule(
   const start = trigger === "Approved" ? "" : ` · from ${trigger}`
   return `${frequencyLabel(rule.periodMonths)}${start} · opens ${days(rule.opensDaysBefore)} before period end · ${due}`
 }
+
+/** A report category's stored timing (`FormCategory.report*`) in the shape `describeRule` takes. Null when none is set. */
+export function categoryTiming(category: {
+  reportKind: string | null
+  reportTriggerStatusId: number | null
+  reportDueDays: number | null
+  reportPeriodMonths: number | null
+  reportOpensDaysBefore: number
+  reportDueDaysAfterPeriodEnd: number
+}) {
+  if (!category.reportKind) return null
+  return {
+    kind: category.reportKind,
+    triggerStatusId: category.reportTriggerStatusId,
+    dueDays: category.reportDueDays,
+    periodMonths: category.reportPeriodMonths,
+    opensDaysBefore: category.reportOpensDaysBefore,
+    dueDaysAfterPeriodEnd: category.reportDueDaysAfterPeriodEnd,
+  }
+}

@@ -13,6 +13,7 @@ async function request(canApprove = true, failSave = false) {
   const tags: string[] = []
   const updates: Array<Record<string, Date>> = []
   const placed: number[] = []
+  const recalculated: number[] = []
   const body = { fundingStart: "2027-01-01T00:00:00.000Z", fundingEnd: "2027-12-31T00:00:00.000Z" }
   const dependencies: Record<string, unknown> = {
     "next/server": { NextResponse: { json: (data: unknown, init?: ResponseInit) => Response.json(data, init) } },
@@ -30,8 +31,10 @@ async function request(canApprove = true, failSave = false) {
     "@/lib/lda-form-prefill": {},
     "@/lib/template-placeholders": {},
     // Date edits are not status changes: reports must be left alone
+    // Date edits re-plan the form's reports but aren't status changes
     "@/lib/report-rules": {
       applyStatusReports: () => assert.fail("Date edit must not create or park reports"),
+      recalculateReports: async (id: number) => { recalculated.push(id) },
     },
     // Date edits regroup the form; a non-primary template never checks overlaps
     "@/lib/primary-form": {
@@ -57,7 +60,7 @@ async function request(canApprove = true, failSave = false) {
     console: { error: () => undefined },
   })
   const response = await exports.PATCH({ json: async () => body }, { params: { lda_form_id: "1" } })
-  return { response, updates, tags, body, placed }
+  return { response, updates, tags, body, placed, recalculated }
 }
 
 async function main() {
@@ -68,6 +71,7 @@ async function main() {
   assert.equal(saved.updates[0].fundingEnd.toISOString(), saved.body.fundingEnd)
   assert.deepEqual(saved.tags, ["lda-forms:list"])
   assert.deepEqual(saved.placed, [1], "New dates regroup the form under its primary")
+  assert.deepEqual(saved.recalculated, [1], "New dates re-plan its reports")
 
   const denied = await request(false)
   assert.equal(denied.response.status, 403)

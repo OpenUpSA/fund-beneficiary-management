@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { permissions, canApproveForm, canCreateForm, canReadForm } from "@/lib/permissions";
 import { triggerFormEvent } from "@/lib/form-events";
 import { placeForm, primaryOverlapError } from "@/lib/primary-form";
+import { planReports } from "@/lib/report-rules";
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -139,6 +140,8 @@ export async function POST(req: NextRequest) {
     // Group it under its primary form (or, for a primary, gather the forms in its period).
     // The form is already saved, so a failure here must not fail the request.
     await placeForm(record.id).catch((error) => console.error("Failed to group new form:", error))
+    // Plan the reports this form will get, with real dates approvers can adjust
+    await planReports(record.id).catch((error) => console.error("Failed to plan reports:", error))
 
     // Trigger form created event (handles data copying, notifications, etc.)
     await triggerFormEvent('created', record, parseInt(session.user.id, 10))

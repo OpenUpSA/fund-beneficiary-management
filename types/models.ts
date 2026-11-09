@@ -218,7 +218,7 @@ export type FormCategoryWithTemplates = Prisma.FormCategoryGetPayload<{
         _count: { select: { reportOverrides: true, localDevelopmentAgencyForms: true } }
       }
     }
-    reportRules: { include: { _count: { select: { overrides: true, reports: true } } } }
+    reportRules: { include: { _count: { select: { overrides: true, plannedReports: true } } } }
   }
 }>
 

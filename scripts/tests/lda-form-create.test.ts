@@ -23,6 +23,7 @@ async function create(options: {
 }) {
   const created: Array<Record<string, unknown>> = []
   const placed: number[] = []
+  const planned: number[] = []
   const overlapChecks: unknown[][] = []
   const template = {
     id: 5,
@@ -38,6 +39,7 @@ async function create(options: {
     "@/lib/auth": { NEXT_AUTH_OPTIONS: {} },
     "@/lib/permissions": permissionsModule,
     "@/lib/form-events": { triggerFormEvent: async () => undefined },
+    "@/lib/report-rules": { planReports: async (id: number) => { planned.push(id) } },
     "@/lib/primary-form": {
       placeForm: async (id: number) => { placed.push(id) },
       primaryOverlapError: async (...args: unknown[]) => {
@@ -69,7 +71,7 @@ async function create(options: {
   })
   const body = { localDevelopmentAgencyId: 1, formTemplateId: 5, formData: {}, ...options.body }
   const response = await exports.POST(new Request("http://localhost/api/lda-form", { method: "POST", body: JSON.stringify(body) }))
-  return { response, created, placed, overlapChecks }
+  return { response, created, placed, planned, overlapChecks }
 }
 
 async function main() {
@@ -123,6 +125,7 @@ async function main() {
 
   // New forms are grouped under their primary; primaries can't overlap another of the same kind
   assert.deepEqual(byApprover.placed, [10])
+  assert.deepEqual(byApprover.planned, [10], "Its reports are planned straight away")
   assert.deepEqual(byApprover.overlapChecks, [], "Only primary forms check for overlaps")
   const primary = await create({ role: "PROGRAMME_OFFICER", isPrimary: true, body: presets })
   assert.equal(primary.response.status, 200)
@@ -132,6 +135,7 @@ async function main() {
   assert.equal(overlapping.response.status, 400)
   assert.equal(overlapping.created.length, 0)
   assert.deepEqual(overlapping.placed, [])
+  assert.deepEqual(overlapping.planned, [])
 
   console.log("lda-form-create: createRoles, LDA access, inactive templates, field whitelisting and primary-form grouping passed")
 }

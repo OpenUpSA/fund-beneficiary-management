@@ -13,7 +13,7 @@ import {
 import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 import { revalidateTag } from "next/cache";
-import { applyStatusReports } from "@/lib/report-rules";
+import { applyStatusReports, recalculateReports } from "@/lib/report-rules";
 import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 
 
@@ -396,6 +396,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     if (data.fundingStart || data.fundingEnd) {
       // New dates can move the form to another primary (or, for a primary, change what's under it)
       await placeForm(ldaFormId).catch((error) => console.error("Failed to regroup form:", error));
+      // Planned reports follow the new dates, except ones created, skipped or edited by hand
+      await recalculateReports(ldaFormId).catch((error) => console.error("Failed to re-plan reports:", error));
       revalidateTag('lda-forms:list')
     }
 

@@ -1,52 +1,50 @@
 /**
- * Convert the old report settings into report rules on categories.
+ * Convert the old report settings into report timing on categories.
  *
- *  - A template's "linked form template" (one report after a status) becomes an
- *    after-status rule between the two templates' categories.
- *  - Each report schedule config (quarterly, … on an application template)
- *    becomes a periodic rule between the two templates' categories.
+ *  - A template's "linked form template" (one report after a status) and each
+ *    report schedule config (quarterly, … on an application template) say that
+ *    forms of one template get reports of another.
+ *  - The report template's category gets that timing as its base (the newest
+ *    setting wins), the two categories are linked, and any template whose
+ *    setting differs gets a template override. Templates in the parent category
+ *    that never had the report get an "off" override, so every template keeps
+ *    behaving as before.
+ *  - Reports those settings already created are recorded as created planned
+ *    reports, so they aren't created again.
  *
- * Several templates of one category may have had different settings. The newest
- * becomes the category default; any template whose settings differ gets a
- * template override, and templates in the category that never had the report
- * get an "off" override, so every template keeps behaving as before.
- * Existing linked/scheduled reports are tagged with their rule and period so
- * the daily job doesn't create them again.
- *
- * Templates need a category first (Form templates → Categories). The dry run
- * lists any that are missing.
+ * Templates need a category first (Form templates → Categories); the dry run
+ * lists any that are missing. Afterwards run `yarn plan-reports` to plan the
+ * remaining reports of existing forms.
  *
  *   yarn migrate-report-rules            # dry run, prints everything it would do
  *   yarn migrate-report-rules --commit   # apply
  */
 import prisma from "../db"
-import { reportPeriods } from "../lib/report-rules"
+import { reportPeriods } from "../lib/report-timing"
 
 const commit = process.argv.includes("--commit")
 
 const MONTHS: Record<string, number> = { MONTHLY: 1, QUARTERLY: 3, BIANNUALLY: 6, ANNUALLY: 12 }
 
+interface Timing {
+  reportKind: "AFTER_STATUS" | "PERIODIC"
+  reportTriggerStatusId: number | null
+  reportDueDays: number | null
+  reportPeriodMonths: number | null
+  reportOpensDaysBefore: number
+  reportDueDaysAfterPeriodEnd: number
+}
+
 interface Source {
   description: string
   parentTemplateId: number
   reportTemplateId: number
-  kind: "AFTER_STATUS" | "PERIODIC"
-  settings: {
-    triggerStatusId: number | null
-    dueDays: number | null
-    periodMonths: number | null
-    opensDaysBefore: number
-    dueDaysAfterPeriodEnd: number
-    active: boolean
-  }
+  timing: Timing
+  active: boolean
 }
 
-type RuleKey = string
-const ruleKey = (parentCategoryId: number, reportCategoryId: number, kind: string, periodMonths: number | null) =>
-  `${parentCategoryId}:${reportCategoryId}:${kind}:${periodMonths ?? ""}`
-
 async function main() {
-  const [templates, configs, existingRules] = await Promise.all([
+  const [templates, configs, categories, links] = await Promise.all([
     prisma.formTemplate.findMany({
       select: {
         id: true,
@@ -60,11 +58,13 @@ async function main() {
       },
     }),
     prisma.reportScheduleConfig.findMany({ orderBy: { id: "asc" } }),
+    prisma.formCategory.findMany(),
     prisma.reportRule.findMany({ include: { overrides: true } }),
   ])
   const template = (id: number) => templates.find((t) => t.id === id)!
+  const categoryLabel = (id: number) => categories.find((c) => c.id === id)?.label ?? `#${id}`
 
-  // Newest first, so the first source of each rule becomes its default
+  // Newest first, so the first source for a report category becomes its base timing
   const sources: Source[] = [
     ...templates
       .filter((t) => t.linkedFormTemplateId)
@@ -73,49 +73,57 @@ async function main() {
         description: `"${t.name}" linked form → "${template(t.linkedFormTemplateId!).name}"`,
         parentTemplateId: t.id,
         reportTemplateId: t.linkedFormTemplateId!,
-        kind: "AFTER_STATUS",
-        settings: {
-          triggerStatusId: t.linkedFormTriggerStatusId,
-          dueDays: t.linkedFormDueDays,
-          periodMonths: null,
-          opensDaysBefore: 14,
-          dueDaysAfterPeriodEnd: 0,
-          active: true,
+        active: true,
+        timing: {
+          reportKind: "AFTER_STATUS",
+          reportTriggerStatusId: t.linkedFormTriggerStatusId,
+          reportDueDays: t.linkedFormDueDays,
+          reportPeriodMonths: null,
+          reportOpensDaysBefore: 14,
+          reportDueDaysAfterPeriodEnd: 0,
         },
       })),
     ...[...configs].reverse().map((c): Source => ({
       description: `"${template(c.applicationTemplateId).name}" ${c.frequency.toLowerCase()} schedule → "${template(c.reportTemplateId).name}"`,
       parentTemplateId: c.applicationTemplateId,
       reportTemplateId: c.reportTemplateId,
-      kind: "PERIODIC",
-      settings: {
-        triggerStatusId: null,
-        dueDays: null,
-        periodMonths: MONTHS[c.frequency],
-        opensDaysBefore: c.availableDaysBefore,
-        dueDaysAfterPeriodEnd: c.dueDaysAfterPeriodEnd,
-        active: c.active,
+      active: c.active,
+      timing: {
+        reportKind: "PERIODIC",
+        reportTriggerStatusId: null,
+        reportDueDays: null,
+        reportPeriodMonths: MONTHS[c.frequency],
+        reportOpensDaysBefore: c.availableDaysBefore,
+        reportDueDaysAfterPeriodEnd: c.dueDaysAfterPeriodEnd,
       },
     })),
   ]
 
   const problems: string[] = []
-  // Per rule: its default settings, the templates that had it, and per-template differences
-  const planned = new Map<RuleKey, {
-    parentCategoryId: number
-    reportCategoryId: number
-    kind: Source["kind"]
-    settings: Source["settings"]
-    existingRuleId?: number
-    templates: Map<number, Source["settings"]>
-    reportTemplateIds: Set<number>
-  }>()
+  const actions: Array<{ describe: string; run: () => Promise<void> }> = []
+
+  // Base timing per report category: what it already has, else the newest source
+  const baseTiming = new Map<number, Timing>()
+  for (const c of categories) {
+    if (c.reportKind) baseTiming.set(c.id, {
+      reportKind: c.reportKind,
+      reportTriggerStatusId: c.reportTriggerStatusId,
+      reportDueDays: c.reportDueDays,
+      reportPeriodMonths: c.reportPeriodMonths,
+      reportOpensDaysBefore: c.reportOpensDaysBefore,
+      reportDueDaysAfterPeriodEnd: c.reportDueDaysAfterPeriodEnd,
+    })
+  }
+
+  // Per link: the parent templates that had it, with their timing
+  const planned = new Map<string, { parentCategoryId: number; reportCategoryId: number; templates: Map<number, Source>; reportTemplateIds: Set<number> }>()
 
   for (const source of sources) {
     const parent = template(source.parentTemplateId)
     const report = template(source.reportTemplateId)
     if (!parent.formCategoryId || !report.formCategoryId) {
-      problems.push(`${source.description}: assign a category to ${[!parent.formCategoryId && `"${parent.name}"`, !report.formCategoryId && `"${report.name}"`].filter(Boolean).join(" and ")}`)
+      const missing = [!parent.formCategoryId && `"${parent.name}"`, !report.formCategoryId && `"${report.name}"`].filter(Boolean)
+      problems.push(`${source.description}: assign a category to ${missing.join(" and ")}`)
       continue
     }
     if (report.category?.role !== "REPORT") {
@@ -126,114 +134,113 @@ async function main() {
       problems.push(`${source.description}: "${parent.name}" is in a report category, so it can't have reports`)
       continue
     }
-    const key = ruleKey(parent.formCategoryId, report.formCategoryId, source.kind, source.settings.periodMonths)
-    let rule = planned.get(key)
-    if (!rule) {
-      const existing = existingRules.find((r) =>
-        ruleKey(r.parentCategoryId, r.reportCategoryId, r.kind, r.periodMonths) === key)
-      rule = {
-        parentCategoryId: parent.formCategoryId,
-        reportCategoryId: report.formCategoryId,
-        kind: source.kind,
-        settings: existing ?? source.settings,
-        existingRuleId: existing?.id,
-        templates: new Map(),
-        reportTemplateIds: new Set(),
-      }
-      planned.set(key, rule)
+
+    if (!baseTiming.has(report.formCategoryId)) {
+      baseTiming.set(report.formCategoryId, source.timing)
+      const categoryId = report.formCategoryId
+      actions.push({
+        describe: `Set ${categoryLabel(categoryId)} timing: ${source.timing.reportKind === "PERIODIC" ? `every ${source.timing.reportPeriodMonths} months, opens ${source.timing.reportOpensDaysBefore}d before, due ${source.timing.reportDueDaysAfterPeriodEnd}d after` : `after a status, due ${source.timing.reportDueDays ?? "—"} days after`}`,
+        run: async () => { await prisma.formCategory.update({ where: { id: categoryId }, data: source.timing }) },
+      })
+    } else if (baseTiming.get(report.formCategoryId)!.reportKind !== source.timing.reportKind) {
+      problems.push(`${source.description}: ${categoryLabel(report.formCategoryId)} is already timed ${baseTiming.get(report.formCategoryId)!.reportKind === "PERIODIC" ? "periodically" : "after a status"}; a template can't change that, so set this one up by hand`)
+      continue
     }
-    if (!rule.templates.has(parent.id)) rule.templates.set(parent.id, source.settings)
-    rule.reportTemplateIds.add(report.id)
+
+    const key = `${parent.formCategoryId}:${report.formCategoryId}`
+    const link = planned.get(key) ?? { parentCategoryId: parent.formCategoryId, reportCategoryId: report.formCategoryId, templates: new Map(), reportTemplateIds: new Set() }
+    planned.set(key, link)
+    if (!link.templates.has(parent.id)) link.templates.set(parent.id, source)
+    link.reportTemplateIds.add(report.id)
   }
 
-  // Work out the rules, overrides and report tags to write
-  const actions: Array<{ describe: string; run: () => Promise<void> }> = []
-  for (const rule of planned.values()) {
-    const label = (id: number) => templates.find((t) => t.formCategoryId === id)?.category?.label ?? `#${id}`
-    const name = `${label(rule.parentCategoryId)} → ${label(rule.reportCategoryId)} (${rule.kind === "PERIODIC" ? `every ${rule.settings.periodMonths} months` : "after a status"})`
-    let ruleId = rule.existingRuleId
-    const getRuleId = async () => {
-      if (!ruleId) {
-        const created = await prisma.reportRule.create({
-          data: {
-            parentCategoryId: rule.parentCategoryId,
-            reportCategoryId: rule.reportCategoryId,
-            kind: rule.kind,
-            triggerStatusId: rule.settings.triggerStatusId,
-            dueDays: rule.settings.dueDays,
-            periodMonths: rule.settings.periodMonths,
-            opensDaysBefore: rule.settings.opensDaysBefore,
-            dueDaysAfterPeriodEnd: rule.settings.dueDaysAfterPeriodEnd,
-            active: rule.settings.active,
-          },
-        })
-        ruleId = created.id
-      }
-      return ruleId
+  for (const link of planned.values()) {
+    const name = `${categoryLabel(link.parentCategoryId)} → ${categoryLabel(link.reportCategoryId)}`
+    const existing = links.find((l) => l.parentCategoryId === link.parentCategoryId && l.reportCategoryId === link.reportCategoryId)
+    let linkId = existing?.id
+    const getLinkId = async () => {
+      linkId ??= (await prisma.reportRule.create({ data: { parentCategoryId: link.parentCategoryId, reportCategoryId: link.reportCategoryId } })).id
+      return linkId
     }
-    if (!ruleId) actions.push({ describe: `Create rule ${name}`, run: async () => { await getRuleId() } })
+    if (!existing) actions.push({ describe: `Attach ${name}`, run: async () => { await getLinkId() } })
 
-    const existingOverrides = existingRules.find((r) => r.id === ruleId)?.overrides ?? []
-    for (const t of templates.filter((t) => t.formCategoryId === rule.parentCategoryId)) {
-      if (existingOverrides.some((o) => o.formTemplateId === t.id)) continue
-      const had = rule.templates.get(t.id)
-      const diff = had
+    // Every template in the parent category keeps its old behaviour
+    const base = baseTiming.get(link.reportCategoryId)!
+    for (const t of templates.filter((t) => t.formCategoryId === link.parentCategoryId)) {
+      if (existing?.overrides.some((o) => o.formTemplateId === t.id)) continue
+      const source = link.templates.get(t.id)
+      const had = source?.timing
+      const diff: Record<string, unknown> = had
         ? {
-            ...(had.triggerStatusId !== rule.settings.triggerStatusId && { triggerStatusId: had.triggerStatusId }),
-            ...(had.dueDays !== rule.settings.dueDays && { dueDays: had.dueDays }),
-            ...(had.opensDaysBefore !== rule.settings.opensDaysBefore && { opensDaysBefore: had.opensDaysBefore }),
-            ...(had.dueDaysAfterPeriodEnd !== rule.settings.dueDaysAfterPeriodEnd && { dueDaysAfterPeriodEnd: had.dueDaysAfterPeriodEnd }),
-            ...(had.active !== rule.settings.active && { enabled: had.active }),
+            ...(had.reportTriggerStatusId !== base.reportTriggerStatusId && { triggerStatusId: had.reportTriggerStatusId }),
+            ...(had.reportDueDays !== base.reportDueDays && { dueDays: had.reportDueDays }),
+            ...(had.reportPeriodMonths !== base.reportPeriodMonths && { periodMonths: had.reportPeriodMonths }),
+            ...(had.reportOpensDaysBefore !== base.reportOpensDaysBefore && { opensDaysBefore: had.reportOpensDaysBefore }),
+            ...(had.reportDueDaysAfterPeriodEnd !== base.reportDueDaysAfterPeriodEnd && { dueDaysAfterPeriodEnd: had.reportDueDaysAfterPeriodEnd }),
+            ...(!source.active && { enabled: false }),
           }
         : { enabled: false }
-      // Null in the old settings ("no due date", "Approved") can't be expressed as an override value
-      const unexpressible = had && Object.entries(diff).some(([k, v]) => v === null && k !== "enabled")
-      if (unexpressible) problems.push(`${name}: "${t.name}" used a blank setting that differs from the default; check its report settings`)
+      // A blank old setting ("no due date", "Approved") can't be an override value
+      if (Object.entries(diff).some(([, v]) => v === null)) {
+        problems.push(`${name}: "${t.name}" had a blank setting that differs from the category; check its report settings`)
+      }
       const data = Object.fromEntries(Object.entries(diff).filter(([, v]) => v !== null))
       if (Object.keys(data).length === 0) continue
       actions.push({
-        describe: had
-          ? `  "${t.name}": override ${JSON.stringify(data)}`
-          : `  "${t.name}": switch off (it didn't have this report)`,
+        describe: had ? `  "${t.name}": change ${JSON.stringify(data)}` : `  "${t.name}": switch off (it didn't have this report)`,
         run: async () => {
-          await prisma.reportRuleOverride.create({ data: { ...data, reportRuleId: await getRuleId(), formTemplateId: t.id } })
+          await prisma.reportRuleOverride.create({ data: { ...data, reportRuleId: await getLinkId(), formTemplateId: t.id } })
         },
       })
     }
 
-    // Tag the reports these settings already created, so they aren't created again
+    // Reports the old settings already created become created planned reports
     const parents = await prisma.localDevelopmentAgencyForm.findMany({
-      where: { formTemplateId: { in: [...rule.templates.keys()] } },
-      select: { id: true, title: true, fundingStart: true, fundingEnd: true },
+      where: { formTemplateId: { in: [...link.templates.keys()] } },
+      select: { id: true, title: true, fundingStart: true, fundingEnd: true, formTemplateId: true },
     })
     const reports = await prisma.localDevelopmentAgencyForm.findMany({
       where: {
         linkedFormId: { in: parents.map((p) => p.id) },
-        formTemplateId: { in: [...rule.reportTemplateIds] },
-        reportRuleId: null,
+        formTemplateId: { in: [...link.reportTemplateIds] },
+        plannedAs: null,
       },
-      select: { id: true, title: true, linkedFormId: true, fundingStart: true },
+      select: { id: true, title: true, linkedFormId: true, fundingStart: true, fundingEnd: true, dueDate: true },
       orderBy: { id: "asc" },
     })
     const taken = new Set<string>()
     for (const report of reports) {
       const parent = parents.find((p) => p.id === report.linkedFormId)!
-      const period = rule.kind === "AFTER_STATUS"
-        ? 0
-        : reportPeriods(parent.fundingStart, parent.fundingEnd, rule.settings)
-            .find((p) => p.start <= report.fundingStart && report.fundingStart <= new Date(p.end.getTime() + 86400000 - 1))?.index
-      const slot = `${report.linkedFormId}:${period}`
-      if (period === undefined || taken.has(slot)) {
-        problems.push(`${name}: report #${report.id} "${report.title}" doesn't match a period of "${parent.title}"; left untagged`)
+      const timing = link.templates.get(parent.formTemplateId)!.timing
+      const period = timing.reportKind === "AFTER_STATUS"
+        ? { index: 0, label: "" }
+        : reportPeriods(parent.fundingStart, parent.fundingEnd, {
+            periodMonths: timing.reportPeriodMonths,
+            opensDaysBefore: timing.reportOpensDaysBefore,
+            dueDaysAfterPeriodEnd: timing.reportDueDaysAfterPeriodEnd,
+          }).find((p) => p.start.getTime() <= report.fundingStart.getTime() && report.fundingStart.getTime() <= p.end.getTime() + 86400000 - 1)
+      const slot = `${report.linkedFormId}:${period?.index}`
+      if (!period || taken.has(slot)) {
+        problems.push(`${name}: report #${report.id} "${report.title}" doesn't match a period of "${parent.title}"; left as is`)
         continue
       }
       taken.add(slot)
       actions.push({
-        describe: `  tag report #${report.id} "${report.title}" as period ${period}`,
+        describe: `  record report #${report.id} "${report.title}" as created${period.index ? ` (period ${period.index})` : ""}`,
         run: async () => {
-          await prisma.localDevelopmentAgencyForm.update({
-            where: { id: report.id },
-            data: { reportRuleId: await getRuleId(), reportPeriod: period },
+          await prisma.plannedReport.create({
+            data: {
+              parentFormId: parent.id,
+              reportRuleId: await getLinkId(),
+              reportCategoryId: link.reportCategoryId,
+              period: period.index,
+              label: period.label,
+              periodStart: report.fundingStart,
+              periodEnd: report.fundingEnd,
+              dueOn: report.dueDate,
+              status: "CREATED",
+              reportFormId: report.id,
+            },
           })
         },
       })
@@ -248,11 +255,11 @@ async function main() {
   }
 
   if (!commit) {
-    console.log("\nDry run. Re-run with --commit to apply.")
+    console.log("\nDry run. Re-run with --commit to apply, then run `yarn plan-reports`.")
     return
   }
   for (const action of actions) await action.run()
-  console.log(`\nApplied ${actions.length} change(s).`)
+  console.log(`\nApplied ${actions.length} change(s). Now run \`yarn plan-reports\` to plan existing forms' remaining reports.`)
 }
 
 main()

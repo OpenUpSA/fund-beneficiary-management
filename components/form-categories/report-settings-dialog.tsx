@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { describeRule, frequencyLabel, statusLabel } from "@/lib/report-rule-format"
+import { categoryTiming, describeRule, frequencyLabel, statusLabel } from "@/lib/report-rule-format"
+import { effectiveTiming, plannedRows, type CategoryTiming } from "@/lib/report-timing"
 
 interface Status { id: number; label: string }
 interface Override {
@@ -22,23 +23,23 @@ interface Override {
   dueDaysAfterPeriodEnd: number | null
   reportTemplateId: number | null
 }
-interface Rule {
+interface ReportCategory extends CategoryTiming {
   id: number
-  kind: "AFTER_STATUS" | "PERIODIC"
+  label: string
+  templates: Array<{ id: number; name: string; active: boolean; createdAt: string }>
+}
+interface Link {
+  id: number
   active: boolean
-  triggerStatusId: number | null
-  dueDays: number | null
-  periodMonths: number | null
-  opensDaysBefore: number
-  dueDaysAfterPeriodEnd: number
-  reportCategory: { id: number; label: string; templates: Array<{ id: number; name: string; active: boolean }> }
+  reportCategory: ReportCategory
   override: Override | null
 }
 interface Settings {
   template: { id: number; name: string; category: { id: number; label: string; role: string } | null }
   statuses: Status[]
-  rules: Rule[]
+  rules: Link[]
 }
+interface ExamplePeriod { start: string; end: string }
 
 const EMPTY: Override = {
   enabled: null, triggerStatusId: null, dueDays: null, periodMonths: null,
@@ -46,6 +47,12 @@ const EMPTY: Override = {
 }
 
 const numberOrNull = (value: string) => (value.trim() === "" ? null : Number(value))
+// Example dates are UTC calendar days, shown as e.g. "16 Jun 2026"
+const showDay = (date: Date) => date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })
+const yearExample = (): ExamplePeriod => {
+  const year = new Date().getFullYear()
+  return { start: `${year}-01-01`, end: `${year}-12-31` }
+}
 
 // A setting that shows the category's value and lets this template change it
 function Field({
@@ -77,35 +84,62 @@ function Field({
   )
 }
 
-function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
-  templateId: number
-  rule: Rule
+/** What a form running over the example period would get from this timing. */
+function ExampleTimeline({ link, draft, example, statuses }: {
+  link: Link
+  draft: Override
+  example: ExamplePeriod
   statuses: Status[]
+}) {
+  const timing = effectiveTiming(link.reportCategory, draft, link.active)
+  const start = new Date(`${example.start}T00:00:00Z`)
+  const end = new Date(`${example.end}T00:00:00Z`)
+  if (!timing || !timing.enabled || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+  const rows = plannedRows({ fundingStart: start, fundingEnd: end }, timing)
+  if (rows.length === 0) return <p className="text-xs text-muted-foreground">No reports for this example period.</p>
+
+  const trigger = timing.triggerStatusId
+    ? statusLabel(statuses.find((s) => s.id === timing.triggerStatusId)?.label ?? "")
+    : "Approved"
+  return (
+    <div className="rounded-md bg-muted/50 p-3 text-xs">
+      <p className="mb-1 font-medium">For a form running {showDay(start)} – {showDay(end)}:</p>
+      <ul className="space-y-0.5 text-muted-foreground">
+        {rows.map((row) => (
+          <li key={row.period}>
+            {row.opensOn ? (
+              <>
+                <span className="text-foreground">{row.label}</span> ({showDay(row.periodStart)} – {showDay(row.periodEnd)}) ·
+                opens {showDay(row.opensOn)} · due {row.dueOn ? showDay(row.dueOn) : "—"}
+              </>
+            ) : (
+              <>Created when the form is {trigger} · {row.dueDays != null ? `due ${row.dueDays} days later` : "no due date"}</>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function RuleOverrideForm({ templateId, link, statuses, example, onSaved }: {
+  templateId: number
+  link: Link
+  statuses: Status[]
+  example: ExamplePeriod
   onSaved: () => void
 }) {
-  const [draft, setDraft] = useState<Override>(rule.override ?? EMPTY)
+  const [draft, setDraft] = useState<Override>(link.override ?? EMPTY)
   const [saving, setSaving] = useState(false)
   const set = (patch: Partial<Override>) => setDraft((d) => ({ ...d, ...patch }))
-  const periodic = rule.kind === "PERIODIC"
+  const base = categoryTiming(link.reportCategory)
+  const category = link.reportCategory
   const changes = Object.values(draft).filter((v) => v !== null).length
-  const dirty = JSON.stringify(draft) !== JSON.stringify(rule.override ?? EMPTY)
-
-  const effective = {
-    ...rule,
-    triggerStatusId: draft.triggerStatusId ?? rule.triggerStatusId,
-    dueDays: draft.dueDays ?? rule.dueDays,
-    periodMonths: draft.periodMonths ?? rule.periodMonths,
-    opensDaysBefore: draft.opensDaysBefore ?? rule.opensDaysBefore,
-    dueDaysAfterPeriodEnd: draft.dueDaysAfterPeriodEnd ?? rule.dueDaysAfterPeriodEnd,
-  }
-  const enabled = rule.active && (draft.enabled ?? true)
-  const inheritedStatus = rule.triggerStatusId
-    ? statusLabel(statuses.find((s) => s.id === rule.triggerStatusId)?.label ?? "")
-    : "Approved"
+  const dirty = JSON.stringify(draft) !== JSON.stringify(link.override ?? EMPTY)
 
   async function save(next: Override) {
     setSaving(true)
-    const response = await fetch(`/api/form-template/${templateId}/report-settings/${rule.id}`, {
+    const response = await fetch(`/api/form-template/${templateId}/report-settings/${link.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(next),
@@ -120,11 +154,34 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
     onSaved()
   }
 
+  if (!base) {
+    return (
+      <div className="rounded-md border p-4 text-sm">
+        <p className="font-medium">{category.label}</p>
+        <p className="text-destructive">No timing set on the {category.label} report category yet, so forms don&apos;t get it.</p>
+      </div>
+    )
+  }
+
+  const periodic = base.kind === "PERIODIC"
+  const effective = {
+    ...base,
+    triggerStatusId: draft.triggerStatusId ?? base.triggerStatusId,
+    dueDays: draft.dueDays ?? base.dueDays,
+    periodMonths: draft.periodMonths ?? base.periodMonths,
+    opensDaysBefore: draft.opensDaysBefore ?? base.opensDaysBefore,
+    dueDaysAfterPeriodEnd: draft.dueDaysAfterPeriodEnd ?? base.dueDaysAfterPeriodEnd,
+  }
+  const enabled = link.active && (draft.enabled ?? true)
+  const inheritedStatus = base.triggerStatusId
+    ? statusLabel(statuses.find((s) => s.id === base.triggerStatusId)?.label ?? "")
+    : "Approved"
+
   return (
     <div className="rounded-md border p-4 space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-medium">{rule.reportCategory.label}</p>
+          <p className="font-medium">{category.label}</p>
           <p className="text-sm text-muted-foreground">{enabled ? describeRule(effective, statuses) : "Off for this template"}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -133,13 +190,13 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
             On
             <Switch
               checked={enabled}
-              disabled={!rule.active}
+              disabled={!link.active}
               onCheckedChange={(checked) => set({ enabled: checked ? null : false })}
             />
           </label>
         </div>
       </div>
-      {!rule.active && <p className="text-sm text-muted-foreground">This rule is switched off for the whole category.</p>}
+      {!link.active && <p className="text-sm text-muted-foreground">This report is switched off for the whole category.</p>}
 
       {enabled && (
         <div className="grid gap-4 sm:grid-cols-2">
@@ -150,10 +207,10 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
             onReset={() => set({ triggerStatusId: null })}
           >
             <Select
-              value={(draft.triggerStatusId ?? rule.triggerStatusId)?.toString() ?? "approved"}
+              value={(draft.triggerStatusId ?? base.triggerStatusId)?.toString() ?? "approved"}
               onValueChange={(value) => {
                 const id = value === "approved" ? null : parseInt(value, 10)
-                set({ triggerStatusId: id === rule.triggerStatusId ? null : id })
+                set({ triggerStatusId: id === base.triggerStatusId ? null : id })
               }}
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -169,11 +226,11 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
           {!periodic && (
             <Field
               label="Due (days after)"
-              inherited={rule.dueDays != null ? `${rule.dueDays} days` : "no due date"}
+              inherited={base.dueDays != null ? `${base.dueDays} days` : "no due date"}
               changed={draft.dueDays !== null}
               onReset={() => set({ dueDays: null })}
             >
-              <Input type="number" min={0} max={365} placeholder={rule.dueDays?.toString() ?? "No due date"}
+              <Input type="number" min={0} max={365} placeholder={base.dueDays?.toString() ?? "No due date"}
                 value={draft.dueDays ?? ""} onChange={(e) => set({ dueDays: numberOrNull(e.target.value) })} />
             </Field>
           )}
@@ -182,29 +239,29 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
             <>
               <Field
                 label="Every (months)"
-                inherited={frequencyLabel(rule.periodMonths)}
+                inherited={frequencyLabel(base.periodMonths)}
                 changed={draft.periodMonths !== null}
                 onReset={() => set({ periodMonths: null })}
               >
-                <Input type="number" min={1} max={60} placeholder={rule.periodMonths?.toString()}
+                <Input type="number" min={1} max={60} placeholder={base.periodMonths?.toString()}
                   value={draft.periodMonths ?? ""} onChange={(e) => set({ periodMonths: numberOrNull(e.target.value) })} />
               </Field>
               <Field
                 label="Opens (days before period end)"
-                inherited={`${rule.opensDaysBefore} days`}
+                inherited={`${base.opensDaysBefore} days`}
                 changed={draft.opensDaysBefore !== null}
                 onReset={() => set({ opensDaysBefore: null })}
               >
-                <Input type="number" min={0} max={365} placeholder={rule.opensDaysBefore.toString()}
+                <Input type="number" min={0} max={365} placeholder={base.opensDaysBefore.toString()}
                   value={draft.opensDaysBefore ?? ""} onChange={(e) => set({ opensDaysBefore: numberOrNull(e.target.value) })} />
               </Field>
               <Field
                 label="Due (days after period end)"
-                inherited={`${rule.dueDaysAfterPeriodEnd} days`}
+                inherited={`${base.dueDaysAfterPeriodEnd} days`}
                 changed={draft.dueDaysAfterPeriodEnd !== null}
                 onReset={() => set({ dueDaysAfterPeriodEnd: null })}
               >
-                <Input type="number" min={-365} max={365} placeholder={rule.dueDaysAfterPeriodEnd.toString()}
+                <Input type="number" min={-365} max={365} placeholder={base.dueDaysAfterPeriodEnd.toString()}
                   value={draft.dueDaysAfterPeriodEnd ?? ""} onChange={(e) => set({ dueDaysAfterPeriodEnd: numberOrNull(e.target.value) })} />
               </Field>
             </>
@@ -212,7 +269,7 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
 
           <Field
             label="Report template"
-            inherited={`active ${rule.reportCategory.label} template`}
+            inherited={`active ${category.label} template`}
             changed={draft.reportTemplateId !== null}
             onReset={() => set({ reportTemplateId: null })}
           >
@@ -222,8 +279,8 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active template in {rule.reportCategory.label}</SelectItem>
-                {rule.reportCategory.templates.map((t) => (
+                <SelectItem value="active">Active template in {category.label}</SelectItem>
+                {category.templates.map((t) => (
                   <SelectItem key={t.id} value={t.id.toString()}>{t.name}{t.active ? "" : " (inactive)"}</SelectItem>
                 ))}
               </SelectContent>
@@ -231,6 +288,8 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
           </Field>
         </div>
       )}
+
+      <ExampleTimeline link={link} draft={draft} example={example} statuses={statuses} />
 
       <div className="flex justify-end gap-2">
         {changes > 0 && (
@@ -244,7 +303,7 @@ function RuleOverrideForm({ templateId, rule, statuses, onSaved }: {
   )
 }
 
-/** A template's report settings: the category's rules, with this template's changes. */
+/** A template's report settings: its category's reports, with this template's changes and an example timeline. */
 export function ReportSettingsDialog({
   templateId,
   open,
@@ -257,6 +316,7 @@ export function ReportSettingsDialog({
   onSaved?: () => void
 }) {
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [example, setExample] = useState<ExamplePeriod>(yearExample)
 
   const load = useCallback(() => {
     fetch(`/api/form-template/${templateId}/report-settings`)
@@ -278,20 +338,36 @@ export function ReportSettingsDialog({
           <DialogTitle>Reports for {settings?.template.name ?? "…"}</DialogTitle>
           <DialogDescription>
             {category
-              ? `Defaults come from the ${category.label} category. Changes here apply only to forms from this template, and only to reports created from now on.`
+              ? `Timing comes from each report category. Changes here apply only to forms from this template that are created from now on; approvers can still adjust each form's dates.`
               : "This template has no category, so its forms get no reports. Assign one on the Categories page."}
           </DialogDescription>
         </DialogHeader>
+
+        {settings && category && settings.rules.length > 0 && (
+          <div className="flex flex-wrap items-end gap-3 rounded-md border p-3">
+            <div className="space-y-1">
+              <Label htmlFor="example-start" className="text-xs">Example form starts</Label>
+              <Input id="example-start" type="date" value={example.start} onChange={(e) => setExample((x) => ({ ...x, start: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="example-end" className="text-xs">and ends</Label>
+              <Input id="example-end" type="date" value={example.end} onChange={(e) => setExample((x) => ({ ...x, end: e.target.value }))} />
+            </div>
+            <p className="pb-2 text-xs text-muted-foreground">Only for the examples below; nothing is saved.</p>
+          </div>
+        )}
+
         {settings && category && settings.rules.length === 0 && (
-          <p className="text-sm text-muted-foreground">The {category.label} category has no report rules yet.</p>
+          <p className="text-sm text-muted-foreground">No reports are attached to the {category.label} category yet.</p>
         )}
         <div className="space-y-3">
-          {settings?.rules.map((rule) => (
+          {settings?.rules.map((link) => (
             <RuleOverrideForm
-              key={`${rule.id}-${JSON.stringify(rule.override)}`}
+              key={`${link.id}-${JSON.stringify(link.override)}`}
               templateId={templateId}
-              rule={rule}
+              link={link}
               statuses={settings.statuses}
+              example={example}
               onSaved={() => {
                 load()
                 onSaved?.()

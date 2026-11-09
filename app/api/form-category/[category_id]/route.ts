@@ -6,6 +6,7 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { formCategoryInputError } from "@/lib/form-category"
 import { applyRegroup, planRegroup } from "@/lib/primary-form"
+import { reportTimingInputError, TIMING_FIELDS } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -37,7 +38,13 @@ export async function PUT(req: NextRequest, { params }: { params: { category_id:
     }
 
     const data = await req.json()
+    // Report timing (report categories only) is checked as it will be after this partial update.
+    // Changing it only affects forms created from now on.
+    const timingChanges = Object.fromEntries(TIMING_FIELDS.filter((f) => data[f] !== undefined).map((f) => [f, data[f]]))
+    const role = data.role ?? existing.role
     const error = await formCategoryInputError(data, existing)
+      ?? (Object.keys(timingChanges).length > 0 && role !== "REPORT" ? "Only report categories have report timing" : undefined)
+      ?? (await reportTimingInputError({ ...Object.fromEntries(TIMING_FIELDS.map((f) => [f, existing[f]])), ...timingChanges }))
     if (error) {
       return NextResponse.json({ error }, { status: 400 })
     }
@@ -56,6 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: { category_id:
         ...(data.role !== undefined && { role: data.role }),
         ...(data.parentCategoryId !== undefined && { parentCategoryId: data.parentCategoryId }),
         ...(data.active !== undefined && { active: data.active }),
+        ...timingChanges,
       },
     })
 

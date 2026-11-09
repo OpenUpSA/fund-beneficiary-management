@@ -131,6 +131,7 @@ async function request(options: {
       reportCalls.push(id)
       return { created: [] }
     },
+    recalculateReports: async () => undefined,
   }
   const route = loadModule(options.submit
     ? "app/api/lda-form/[lda_form_id]/submit/route.ts"

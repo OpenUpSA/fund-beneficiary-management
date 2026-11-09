@@ -18,9 +18,9 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FormCategoryWithTemplates } from "@/types/models"
 import { cn } from "@/lib/utils"
-import { describeRule, frequencyLabel } from "@/lib/report-rule-format"
+import { categoryTiming, describeRule, frequencyLabel } from "@/lib/report-rule-format"
 import { formTemplateTypeLabel } from "@/lib/form-template-type"
-import { RuleDialog } from "./rule-dialog"
+import { AttachReportDialog, TimingDialog } from "./rule-dialog"
 import { ReportSettingsDialog } from "./report-settings-dialog"
 
 type Role = "PRIMARY" | "SECONDARY" | "REPORT"
@@ -221,7 +221,8 @@ function CategoryNode({
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
-  const [ruleDialog, setRuleDialog] = useState<{ rule?: FormCategoryWithTemplates["reportRules"][number] } | null>(null)
+  const [attaching, setAttaching] = useState(false)
+  const [editingTiming, setEditingTiming] = useState(false)
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
   // The template list is hidden until asked for; the header always shows the count
   const [showTemplates, setShowTemplates] = useState(false)
@@ -258,13 +259,22 @@ function CategoryNode({
     if (await send(`/api/report-rule/${ruleId}`, "PUT", { active })) router.refresh()
   }
 
-  async function removeRule(ruleId: number) {
-    if (!window.confirm("Delete this report rule? Only possible before it has created any reports.")) return
+  async function removeRule(ruleId: number, name: string) {
+    if (!window.confirm(`Detach ${name}? New forms won't get it; forms that already have it planned keep it.`)) return
     if (await send(`/api/report-rule/${ruleId}`, "DELETE")) {
-      toast.success("Report rule deleted")
+      toast.success("Report detached")
       router.refresh()
     }
   }
+
+  // Report categories: their timing, and the categories they're attached to
+  const timing = categoryTiming(category)
+  const attachedTo = categories.filter((c) => c.reportRules.some((r) => r.reportCategoryId === category.id))
+  const describeCategory = (c: FormCategoryWithTemplates) => {
+    const t = categoryTiming(c)
+    return t ? describeRule(t, statuses) : "No timing set yet"
+  }
+  const attachable = reportCategories.filter((c) => !category.reportRules.some((r) => r.reportCategoryId === c.id))
 
   async function remove() {
     if (!window.confirm(`Delete the "${category.label}" category?`)) return
@@ -391,28 +401,36 @@ function CategoryNode({
                   {category.reportRules.length > 0 && (
                     <ul className="divide-y rounded-md border">
                       {category.reportRules.map((rule) => {
+                        const reportCategory = categories.find((c) => c.id === rule.reportCategoryId)
                         const name = categoryLabel(rule.reportCategoryId)
+                        const reportTiming = reportCategory ? categoryTiming(reportCategory) : null
                         const templateName = reportTemplateName(rule.reportCategoryId)
                         return (
                           <li key={rule.id} className={cn("flex flex-wrap items-start justify-between gap-2 p-3 text-sm", !rule.active && "bg-muted/40")}>
                             <div className="min-w-0 space-y-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-medium">{name}</span>
-                                <Badge variant="outline" className="font-normal">
-                                  {rule.kind === "AFTER_STATUS" ? "After a status" : frequencyLabel(rule.periodMonths)}
-                                </Badge>
+                                {reportTiming && (
+                                  <Badge variant="outline" className="font-normal">
+                                    {reportTiming.kind === "AFTER_STATUS" ? "After a status" : frequencyLabel(reportTiming.periodMonths)}
+                                  </Badge>
+                                )}
                                 <Badge variant={rule.active ? "outline" : "secondary"} className="font-normal">
                                   {rule.active ? "Active" : "Off"}
                                 </Badge>
                               </div>
-                              <p className="text-muted-foreground">{describeRule(rule, statuses)}</p>
+                              <p className={cn("text-muted-foreground", !reportTiming && "text-destructive")}>
+                                {reportTiming
+                                  ? describeRule(reportTiming, statuses)
+                                  : "No timing set: set it on the Reports tab, or forms won't get this report"}
+                              </p>
                               <p className="text-xs text-muted-foreground">
                                 {templateName ? (
                                   <>Filled in with {templateName}</>
                                 ) : (
                                   <span className="text-destructive">No active {name} template: these reports can&apos;t be created</span>
                                 )}
-                                {" · "}{rule._count.reports} report{rule._count.reports === 1 ? "" : "s"} created
+                                {" · "}planned on forms {rule._count.plannedReports} time{rule._count.plannedReports === 1 ? "" : "s"}
                                 {rule._count.overrides > 0 &&
                                   ` · changed by ${rule._count.overrides} template${rule._count.overrides === 1 ? "" : "s"}`}
                               </p>
@@ -423,11 +441,8 @@ function CategoryNode({
                                 onCheckedChange={(active) => setRuleActive(rule.id, active)}
                                 aria-label={`Switch ${name} on or off`}
                               />
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setRuleDialog({ rule })} aria-label={`Edit ${name}`}>
-                                <PencilIcon className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRule(rule.id)} aria-label={`Delete ${name}`}>
-                                <Trash2Icon className="h-4 w-4" />
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRule(rule.id, name)} aria-label={`Detach ${name}`}>
+                                <XIcon className="h-4 w-4" />
                               </Button>
                             </div>
                           </li>
@@ -435,12 +450,31 @@ function CategoryNode({
                       })}
                     </ul>
                   )}
-                  <Button variant="outline" size="sm" onClick={() => setRuleDialog({})} disabled={reportCategories.length === 0}>
+                  <Button variant="outline" size="sm" onClick={() => setAttaching(true)} disabled={attachable.length === 0}>
                     <PlusIcon className="h-4 w-4" />
-                    Add report
+                    Attach report
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+          {category.role === "REPORT" && (
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Timing</p>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className={cn(!timing && "text-destructive")}>
+                  {timing ? describeRule(timing, statuses) : "Not set: forms won't get this report until it is"}
+                </span>
+                <Button variant="outline" size="sm" onClick={() => setEditingTiming(true)}>
+                  <PencilIcon className="h-3.5 w-3.5" />
+                  {timing ? "Edit timing" : "Set timing"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {attachedTo.length > 0
+                  ? `Attached to ${attachedTo.map((c) => c.label).join(", ")}`
+                  : "Not attached to any application category yet"}
+              </p>
             </div>
           )}
         </CardContent>
@@ -449,16 +483,15 @@ function CategoryNode({
         <CategoryNode key={child.id} category={child} categories={categories} templates={templates} statuses={statuses} depth={depth + 1} />
       ))}
       {editing && <CategoryDialog open={editing} onOpenChange={setEditing} category={category} categories={categories} />}
-      {ruleDialog && (
-        <RuleDialog
+      {attaching && (
+        <AttachReportDialog
           open
-          onOpenChange={(open) => !open && setRuleDialog(null)}
+          onOpenChange={setAttaching}
           parentCategory={category}
-          reportCategories={reportCategories}
-          statuses={statuses}
-          rule={ruleDialog.rule}
+          reportCategories={attachable.map((c) => ({ id: c.id, label: c.label, timing: describeCategory(c) }))}
         />
       )}
+      {editingTiming && <TimingDialog open onOpenChange={setEditingTiming} category={category} statuses={statuses} />}
       {settingsFor !== null && (
         <ReportSettingsDialog
           templateId={settingsFor}

@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
 import { formCategoryInputError } from "@/lib/form-category"
+import { reportTimingInputError, TIMING_FIELDS } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -33,7 +34,7 @@ export async function GET() {
       },
       reportRules: {
         orderBy: { id: "asc" },
-        include: { _count: { select: { overrides: true, reports: true } } },
+        include: { _count: { select: { overrides: true, plannedReports: true } } },
       },
     },
   })
@@ -51,7 +52,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await req.json()
+    const timing = Object.fromEntries(TIMING_FIELDS.filter((f) => data[f] !== undefined).map((f) => [f, data[f]]))
     const error = await formCategoryInputError(data)
+      ?? (Object.keys(timing).length > 0 && data.role !== "REPORT" ? "Only report categories have report timing" : undefined)
+      ?? (await reportTimingInputError(timing))
     if (error) {
       return NextResponse.json({ error }, { status: 400 })
     }
@@ -63,6 +67,7 @@ export async function POST(req: NextRequest) {
         role: data.role,
         parentCategoryId: data.parentCategoryId ?? null,
         active: data.active ?? true,
+        ...timing,
       },
     })
     revalidateTag("form-templates:list")
