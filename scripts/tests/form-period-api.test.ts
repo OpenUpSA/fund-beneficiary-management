@@ -29,11 +29,9 @@ async function request(canApprove = true, failSave = false) {
     "@/lib/form-validation/validate-submission": {},
     "@/lib/lda-form-prefill": {},
     "@/lib/template-placeholders": {},
-    // Date edits are not status changes: the linked form must be left alone
-    "@/lib/linked-form": {
-      isLinkedFormTrigger: () => assert.fail("Date edit must not check the linked-form trigger"),
-      ensureLinkedForm: () => assert.fail("Date edit must not create a linked form"),
-      setLinkedFormStatus: () => assert.fail("Date edit must not move the linked form"),
+    // Date edits are not status changes: reports must be left alone
+    "@/lib/report-rules": {
+      applyStatusReports: () => assert.fail("Date edit must not create or park reports"),
     },
     // Date edits regroup the form; a non-primary template never checks overlaps
     "@/lib/primary-form": {
@@ -45,7 +43,7 @@ async function request(canApprove = true, failSave = false) {
       update: async ({ data }: { data: Record<string, Date> }) => {
         updates.push(data)
         if (failSave) throw new Error("Database unavailable")
-        return { id: 1, ...data, formTemplate: { linkedFormTemplateId: null } }
+        return { id: 1, ...data }
       },
     } } },
   }

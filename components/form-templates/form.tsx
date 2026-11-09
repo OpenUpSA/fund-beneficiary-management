@@ -34,7 +34,7 @@ import {
 import { ChevronDownIcon, CopyIcon, InfoIcon, PencilIcon, PlusIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { FormCategory, FormStatus, FormTemplate } from "@prisma/client"
+import { FormCategory, FormTemplate } from "@prisma/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Combobox } from "@/components/ui/combobox"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -42,7 +42,6 @@ import { Label } from "@/components/ui/label"
 import { Control, UseFormReturn } from "react-hook-form"
 import { ASSIGNABLE_FORM_ROLES, getRoleDisplayName } from "@/lib/permissions"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { LDA_TERMINOLOGY } from "@/constants/lda"
 import { FORM_TEMPLATE_TYPE_OPTIONS, FORM_TEMPLATE_TYPE_VALUES, formTemplateTypeLabel } from "@/lib/form-template-type"
 
 // Roles selectable in the form-permission pickers. SUPER_USER is excluded — it
@@ -66,9 +65,6 @@ const FormSchema = z.object({
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   templateType: z.enum(FORM_TEMPLATE_TYPE_VALUES),
   formCategoryId: z.number().nullable().optional(),
-  linkedFormTemplateId: z.number().nullable().optional(),
-  linkedFormTriggerStatusId: z.number().nullable().optional(),
-  linkedFormDueDays: z.number().int().min(0).max(365, { message: "Must be 365 days or fewer." }).nullable().optional(),
   sidebarConfig: z.object({
     amount: z.boolean(),
     status: z.boolean(),
@@ -147,12 +143,6 @@ function FormPermissionsSection({ control }: { control: Control<FormTemplateForm
   )
 }
 
-// "UnderReview" -> "Under review (submitted)", "Approved" -> "Approved"
-const statusOptionLabel = (label: string) =>
-  label === 'UnderReview'
-    ? 'Under review (submitted)'
-    : label.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^(\w)(.*)$/, (_, a: string, b: string) => a + b.toLowerCase())
-
 function FieldInfo({ text }: { text: string }) {
   return (
     <Tooltip>
@@ -163,89 +153,6 @@ function FieldInfo({ text }: { text: string }) {
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">{text}</TooltipContent>
     </Tooltip>
-  )
-}
-
-// When the linked form is created, and how long the LDA has to complete it.
-// Shared by the create and edit dialogs; only shown once a linked template is picked.
-function LinkedFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFormValues> }) {
-  const [statuses, setStatuses] = useState<FormStatus[]>([])
-  const linkedFormTemplateId = form.watch('linkedFormTemplateId')
-
-  useEffect(() => {
-    if (!linkedFormTemplateId || statuses.length > 0) return
-    fetch('/api/form-status')
-      .then((res) => (res.ok ? res.json() : []))
-      .then(setStatuses)
-      .catch(() => setStatuses([]))
-  }, [linkedFormTemplateId, statuses.length])
-
-  if (!linkedFormTemplateId) return null
-
-  return (
-    <div className="rounded-md border p-4 space-y-4">
-      <FormField
-        control={form.control}
-        name="linkedFormTriggerStatusId"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1.5">
-              <FormLabel>Create linked form when status is</FormLabel>
-              <FieldInfo
-                text={`The linked form is created for the ${LDA_TERMINOLOGY.shortName} when a form from this template reaches this status, e.g. "Under review" (as soon as it is submitted) or "Approved". The new form opens as a Draft the ${LDA_TERMINOLOGY.shortName} can fill in straight away.`}
-              />
-            </div>
-            <Select
-              value={field.value?.toString() ?? 'default'}
-              onValueChange={(val) => field.onChange(val === 'default' ? null : parseInt(val, 10))}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="default">Approved (default)</SelectItem>
-                {statuses
-                  .filter((s) => s.label !== 'Approved')
-                  .map((s) => (
-                    <SelectItem key={s.id} value={s.id.toString()}>
-                      {statusOptionLabel(s.label)}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="linkedFormDueDays"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-1.5">
-              <FormLabel>Days to complete linked form</FormLabel>
-              <FieldInfo
-                text={`Number of days the ${LDA_TERMINOLOGY.shortName} has to complete the linked form, counted from the day it is created. Leave empty for no due date.`}
-              />
-            </div>
-            <FormControl>
-              <Input
-                type="number"
-                min={0}
-                max={365}
-                step={1}
-                placeholder="No due date"
-                value={field.value ?? ''}
-                onChange={(e) => field.onChange(e.target.value === '' ? null : Number(e.target.value))}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
   )
 }
 
@@ -299,19 +206,12 @@ function FormCategoryField({ form }: { form: UseFormReturn<FormTemplateFormValue
   )
 }
 
-// Picking "None" as the linked template also clears its settings
-const clearLinkedFormSettings = (form: UseFormReturn<FormTemplateFormValues>) => {
-  form.setValue('linkedFormTriggerStatusId', null)
-  form.setValue('linkedFormDueDays', null)
-}
-
 interface FormDialogProps {
   formTemplate?: FormTemplate
-  allTemplates?: FormTemplate[]
 }
 
 // Edit Form Template Dialog (used when editing existing template)
-export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps) {
+export function FormDialog({ formTemplate }: FormDialogProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -330,9 +230,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       description: formTemplate ? formTemplate.description : "",
       templateType: formTemplate?.templateType || 'APPLICATION',
       formCategoryId: formTemplate?.formCategoryId ?? null,
-      linkedFormTemplateId: formTemplate?.linkedFormTemplateId || null,
-      linkedFormTriggerStatusId: formTemplate?.linkedFormTriggerStatusId ?? null,
-      linkedFormDueDays: formTemplate?.linkedFormDueDays ?? null,
       sidebarConfig: parsedSidebarConfig,
       // Existing templates use stored roles; a brand-new template pre-selects all roles.
       createRoles: (formTemplate?.createRoles as FormRole[] | undefined) ?? defaultCreateRoleSelection,
@@ -341,10 +238,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       approveRoles: (formTemplate?.approveRoles as FormRole[] | undefined) ?? defaultRoleSelection,
     },
   })
-
-  const availableTemplatesForLinking = allTemplates.filter(t => 
-    t.id !== formTemplate?.id
-  )
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     setOpen(false)
@@ -447,36 +340,6 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
 
               <FormCategoryField form={form} />
 
-              <FormField
-                control={form.control}
-                name="linkedFormTemplateId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Linked Form Template</FormLabel>
-                    <FormControl>
-                      <Combobox
-                        options={[
-                          { value: 'none', label: 'None' },
-                          ...availableTemplatesForLinking.map((t) => ({
-                            value: t.id.toString(),
-                            label: t.name,
-                          })),
-                        ]}
-                        value={field.value?.toString() || 'none'}
-                        onChange={(val) => {
-                          if (val === 'none') clearLinkedFormSettings(form)
-                          field.onChange(val === 'none' ? null : parseInt(val))
-                        }}
-                        placeholder="Select form template"
-                        searchPlaceholder="Search templates..."
-                        emptyText="No templates found."
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <LinkedFormSettingsFields form={form} />
 
               <FormField
                 control={form.control}
@@ -696,7 +559,7 @@ export function CreateTemplateButton({ allTemplates }: CreateTemplateButtonProps
       {/* Create New Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-h-[90vh] max-w-2xl w-full p-0 gap-0 flex flex-col">
-          <CreateNewTemplateForm onClose={() => setCreateDialogOpen(false)} allTemplates={allTemplates} />
+          <CreateNewTemplateForm onClose={() => setCreateDialogOpen(false)} />
         </DialogContent>
       </Dialog>
 
@@ -713,10 +576,9 @@ export function CreateTemplateButton({ allTemplates }: CreateTemplateButtonProps
 // Create New Template Form (extracted for use in dialog)
 interface CreateNewTemplateFormProps {
   onClose: () => void
-  allTemplates: FormTemplate[]
 }
 
-function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormProps) {
+function CreateNewTemplateForm({ onClose }: CreateNewTemplateFormProps) {
   const defaultSidebarConfig = { amount: true, status: true, startDate: true, endDate: true, dueDate: true }
   const router = useRouter()
 
@@ -728,9 +590,6 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
       description: "",
       templateType: 'APPLICATION',
       formCategoryId: null,
-      linkedFormTemplateId: null,
-      linkedFormTriggerStatusId: null,
-      linkedFormDueDays: null,
       sidebarConfig: defaultSidebarConfig,
       createRoles: defaultCreateRoleSelection,
       readRoles: defaultRoleSelection,
@@ -815,36 +674,6 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
 
             <FormCategoryField form={form} />
 
-            <FormField
-              control={form.control}
-              name="linkedFormTemplateId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Linked Form Template</FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={[
-                        { value: 'none', label: 'None' },
-                        ...allTemplates.map((t) => ({
-                          value: t.id.toString(),
-                          label: t.name,
-                        })),
-                      ]}
-                      value={field.value?.toString() || 'none'}
-                      onChange={(val) => {
-                        if (val === 'none') clearLinkedFormSettings(form)
-                        field.onChange(val === 'none' ? null : parseInt(val))
-                      }}
-                      placeholder="Select form template"
-                      searchPlaceholder="Search templates..."
-                      emptyText="No templates found."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <LinkedFormSettingsFields form={form} />
 
             <FormField
               control={form.control}

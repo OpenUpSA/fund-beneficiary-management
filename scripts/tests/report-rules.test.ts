@@ -39,10 +39,13 @@ function load(state: { rules?: Rule[]; parents?: Form[]; reports?: Form[]; templ
     { id: 60, name: "Short Narrative Report", formCategoryId: 5, active: true, createdAt: d("2024-01-01") },
   ]
   let nextId = 1000
+  const statusLabelOf = (id: number) => Object.values(STATUS).find((s) => s.id === id)!.label
   const prisma = {
     reportRule: { findMany: async () => state.rules ?? [] },
     formStatus: {
       findFirst: async () => ({ id: STATUS.Draft.id }),
+      findMany: async ({ where }: { where: { label: { in: string[] } } }) =>
+        Object.values(STATUS).filter((s) => where.label.in.includes(s.label)),
       findUnique: async ({ where }: { where: { id: number } }) => Object.values(STATUS).find((s) => s.id === where.id) ?? null,
     },
     formCategory: {
@@ -57,6 +60,16 @@ function load(state: { rules?: Rule[]; parents?: Form[]; reports?: Form[]; templ
           .sort((a, b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime())[0] ?? null,
     },
     localDevelopmentAgencyForm: {
+      findUnique: async ({ where }: { where: { id: number } }) => {
+        const parent = (state.parents ?? []).find((p) => p.id === where.id)
+        return parent && { ...parent, formTemplate: { formCategoryId: parent.categoryId, ...(parent.formTemplate as object) } }
+      },
+      findFirst: async ({ where }: { where: Record<string, unknown> }) => {
+        const report = reports.find((r) =>
+          r.linkedFormId === where.linkedFormId && r.reportRuleId === where.reportRuleId && r.reportPeriod === where.reportPeriod)
+        return report && { id: report.id, formStatus: { label: statusLabelOf(report.formStatusId as number) } }
+      },
+      update: async ({ where, data }: { where: { id: number }; data: Form }) => Object.assign(reports.find((r) => r.id === where.id)!, data),
       findMany: async ({ where }: { where: Record<string, any> }) => {
         if (where.reportRuleId !== undefined) {
           return reports.filter((r) => r.reportRuleId === where.reportRuleId && where.linkedFormId.in.includes(r.linkedFormId))
@@ -236,6 +249,62 @@ async function main() {
     assert.equal(missing.created, 0)
     assert.match(missing.errors[0], /no active template/)
     assert.equal((await lib.generateDueReports(d("2026-07-01"))).created, 1, "Another rule's report doesn't block this one")
+  }
+
+  // Status changes: after-status reports are created once, parked on rejection or going back, reopened on re-approval
+  {
+    const afterApproval = { ...quarterly, id: 2, kind: "AFTER_STATUS", periodMonths: null, dueDays: 30, overrides: [] }
+    const dft = grant(140, STATUS.Approved, { formTemplate: { category: { role: "SECONDARY" } }, primaryFormId: 100 })
+    const state = { rules: [afterApproval], parents: [dft] }
+    const { lib, reports } = load(state)
+
+    const created = await lib.applyStatusReports(140, d("2026-10-02"))
+    same(created.created.map((r) => r.title), ["Narrative Report 2026"])
+    same(reports.map((r) => [r.linkedFormId, r.reportPeriod, iso(r.dueDate as Date), r.primaryFormId, r.formStatusId]), [
+      [140, 0, "2026-11-01", 100, STATUS.Draft.id],
+    ])
+    assert.equal((await lib.applyStatusReports(140, d("2026-10-03"))).created.length, 0, "Approving again creates no second report")
+
+    dft.formStatus = STATUS.Rejected
+    await lib.applyStatusReports(140, d("2026-10-04"))
+    assert.equal(reports[0].formStatusId, STATUS.Rejected.id, "Rejecting the parent rejects its report")
+    dft.formStatus = STATUS.Approved
+    await lib.applyStatusReports(140, d("2026-10-05"))
+    assert.equal(reports[0].formStatusId, STATUS.Draft.id, "Re-approving reopens it")
+    dft.formStatus = STATUS.UnderReview
+    await lib.applyStatusReports(140, d("2026-10-06"))
+    assert.equal(reports[0].formStatusId, STATUS.Paused.id, "Going back pauses it")
+
+    reports[0].formStatusId = STATUS.Approved.id
+    dft.formStatus = STATUS.Rejected
+    await lib.applyStatusReports(140, d("2026-10-07"))
+    assert.equal(reports[0].formStatusId, STATUS.Approved.id, "An approved report is never parked")
+  }
+
+  // A template set to start on submission gets its report when submitted; the default waits for approval
+  {
+    const afterApproval = { ...quarterly, id: 3, kind: "AFTER_STATUS", periodMonths: null, dueDays: null, overrides: [] }
+    const onSubmission = { ...afterApproval, overrides: [{ formTemplateId: 12, triggerStatusId: STATUS.UnderReview.id }] }
+    const submitted = (templateId: number) => grant(150 + templateId, STATUS.UnderReview, { formTemplateId: templateId })
+
+    const standard = load({ rules: [afterApproval], parents: [submitted(11)] })
+    await standard.lib.applyStatusReports(161, d("2026-10-02"))
+    assert.equal(standard.reports.length, 0, "Default template: nothing on submission")
+
+    const early = load({ rules: [onSubmission], parents: [submitted(12)] })
+    await early.lib.applyStatusReports(162, d("2026-10-02"))
+    same(early.reports.map((r) => [r.linkedFormId, r.dueDate ?? null]), [[162, null]], "No due days: no due date")
+  }
+
+  // Reaching a periodic rule's trigger catches up its open periods straight away
+  {
+    const { lib, reports } = load({ rules: [quarterly], parents: [grant(170)] })
+    const result = await lib.applyStatusReports(170, d("2026-10-20"))
+    assert.equal(result.created.length, 2)
+    same(reports.map((r) => r.reportPeriod), [1, 2])
+    const { lib: idle, reports: none } = load({ rules: [quarterly], parents: [grant(171, STATUS.UnderReview)] })
+    await idle.applyStatusReports(171, d("2026-10-20"))
+    assert.equal(none.length, 0)
   }
 
   // Rule validation: categories by role, kinds, number ranges, statuses; categories/kind fixed once created

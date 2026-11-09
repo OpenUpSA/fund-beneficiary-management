@@ -248,6 +248,113 @@ export async function generateDueReports(today: Date, parentFormId?: number): Pr
   return result
 }
 
+// ─── Status changes ──────────────────────────────────────────────────────────
+
+// After-status reports in these statuses were parked by an earlier status change
+// on the parent and are reopened when the parent reaches the trigger again
+const REOPENABLE_STATUSES = ["Paused", "Rejected"]
+// A finished report is never parked again
+const SETTLED_STATUSES = ["Approved"]
+
+export interface StatusReportsResult {
+  created: Array<{ id: number; title: string }>
+}
+
+/**
+ * Run a form's report rules after its status changes (approval, submission,
+ * rejection…). For each after-status rule: create the report when the trigger is
+ * reached (or reopen it if it was parked); park it when the parent is rejected or
+ * moves back (Rejected when rejected, otherwise Paused). Periodic rules catch up
+ * any periods that have already opened.
+ */
+export async function applyStatusReports(formId: number, today: Date): Promise<StatusReportsResult> {
+  const result: StatusReportsResult = { created: [] }
+  const parent = await prisma.localDevelopmentAgencyForm.findUnique({
+    where: { id: formId },
+    select: { ...PARENT_SELECT, formTemplate: { select: { formCategoryId: true, category: { select: { role: true } } } } },
+  })
+  const categoryId = parent?.formTemplate.formCategoryId
+  if (!parent || !categoryId) return result
+
+  const rules = await prisma.reportRule.findMany({
+    where: { parentCategoryId: categoryId, active: true },
+    include: { overrides: { where: { formTemplateId: parent.formTemplateId } } },
+  })
+  if (rules.length === 0) return result
+
+  const statuses = await prisma.formStatus.findMany({
+    where: { label: { in: ["Draft", "Paused", "Rejected"] } },
+    select: { id: true, label: true },
+  })
+  const statusId = (label: string) => statuses.find((s) => s.label === label)?.id
+
+  let periodic = false
+  for (const rule of rules) {
+    const effective = effectiveRule(rule, rule.overrides[0])
+    if (!effective.enabled) continue
+    const reached = triggerReached(parent.formStatus, effective.triggerStatusId)
+    if (rule.kind === "PERIODIC") {
+      periodic ||= reached
+      continue
+    }
+
+    const existing = await prisma.localDevelopmentAgencyForm.findFirst({
+      where: { linkedFormId: parent.id, reportRuleId: rule.id, reportPeriod: 0 },
+      select: { id: true, formStatus: { select: { label: true } } },
+    })
+
+    if (!reached) {
+      const parkAs = statusId(parent.formStatus.label === "Rejected" ? "Rejected" : "Paused")
+      if (existing && parkAs && !SETTLED_STATUSES.includes(existing.formStatus.label)) {
+        await prisma.localDevelopmentAgencyForm.update({ where: { id: existing.id }, data: { formStatusId: parkAs } })
+      }
+      continue
+    }
+
+    if (existing) {
+      const draft = statusId("Draft")
+      if (draft && REOPENABLE_STATUSES.includes(existing.formStatus.label)) {
+        await prisma.localDevelopmentAgencyForm.update({ where: { id: existing.id }, data: { formStatusId: draft } })
+      }
+      continue
+    }
+
+    const template = await reportTemplateFor(effective)
+    const draft = statusId("Draft")
+    if (!template || !draft) continue
+    const day = utcDay(today)
+    try {
+      const report = await prisma.localDevelopmentAgencyForm.create({
+        data: {
+          localDevelopmentAgencyId: parent.localDevelopmentAgencyId,
+          formTemplateId: template.id,
+          formStatusId: draft,
+          formData: {},
+          title: template.name,
+          linkedFormId: parent.id,
+          primaryFormId: parent.formTemplate.category?.role === "PRIMARY" ? parent.id : parent.primaryFormId,
+          reportRuleId: rule.id,
+          reportPeriod: 0,
+          fundingStart: parent.fundingStart,
+          fundingEnd: parent.fundingEnd,
+          // Due N days from today (UTC calendar day); no due date when unset
+          dueDate: effective.dueDays != null ? new Date(day.getTime() + effective.dueDays * DAY_MS) : null,
+        },
+        select: { id: true, title: true },
+      })
+      result.created.push(report)
+    } catch (error) {
+      if (!isDuplicate(error)) throw error
+    }
+  }
+
+  if (periodic) {
+    const generated = await generateDueReports(today, parent.id)
+    result.created.push(...generated.createdReports.map(({ id, title }) => ({ id, title })))
+  }
+  return result
+}
+
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 const inRange = (value: unknown, [min, max]: readonly [number, number]) =>

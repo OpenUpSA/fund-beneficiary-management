@@ -98,7 +98,7 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
             <span className="hidden md:inline">Save</span>
             <SaveIcon />
           </Button>
-          <FormDialog formTemplate={formTemplate} allTemplates={allTemplates} />
+          <FormDialog formTemplate={formTemplate} />
           <ReportSettingsButton templateId={formTemplate.id} />
           {formTemplate.templateType === "APPLICATION" && (
             <ReportScheduleConfigDialog

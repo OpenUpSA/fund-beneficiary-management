@@ -54,7 +54,6 @@ async function request(options: {
   failSave?: boolean
   status?: string
   body?: Record<string, unknown>
-  linkedTemplate?: { linkedFormTemplateId: number; linkedFormTriggerStatusId: number | null }
 } = {}) {
   const saved = options.saved ?? reportData
   const record = {
@@ -66,9 +65,6 @@ async function request(options: {
       form: template,
       approveRoles: [],
       fillRoles: [],
-      linkedFormTemplateId: null as number | null,
-      linkedFormTriggerStatusId: null as number | null,
-      ...options.linkedTemplate,
     },
     formStatus: undefined as { id: number; label: string } | undefined,
     linkedForm: options.linked === null ? null : { formData: options.linked ?? applicationData },
@@ -83,7 +79,7 @@ async function request(options: {
   }
   const updates: UpdateData[] = []
   const sequence: string[] = []
-  const linkedCalls: string[] = []
+  const reportCalls: number[] = []
   let prefillReads = 0
   const db = { default: {
     localDevelopmentAgencyForm: {
@@ -129,16 +125,11 @@ async function request(options: {
   dependencies["@/lib/number-input"] = loadModule("lib/number-input.ts", dependencies)
   dependencies["@/lib/form-validation/validate-submission"] = loadModule("lib/form-validation/validate-submission.ts", dependencies)
   dependencies["@/lib/primary-form"] = { placeForm: async () => undefined, primaryOverlapError: async () => undefined }
-  // Real trigger decision; creation/status moves are recorded (covered in linked-form.test.ts)
-  const linkedForm = loadModule("lib/linked-form.ts", dependencies)
-  dependencies["@/lib/linked-form"] = {
-    isLinkedFormTrigger: linkedForm.isLinkedFormTrigger,
-    ensureLinkedForm: async (id: number) => {
-      linkedCalls.push(`ensure:${id}`)
-      return null
-    },
-    setLinkedFormStatus: async (_id: number, label: string) => {
-      linkedCalls.push(`set:${label}`)
+  // Report rules run on every status change (rules themselves are covered in report-rules.test.ts)
+  dependencies["@/lib/report-rules"] = {
+    applyStatusReports: async (id: number) => {
+      reportCalls.push(id)
+      return { created: [] }
     },
   }
   const route = loadModule(options.submit
@@ -153,7 +144,7 @@ async function request(options: {
   }, { params: { lda_form_id: "1" } })
   // Let the asynchronous approval event finish before checking its effects.
   await new Promise(resolve => setImmediate(resolve))
-  return { response, body: await response.json(), updates, sequence, prefillReads, linkedCalls }
+  return { response, body: await response.json(), updates, sequence, prefillReads, reportCalls }
 }
 
 async function main() {
@@ -222,27 +213,17 @@ async function main() {
   assert.equal(incompleteSubmission.response.status, 400)
   assert.deepEqual(incompleteSubmission.sequence, [])
 
-  // Linked forms: created on the template's trigger status (Approved when unset)
-  const linkedTemplate = { linkedFormTemplateId: 9, linkedFormTriggerStatusId: null }
-  assert.deepEqual(approved.linkedCalls, [], "No linked template, nothing to create")
-  assert.deepEqual((await request({ linkedTemplate })).linkedCalls, ["ensure:1"])
-  assert.deepEqual((await request({ linkedTemplate, submit: true })).linkedCalls, [], "Submission is not the default trigger")
-  assert.deepEqual(
-    (await request({ linkedTemplate: { linkedFormTemplateId: 9, linkedFormTriggerStatusId: 2 }, submit: true })).linkedCalls,
-    ["ensure:1"],
-    "UnderReview trigger creates the linked form on submission",
-  )
-  assert.deepEqual(
-    (await request({ linkedTemplate: { linkedFormTemplateId: 9, linkedFormTriggerStatusId: 2 } })).linkedCalls,
-    ["ensure:1"],
-    "Approval still ensures the linked form exists",
-  )
-  assert.deepEqual((await request({ linkedTemplate, status: "Rejected" })).linkedCalls, ["set:Rejected"])
-  const amountOnly = await request({ linkedTemplate, body: { amount: "500" } })
+  // Report rules run after a status change is saved (approval, rejection, submission), never on failed or field-only edits
+  assert.deepEqual(approved.reportCalls, [1])
+  assert.deepEqual(rejected.reportCalls, [1])
+  assert.deepEqual(submitted.reportCalls, [1], "Submission runs them too, for reports that start on submission")
+  assert.deepEqual(missingAnswer.reportCalls, [], "A refused approval creates nothing")
+  assert.deepEqual(incompleteSubmission.reportCalls, [])
+  const amountOnly = await request({ body: { amount: "500" } })
   assert.equal(amountOnly.response.status, 200)
-  assert.deepEqual(amountOnly.linkedCalls, [], "Editing the amount must not pause the linked form")
+  assert.deepEqual(amountOnly.reportCalls, [], "Editing the amount must not create or park reports")
 
-  console.log("form-approval-prefill: approval persistence, submission, validation, permissions, event ordering and linked-form trigger checks passed")
+  console.log("form-approval-prefill: approval persistence, submission, validation, permissions, event ordering and report-rule trigger checks passed")
 }
 
 main().catch(error => {

@@ -13,7 +13,7 @@ import {
 import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 import { revalidateTag } from "next/cache";
-import { ensureLinkedForm, isLinkedFormTrigger, setLinkedFormStatus } from "@/lib/linked-form";
+import { applyStatusReports } from "@/lib/report-rules";
 import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 
 
@@ -374,12 +374,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
             id: true,
             label: true
           }
-        },
-        formTemplate: {
-          select: {
-            linkedFormTemplateId: true,
-            linkedFormTriggerStatusId: true
-          }
         }
       }
     });
@@ -405,19 +399,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       revalidateTag('lda-forms:list')
     }
 
-    // Handle the linked form (e.g. Report for an Application) — only on status
-    // changes, so editing the amount or dates leaves it alone
-    if (data.formStatusLabel && updatedRecord.formTemplate?.linkedFormTemplateId) {
-      if (isLinkedFormTrigger(updatedRecord.formTemplate, updatedRecord.formStatus)) {
-        const linkedForm = await ensureLinkedForm(ldaFormId);
-        if (linkedForm) {
-          return NextResponse.json({ ...updatedRecord, createdLinkedForm: linkedForm });
-        }
-      } else {
-        await setLinkedFormStatus(ldaFormId, data.formStatusLabel === "Rejected" ? "Rejected" : "Paused");
+    // Create, reopen or park this form's reports (e.g. the DFT Report of a DFT
+    // Application) — only on status changes, so editing the amount or dates leaves them alone
+    if (data.formStatusLabel) {
+      const reports = await applyStatusReports(ldaFormId, new Date());
+      if (reports.created.length > 0) {
+        revalidateTag('lda-forms:list');
+        return NextResponse.json({ ...updatedRecord, createdReports: reports.created });
       }
     }
-    
+
     return NextResponse.json(updatedRecord);
   } catch (error) {
     console.error("Error updating LDA form field:", error);
