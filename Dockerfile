@@ -83,6 +83,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+# Dokku reads app.json (the daily report cron) from the image's working directory
+COPY --from=builder /app/app.json ./app.json
 
 RUN mkdir .next && chown nextjs:nodejs .next
 

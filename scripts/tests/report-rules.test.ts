@@ -307,6 +307,17 @@ async function main() {
     assert.equal(none.length, 0)
   }
 
+  // Upcoming: periods that open within the window and don't exist yet, soonest first
+  {
+    const { lib } = load({
+      rules: [quarterly],
+      parents: [grant(180), grant(181, STATUS.UnderReview)],
+      reports: [{ id: 1, linkedFormId: 180, reportRuleId: 1, reportPeriod: 1 }],
+    })
+    const upcoming = await lib.upcomingReports(d("2026-06-01"), 120)
+    same(upcoming.map((u) => [u.parentId, u.label, u.opensOn.slice(0, 10)]), [[180, "Q2 2026", "2026-09-16"]])
+  }
+
   // Rule validation: categories by role, kinds, number ranges, statuses; categories/kind fixed once created
   {
     const { lib } = load()

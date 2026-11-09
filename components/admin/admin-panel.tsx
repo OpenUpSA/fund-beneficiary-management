@@ -22,7 +22,7 @@ import { CreateFormPanel } from "./create-form-panel"
 import { FormTemplatesPanel } from "./form-templates-panel"
 import { ExportResponsesPanel } from "./export-responses-panel"
 import { CrudPanel, FieldConfig } from "./crud-panel"
-import { ReportSchedulesPanel } from "./report-schedules-panel"
+import { ReportsPanel } from "./reports-panel"
 import { CacheManagementPanel } from "./cache-management-panel"
 import { ProvincesPanel } from "./provinces-panel"
 import { BulkUploadPanel } from "./bulk-upload-panel"
@@ -80,8 +80,8 @@ const toolOptions: ToolOption[] = [
   },
   {
     id: 'report-schedules',
-    title: 'Report Schedules',
-    description: 'View and manage upcoming report schedules',
+    title: 'Reports',
+    description: 'Run report generation and see which reports open next',
     icon: Calendar,
     category: 'forms',
   },
@@ -208,7 +208,7 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
         return <ExportResponsesPanel formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
       
       case 'report-schedules':
-        return <ReportSchedulesPanel ldas={ldas} onBack={() => setSelectedTool(null)} />
+        return <ReportsPanel onBack={() => setSelectedTool(null)} />
       
       case 'cache-management':
         return <CacheManagementPanel onBack={() => setSelectedTool(null)} />

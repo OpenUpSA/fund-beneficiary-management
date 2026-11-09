@@ -163,33 +163,32 @@ export interface GenerationResult {
 /** Prisma's unique-constraint error: another run created the same report first */
 const isDuplicate = (error: unknown) => (error as { code?: string })?.code === "P2002"
 
+type Parent = Awaited<ReturnType<typeof findParents>>[number]
+
+const findParents = (categoryId: number, parentFormId?: number) =>
+  prisma.localDevelopmentAgencyForm.findMany({
+    where: { formTemplate: { formCategoryId: categoryId }, ...(parentFormId && { id: parentFormId }) },
+    select: PARENT_SELECT,
+  })
+
+interface PendingPeriods {
+  ruleId: number
+  parent: Parent
+  effective: EffectiveRule
+  /** Periods not created yet, in order */
+  periods: ReportPeriod[]
+}
+
 /**
- * Create every periodic report that has opened (its `opensOn` is on or before
- * `today`) and doesn't exist yet. Safe to run any number of times: missed days
- * are caught up and nothing is created twice. Pass `parentFormId` to only look at
- * one parent form (e.g. right after it's approved).
+ * For every active periodic rule and every parent that has reached its trigger:
+ * the periods that don't have a report yet. Shared by the daily job (creates the
+ * opened ones) and the admin overview (lists the upcoming ones).
  */
-export async function generateDueReports(today: Date, parentFormId?: number): Promise<GenerationResult> {
-  const result: GenerationResult = { created: 0, skipped: 0, errors: [], createdReports: [] }
-  const day = utcDay(today)
-
-  const [rules, draftStatus] = await Promise.all([
-    prisma.reportRule.findMany({ where: { kind: "PERIODIC", active: true }, include: RULE_INCLUDE }),
-    prisma.formStatus.findFirst({ where: { label: "Draft" }, select: { id: true } }),
-  ])
-  if (!draftStatus) {
-    result.errors.push("Draft status not found")
-    return result
-  }
-
+async function pendingPeriods(parentFormId?: number): Promise<PendingPeriods[]> {
+  const rules = await prisma.reportRule.findMany({ where: { kind: "PERIODIC", active: true }, include: RULE_INCLUDE })
+  const pending: PendingPeriods[] = []
   for (const rule of rules) {
-    const parents = await prisma.localDevelopmentAgencyForm.findMany({
-      where: {
-        formTemplate: { formCategoryId: rule.parentCategoryId },
-        ...(parentFormId && { id: parentFormId }),
-      },
-      select: PARENT_SELECT,
-    })
+    const parents = await findParents(rule.parentCategoryId, parentFormId)
     if (parents.length === 0) continue
 
     const existing = await prisma.localDevelopmentAgencyForm.findMany({
@@ -202,50 +201,105 @@ export async function generateDueReports(today: Date, parentFormId?: number): Pr
       const override = rule.overrides.find((o) => o.formTemplateId === parent.formTemplateId)
       const effective = effectiveRule(rule, override)
       if (!effective.enabled || !triggerReached(parent.formStatus, effective.triggerStatusId)) continue
+      const periods = reportPeriods(parent.fundingStart, parent.fundingEnd, effective)
+        .filter((p) => !done.has(`${parent.id}:${p.index}`))
+      if (periods.length > 0) pending.push({ ruleId: rule.id, parent, effective, periods })
+    }
+  }
+  return pending
+}
 
-      const due = reportPeriods(parent.fundingStart, parent.fundingEnd, effective)
-        .filter((p) => p.opensOn <= day && !done.has(`${parent.id}:${p.index}`))
-      if (due.length === 0) continue
+/**
+ * Create every periodic report that has opened (its `opensOn` is on or before
+ * `today`) and doesn't exist yet. Safe to run any number of times: missed days
+ * are caught up and nothing is created twice. Pass `parentFormId` to only look at
+ * one parent form (e.g. right after it's approved).
+ */
+export async function generateDueReports(today: Date, parentFormId?: number): Promise<GenerationResult> {
+  const result: GenerationResult = { created: 0, skipped: 0, errors: [], createdReports: [] }
+  const day = utcDay(today)
 
-      const template = await reportTemplateFor(effective)
-      if (!template) {
-        result.errors.push(`Rule ${rule.id}: no active template in the report category for "${parent.title}"`)
-        continue
-      }
+  const draftStatus = await prisma.formStatus.findFirst({ where: { label: "Draft" }, select: { id: true } })
+  if (!draftStatus) {
+    result.errors.push("Draft status not found")
+    return result
+  }
 
-      for (const period of due) {
-        try {
-          const report = await prisma.localDevelopmentAgencyForm.create({
-            data: {
-              localDevelopmentAgencyId: parent.localDevelopmentAgencyId,
-              formTemplateId: template.id,
-              formStatusId: draftStatus.id,
-              formData: {},
-              title: `${template.name} – ${period.label}`,
-              linkedFormId: parent.id,
-              // Grouped under the parent's primary form (or the parent itself if it is one)
-              primaryFormId: parent.formTemplate.category?.role === "PRIMARY" ? parent.id : parent.primaryFormId,
-              reportRuleId: rule.id,
-              reportPeriod: period.index,
-              fundingStart: period.start,
-              fundingEnd: period.end,
-              dueDate: period.dueOn,
-            },
-            select: { id: true, title: true },
-          })
-          result.created++
-          result.createdReports.push({ id: report.id, title: report.title, parentId: parent.id })
-        } catch (error) {
-          if (isDuplicate(error)) {
-            result.skipped++
-          } else {
-            result.errors.push(`Rule ${rule.id}, "${parent.title}" ${period.label}: ${(error as Error).message}`)
-          }
+  for (const { ruleId, parent, effective, periods } of await pendingPeriods(parentFormId)) {
+    const due = periods.filter((p) => p.opensOn <= day)
+    if (due.length === 0) continue
+
+    const template = await reportTemplateFor(effective)
+    if (!template) {
+      result.errors.push(`Rule ${ruleId}: no active template in the report category for "${parent.title}"`)
+      continue
+    }
+
+    for (const period of due) {
+      try {
+        const report = await prisma.localDevelopmentAgencyForm.create({
+          data: {
+            localDevelopmentAgencyId: parent.localDevelopmentAgencyId,
+            formTemplateId: template.id,
+            formStatusId: draftStatus.id,
+            formData: {},
+            title: `${template.name} – ${period.label}`,
+            linkedFormId: parent.id,
+            // Grouped under the parent's primary form (or the parent itself if it is one)
+            primaryFormId: parent.formTemplate.category?.role === "PRIMARY" ? parent.id : parent.primaryFormId,
+            reportRuleId: ruleId,
+            reportPeriod: period.index,
+            fundingStart: period.start,
+            fundingEnd: period.end,
+            dueDate: period.dueOn,
+          },
+          select: { id: true, title: true },
+        })
+        result.created++
+        result.createdReports.push({ id: report.id, title: report.title, parentId: parent.id })
+      } catch (error) {
+        if (isDuplicate(error)) {
+          result.skipped++
+        } else {
+          result.errors.push(`Rule ${ruleId}, "${parent.title}" ${period.label}: ${(error as Error).message}`)
         }
       }
     }
   }
   return result
+}
+
+export interface UpcomingReport {
+  parentId: number
+  parentTitle: string
+  ldaId: number
+  reportCategoryId: number
+  label: string
+  opensOn: string
+  dueOn: string
+}
+
+/** Periodic reports that will open after `today` and within `days`, soonest first. */
+export async function upcomingReports(today: Date, days: number): Promise<UpcomingReport[]> {
+  const from = utcDay(today)
+  const until = new Date(from.getTime() + days * DAY_MS)
+  const upcoming: UpcomingReport[] = []
+  for (const { parent, effective, periods } of await pendingPeriods()) {
+    for (const period of periods) {
+      if (period.opensOn > from && period.opensOn <= until) {
+        upcoming.push({
+          parentId: parent.id,
+          parentTitle: parent.title,
+          ldaId: parent.localDevelopmentAgencyId,
+          reportCategoryId: effective.reportCategoryId,
+          label: period.label,
+          opensOn: period.opensOn.toISOString(),
+          dueOn: period.dueOn.toISOString(),
+        })
+      }
+    }
+  }
+  return upcoming.sort((a, b) => a.opensOn.localeCompare(b.opensOn))
 }
 
 // ─── Status changes ──────────────────────────────────────────────────────────
