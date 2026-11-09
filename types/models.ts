@@ -206,6 +206,7 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
 
 export type FormTemplateWithRelations = Prisma.FormTemplateGetPayload<{
   include: {
+    category: true
     localDevelopmentAgencyForms: {
       include: {
         localDevelopmentAgency: true

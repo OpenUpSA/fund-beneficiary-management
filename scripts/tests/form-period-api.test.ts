@@ -41,7 +41,7 @@ async function request(canApprove = true, failSave = false) {
       primaryOverlapError: () => assert.fail("Only primary forms check for overlapping periods"),
     },
     "@/db": { default: { localDevelopmentAgencyForm: {
-      findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [], isPrimary: false, formCategory: null } }),
+      findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [], category: null } }),
       update: async ({ data }: { data: Record<string, Date> }) => {
         updates.push(data)
         if (failSave) throw new Error("Database unavailable")

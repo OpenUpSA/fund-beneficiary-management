@@ -238,11 +238,10 @@ model FormTemplate {
   form                        Json                         @default("{}")
   active                      Boolean                      @default(true)
   templateType                FormTemplateType             @default(APPLICATION)
-  formCategory                String?
-  // Primary forms (e.g. Grant Funding) group the other forms of their funding period
-  isPrimary                   Boolean                      @default(false)
-  // Category of the primary form that forms from this template are grouped under
-  primaryCategory             String?
+  // What kind of form this is (Grant Funding, DFT Application, Narrative Report…);
+  // the category decides where its forms sit and which reports they get
+  formCategoryId              Int?
+  category                    FormCategory?                @relation(fields: [formCategoryId], references: [id], onDelete: SetNull)
   linkedFormTemplateId        Int?
   linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
   linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
@@ -542,6 +541,29 @@ enum FundingCalculationType {
 enum FundAmountType {
   USE_DEFAULT
   AD_HOC
+}
+
+// Where forms of a category sit: primary forms group a funding period, secondary
+// forms sit under the primary covering their start date, reports under their parent
+enum FormCategoryRole {
+  PRIMARY
+  SECONDARY
+  REPORT
+}
+
+model FormCategory {
+  id               Int              @id @default(autoincrement())
+  key              String           @unique
+  label            String
+  role             FormCategoryRole
+  // SECONDARY categories: the PRIMARY category their forms sit under
+  parentCategoryId Int?
+  parentCategory   FormCategory?    @relation("CategoryParent", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  childCategories  FormCategory[]   @relation("CategoryParent")
+  active           Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  templates        FormTemplate[]
 }
 
 enum FormTemplateType {

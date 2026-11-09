@@ -15,23 +15,6 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { DeleteDialog } from "./delete"
 import { FORM_TEMPLATE_TYPE_OPTIONS, formTemplateTypeLabel } from "@/lib/form-template-type"
 
-// Acronyms that should stay fully uppercased when formatting category slugs.
-const CATEGORY_ACRONYMS = new Set(["dft", "fris", "lda", "scat", "npo", "bpo", "fbo"])
-
-// Turn a stored category slug (e.g. "dft_report") into a readable label ("DFT Report").
-function formatCategory(category?: string | null): string {
-  if (!category) return "—"
-  return category
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((word) =>
-      CATEGORY_ACRONYMS.has(word.toLowerCase())
-        ? word.toUpperCase()
-        : word.charAt(0).toUpperCase() + word.slice(1)
-    )
-    .join(" ")
-}
-
 interface Props {
   formTemplates: FormTemplateWithRelations[]
 }
@@ -54,12 +37,11 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
 
   // Build category options from the distinct categories present in the data.
   const categoryOptions: FilterOption[] = useMemo(() => {
-    const cats = Array.from(
-      new Set(formTemplates.map((t) => t.formCategory).filter(Boolean))
-    ) as string[]
-    return cats
-      .sort()
-      .map((c) => ({ id: c, label: formatCategory(c) }))
+    const cats = new Map<number, string>()
+    for (const t of formTemplates) if (t.category) cats.set(t.category.id, t.category.label)
+    return [...cats]
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, label]) => ({ id, label }))
   }, [formTemplates])
 
   const filterConfigs = useMemo(() => [
@@ -81,7 +63,7 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
 
     return formTemplates.filter((t) => {
       if (types.length && !types.includes(t.templateType)) return false
-      if (cats.length && !(t.formCategory && cats.includes(t.formCategory))) return false
+      if (cats.length && !(t.formCategoryId && cats.includes(String(t.formCategoryId)))) return false
       if (statuses.length && !statuses.includes(t.active ? "active" : "inactive")) return false
       return true
     })
@@ -119,7 +101,7 @@ export function FilteredFormTemplates({ formTemplates }: Props) {
                     </Link>
                   </TableCell>
                   <TableCell className="text-nowrap">{formTemplateTypeLabel(formTemplate.templateType)}</TableCell>
-                  <TableCell className="text-nowrap">{formatCategory(formTemplate.formCategory)}</TableCell>
+                  <TableCell className="text-nowrap">{formTemplate.category?.label ?? "—"}</TableCell>
                   <TableCell>
                     <Badge variant={formTemplate.active ? "default" : "secondary"}>
                       {formTemplate.active ? "Active" : "Inactive"}

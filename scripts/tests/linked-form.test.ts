@@ -38,7 +38,7 @@ function load(options: {
         fundingEnd: null,
         primaryFormId: 40,
         formTemplate: {
-          isPrimary: false,
+          category: { role: "SECONDARY" },
           linkedFormTemplateId: options.linkedFormTemplateId === undefined ? 9 : options.linkedFormTemplateId,
           linkedFormDueDays: options.linkedFormDueDays ?? null,
           linkedFormTemplate: { name: "DFT Report" },

@@ -208,8 +208,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
           select: {
             form: true,
             approveRoles: true,
-            isPrimary: true,
-            formCategory: true
+            category: { select: { id: true, role: true } }
           }
         }
       }
@@ -342,11 +341,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
 
     // A primary form's new period can't overlap another primary of the same kind
     const datesChanged = Boolean(updateData.fundingStart || updateData.fundingEnd);
-    const { isPrimary, formCategory } = existingForm.formTemplate;
-    if (datesChanged && isPrimary && formCategory) {
+    const category = existingForm.formTemplate.category;
+    if (datesChanged && category?.role === "PRIMARY") {
       const overlap = await primaryOverlapError(
         existingForm.localDevelopmentAgencyId,
-        formCategory,
+        category.id,
         updateData.fundingStart ?? existingForm.fundingStart,
         updateData.fundingEnd ?? existingForm.fundingEnd,
         ldaFormId

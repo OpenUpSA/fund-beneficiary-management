@@ -53,7 +53,7 @@ export async function GET(
     const whereClause: {
       localDevelopmentAgencyId: number
       formStatusId: number
-      formTemplate?: { name?: { in: string[] }; formCategory?: { in: string[] } }
+      formTemplate?: { name?: { in: string[] }; category?: { key: { in: string[] } } }
     } = {
       localDevelopmentAgencyId: ldaId,
       formStatusId: approvedStatus.id,
@@ -66,7 +66,7 @@ export async function GET(
         whereClause.formTemplate.name = { in: templateNames }
       }
       if (formCategories.length > 0) {
-        whereClause.formTemplate.formCategory = { in: formCategories }
+        whereClause.formTemplate.category = { key: { in: formCategories } }
       }
     }
 
@@ -79,7 +79,7 @@ export async function GET(
             id: true,
             name: true,
             templateType: true,
-            formCategory: true,
+            category: { select: { key: true } },
             readRoles: true,
           },
         },
@@ -110,7 +110,7 @@ export async function GET(
         title: form.title,
         templateName: form.formTemplate.name,
         templateType: form.formTemplate.templateType,
-        formCategory: form.formTemplate.formCategory,
+        formCategory: form.formTemplate.category?.key ?? null,
         status: form.formStatus.label,
         activityDate: formData?.activity_date || null,
         fundingStart: form.fundingStart,

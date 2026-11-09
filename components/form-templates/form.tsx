@@ -34,7 +34,7 @@ import {
 import { ChevronDownIcon, CopyIcon, InfoIcon, PencilIcon, PlusIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { FormStatus, FormTemplate } from "@prisma/client"
+import { FormCategory, FormStatus, FormTemplate } from "@prisma/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Combobox } from "@/components/ui/combobox"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -60,24 +60,12 @@ const defaultRoleSelection = [...ASSIGNABLE_FORM_ROLES] as FormRole[]
 // Creating is staff-only unless an admin opts LDA users in (matches the data migration)
 const defaultCreateRoleSelection: FormRole[] = ['PROGRAMME_OFFICER', 'ADMIN']
 
-const formCategoryOptions = [
-  { value: 'dft_application', label: 'DFT Application' },
-  { value: 'dft_report', label: 'DFT Report' },
-  { value: 'fris_application', label: 'FRIS Application' },
-  { value: 'fris_claim', label: 'FRIS Claim' },
-  { value: 'grant_funding', label: 'Grant Funding' },
-  { value: 'narrative_report', label: 'Narrative Report' },
-  { value: 'finance_report', label: 'Finance Report' },
-]
-
 const FormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   active: z.boolean(),
   description: z.string().min(2, { message: "Description must be at least 2 characters." }),
   templateType: z.enum(FORM_TEMPLATE_TYPE_VALUES),
-  formCategory: z.string().nullable().optional(),
-  isPrimary: z.boolean(),
-  primaryCategory: z.string().nullable().optional(),
+  formCategoryId: z.number().nullable().optional(),
   linkedFormTemplateId: z.number().nullable().optional(),
   linkedFormTriggerStatusId: z.number().nullable().optional(),
   linkedFormDueDays: z.number().int().min(0).max(365, { message: "Must be 365 days or fewer." }).nullable().optional(),
@@ -261,77 +249,53 @@ function LinkedFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFo
   )
 }
 
-// Whether forms from this template are primary (e.g. Grant Funding), or which
-// primary form category they're grouped under. Shared by the create and edit dialogs.
-function PrimaryFormSettingsFields({ form }: { form: UseFormReturn<FormTemplateFormValues> }) {
-  const isPrimary = form.watch('isPrimary')
-  const formCategory = form.watch('formCategory')
-  // Only categories other than this template's own can be grouped under
-  const groupUnderOptions = formCategoryOptions.filter((option) => option.value !== formCategory)
+const CATEGORY_ROLE_LABELS: Record<string, string> = { PRIMARY: "Primary", SECONDARY: "Secondary", REPORT: "Report" }
+
+// The category decides where this template's forms sit and which reports they
+// get. Shared by the create and edit dialogs.
+function FormCategoryField({ form }: { form: UseFormReturn<FormTemplateFormValues> }) {
+  const [categories, setCategories] = useState<FormCategory[]>([])
+
+  useEffect(() => {
+    fetch('/api/form-category')
+      .then((res) => (res.ok ? res.json() : []))
+      .then(setCategories)
+      .catch(() => setCategories([]))
+  }, [])
 
   return (
-    <div className="rounded-md border p-4 space-y-4">
-      <FormField
-        control={form.control}
-        name="isPrimary"
-        render={({ field }) => (
-          <FormItem>
-            <div className="flex items-center gap-2">
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  disabled={!formCategory && !field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked)
-                    if (checked) form.setValue('primaryCategory', null)
-                  }}
-                />
-              </FormControl>
-              <FormLabel className="!mt-0">Primary form</FormLabel>
-              <FieldInfo
-                text={`A primary form (e.g. a Grant Funding Application) groups the other forms of its funding period underneath it in each ${LDA_TERMINOLOGY.shortName}'s list. An ${LDA_TERMINOLOGY.shortName} can't have two primary forms of the same category with overlapping dates. Needs a form category, which yearly copies of the template keep.`}
-              />
-            </div>
-            {!formCategory && <p className="text-xs text-muted-foreground">Choose a form category to make this a primary form.</p>}
-          </FormItem>
-        )}
-      />
-
-      {!isPrimary && (
-        <FormField
-          control={form.control}
-          name="primaryCategory"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-center gap-1.5">
-                <FormLabel>Group under primary form</FormLabel>
-                <FieldInfo
-                  text={`Forms from this template are listed under the ${LDA_TERMINOLOGY.shortName}'s primary form of this category whose start and end dates include the form's start date.`}
-                />
-              </div>
-              <Select
-                value={field.value || 'none'}
-                onValueChange={(val) => field.onChange(val === 'none' ? null : val)}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="none">None (not grouped)</SelectItem>
-                  {groupUnderOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FormItem>
-          )}
-        />
+    <FormField
+      control={form.control}
+      name="formCategoryId"
+      render={({ field }) => (
+        <FormItem>
+          <div className="flex items-center gap-1.5">
+            <FormLabel>Form category</FormLabel>
+            <FieldInfo text="Primary forms (e.g. Grant Funding) group a funding period, secondary forms sit under the primary covering their start date, and reports sit under the form they were created for. Categories and their reports are managed on the Categories page." />
+          </div>
+          <Select
+            value={field.value?.toString() ?? 'none'}
+            onValueChange={(val) => field.onChange(val === 'none' ? null : parseInt(val, 10))}
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {categories
+                .filter((c) => c.active || c.id === field.value)
+                .map((c) => (
+                  <SelectItem key={c.id} value={c.id.toString()}>
+                    {c.label} <span className="text-muted-foreground">· {CATEGORY_ROLE_LABELS[c.role]}</span>
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </FormItem>
       )}
-    </div>
+    />
   )
 }
 
@@ -365,9 +329,7 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
       active: formTemplate ? formTemplate.active : true,
       description: formTemplate ? formTemplate.description : "",
       templateType: formTemplate?.templateType || 'APPLICATION',
-      formCategory: formTemplate?.formCategory || null,
-      isPrimary: formTemplate?.isPrimary ?? false,
-      primaryCategory: formTemplate?.primaryCategory ?? null,
+      formCategoryId: formTemplate?.formCategoryId ?? null,
       linkedFormTemplateId: formTemplate?.linkedFormTemplateId || null,
       linkedFormTriggerStatusId: formTemplate?.linkedFormTriggerStatusId ?? null,
       linkedFormDueDays: formTemplate?.linkedFormDueDays ?? null,
@@ -483,35 +445,7 @@ export function FormDialog({ formTemplate, allTemplates = [] }: FormDialogProps)
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="formCategory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Form Category</FormLabel>
-                    <Select 
-                      value={field.value || 'none'} 
-                      onValueChange={(val) => field.onChange(val === 'none' ? null : val)}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        {formCategoryOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
-
-              <PrimaryFormSettingsFields form={form} />
+              <FormCategoryField form={form} />
 
               <FormField
                 control={form.control}
@@ -793,9 +727,7 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
       active: true,
       description: "",
       templateType: 'APPLICATION',
-      formCategory: null,
-      isPrimary: false,
-      primaryCategory: null,
+      formCategoryId: null,
       linkedFormTemplateId: null,
       linkedFormTriggerStatusId: null,
       linkedFormDueDays: null,
@@ -881,35 +813,7 @@ function CreateNewTemplateForm({ onClose, allTemplates }: CreateNewTemplateFormP
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="formCategory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Form Category</FormLabel>
-                  <Select 
-                    value={field.value || 'none'} 
-                    onValueChange={(val) => field.onChange(val === 'none' ? null : val)}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {formCategoryOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
-
-            <PrimaryFormSettingsFields form={form} />
+            <FormCategoryField form={form} />
 
             <FormField
               control={form.control}

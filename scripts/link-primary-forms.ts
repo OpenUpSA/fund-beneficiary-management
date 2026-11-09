@@ -21,14 +21,14 @@ const day = (date: Date) => date.toISOString().slice(0, 10)
 
 async function reportOverlaps() {
   const primaries = await prisma.localDevelopmentAgencyForm.findMany({
-    where: { formTemplate: { isPrimary: true }, formStatus: { label: { not: "Rejected" } } },
+    where: { formTemplate: { category: { role: "PRIMARY" } }, formStatus: { label: { not: "Rejected" } } },
     select: {
       id: true,
       title: true,
       fundingStart: true,
       fundingEnd: true,
       localDevelopmentAgency: { select: { name: true } },
-      formTemplate: { select: { formCategory: true } },
+      formTemplate: { select: { formCategoryId: true } },
     },
     orderBy: [{ localDevelopmentAgencyId: "asc" }, { fundingStart: "asc" }],
   })
@@ -36,7 +36,7 @@ async function reportOverlaps() {
   primaries.forEach((a, i) => {
     for (const b of primaries.slice(i + 1)) {
       if (a.localDevelopmentAgency.name !== b.localDevelopmentAgency.name) continue
-      if (a.formTemplate.formCategory !== b.formTemplate.formCategory) continue
+      if (a.formTemplate.formCategoryId !== b.formTemplate.formCategoryId) continue
       if (a.fundingStart <= b.fundingEnd && b.fundingStart <= a.fundingEnd) {
         overlaps.push(
           `${a.localDevelopmentAgency.name}: #${a.id} "${a.title}" (${day(a.fundingStart)} – ${day(a.fundingEnd)}) ` +

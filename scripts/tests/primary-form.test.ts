@@ -8,7 +8,8 @@ const source = ts.transpileModule(readFileSync("lib/primary-form.ts", "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText
 
-type Template = { isPrimary: boolean; formCategory: string | null; primaryCategory: string | null }
+type Category = { id: number; role: "PRIMARY" | "SECONDARY" | "REPORT"; parentCategoryId: number | null }
+type Template = { formCategoryId: number | null; category: Category | null }
 type FormRow = {
   id: number
   localDevelopmentAgencyId: number
@@ -21,23 +22,35 @@ type FormRow = {
   template: Template
 }
 
+const GRANT = 1
+const FRIS = 2
+const category = (id: number, role: Category["role"], parentCategoryId: number | null = null): Template =>
+  ({ formCategoryId: id, category: { id, role, parentCategoryId } })
 const TEMPLATES: Record<string, Template> = {
-  grant: { isPrimary: true, formCategory: "grant_funding", primaryCategory: null },
-  fris: { isPrimary: true, formCategory: "fris_application", primaryCategory: null },
-  dft: { isPrimary: false, formCategory: "dft_application", primaryCategory: "grant_funding" },
-  dftReport: { isPrimary: false, formCategory: "dft_report", primaryCategory: null },
-  narrative: { isPrimary: false, formCategory: "narrative_report", primaryCategory: "grant_funding" },
-  survey: { isPrimary: false, formCategory: null, primaryCategory: null },
+  grant: category(GRANT, "PRIMARY"),
+  fris: category(FRIS, "PRIMARY"),
+  dft: category(3, "SECONDARY", GRANT),
+  dftReport: category(4, "REPORT"),
+  narrative: category(5, "REPORT"),
+  orphanSecondary: category(6, "SECONDARY"),
+  survey: { formCategoryId: null, category: null },
 }
 
 const d = (iso: string) => new Date(`${iso}T00:00:00.000Z`)
 
+// Nested equality for relation filters like { category: { role: "PRIMARY" } }
+function matchesObject(value: unknown, cond: Record<string, unknown>): boolean {
+  if (!value || typeof value !== "object") return false
+  return Object.entries(cond).every(([k, v]) => {
+    const inner = (value as Record<string, unknown>)[k]
+    return v && typeof v === "object" ? matchesObject(inner, v as Record<string, unknown>) : inner === v
+  })
+}
+
 // Minimal in-memory evaluation of the Prisma `where` shapes lib/primary-form.ts uses
 function matches(row: FormRow, where: Record<string, unknown>): boolean {
   return Object.entries(where).every(([key, cond]) => {
-    if (key === "formTemplate") {
-      return Object.entries(cond as Record<string, unknown>).every(([k, v]) => row.template[k as keyof Template] === v)
-    }
+    if (key === "formTemplate") return matchesObject(row.template, cond as Record<string, unknown>)
     if (key === "formStatus") {
       const label = (cond as { label: { notIn: string[] } }).label
       return !label.notIn.includes(row.status)
@@ -112,13 +125,20 @@ async function main() {
       { id: 12, template: TEMPLATES.dft, fundingStart: d("2026-12-31") },
       { id: 13, template: TEMPLATES.survey },
       { id: 14, template: TEMPLATES.dft, localDevelopmentAgencyId: 2 },
+      { id: 15, template: TEMPLATES.orphanSecondary },
+      { id: 16, template: TEMPLATES.narrative },
+      { id: 4, template: TEMPLATES.grant, primaryFormId: 2, localDevelopmentAgencyId: 3 },
     ])
     assert.equal(await lib.assignPrimaryForm(10), 1)
     assert.equal(await lib.assignPrimaryForm(11), 2, "Next year's form lands under next year's primary")
     assert.equal(await lib.assignPrimaryForm(12), 1, "The period end date is inclusive")
-    assert.equal(await lib.assignPrimaryForm(13), null, "A template without a primary category stays ungrouped")
+    assert.equal(await lib.assignPrimaryForm(13), null, "A template without a category stays ungrouped")
     assert.equal(await lib.assignPrimaryForm(14), null, "Another LDA's primary is never used")
     assert.equal(await lib.assignPrimaryForm(1), null, "A primary is never grouped under another primary")
+    assert.equal(await lib.assignPrimaryForm(15), null, "A secondary category with no parent stays ungrouped")
+    assert.equal(await lib.assignPrimaryForm(16), null, "A report not created for a parent stays ungrouped")
+    assert.equal(await lib.assignPrimaryForm(4), null)
+    assert.equal(primaryOf(4), null, "A form whose category became primary is released")
     assert.equal(primaryOf(10), 1)
     assert.equal(primaryOf(11), 2)
   }
@@ -142,7 +162,7 @@ async function main() {
       { id: 10, template: TEMPLATES.dft },
     ])
     assert.equal(await lib.assignPrimaryForm(10), null)
-    assert.equal(await lib.primaryOverlapError(1, "grant_funding", d("2026-01-01"), d("2026-12-31")), undefined)
+    assert.equal(await lib.primaryOverlapError(1, GRANT, d("2026-01-01"), d("2026-12-31")), undefined)
   }
 
   // Creating a primary attaches the LDA's ungrouped forms in its period, and their linked forms
@@ -180,12 +200,12 @@ async function main() {
   // Overlap: same LDA and category only; touching periods do overlap, adjacent ones don't
   {
     const { lib } = load([{ id: 1, template: TEMPLATES.grant }])
-    assert.match((await lib.primaryOverlapError(1, "grant_funding", d("2026-06-01"), d("2027-05-31")))!, /Form 1/)
-    assert.ok(await lib.primaryOverlapError(1, "grant_funding", d("2026-12-31"), d("2027-12-31")))
-    assert.equal(await lib.primaryOverlapError(1, "grant_funding", d("2027-01-01"), d("2027-12-31")), undefined)
-    assert.equal(await lib.primaryOverlapError(1, "fris_application", d("2026-01-01"), d("2026-12-31")), undefined)
-    assert.equal(await lib.primaryOverlapError(2, "grant_funding", d("2026-01-01"), d("2026-12-31")), undefined)
-    assert.equal(await lib.primaryOverlapError(1, "grant_funding", d("2026-01-01"), d("2026-12-31"), 1), undefined, "Editing itself")
+    assert.match((await lib.primaryOverlapError(1, GRANT, d("2026-06-01"), d("2027-05-31")))!, /Form 1/)
+    assert.ok(await lib.primaryOverlapError(1, GRANT, d("2026-12-31"), d("2027-12-31")))
+    assert.equal(await lib.primaryOverlapError(1, GRANT, d("2027-01-01"), d("2027-12-31")), undefined)
+    assert.equal(await lib.primaryOverlapError(1, FRIS, d("2026-01-01"), d("2026-12-31")), undefined)
+    assert.equal(await lib.primaryOverlapError(2, GRANT, d("2026-01-01"), d("2026-12-31")), undefined)
+    assert.equal(await lib.primaryOverlapError(1, GRANT, d("2026-01-01"), d("2026-12-31"), 1), undefined, "Editing itself")
   }
 
   // Regrouping everything from scratch matches the per-form rules and only reports moves
@@ -207,19 +227,7 @@ async function main() {
     )
   }
 
-  // Template settings validation
-  {
-    const { lib } = load([])
-    assert.equal(lib.primaryFormSettingsError({}), undefined)
-    assert.equal(lib.primaryFormSettingsError({ isPrimary: true, formCategory: "grant_funding" }), undefined)
-    assert.equal(lib.primaryFormSettingsError({ isPrimary: false, primaryCategory: "grant_funding" }), undefined)
-    assert.ok(lib.primaryFormSettingsError({ isPrimary: true, formCategory: null }))
-    assert.ok(lib.primaryFormSettingsError({ isPrimary: true, formCategory: "grant_funding", primaryCategory: "grant_funding" }))
-    assert.ok(lib.primaryFormSettingsError({ isPrimary: "yes" }))
-    assert.ok(lib.primaryFormSettingsError({ primaryCategory: 5 }))
-  }
-
-  console.log("primary-form: matching by category and period, linked forms, attaching, overlaps and settings validation passed")
+  console.log("primary-form: placement by category role and period, linked forms, attaching, overlaps and regrouping passed")
 }
 
 main().catch((error) => {

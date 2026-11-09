@@ -30,8 +30,7 @@ async function create(options: {
     active: options.active ?? true,
     createRoles: options.createRoles ?? ["PROGRAMME_OFFICER", "ADMIN"],
     approveRoles: options.approveRoles ?? ["PROGRAMME_OFFICER", "ADMIN"],
-    isPrimary: options.isPrimary ?? false,
-    formCategory: options.isPrimary ? "grant_funding" : null,
+    category: options.isPrimary ? { id: 1, role: "PRIMARY" } : { id: 3, role: "SECONDARY" },
   }
   const dependencies: Record<string, unknown> = {
     "next/server": { NextResponse: { json: (data: unknown, init?: ResponseInit) => Response.json(data, init) } },
@@ -127,7 +126,7 @@ async function main() {
   assert.deepEqual(byApprover.overlapChecks, [], "Only primary forms check for overlaps")
   const primary = await create({ role: "PROGRAMME_OFFICER", isPrimary: true, body: presets })
   assert.equal(primary.response.status, 200)
-  assert.equal(primary.overlapChecks[0][1], "grant_funding")
+  assert.equal(primary.overlapChecks[0][1], 1, "Checked against the primary's category")
   assert.equal((primary.overlapChecks[0][2] as Date).toISOString(), presets.fundingStart)
   const overlapping = await create({ role: "PROGRAMME_OFFICER", isPrimary: true, overlap: "Already covered" })
   assert.equal(overlapping.response.status, 400)

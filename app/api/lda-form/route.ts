@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
     // Get the form template to use its name as the title
     const formTemplate = await prisma.formTemplate.findUnique({
       where: { id: data.formTemplateId },
+      include: { category: { select: { id: true, role: true } } },
     })
 
     if (!formTemplate || !formTemplate.active) {
@@ -108,10 +109,10 @@ export async function POST(req: NextRequest) {
     const canSetApproverFields = canApproveForm(session.user, formTemplate.approveRoles)
 
     // An LDA's primary forms of one kind (e.g. Grant Funding) can't overlap in dates
-    if (formTemplate.isPrimary && formTemplate.formCategory) {
+    if (formTemplate.category?.role === "PRIMARY") {
       const start = canSetApproverFields && data.fundingStart ? new Date(data.fundingStart) : new Date()
       const end = canSetApproverFields && data.fundingEnd ? new Date(data.fundingEnd) : new Date()
-      const overlap = await primaryOverlapError(ldaId, formTemplate.formCategory, start, end)
+      const overlap = await primaryOverlapError(ldaId, formTemplate.category.id, start, end)
       if (overlap) {
         return NextResponse.json({ error: overlap }, { status: 400 })
       }

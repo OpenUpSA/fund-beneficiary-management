@@ -75,11 +75,8 @@ export async function POST(
         form: sourceTemplate.form as object,
         active: true,
         templateType: sourceTemplate.templateType,
-        // Keeping the category and primary settings is what lets next year's
-        // version group forms with no extra setup
-        formCategory: sourceTemplate.formCategory,
-        isPrimary: sourceTemplate.isPrimary,
-        primaryCategory: sourceTemplate.primaryCategory,
+        // Keeping the category is what lets next year's version slot in with no extra setup
+        formCategoryId: sourceTemplate.formCategoryId,
         linkedFormTemplateId: sourceTemplate.linkedFormTemplateId,
         linkedFormTriggerStatusId: sourceTemplate.linkedFormTriggerStatusId,
         linkedFormDueDays: sourceTemplate.linkedFormDueDays,
