@@ -22,6 +22,7 @@ yarn create-superuser # Interactively create an admin user
 yarn assign-pos       # Assign programme officers to LDAs from a CSV (dry run by default)
 yarn normalize-period-dates # One-off: move legacy funding/schedule dates to UTC midnight (dry run by default)
 yarn link-primary-forms # Group existing forms under their primary forms (dry run by default)
+yarn migrate-report-rules # One-off: turn old linked-form/report-schedule settings into report rules (dry run by default)
 yarn test             # Run the script-based tests in scripts/tests/
 ```
 
@@ -68,7 +69,7 @@ The `[locale]` segment is `en` or `xh` (Xhosa). Route protection is handled by `
 
 Key model relationships: `Funder` → `Fund` → `LocalDevelopmentAgency` → `LocalDevelopmentAgencyForm` (submitted against a `FormTemplate`).
 
-Forms are grouped under a **primary form** (`primaryFormId`, e.g. that year's Grant Funding Application) by template category and date; linked forms (`linkedFormId`) sit under their parent. See [docs/PRIMARY_FORMS.md](docs/PRIMARY_FORMS.md) and `lib/primary-form.ts`.
+Each `FormTemplate` belongs to a `FormCategory` (role PRIMARY / SECONDARY / REPORT). Forms are grouped under a **primary form** (`primaryFormId`) by category and date; reports sit under the form they were created for (`linkedFormId`). Reports come from `ReportRule`s on categories (after a status, or every N months of the parent's funding period), which a template can change via `ReportRuleOverride`; a daily Dokku cron (`app.json`) runs `/api/cron/generate-reports`. See [docs/FORM_CATEGORIES.md](docs/FORM_CATEGORIES.md), `lib/primary-form.ts` and `lib/report-rules.ts`.
 
 ### Auth & permissions
 

@@ -2,9 +2,10 @@
  * Group existing forms under their primary forms (primaryFormId).
  *
  * New forms are grouped automatically when they're created or their dates
- * change, and saving a template's primary settings regroups everything. Run
- * this after the primary-forms migration, or after editing form dates directly
- * in the database. The rules are in lib/primary-form.ts (planRegroup).
+ * change, and changing a category's role or parent, or a template's category,
+ * regroups everything. Run this after setting up categories on an existing
+ * database, or after editing form dates directly in the database. The rules
+ * are in lib/primary-form.ts (planRegroup).
  *
  *   yarn link-primary-forms            # dry run, prints every move
  *   yarn link-primary-forms --commit   # apply in one transaction
