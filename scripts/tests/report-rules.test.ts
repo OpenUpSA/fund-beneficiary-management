@@ -4,9 +4,12 @@ import { readFileSync } from "node:fs"
 import { runInNewContext } from "node:vm"
 import ts from "typescript"
 
-const source = ts.transpileModule(readFileSync("lib/report-rules.ts", "utf8"), {
+const transpile = (file: string) => ts.transpileModule(readFileSync(file, "utf8"), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
 }).outputText
+const source = transpile("lib/report-rules.ts")
+const formatModule: Record<string, unknown> = {}
+runInNewContext(transpile("lib/report-rule-format.ts"), { exports: formatModule })
 
 // Values built inside the vm sandbox have that realm's prototypes; compare plain copies
 const same = (actual: unknown, expected: unknown, message?: string) =>
@@ -38,7 +41,14 @@ function load(state: { rules?: Rule[]; parents?: Form[]; reports?: Form[]; templ
   let nextId = 1000
   const prisma = {
     reportRule: { findMany: async () => state.rules ?? [] },
-    formStatus: { findFirst: async () => ({ id: STATUS.Draft.id }) },
+    formStatus: {
+      findFirst: async () => ({ id: STATUS.Draft.id }),
+      findUnique: async ({ where }: { where: { id: number } }) => Object.values(STATUS).find((s) => s.id === where.id) ?? null,
+    },
+    formCategory: {
+      findUnique: async ({ where }: { where: { id: number } }) =>
+        ({ 1: { role: "PRIMARY" }, 3: { role: "SECONDARY" }, 5: { role: "REPORT" } } as Record<number, { role: string }>)[where.id] ?? null,
+    },
     formTemplate: {
       findUnique: async ({ where }: { where: { id: number } }) => templates.find((t) => t.id === where.id) ?? null,
       findFirst: async ({ where }: { where: { formCategoryId: number; active: boolean } }) =>
@@ -68,6 +78,7 @@ function load(state: { rules?: Rule[]; parents?: Form[]; reports?: Form[]; templ
   runInNewContext(source, {
     exports,
     require: (name: string) => {
+      if (name === "@/lib/report-rule-format") return formatModule
       assert.equal(name, "@/db", `Unexpected dependency: ${name}`)
       return { default: prisma }
     },
@@ -227,7 +238,32 @@ async function main() {
     assert.equal((await lib.generateDueReports(d("2026-07-01"))).created, 1, "Another rule's report doesn't block this one")
   }
 
-  console.log("report-rules: periods, overrides, triggers, catch-up, idempotency, blocked parents and template choice passed")
+  // Rule validation: categories by role, kinds, number ranges, statuses; categories/kind fixed once created
+  {
+    const { lib } = load()
+    const rule = { parentCategoryId: 1, reportCategoryId: 5, kind: "PERIODIC", periodMonths: 3 }
+    assert.equal(await lib.reportRuleInputError(rule), undefined)
+    assert.equal(await lib.reportRuleInputError({ parentCategoryId: 3, reportCategoryId: 5, kind: "AFTER_STATUS", dueDays: 30 }), undefined)
+    assert.match((await lib.reportRuleInputError({ ...rule, parentCategoryId: 5 }))!, /primary or secondary/)
+    assert.match((await lib.reportRuleInputError({ ...rule, reportCategoryId: 1 }))!, /report category/)
+    assert.ok(await lib.reportRuleInputError({ ...rule, kind: "WEEKLY" }))
+    assert.match((await lib.reportRuleInputError({ ...rule, periodMonths: null }))!, /frequency/)
+    assert.ok(await lib.reportRuleInputError({ ...rule, periodMonths: 0 }))
+    assert.ok(await lib.reportRuleInputError({ ...rule, opensDaysBefore: -1 }))
+    assert.equal(await lib.reportRuleInputError({ ...rule, dueDaysAfterPeriodEnd: -10 }), undefined, "Due before the period ends is allowed")
+    assert.ok(await lib.reportRuleInputError({ ...rule, triggerStatusId: 404 }))
+    const existing = { kind: "PERIODIC", periodMonths: 3 }
+    assert.equal(await lib.reportRuleInputError({ opensDaysBefore: 7, active: false }, existing), undefined)
+    assert.match((await lib.reportRuleInputError({ kind: "AFTER_STATUS" }, existing))!, /add a new one/)
+
+    // Overrides: same ranges; a pinned report template must be in the rule's report category
+    assert.equal(await lib.reportOverrideInputError({ enabled: false, periodMonths: 6, reportTemplateId: 60 }, { reportCategoryId: 5 }), undefined)
+    assert.match((await lib.reportOverrideInputError({ reportTemplateId: 60 }, { reportCategoryId: 4 }))!, /report category/)
+    assert.ok(await lib.reportOverrideInputError({ dueDays: 1.5 }, { reportCategoryId: 5 }))
+    assert.ok(await lib.reportOverrideInputError({ enabled: "no" }, { reportCategoryId: 5 }))
+  }
+
+  console.log("report-rules: periods, overrides, triggers, catch-up, idempotency, blocked parents, template choice and validation passed")
 }
 
 main().catch((error) => {

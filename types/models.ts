@@ -206,7 +206,10 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
 
 export type FormCategoryWithTemplates = Prisma.FormCategoryGetPayload<{
   include: {
-    templates: { select: { id: true, name: true, active: true, templateType: true } }
+    templates: {
+      select: { id: true, name: true, active: true, templateType: true, _count: { select: { reportOverrides: true } } }
+    }
+    reportRules: true
   }
 }>
 

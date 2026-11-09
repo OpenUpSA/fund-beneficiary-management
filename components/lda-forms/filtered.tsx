@@ -360,7 +360,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map(({ form: ldaForm, depth, hasChildren, isContext }) => {
+            {rows.map(({ form: ldaForm, depth, hasChildren, isContext, rootStart }) => {
               // Generate demo data for the example
               const getStatusBadge = () => {
                 // Adding keys to each status badge element to prevent React key warnings
@@ -404,7 +404,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                       </Link>
                     </div>
                   </TableCell>
-                  <TableCell>{formPeriodLabel(ldaForm.fundingStart, depth)}</TableCell>
+                  <TableCell>{formPeriodLabel(ldaForm.fundingStart, depth, rootStart)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-normal">
                       {formTemplateTypeLabel(ldaForm.formTemplate?.templateType)}

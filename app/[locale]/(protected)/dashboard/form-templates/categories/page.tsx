@@ -1,5 +1,5 @@
 import { BreadcrumbNav } from "@/components/ui/breadcrumb-nav"
-import { fetchFormCategories, fetchFormTemplates } from "@/lib/data"
+import { fetchFormCategories, fetchFormStatuses, fetchFormTemplates } from "@/lib/data"
 import { CategoriesTree, NewCategoryButton } from "@/components/form-categories/categories-tree"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
@@ -13,7 +13,11 @@ export default async function Page() {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
   if (!session?.user || !permissions.isSuperUser(session.user)) notFound()
 
-  const [categories, formTemplates] = await Promise.all([fetchFormCategories(), fetchFormTemplates()])
+  const [categories, formTemplates, statuses] = await Promise.all([
+    fetchFormCategories(),
+    fetchFormTemplates(),
+    fetchFormStatuses(),
+  ])
 
   return (
     <div>
@@ -37,6 +41,7 @@ export default async function Page() {
       <CategoriesTree
         categories={categories}
         templates={formTemplates.map((t) => ({ id: t.id, name: t.name, formCategoryId: t.formCategoryId }))}
+        statuses={statuses.map((s) => ({ id: s.id, label: s.label }))}
       />
     </div>
   )

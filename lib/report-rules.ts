@@ -1,4 +1,5 @@
 import prisma from "@/db"
+import { REPORT_RULE_LIMITS, type ReportRuleNumberField } from "@/lib/report-rule-format"
 
 // Reports are created from report rules: a category default (e.g. Grant Funding
 // forms get a Narrative Report every 3 months) that a template can override (e.g.
@@ -246,3 +247,77 @@ export async function generateDueReports(today: Date, parentFormId?: number): Pr
   }
   return result
 }
+
+// ─── Validation ──────────────────────────────────────────────────────────────
+
+const inRange = (value: unknown, [min, max]: readonly [number, number]) =>
+  Number.isInteger(value) && (value as number) >= min && (value as number) <= max
+
+function numbersError(data: Record<string, unknown>): string | undefined {
+  for (const field of Object.keys(REPORT_RULE_LIMITS) as ReportRuleNumberField[]) {
+    const value = data[field]
+    const limits = REPORT_RULE_LIMITS[field]
+    if (value != null && !inRange(value, limits)) return `${field} must be a whole number from ${limits[0]} to ${limits[1]}`
+  }
+}
+
+async function statusError(statusId: unknown): Promise<string | undefined> {
+  if (statusId == null) return
+  const status = Number.isInteger(statusId)
+    ? await prisma.formStatus.findUnique({ where: { id: statusId as number }, select: { id: true } })
+    : null
+  if (!status) return "Trigger status not found"
+}
+
+/** Validate a report rule create (`existing` undefined) or partial update. */
+export async function reportRuleInputError(
+  data: Record<string, unknown>,
+  existing?: { kind: string; periodMonths: number | null },
+): Promise<string | undefined> {
+  if (!existing) {
+    const [parent, report] = await Promise.all([
+      Number.isInteger(data.parentCategoryId)
+        ? prisma.formCategory.findUnique({ where: { id: data.parentCategoryId as number }, select: { role: true } })
+        : null,
+      Number.isInteger(data.reportCategoryId)
+        ? prisma.formCategory.findUnique({ where: { id: data.reportCategoryId as number }, select: { role: true } })
+        : null,
+    ])
+    if (!parent || parent.role === "REPORT") return "Reports belong to a primary or secondary category"
+    if (report?.role !== "REPORT") return "Choose a report category"
+    if (data.kind !== "AFTER_STATUS" && data.kind !== "PERIODIC") return "Choose when the report is created"
+  } else if (data.parentCategoryId !== undefined || data.reportCategoryId !== undefined || data.kind !== undefined) {
+    return "Delete the rule and add a new one to change its categories or kind"
+  }
+  if (data.active !== undefined && typeof data.active !== "boolean") return "Active must be true or false"
+  const kind = (data.kind ?? existing?.kind) as string
+  const periodMonths = data.periodMonths !== undefined ? data.periodMonths : existing?.periodMonths
+  if (kind === "PERIODIC" && periodMonths == null) return "Periodic reports need a frequency"
+  return numbersError(data) ?? (await statusError(data.triggerStatusId))
+}
+
+/** Validate a template's override of a rule; a pinned report template must be in the rule's report category. */
+export async function reportOverrideInputError(
+  data: Record<string, unknown>,
+  rule: { reportCategoryId: number },
+): Promise<string | undefined> {
+  if (data.enabled != null && typeof data.enabled !== "boolean") return "Enabled must be true or false"
+  const error = numbersError(data) ?? (await statusError(data.triggerStatusId))
+  if (error) return error
+  if (data.reportTemplateId != null) {
+    const template = Number.isInteger(data.reportTemplateId)
+      ? await prisma.formTemplate.findUnique({ where: { id: data.reportTemplateId as number }, select: { formCategoryId: true } })
+      : null
+    if (template?.formCategoryId !== rule.reportCategoryId) return "The report template must be in the rule's report category"
+  }
+}
+
+export const OVERRIDE_FIELDS = [
+  "enabled",
+  "triggerStatusId",
+  "dueDays",
+  "periodMonths",
+  "opensDaysBefore",
+  "dueDaysAfterPeriodEnd",
+  "reportTemplateId",
+] as const

@@ -19,9 +19,16 @@ export async function GET() {
     orderBy: { label: "asc" },
     include: {
       templates: {
-        select: { id: true, name: true, active: true, templateType: true },
+        select: {
+          id: true,
+          name: true,
+          active: true,
+          templateType: true,
+          _count: { select: { reportOverrides: true } },
+        },
         orderBy: { name: "asc" },
       },
+      reportRules: { orderBy: { id: "asc" } },
     },
   })
   return NextResponse.json(categories)

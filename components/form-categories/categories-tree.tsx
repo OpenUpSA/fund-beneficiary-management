@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
+import { FileClockIcon, FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import { Link } from "@/i18n/routing"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { FormCategoryWithTemplates } from "@/types/models"
 import { cn } from "@/lib/utils"
+import { describeRule } from "@/lib/report-rule-format"
+import { RuleDialog } from "./rule-dialog"
+import { ReportSettingsDialog } from "./report-settings-dialog"
 
 type Role = "PRIMARY" | "SECONDARY" | "REPORT"
 
@@ -24,6 +27,11 @@ const ROLE_HINTS: Record<Role, string> = {
   PRIMARY: "Groups the forms of a funding period, e.g. a Grant Funding Application. One per LDA per period.",
   SECONDARY: "Sits under the primary form whose period covers its start date, e.g. a DFT Application.",
   REPORT: "Created by report rules and sits under the form it was created for.",
+}
+
+interface StatusOption {
+  id: number
+  label: string
 }
 
 interface TemplateOption {
@@ -188,15 +196,22 @@ function CategoryNode({
   category,
   categories,
   templates,
+  statuses,
   depth,
 }: {
   category: FormCategoryWithTemplates
   categories: FormCategoryWithTemplates[]
   templates: TemplateOption[]
+  statuses: StatusOption[]
   depth: number
 }) {
   const router = useRouter()
   const [editing, setEditing] = useState(false)
+  const [ruleDialog, setRuleDialog] = useState<{ rule?: FormCategoryWithTemplates["reportRules"][number] } | null>(null)
+  const [settingsFor, setSettingsFor] = useState<number | null>(null)
+  const getsReports = category.role !== "REPORT"
+  const reportCategories = categories.filter((c) => c.role === "REPORT")
+  const categoryLabel = (id: number) => categories.find((c) => c.id === id)?.label ?? "Unknown category"
   const children = categories.filter((c) => c.parentCategoryId === category.id)
   const assignable = templates.filter((t) => t.formCategoryId !== category.id)
 
@@ -209,6 +224,18 @@ function CategoryNode({
 
   async function setActive(active: boolean) {
     if (await send(`/api/form-category/${category.id}`, "PUT", { active })) router.refresh()
+  }
+
+  async function setRuleActive(ruleId: number, active: boolean) {
+    if (await send(`/api/report-rule/${ruleId}`, "PUT", { active })) router.refresh()
+  }
+
+  async function removeRule(ruleId: number) {
+    if (!window.confirm("Delete this report rule? Only possible before it has created any reports.")) return
+    if (await send(`/api/report-rule/${ruleId}`, "DELETE")) {
+      toast.success("Report rule deleted")
+      router.refresh()
+    }
   }
 
   async function remove() {
@@ -250,6 +277,18 @@ function CategoryNode({
                 <li key={t.id} className="flex items-center gap-2 text-sm">
                   <Link href={`/dashboard/form-templates/${t.id}`} className="hover:underline">{t.name}</Link>
                   {!t.active && <Badge variant="secondary" className="font-normal">Inactive</Badge>}
+                  {getsReports && (
+                    <button
+                      type="button"
+                      onClick={() => setSettingsFor(t.id)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <FileClockIcon className="h-3.5 w-3.5" />
+                      {t._count.reportOverrides > 0
+                        ? `${t._count.reportOverrides} report change${t._count.reportOverrides === 1 ? "" : "s"}`
+                        : "uses category reports"}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => assignTemplate(t.id, null)}
@@ -274,12 +313,59 @@ function CategoryNode({
               </div>
             )}
           </div>
+          {getsReports && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Reports</p>
+              {category.reportRules.length === 0 && <p className="text-sm text-muted-foreground">No reports.</p>}
+              <ul className="space-y-1">
+                {category.reportRules.map((rule) => (
+                  <li key={rule.id} className={cn("flex flex-wrap items-center gap-2 text-sm", !rule.active && "text-muted-foreground")}>
+                    <span className="font-medium">{categoryLabel(rule.reportCategoryId)}</span>
+                    <span className="text-muted-foreground">{describeRule(rule, statuses)}</span>
+                    <Switch
+                      checked={rule.active}
+                      onCheckedChange={(active) => setRuleActive(rule.id, active)}
+                      aria-label={`Switch ${categoryLabel(rule.reportCategoryId)} on or off`}
+                    />
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setRuleDialog({ rule })} aria-label="Edit report rule">
+                      <PencilIcon className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeRule(rule.id)} aria-label="Delete report rule">
+                      <Trash2Icon className="h-3.5 w-3.5" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+              <Button variant="outline" size="sm" className="mt-2" onClick={() => setRuleDialog({})} disabled={reportCategories.length === 0}>
+                <PlusIcon className="h-4 w-4" />
+                Add report
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
       {children.map((child) => (
-        <CategoryNode key={child.id} category={child} categories={categories} templates={templates} depth={depth + 1} />
+        <CategoryNode key={child.id} category={child} categories={categories} templates={templates} statuses={statuses} depth={depth + 1} />
       ))}
       {editing && <CategoryDialog open={editing} onOpenChange={setEditing} category={category} categories={categories} />}
+      {ruleDialog && (
+        <RuleDialog
+          open
+          onOpenChange={(open) => !open && setRuleDialog(null)}
+          parentCategory={category}
+          reportCategories={reportCategories}
+          statuses={statuses}
+          rule={ruleDialog.rule}
+        />
+      )}
+      {settingsFor !== null && (
+        <ReportSettingsDialog
+          templateId={settingsFor}
+          open
+          onOpenChange={(open) => !open && setSettingsFor(null)}
+          onSaved={() => router.refresh()}
+        />
+      )}
     </div>
   )
 }
@@ -287,9 +373,11 @@ function CategoryNode({
 export function CategoriesTree({
   categories,
   templates,
+  statuses,
 }: {
   categories: FormCategoryWithTemplates[]
   templates: TemplateOption[]
+  statuses: StatusOption[]
 }) {
   const ids = new Set(categories.map((c) => c.id))
   const primaries = categories.filter((c) => c.role === "PRIMARY")
@@ -305,7 +393,7 @@ export function CategoriesTree({
       <section className="space-y-1">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
         {items.map((c) => (
-          <CategoryNode key={c.id} category={c} categories={categories} templates={templates} depth={0} />
+          <CategoryNode key={c.id} category={c} categories={categories} templates={templates} statuses={statuses} depth={0} />
         ))}
       </section>
     )

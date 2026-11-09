@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ReportSettingsButton } from "@/components/form-categories/report-settings-dialog"
 import { Button } from "../ui/button"
 import { FormTemplate } from "@prisma/client"
 import DynamicForm from "@/components/form-templates/dynamicForm"
@@ -98,6 +99,7 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
             <SaveIcon />
           </Button>
           <FormDialog formTemplate={formTemplate} allTemplates={allTemplates} />
+          <ReportSettingsButton templateId={formTemplate.id} />
           {formTemplate.templateType === "APPLICATION" && (
             <ReportScheduleConfigDialog
               applicationTemplate={formTemplate}

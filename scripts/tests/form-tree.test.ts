@@ -60,5 +60,13 @@ assert.equal(formPeriodLabel("2026-01-01T00:00:00.000Z", 0), "2026")
 assert.equal(formPeriodLabel("2026-10-02T00:00:00.000Z", 1), "Q4")
 assert.equal(formPeriodLabel("2026-03-31T00:00:00.000Z", 2), "Q1")
 assert.equal(formPeriodLabel(null, 0), "-")
+// Quarters count from the top-level form's start: an April–March grant
+assert.equal(formPeriodLabel("2026-04-01T00:00:00.000Z", 1, "2026-04-01T00:00:00.000Z"), "Q1")
+assert.equal(formPeriodLabel("2027-01-15T00:00:00.000Z", 1, "2026-04-01T00:00:00.000Z"), "Q4")
+assert.equal(formPeriodLabel("2027-04-01T00:00:00.000Z", 2, "2026-04-01T00:00:00.000Z"), "Q5", "Second year of a multi-year grant")
+assert.equal(formPeriodLabel("2026-02-01T00:00:00.000Z", 1, "2026-04-01T00:00:00.000Z"), "Q1", "Before the primary starts: calendar quarter")
+// Rows carry their top-level form's start
+const withRoots = buildFormTree(all, all, new Set(), false)
+assert.equal(withRoots.find((r) => r.form.id === 20)!.rootStart, "2026-01-01T00:00:00.000Z")
 
 console.log("form-tree: grouping, default and user sort order, collapsing, filter context and period labels passed")

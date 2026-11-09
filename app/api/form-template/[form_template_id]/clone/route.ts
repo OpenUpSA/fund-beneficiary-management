@@ -55,6 +55,7 @@ export async function POST(
     const sourceTemplate = await prisma.formTemplate.findUnique({
       where: { id: templateId },
       include: {
+        reportOverrides: true,
         reportConfigs: {
           include: {
             periodSchedules: true,
@@ -120,6 +121,23 @@ export async function POST(
           })
         }
       }))
+    }
+
+    // The copy keeps this template's report settings
+    if (sourceTemplate.reportOverrides.length > 0) {
+      await prisma.reportRuleOverride.createMany({
+        data: sourceTemplate.reportOverrides.map((override) => ({
+          reportRuleId: override.reportRuleId,
+          formTemplateId: clonedTemplate.id,
+          enabled: override.enabled,
+          triggerStatusId: override.triggerStatusId,
+          dueDays: override.dueDays,
+          periodMonths: override.periodMonths,
+          opensDaysBefore: override.opensDaysBefore,
+          dueDaysAfterPeriodEnd: override.dueDaysAfterPeriodEnd,
+          reportTemplateId: override.reportTemplateId,
+        })),
+      })
     }
 
     revalidateTag("form-templates:list")

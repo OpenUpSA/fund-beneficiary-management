@@ -16,6 +16,8 @@ export interface TreeRow<T extends TreeForm> {
   hasChildren: boolean
   /** Shown only as the parent of a matching form, not because it matches itself */
   isContext: boolean
+  /** Start date of the top-level form this row sits under (its own for top-level rows) */
+  rootStart: Date | string | null
 }
 
 const time = (value: Date | string | null) => (value ? new Date(value).getTime() : Number.POSITIVE_INFINITY)
@@ -83,20 +85,28 @@ export function buildFormTree<T extends TreeForm>(
     )
 
   const rows: TreeRow<T>[] = []
-  const visit = (form: T, depth: number, path: Set<number>) => {
+  const visit = (form: T, depth: number, path: Set<number>, rootStart: Date | string | null) => {
     const kids = (children.get(form.id) ?? []).filter((k) => !path.has(k.id))
-    rows.push({ form, depth, hasChildren: kids.length > 0, isContext: !matchingIds.has(form.id) })
+    rows.push({ form, depth, hasChildren: kids.length > 0, isContext: !matchingIds.has(form.id), rootStart })
     if (collapsed.has(form.id)) return
     const nextPath = new Set(path).add(form.id)
-    for (const child of order(kids, false)) visit(child, depth + 1, nextPath)
+    for (const child of order(kids, false)) visit(child, depth + 1, nextPath, rootStart)
   }
-  for (const root of order(children.get(null) ?? [], true)) visit(root, 0, new Set())
+  for (const root of order(children.get(null) ?? [], true)) visit(root, 0, new Set(), root.fundingStart)
   return rows
 }
 
-/** "2026" for a top-level form, "Q3" for a form grouped under another. */
-export function formPeriodLabel(fundingStart: Date | string | null, depth: number): string {
+/**
+ * "2026" for a top-level form, "Q3" for a form grouped under another. Quarters
+ * count from the top-level form's start, so an April–March grant's April–June
+ * report is Q1, matching the report's own title.
+ */
+export function formPeriodLabel(fundingStart: Date | string | null, depth: number, rootStart?: Date | string | null): string {
   if (!fundingStart) return "-"
   const date = new Date(fundingStart)
-  return depth === 0 ? String(date.getUTCFullYear()) : `Q${Math.floor(date.getUTCMonth() / 3) + 1}`
+  if (depth === 0) return String(date.getUTCFullYear())
+  const root = rootStart ? new Date(rootStart) : new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  const months = (date.getUTCFullYear() - root.getUTCFullYear()) * 12 + date.getUTCMonth() - root.getUTCMonth()
+  // Forms dated before their primary starts fall back to calendar quarters
+  return `Q${months >= 0 ? Math.floor(months / 3) + 1 : Math.floor(date.getUTCMonth() / 3) + 1}`
 }
