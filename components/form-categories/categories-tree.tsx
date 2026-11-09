@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
-import { FileClockIcon, FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
+import { ChevronDownIcon, ChevronRightIcon, FileClockIcon, FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
+import { format } from "date-fns"
 import { Link } from "@/i18n/routing"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FormCategoryWithTemplates } from "@/types/models"
 import { cn } from "@/lib/utils"
 import { describeRule } from "@/lib/report-rule-format"
+import { formTemplateTypeLabel } from "@/lib/form-template-type"
 import { RuleDialog } from "./rule-dialog"
 import { ReportSettingsDialog } from "./report-settings-dialog"
 
@@ -221,6 +223,14 @@ function CategoryNode({
   const [editing, setEditing] = useState(false)
   const [ruleDialog, setRuleDialog] = useState<{ rule?: FormCategoryWithTemplates["reportRules"][number] } | null>(null)
   const [settingsFor, setSettingsFor] = useState<number | null>(null)
+  // The template list is hidden until asked for; the header always shows the count
+  const [showTemplates, setShowTemplates] = useState(false)
+  // Reports are filled in with the newest active template of a report category
+  const inUseId = category.role === "REPORT"
+    ? [...category.templates]
+        .filter((t) => t.active)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.id
+    : undefined
   const getsReports = category.role !== "REPORT"
   const reportCategories = categories.filter((c) => c.role === "REPORT")
   const categoryLabel = (id: number) => categories.find((c) => c.id === id)?.label ?? "Unknown category"
@@ -282,46 +292,79 @@ function CategoryNode({
         </CardHeader>
         <CardContent className="space-y-3 p-4 pt-0">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">Templates</p>
-            {category.templates.length === 0 && <p className="text-sm text-muted-foreground">No templates yet.</p>}
-            <ul className="space-y-1">
-              {category.templates.map((t) => (
-                <li key={t.id} className="flex items-center gap-2 text-sm">
-                  <Link href={`/dashboard/form-templates/${t.id}`} className="hover:underline">{t.name}</Link>
-                  {!t.active && <Badge variant="secondary" className="font-normal">Inactive</Badge>}
-                  {getsReports && (
-                    <button
-                      type="button"
-                      onClick={() => setSettingsFor(t.id)}
-                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      <FileClockIcon className="h-3.5 w-3.5" />
-                      {t._count.reportOverrides > 0
-                        ? `${t._count.reportOverrides} report change${t._count.reportOverrides === 1 ? "" : "s"}`
-                        : "uses category reports"}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => assignTemplate(t.id, null)}
-                    className="text-muted-foreground hover:text-foreground"
-                    aria-label={`Remove ${t.name} from ${category.label}`}
-                  >
-                    <XIcon className="h-3.5 w-3.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {assignable.length > 0 && (
-              <div className="mt-2 max-w-sm">
-                <Combobox
-                  options={assignable.map((t) => ({ value: t.id.toString(), label: t.name }))}
-                  value=""
-                  onChange={(value) => value && assignTemplate(parseInt(value, 10), category.id)}
-                  placeholder="Add template…"
-                  searchPlaceholder="Search templates..."
-                  emptyText="No templates found."
-                />
+            <button
+              type="button"
+              onClick={() => setShowTemplates((v) => !v)}
+              className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground"
+              aria-expanded={showTemplates}
+            >
+              {showTemplates ? <ChevronDownIcon className="h-3.5 w-3.5" /> : <ChevronRightIcon className="h-3.5 w-3.5" />}
+              Templates ({category.templates.length})
+              {category.role === "REPORT" && category.active && !inUseId && (
+                <span className="ml-2 normal-case font-normal tracking-normal text-destructive">No active template: reports of this kind can&apos;t be created</span>
+              )}
+            </button>
+            {showTemplates && (
+              <div className="mt-2 space-y-2">
+                {category.templates.length === 0 && <p className="text-sm text-muted-foreground">No templates yet.</p>}
+                {category.templates.length > 0 && (
+                  <ul className="divide-y rounded-md border">
+                    {category.templates.map((t) => (
+                      <li key={t.id} className={cn("flex flex-wrap items-start justify-between gap-2 p-3 text-sm", !t.active && "bg-muted/40")}>
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Link href={`/dashboard/form-templates/${t.id}`} className="font-medium hover:underline">{t.name}</Link>
+                            <Badge variant="outline" className="font-normal">{formTemplateTypeLabel(t.templateType)}</Badge>
+                            <Badge variant={t.active ? "outline" : "secondary"} className="font-normal">
+                              {t.active ? "Active" : "Inactive"}
+                            </Badge>
+                            {t.id === inUseId && <Badge className="font-normal">Used for new reports</Badge>}
+                          </div>
+                          {t.description && <p className="line-clamp-2 text-muted-foreground">{t.description}</p>}
+                          <p className="text-xs text-muted-foreground">
+                            {t._count.localDevelopmentAgencyForms} form{t._count.localDevelopmentAgencyForms === 1 ? "" : "s"}
+                            {" · "}created {format(new Date(t.createdAt), "d MMM yyyy")}
+                            {" · "}updated {format(new Date(t.updatedAt), "d MMM yyyy")}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {getsReports && (
+                            <button
+                              type="button"
+                              onClick={() => setSettingsFor(t.id)}
+                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              <FileClockIcon className="h-3.5 w-3.5" />
+                              {t._count.reportOverrides > 0
+                                ? `${t._count.reportOverrides} report change${t._count.reportOverrides === 1 ? "" : "s"}`
+                                : "uses category reports"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => assignTemplate(t.id, null)}
+                            className="text-muted-foreground hover:text-foreground"
+                            aria-label={`Remove ${t.name} from ${category.label}`}
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {assignable.length > 0 && (
+                  <div className="max-w-sm">
+                    <Combobox
+                      options={assignable.map((t) => ({ value: t.id.toString(), label: t.name }))}
+                      value=""
+                      onChange={(value) => value && assignTemplate(parseInt(value, 10), category.id)}
+                      placeholder="Add template…"
+                      searchPlaceholder="Search templates..."
+                      emptyText="No templates found."
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
