@@ -1,4 +1,4 @@
-import { DocumentFull, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFormListItem, LocalDevelopmentAgencyFull, LocalDevelopmentAgencyListItem, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
+import { DocumentFull, FormCategoryWithTemplates, FormTemplateWithRelations, FunderFull, FundFull, LocalDevelopmentAgencyFormFull, LocalDevelopmentAgencyFormListItem, LocalDevelopmentAgencyFull, LocalDevelopmentAgencyListItem, MediaFull, UserFull, Province, UserWithLDAsBasic } from "@/types/models"
 import { FocusArea, FundingStatus, Location, DevelopmentStage, FormTemplate, FormStatus, Contact, MediaSourceType } from "@prisma/client"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
@@ -226,6 +226,16 @@ export async function fetchFormTemplates(): Promise<FormTemplateWithRelations[]>
       cookie: headers().get('cookie') ?? ''
     },
     next: { tags: ['form-templates:list'], revalidate: 300 }
+  })
+  return res.json()
+}
+
+export async function fetchFormCategories(): Promise<FormCategoryWithTemplates[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/form-category`, {
+    headers: {
+      cookie: headers().get('cookie') ?? ''
+    },
+    cache: 'no-store',
   })
   return res.json()
 }

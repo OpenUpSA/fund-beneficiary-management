@@ -55,11 +55,7 @@ export async function POST(
     const sourceTemplate = await prisma.formTemplate.findUnique({
       where: { id: templateId },
       include: {
-        reportConfigs: {
-          include: {
-            periodSchedules: true,
-          },
-        },
+        reportOverrides: true,
       },
     })
 
@@ -75,9 +71,8 @@ export async function POST(
         form: sourceTemplate.form as object,
         active: true,
         templateType: sourceTemplate.templateType,
-        linkedFormTemplateId: sourceTemplate.linkedFormTemplateId,
-        linkedFormTriggerStatusId: sourceTemplate.linkedFormTriggerStatusId,
-        linkedFormDueDays: sourceTemplate.linkedFormDueDays,
+        // Keeping the category is what lets next year's version slot in with no extra setup
+        formCategoryId: sourceTemplate.formCategoryId,
         sidebarConfig: sourceTemplate.sidebarConfig as object,
         createRoles: sourceTemplate.createRoles,
         readRoles: sourceTemplate.readRoles,
@@ -86,38 +81,16 @@ export async function POST(
       },
     })
 
-    // Clone report schedule configs if this is an APPLICATION template
-    if (sourceTemplate.templateType === "APPLICATION" && sourceTemplate.reportConfigs.length > 0) {
-      await Promise.all(sourceTemplate.reportConfigs.map(async (config) => {
-        const clonedConfig = await prisma.reportScheduleConfig.create({
-          data: {
-            applicationTemplateId: clonedTemplate.id,
-            reportTemplateId: config.reportTemplateId,
-            frequency: config.frequency,
-            availableDaysBefore: config.availableDaysBefore,
-            dueDaysAfterPeriodEnd: config.dueDaysAfterPeriodEnd,
-            active: config.active,
-          },
-        })
-
-        // Clone period schedules
-        if (config.periodSchedules.length > 0) {
-          await prisma.reportPeriodSchedule.createMany({
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data: config.periodSchedules.map((schedule: any) => ({
-              reportConfigId: clonedConfig.id,
-              year: schedule.year,
-              period: schedule.period,
-              periodStart: schedule.periodStart,
-              periodEnd: schedule.periodEnd,
-              availableDate: schedule.availableDate,
-              dueDate: schedule.dueDate,
-              isCustomized: schedule.isCustomized,
-              note: schedule.note,
-            })),
-          })
-        }
-      }))
+    // The copy keeps this template's report settings
+    if (sourceTemplate.reportOverrides.length > 0) {
+      await prisma.reportRuleOverride.createMany({
+        data: sourceTemplate.reportOverrides.map((override) => ({
+          reportRuleId: override.reportRuleId,
+          formTemplateId: clonedTemplate.id,
+          enabled: override.enabled,
+          triggerStatusId: override.triggerStatusId,
+        })),
+      })
     }
 
     revalidateTag("form-templates:list")

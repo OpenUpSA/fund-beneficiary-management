@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { ReportSettingsButton } from "@/components/form-categories/report-settings-dialog"
 import { Button } from "../ui/button"
 import { FormTemplate } from "@prisma/client"
 import DynamicForm from "@/components/form-templates/dynamicForm"
@@ -8,7 +9,6 @@ import { EyeIcon, SaveIcon, WandSparklesIcon } from "lucide-react"
 import { toast } from "sonner"
 import { FormDialog } from '@/components/form-templates/form'
 import { DeleteDialog } from "@/components/form-templates/delete"
-import { ReportScheduleConfigDialog } from "@/components/form-templates/report-schedule-config"
 import { Form } from "@/types/forms"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import CodeMirror, { EditorView } from "@uiw/react-codemirror"
@@ -20,9 +20,8 @@ import { FORM_TEMPLATE_SCHEMA } from "@/lib/form-template-schema"
 // hover docs, and property/value autocompletion
 const editorExtensions = [...jsonSchema(FORM_TEMPLATE_SCHEMA), lintGutter(), EditorView.lineWrapping]
 
-export default function Editor({ formTemplate, allTemplates = [] }: {
+export default function Editor({ formTemplate }: {
   formTemplate: FormTemplate
-  allTemplates?: FormTemplate[]
 }) {
   const [form, setForm] = useState<Form>()
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -97,13 +96,8 @@ export default function Editor({ formTemplate, allTemplates = [] }: {
             <span className="hidden md:inline">Save</span>
             <SaveIcon />
           </Button>
-          <FormDialog formTemplate={formTemplate} allTemplates={allTemplates} />
-          {formTemplate.templateType === "APPLICATION" && (
-            <ReportScheduleConfigDialog
-              applicationTemplate={formTemplate}
-              reportTemplates={allTemplates.filter(t => t.templateType === "REPORT")}
-            />
-          )}
+          <FormDialog formTemplate={formTemplate} />
+          <ReportSettingsButton templateId={formTemplate.id} />
           <DeleteDialog formTemplate={formTemplate} />
         </div>
       </div>

@@ -4,6 +4,9 @@ import { NEXT_AUTH_OPTIONS } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { permissions, canApproveForm, canCreateForm, canReadForm } from "@/lib/permissions";
 import { triggerFormEvent } from "@/lib/form-events";
+import { placeForm, primaryOverlapError } from "@/lib/primary-form";
+import { planReports } from "@/lib/report-rules";
+import { refreshTitles } from "@/lib/form-title";
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -65,6 +68,7 @@ export async function POST(req: NextRequest) {
     // Get the form template to use its name as the title
     const formTemplate = await prisma.formTemplate.findUnique({
       where: { id: data.formTemplateId },
+      include: { category: { select: { id: true, role: true } } },
     })
 
     if (!formTemplate || !formTemplate.active) {
@@ -105,6 +109,18 @@ export async function POST(req: NextRequest) {
     // Only take the fields a new form may set. The amount and dates are approver
     // fields (same as the form sidebar), so other roles can't preset them.
     const canSetApproverFields = canApproveForm(session.user, formTemplate.approveRoles)
+
+    // An LDA's primary forms of one kind (e.g. Grant Funding) can't overlap in dates
+    if (formTemplate.category?.role === "PRIMARY") {
+      const start = canSetApproverFields && data.fundingStart ? new Date(data.fundingStart) : new Date()
+      const end = canSetApproverFields && data.fundingEnd ? new Date(data.fundingEnd) : new Date()
+      const overlap = await primaryOverlapError(ldaId, formTemplate.category.id, start, end)
+      if (overlap) {
+        return NextResponse.json({ error: overlap }, { status: 400 })
+      }
+    }
+
+    const customTitle = typeof data.title === "string" && data.title.trim() ? data.title.trim() : undefined
     const query = {
       data: {
         localDevelopmentAgencyId: ldaId,
@@ -116,12 +132,22 @@ export async function POST(req: NextRequest) {
           ...(data.fundingStart && { fundingStart: data.fundingStart }),
           ...(data.fundingEnd && { fundingEnd: data.fundingEnd }),
         }),
-        title: formTemplate.name,
+        // A title typed in when creating is kept; otherwise it's filled in below
+        title: customTitle ?? formTemplate.name,
+        customTitle: customTitle !== undefined,
         formStatusId: pendingStatus.id,
         createdById: userId,
       },
     }
     const record = await prisma.localDevelopmentAgencyForm.create(query)
+
+    // Group it under its primary form (or, for a primary, gather the forms in its period).
+    // The form is already saved, so a failure here must not fail the request.
+    await placeForm(record.id).catch((error) => console.error("Failed to group new form:", error))
+    // Plan the reports this form will get
+    await planReports(record.id).catch((error) => console.error("Failed to plan reports:", error))
+    // Fill in its title (template name + period), and those of forms it now groups
+    await refreshTitles([record.id]).catch((error) => console.error("Failed to set titles:", error))
 
     // Trigger form created event (handles data copying, notifications, etc.)
     await triggerFormEvent('created', record, parseInt(session.user.id, 10))

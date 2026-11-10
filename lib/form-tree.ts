@@ -1,0 +1,130 @@
+// Turns an LDA's flat form list into the primary → secondary → linked-report
+// tree shown in the forms table. Pure, so the table can rebuild it on every
+// filter/sort/expand change.
+
+export interface TreeForm {
+  id: number
+  linkedFormId: number | null
+  primaryFormId: number | null
+  fundingStart: Date | string | null
+}
+
+export interface TreeRow<T extends TreeForm> {
+  form: T
+  depth: number
+  /** Has children in the current (filtered) view, so it gets an expand toggle */
+  hasChildren: boolean
+  /** Shown only as the parent of a matching form, not because it matches itself */
+  isContext: boolean
+  /** Start date of the top-level form this row sits under (its own for top-level rows) */
+  rootStart: Date | string | null
+}
+
+const time = (value: Date | string | null) => (value ? new Date(value).getTime() : Number.POSITIVE_INFINITY)
+
+/** A linked form sits under the form it was created from; anything else under its primary form. */
+function directParentId<T extends TreeForm>(form: T, byId: Map<number, T>): number | null {
+  if (form.linkedFormId && form.linkedFormId !== form.id && byId.has(form.linkedFormId)) return form.linkedFormId
+  if (form.primaryFormId && form.primaryFormId !== form.id && byId.has(form.primaryFormId)) return form.primaryFormId
+  return null
+}
+
+/** The parent, or null when the parent chain loops back (bad data) so the form still shows at the top. */
+function parentIdOf<T extends TreeForm>(form: T, byId: Map<number, T>): number | null {
+  const parentId = directParentId(form, byId)
+  const seen = new Set([form.id])
+  for (let id = parentId; id !== null; id = directParentId(byId.get(id)!, byId)) {
+    if (seen.has(id)) return null
+    seen.add(id)
+  }
+  return parentId
+}
+
+/**
+ * @param all       every form in the list (for parents of matching forms)
+ * @param matching  forms matching the search/filters, in the user's sort order
+ * @param collapsed ids of rows whose children are hidden
+ * @param sorted    true when the user picked a sort column; otherwise primaries
+ *                  are newest first and the forms under them oldest first
+ */
+export function buildFormTree<T extends TreeForm>(
+  all: T[],
+  matching: T[],
+  collapsed: Set<number>,
+  sorted: boolean,
+): TreeRow<T>[] {
+  const byId = new Map(all.map((f) => [f.id, f]))
+  const matchingIds = new Set(matching.map((f) => f.id))
+
+  // Matching forms plus their ancestors, so a matching report keeps its primary
+  const rank = new Map<number, number>()
+  matching.forEach((form, index) => {
+    let current: T | undefined = form
+    const seen = new Set<number>()
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id)
+      if (!rank.has(current.id) || rank.get(current.id)! > index) rank.set(current.id, index)
+      const parentId: number | null = parentIdOf(current, byId)
+      current = parentId ? byId.get(parentId) : undefined
+    }
+  })
+
+  const children = new Map<number | null, T[]>()
+  for (const id of rank.keys()) {
+    const form = byId.get(id)!
+    const parentId = parentIdOf(form, byId)
+    const key = parentId && rank.has(parentId) ? parentId : null
+    children.set(key, [...(children.get(key) ?? []), form])
+  }
+
+  const order = (forms: T[], isRoot: boolean) =>
+    [...forms].sort((a, b) =>
+      sorted
+        ? rank.get(a.id)! - rank.get(b.id)!
+        : (isRoot ? -1 : 1) * (time(a.fundingStart) - time(b.fundingStart)) || a.id - b.id
+    )
+
+  const rows: TreeRow<T>[] = []
+  const visit = (form: T, depth: number, path: Set<number>, rootStart: Date | string | null) => {
+    const kids = (children.get(form.id) ?? []).filter((k) => !path.has(k.id))
+    rows.push({ form, depth, hasChildren: kids.length > 0, isContext: !matchingIds.has(form.id), rootStart })
+    if (collapsed.has(form.id)) return
+    const nextPath = new Set(path).add(form.id)
+    for (const child of order(kids, false)) visit(child, depth + 1, nextPath, rootStart)
+  }
+  for (const root of order(children.get(null) ?? [], true)) visit(root, 0, new Set(), root.fundingStart)
+  return rows
+}
+
+/**
+ * A form's automatic title: the template name and the period the forms list
+ * shows, e.g. "Grant Funding Application – 2026", "DFT Application – Q2",
+ * "Narrative Report – Q1 2026". The period is left off when there is none or the
+ * name already contains it ("SOAR Grant 2026" stays as it is).
+ */
+export function autoFormTitle(templateName: string, period: string | null | undefined): string {
+  if (!period || period === "-" || templateName.includes(period)) return templateName
+  return `${templateName} – ${period}`
+}
+
+/**
+ * "2026" for a top-level form, "Q3" for a form grouped under another. Quarters
+ * count from the top-level form's start, so an April–March grant's April–June
+ * report is Q1. A report planned for a period shows that period instead
+ * ("Q1 2026", "H1 2026"), so the column matches its title.
+ */
+export function formPeriodLabel(
+  fundingStart: Date | string | null,
+  depth: number,
+  rootStart?: Date | string | null,
+  plannedLabel?: string | null,
+): string {
+  if (depth > 0 && plannedLabel) return plannedLabel
+  if (!fundingStart) return "-"
+  const date = new Date(fundingStart)
+  if (depth === 0) return String(date.getUTCFullYear())
+  const root = rootStart ? new Date(rootStart) : new Date(Date.UTC(date.getUTCFullYear(), 0, 1))
+  const months = (date.getUTCFullYear() - root.getUTCFullYear()) * 12 + date.getUTCMonth() - root.getUTCMonth()
+  // Forms dated before their primary starts fall back to calendar quarters
+  return `Q${months >= 0 ? Math.floor(months / 3) + 1 : Math.floor(date.getUTCMonth() / 3) + 1}`
+}

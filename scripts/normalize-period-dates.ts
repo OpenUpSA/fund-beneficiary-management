@@ -1,9 +1,9 @@
 /**
  * One-off: normalise reporting-period dates to UTC calendar days.
  *
- * Funding and schedule dates used to be saved as the browser's local midnight
+ * Funding dates used to be saved as the browser's local midnight
  * (22:00Z from South Africa, 18:30Z from India), as end-of-day markers
- * (hh:59:59.999Z) from the schedule generator, or with whatever wall-clock time
+ * (hh:59:59.999Z), or with whatever wall-clock time
  * the date picker happened to keep. Since serializeFormPeriodDate every new
  * value is stored at UTC midnight, and the placeholder/date code reads the UTC
  * day. Old rows therefore render one day early (wrong year, 13-month periods).
@@ -16,8 +16,7 @@
  *   yarn normalize-period-dates            # dry run, prints every change
  *   yarn normalize-period-dates --commit   # apply in one transaction
  *
- * Columns: LocalDevelopmentAgencyForm.fundingStart/fundingEnd and
- * ReportPeriodSchedule.periodStart/periodEnd/availableDate/dueDate.
+ * Columns: LocalDevelopmentAgencyForm.fundingStart/fundingEnd.
  * Form dueDate is left alone: it is shown with a time and has its own semantics.
  */
 import prisma from "../db"
@@ -46,19 +45,11 @@ async function main() {
     select: { id: true, fundingStart: true, fundingEnd: true },
     orderBy: { id: "asc" },
   })
-  const schedules = await prisma.reportPeriodSchedule.findMany({
-    select: { id: true, periodStart: true, periodEnd: true, availableDate: true, dueDate: true },
-    orderBy: { id: "asc" },
-  })
-
-  const changes = [
-    ...plan("LocalDevelopmentAgencyForm", forms, ["fundingStart", "fundingEnd"]),
-    ...plan("ReportPeriodSchedule", schedules, ["periodStart", "periodEnd", "availableDate", "dueDate"]),
-  ]
+  const changes = plan("LocalDevelopmentAgencyForm", forms, ["fundingStart", "fundingEnd"])
 
   const byRule: Record<string, number> = {}
   for (const c of changes) byRule[c.rule] = (byRule[c.rule] ?? 0) + 1
-  console.log(`Scanned ${forms.length} forms and ${schedules.length} schedules; ${changes.length} values to normalise`)
+  console.log(`Scanned ${forms.length} forms; ${changes.length} values to normalise`)
   console.table(byRule)
 
   for (const c of changes) {
@@ -72,19 +63,17 @@ async function main() {
   }
 
   // Group per row so each row is one update
-  const grouped = new Map<string, { table: string; id: number; data: Record<string, Date> }>()
+  const grouped = new Map<number, { id: number; data: Record<string, Date> }>()
   for (const c of changes) {
-    const key = `${c.table}#${c.id}`
-    const entry = grouped.get(key) ?? { table: c.table, id: c.id, data: {} }
+    const key = c.id
+    const entry = grouped.get(key) ?? { id: c.id, data: {} }
     entry.data[c.column] = c.to
     grouped.set(key, entry)
   }
 
   await prisma.$transaction(
     [...grouped.values()].map((row) =>
-      row.table === "LocalDevelopmentAgencyForm"
-        ? prisma.localDevelopmentAgencyForm.update({ where: { id: row.id }, data: row.data })
-        : prisma.reportPeriodSchedule.update({ where: { id: row.id }, data: row.data })
+      prisma.localDevelopmentAgencyForm.update({ where: { id: row.id }, data: row.data })
     )
   )
   console.log(`\nApplied ${grouped.size} row updates.`)

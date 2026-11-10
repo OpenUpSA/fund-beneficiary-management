@@ -204,8 +204,27 @@ export type LocalDevelopmentAgencyFull = Prisma.LocalDevelopmentAgencyGetPayload
   }
 }>
 
+export type FormCategoryWithTemplates = Prisma.FormCategoryGetPayload<{
+  include: {
+    templates: {
+      select: {
+        id: true
+        name: true
+        active: true
+        templateType: true
+        description: true
+        createdAt: true
+        updatedAt: true
+        _count: { select: { reportOverrides: true, localDevelopmentAgencyForms: true } }
+      }
+    }
+    reportRules: { include: { _count: { select: { overrides: true, plannedReports: true } } } }
+  }
+}>
+
 export type FormTemplateWithRelations = Prisma.FormTemplateGetPayload<{
   include: {
+    category: true
     localDevelopmentAgencyForms: {
       include: {
         localDevelopmentAgency: true
@@ -273,6 +292,7 @@ export type LocalDevelopmentAgencyFormListItem = Prisma.LocalDevelopmentAgencyFo
     formTemplate: {
       omit: { form: true }
     }
+    plannedAs: { select: { label: true } }
   }
 }>
 

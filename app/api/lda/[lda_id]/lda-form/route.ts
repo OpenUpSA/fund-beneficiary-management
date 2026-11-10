@@ -40,7 +40,8 @@ export async function GET(req: NextRequest, { params }: { params: { lda_id: stri
       formStatus: true,
       formTemplate: {
         omit: { form: true }
-      }
+      },
+      plannedAs: { select: { label: true } }
     },
   });
 

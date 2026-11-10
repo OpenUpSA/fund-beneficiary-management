@@ -14,6 +14,7 @@ import {
   FormLabel,
 } from "@/components/ui/form"
 import { Combobox } from "@/components/ui/combobox"
+import { Input } from "@/components/ui/input"
 
 import { LocalDevelopmentAgencyForm } from '@prisma/client'
 import { FormTemplateWithRelations, LocalDevelopmentAgencyFull } from '@/types/models'
@@ -46,7 +47,7 @@ interface FormDialogProps {
 }
 
 const FormSchema = z.object({
-  // title: z.string().optional(),
+  title: z.string().max(200).optional(),
   localDevelopmentAgencyId: z.coerce.number({ required_error: "Please select a local development agency." }),
   formTemplateId: z.coerce.number({ required_error: "Please select a form templte." }),
   dueDate: z.date().optional().nullable(),
@@ -62,7 +63,7 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      // title: ldaForm ? ldaForm.title : "",
+      title: "",
       localDevelopmentAgencyId: ldaForm ? ldaForm.localDevelopmentAgencyId : lda ? lda.id : 0,
       formTemplateId: ldaForm ? ldaForm.formTemplateId : 0,
       dueDate: ldaForm?.dueDate ? new Date(ldaForm.dueDate) : undefined,
@@ -198,6 +199,21 @@ export function FormDialog({ ldaForm, formTemplates, lda, ldas, callback }: Form
                     />
                   </FormControl>
 
+                </FormItem>
+              )} />}
+
+            {!ldaForm && <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem className="flex-1 w-full">
+                  <FormLabel>Title (optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder={selectedTemplate ? `Filled in automatically, e.g. ${selectedTemplate.name} – 2026` : "Filled in automatically from the template and dates"}
+                    />
+                  </FormControl>
                 </FormItem>
               )} />}
 

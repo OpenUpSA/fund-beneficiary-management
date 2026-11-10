@@ -79,7 +79,7 @@ async function getPrefillData(
         where: {
           localDevelopmentAgencyId: fundingContext.ldaId,
           approved: { not: null },
-          formTemplate: { formCategory: 'grant_funding' },
+          formTemplate: { category: { key: 'grant_funding' } },
           fundingStart: { lte: fundingContext.fundingStart },
           fundingEnd: { gte: fundingContext.fundingStart },
         },
@@ -96,7 +96,7 @@ async function getPrefillData(
         where: {
           localDevelopmentAgencyId: fundingContext.ldaId,
           formStatus: { label: 'Approved' },
-          formTemplate: { formCategory: 'fris_claim' },
+          formTemplate: { category: { key: 'fris_claim' } },
           approved: { gte: fundingContext.fundingStart, lte: fundingContext.fundingEnd },
         },
         select: { amount: true },
@@ -110,7 +110,7 @@ async function getPrefillData(
         where: {
           localDevelopmentAgencyId: fundingContext.ldaId,
           formStatus: { label: 'Approved' },
-          formTemplate: { formCategory: 'dft_application' },
+          formTemplate: { category: { key: 'dft_application' } },
           approved: { gte: fundingContext.fundingStart, lte: fundingContext.fundingEnd },
         },
         select: { amount: true },
@@ -125,7 +125,7 @@ async function getPrefillData(
         where: {
           localDevelopmentAgencyId: fundingContext.ldaId,
           formStatus: { label: 'Approved' },
-          formTemplate: { formCategory: 'finance_report' },
+          formTemplate: { category: { key: 'finance_report' } },
           fundingStart: { gte: yearStart },
           fundingEnd: { lt: fundingContext.fundingStart },
         },

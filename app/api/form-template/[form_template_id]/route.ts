@@ -4,7 +4,10 @@ import { revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { linkedFormSettingsError } from "@/lib/linked-form"
+import { applyRegroup, planRegroup } from "@/lib/primary-form"
+import { replanForms } from "@/lib/report-rules"
+import { refreshTitles } from "@/lib/form-title"
+import { formCategoryIdError, templateTypeForCategory } from "@/lib/form-category"
 import { Prisma } from "@prisma/client"
 
 export const dynamic = "force-dynamic"
@@ -66,30 +69,27 @@ export async function PUT(req: NextRequest, { params }: { params: { form_templat
 
     const data = await req.json()
 
-    const settingsError = await linkedFormSettingsError(data)
+    const settingsError = await formCategoryIdError(data.formCategoryId)
     if (settingsError) {
       return NextResponse.json({ error: settingsError }, { status: 400 })
     }
 
-    // Validate linkedFormTemplateId if provided
-    if (data.linkedFormTemplateId) {
-      if (data.linkedFormTemplateId === id) {
-        return NextResponse.json({ error: "Cannot link a template to itself" }, { status: 400 });
-      }
-
-      const linkedTemplate = await prisma.formTemplate.findUnique({
-        where: { id: data.linkedFormTemplateId }
-      });
-
-      if (!linkedTemplate) {
-        return NextResponse.json({ error: "Linked form template not found" }, { status: 404 });
-      }
-    }
-
+    // A template in a category gets its type from it (report categories hold reports)
+    const templateType = await templateTypeForCategory(
+      data.formCategoryId !== undefined ? data.formCategoryId : existingTemplate.formCategoryId
+    )
     const updated = await prisma.formTemplate.update({
       where: { id: id },
-      data: data
+      data: { ...data, ...(templateType && { templateType }) }
     })
+
+    // A new category can change where this template's forms sit, and which reports they get
+    if (data.formCategoryId !== undefined && data.formCategoryId !== existingTemplate.formCategoryId) {
+      const moves = await planRegroup()
+      await applyRegroup(moves)
+      await replanForms({ formTemplateId: id }, new Date())
+      await refreshTitles(moves.map((m) => m.id))
+    }
     revalidateTag('form-templates:list')
     // Cached form payloads embed the template — flush them so edits show up
     revalidateTag('lda-forms:list')

@@ -1,783 +1,434 @@
-import { PrismaClient } from '@prisma/client'
-import { createHash } from '@/lib/hash'
+/**
+ * Seed a local database with test data: users for each role, lookup data,
+ * funders/funds/LDAs, form categories with report timing, the form templates
+ * from `form-templates/`, and example forms whose reports are planned (and the
+ * ones already due created) through the same code the app uses.
+ *
+ * Wipes every table first. Run with `yarn db:seed` (or `yarn db:reset`).
+ * All seeded users sign in with the password `test12345`.
+ */
+import fs from "fs"
+import path from "path"
+import { Prisma, Role } from "@prisma/client"
+import prisma from "@/db"
+import { createHash } from "@/lib/hash"
 import imagekit from "@/lib/imagekit"
-import fs from 'fs'
-import path from 'path'
-import { ZA_PROVINCES } from '@/constants/province'
+import { ZA_PROVINCES } from "@/constants/province"
+import { placeForm } from "@/lib/primary-form"
+import { applyStatusReports, planReports } from "@/lib/report-rules"
+import { refreshTitles } from "@/lib/form-title"
 
+// "Today" for the example forms; reports due by then are created
+const TODAY = new Date()
+const PASSWORD = "test12345"
+const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`)
 
-// Uploads to ImageKit storage and returns the URL
-// Test/seed files in @/db/seed e.g. 
-// @/db/seed/media/cdra_legacy.jpg
-const uploadFile = async (filename: string) => {
-  const filePath = path.join(process.cwd(), filename)
-  const fileBuffer = fs.readFileSync(filePath)
-  const fileBase64 = fileBuffer.toString("base64")
-  const fileName = filename.split('/').pop()
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-  if (!fileName) throw new Error('Invalid filename')
-
-  const uploadResponse = await imagekit().upload({
-    file: fileBase64,
-    fileName: fileName,
-  })
-
-  return uploadResponse.filePath
+/** Empty every table (keeps the migration history), so the seed can be re-run. */
+async function wipe() {
+  const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
+    SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> '_prisma_migrations'`
+  if (tables.length === 0) return
+  const list = tables.map((t) => `"public"."${t.tablename}"`).join(", ")
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`)
 }
 
-const prisma = new PrismaClient()
+/** A template's form definition from `form-templates/` (an empty file gives an empty form). */
+function templateForm(file: string, title: string): Prisma.InputJsonValue {
+  const text = fs.readFileSync(path.join(process.cwd(), "form-templates", file), "utf8").trim()
+  return text ? JSON.parse(text) : { title, sections: [] }
+}
+
+/** Upload a seed file to ImageKit; null (and a warning) when ImageKit isn't configured or the upload fails. */
+async function uploadFile(filename: string): Promise<string | null> {
+  if (!process.env.IMAGEKIT_PRIVATE_KEY || !process.env.IMAGEKIT_PUBLIC_KEY) return null
+  try {
+    const file = fs.readFileSync(path.join(process.cwd(), filename)).toString("base64")
+    const upload = await imagekit().upload({ file, fileName: path.basename(filename) })
+    return upload.filePath
+  } catch (error) {
+    console.warn(`  Couldn't upload ${filename}: ${(error as Error).message}`)
+    return null
+  }
+}
+
+const LDA_ABOUT =
+  "The Inter-Church Local Development Agency (ILDA) was founded by Molly Blackburn, Bishop Michael Coleman, Judy Chalmers and other community leaders as a direct response to the Langa massacre. These days they offer paralegal services and are championing the Asset Based Community Development Approach in that part of the Eastern Cape."
+const FUND_ABOUT =
+  "How can learners stay safe when many schools throughout South Africa don't have sustainable access to water? This fund installs rainwater tanks and handwashing stations in schools and teaches learners about water conservation."
+
+// Who can do what with forms from a template (SUPER_USER can always do everything)
+const APPLICATION_ROLES = {
+  createRoles: [Role.USER, Role.PROGRAMME_OFFICER, Role.ADMIN],
+  readRoles: [Role.USER, Role.PROGRAMME_OFFICER, Role.ADMIN],
+  fillRoles: [Role.USER, Role.PROGRAMME_OFFICER, Role.ADMIN],
+  approveRoles: [Role.PROGRAMME_OFFICER, Role.ADMIN],
+}
+const REPORT_ROLES = {
+  createRoles: [Role.PROGRAMME_OFFICER, Role.ADMIN],
+  readRoles: [Role.USER, Role.PROGRAMME_OFFICER, Role.ADMIN],
+  fillRoles: [Role.USER, Role.PROGRAMME_OFFICER, Role.ADMIN],
+  approveRoles: [Role.PROGRAMME_OFFICER, Role.ADMIN],
+}
+const STAFF_ONLY_ROLES = {
+  createRoles: [Role.PROGRAMME_OFFICER, Role.ADMIN],
+  readRoles: [Role.PROGRAMME_OFFICER, Role.ADMIN],
+  fillRoles: [Role.PROGRAMME_OFFICER, Role.ADMIN],
+  approveRoles: [Role.ADMIN],
+}
+
+// ─── Seed ────────────────────────────────────────────────────────────────────
 
 async function main() {
-  await prisma.media.deleteMany()
-  await prisma.mediaSourceType.deleteMany()
-  await prisma.localDevelopmentAgencyForm.deleteMany()
-  await prisma.fundLocalDevelopmentAgency.deleteMany()
-  await prisma.fundFunder.deleteMany()
-  await prisma.localDevelopmentAgency.deleteMany()
-  await prisma.developmentStage.deleteMany()
-  await prisma.fund.deleteMany()
-  await prisma.funder.deleteMany()
-  await prisma.fundingStatus.deleteMany()
-  await prisma.focusArea.deleteMany()
-  await prisma.location.deleteMany()
-  await prisma.formStatus.deleteMany()
-  await prisma.formTemplate.deleteMany()
-  await prisma.user.deleteMany()
-  await prisma.province.deleteMany()
+  console.log("Wiping tables…")
+  await wipe()
 
-  // Default source type preselected for manual uploads in the media form
-  await prisma.mediaSourceType.create({ data: { title: 'Uploaded' } })
+  // Users ---------------------------------------------------------------------
+  const passwordHash = await createHash(PASSWORD)
+  const user = (email: string, name: string, role: Role) =>
+    prisma.user.create({ data: { email, name, passwordHash, role, approved: true } })
+  await user("super@test.test", "Sam Super", Role.SUPER_USER)
+  const admin = await user("nala@test.test", "Nala Smith", Role.ADMIN)
+  const officer = await user("sihle@test.test", "Sihle Lonzi", Role.PROGRAMME_OFFICER)
+  const member = await user("constance@test.test", "Constance Seoposengwe", Role.USER)
 
-  const userNala = await prisma.user.create(
-    {
-      data: {
-        email: 'nala@test.test',
-        name: 'Nala Smith',
-        passwordHash: await createHash('test12345'),
-        approved: true,
-        role: 'ADMIN'
-      }
+  // Lookup data ---------------------------------------------------------------
+  await prisma.mediaSourceType.create({ data: { title: "Uploaded" } }) // preselected for manual uploads
+
+  const statuses = Object.fromEntries(
+    await Promise.all(
+      [
+        ["Draft", "FileEdit"],
+        ["UnderReview", "Eye"],
+        ["Approved", "Check"],
+        ["Underway", "Play"],
+        ["Pending", "Clock"],
+        ["Upcoming", "Calendar"],
+        ["Overdue", "TriangleAlert"],
+        ["Paused", "Pause"],
+        ["Rejected", "X"],
+      ].map(async ([label, icon]) => [label, await prisma.formStatus.create({ data: { label, icon } })] as const),
+    ),
+  )
+
+  const [established, , emerging] = await Promise.all(
+    ["Established", "Depreciated", "Emerging"].map((label) => prisma.developmentStage.create({ data: { label, description: label } })),
+  )
+  const [underway, , delayed] = await Promise.all(
+    ["Underway", "Paused", "Delayed", "Dead", "Finished"].map((label) => prisma.fundingStatus.create({ data: { label, description: label } })),
+  )
+  const [transport, climate, food, youth, ecological] = await Promise.all(
+    [
+      ["Transport", "Plane"],
+      ["Climate Resilience", "Thermometer"],
+      ["Food Security", "Utensils"],
+      ["Youth", "PersonStanding"],
+      ["Ecological", "Leaf"],
+    ].map(([label, icon]) => prisma.focusArea.create({ data: { label, icon } })),
+  )
+  const [northernCape, gauteng, easternCape] = await Promise.all(
+    [
+      ["Northern Cape", "NC"],
+      ["Gauteng", "GT"],
+      ["Eastern Cape", "EC"],
+      ["Western Cape", "WC"],
+    ].map(([label, short]) => prisma.location.create({ data: { label, short } })),
+  )
+  for (const province of ZA_PROVINCES) {
+    await prisma.province.create({
+      data: { name: province.name, code: province.code, districts: JSON.parse(JSON.stringify(province.districts ?? [])) },
     })
+  }
 
-  await prisma.user.create(
-    {
-      data: {
-        email: 'sihle@test.test',
-        name: 'Sihle Lonzi',
-        passwordHash: await createHash('test12345'),
-        role: 'PROGRAMME_OFFICER'
-      }
-    })
-
-  await prisma.user.create(
-    {
-      data: {
-        email: 'constance@test.test',
-        name: 'Constance SeoposengweLonzi',
-        passwordHash: await createHash('test12345'),
-        role: 'USER'
-      }
-    })
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Paused', icon: 'Pause' }
-    }
-  )
-
-  const formStatusApproved = await prisma.formStatus.create(
-    {
-      data: { label: 'Approved', icon: 'Check' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Pending', icon: 'Clock' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Upcoming', icon: 'Calendar' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Overdue', icon: 'TriangleAlert' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Underway', icon: 'Play' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Rejected', icon: 'X' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'Draft', icon: 'FileEdit' }
-    }
-  )
-
-  await prisma.formStatus.create(
-    {
-      data: { label: 'UnderReview', icon: 'Eye' }
-    }
-  )
-
-  const formTemplateGrantFundingApplication = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'Grant Funding Application',
-        description: 'Grant Funding Application form template',
-        form: {
-          "title": "Grant Funding Application | SCAT Data Process",
-          "sections": [
-            {
-              "title": "SECTION 1: ORGANISATIONAL DETAILS",
-              "fields": [
-                {
-                  "name": "name",
-                  "type": "text",
-                  "label": "Name of the organisation (LDA)",
-                  "required": true
-                },
-                {
-                  "name": "address",
-                  "type": "textarea",
-                  "label": "Physical address of the organisation (Name of street, section and place)",
-                  "required": true
-                },
-                {
-                  "name": "status",
-                  "type": "textarea",
-                  "label": "Registration status (NPO or PBO number and date of registration)",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "title": "SECTION 2: GOVERNANCE AND MANAGEMENT",
-              "fields": [
-                {
-                  "name": "list",
-                  "type": "textarea",
-                  "label": "List the names, surnames, and positions of the LDA Management Committee members (Board members)",
-                  "required": true
-                },
-                {
-                  "name": "list2",
-                  "type": "textarea",
-                  "label": "List the names and surnames of LDA staff (EG, coordinator, administrator, field worker, etc)  "
-                }
-              ]
-            },
-            {
-              "title": "SECTION 3: VISION & MISSION",
-              "fields": [
-                {
-                  "name": "vision",
-                  "type": "textarea",
-                  "label": "Vision",
-                  "required": true
-                },
-                {
-                  "name": "mission",
-                  "type": "textarea",
-                  "label": "Mission",
-                  "required": true
-                }
-              ]
-            }
-          ]
-        }
-      }
-    }
-  )
-
-  const formTemplateDFTApplication = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'DFT Application',
-        description: 'DFT Application form template',
-        form: {
-          "title": "DFT Application",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateLDADFTClaimForm = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'LDA DFT Claim Form',
-        description: 'LDA DFT Claim Form form template',
-        form: {
-          "title": "LDA DFT Claim Form",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateFRISApplication = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'FRIS Application',
-        description: 'FRIS Application form template',
-        form: {
-          "title": "FRIS Application",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateFRISReport = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'FRIS Report',
-        description: 'FRIS Report form template',
-        form: {
-          "title": "FRIS Report",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateFRISClaimForm = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'FRIS Claim Form',
-        description: 'FRIS Claim Form form template',
-        form: {
-          "title": "FRIS Claim Form",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateNarrativeReport = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'Narrative Report',
-        description: 'Narrative Report form template',
-        form: {
-          "title": "Narrative Report",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateFinanceReport = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'Finance Report',
-        description: 'Finance Report form template',
-        form: {
-          "title": "Finance Report",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateFieldReportSCATPO = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'Field Report (SCAT PO)',
-        description: 'Field Report (SCAT PO) form template',
-        form: {
-          "title": "Field Report (SCAT PO)",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const formTemplateDFTReport = await prisma.formTemplate.create(
-    {
-      data: {
-        name: 'DFT Report',
-        description: 'DFT Report form template',
-        form: {
-          "title": "DFT Report",
-          "sections": []
-        }
-      }
-    }
-  )
-
-  const developmentStageEstablished = await prisma.developmentStage.create(
-    {
-      data: { label: 'Established', description: 'Established' }
-    }
-  )
-
-  const developmentStageDepreciated = await prisma.developmentStage.create(
-    {
-      data: { label: 'Depreciated', description: 'Depreciated' }
-    }
-  )
-
-  const developmentStageEmerging = await prisma.developmentStage.create(
-    {
-      data: { label: 'Emerging', description: 'Emerging' }
-    }
-  )
-
-  const fundingStatusUnderway = await prisma.fundingStatus.create(
-    {
-      data: { label: 'Underway', description: 'Underway' }
-    })
-
-  const fundingStatusPaused = await prisma.fundingStatus.create(
-    {
-      data: { label: 'Paused', description: 'Paused' },
-    })
-
-  const fundingStatusDelayed = await prisma.fundingStatus.create(
-    {
-      data: { label: 'Delayed', description: 'Delayed' }
-    })
-
-  const fundingStatusDead = await prisma.fundingStatus.create(
-    {
-      data: { label: 'Dead', description: 'Dead' }
-    })
-
-  const fundingStatusFinished = await prisma.fundingStatus.create(
-    {
-      data: { label: 'Finished', description: 'Finished' }
-    })
-
-  const focusAreaTransport = await prisma.focusArea.create(
-    {
-      data: { label: 'Transport', icon: 'Plane' }
-    })
-
-  const focusAreaClimateResilience = await prisma.focusArea.create(
-    {
-      data: { label: 'Climate Resilience', icon: 'Thermometer' }
-    })
-
-  const focusAreaFoodResilience = await prisma.focusArea.create(
-    {
-      data: { label: 'Food Security', icon: 'Utensils' }
-    })
-
-  const focusAreaYouth = await prisma.focusArea.create(
-    {
-      data: { label: 'Youth', icon: 'PersonStanding' }
-    })
-
-  const focusEcological = await prisma.focusArea.create(
-    {
-      data: { label: 'Ecological', icon: 'Leaf' }
-    })
-
-  const locationNorthernCape = await prisma.location.create(
-    {
-      data: { label: 'Northern Cape', short: 'NC' }
-    })
-
-  const locationGauteng = await prisma.location.create(
-    {
-      data: { label: 'Gauteng', short: 'GT' }
-    })
-
-  const locationEasternCape = await prisma.location.create(
-    {
-      data: { label: 'Eastern Cape', short: 'EC' }
-    })
-
-  const locationWesternCape = await prisma.location.create(
-    {
-      data: { label: 'Western Cape', short: 'WC' }
-    })
-
-  const funderWoolworths = await prisma.funder.create(
-    {
-      data: {
-        name: 'Woolworths',
-        about: `As a South African retailer, we are faced with complex social challenges, and we believe in working together to make a real difference. 
-      Every programme or initiative we launch makes room for collaboration with one or more of our partners or suppliers. 
-      We take this approach in every country in which we operate and tailor the way we do things to their specific social context. 
-      In South Africa, our social development efforts are overseen by the Woolworths Trust. 
-      Established in 2003, The Woolworths Trust is managed by a Board of Trustees and reports to the WHL Social and Ethics Committee.`,
-        amount: 12345,
-        fundingStatus: 'Active',
-        fundingStart: new Date('2024-01-01'),
-        fundingEnd: new Date('2025-12-31'),
-        focusAreas: {
-          connect: [
-            { id: focusAreaClimateResilience.id },
-            { id: focusAreaFoodResilience.id },
-            { id: focusAreaYouth.id },
-          ],
-        },
-        organisationDetail: {
-          create: {},
-        },
-      },
-    })
-
-  const fundCommunityGardeningFund = await prisma.fund.create(
-    {
-      data: {
-        name: 'Community Gardening fund',
-        about: `How can learners stay safe when many schools throughout South Africa don't have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.`,
-        amount: 9999999,
-        fundingStatus: 'Active',
-        fundingStart: new Date('2024-01-01'),
-        fundingEnd: new Date('2025-12-31'),
-        focusAreas: {
-          connect: [{ id: focusEcological.id }]
-        },
-        organisationDetail: {
-          create: {},
-        },
-      },
-    })
-
-  // Link Funder to Fund
-  await prisma.fundFunder.create({
+  // Funders and funds ---------------------------------------------------------
+  const woolworths = await prisma.funder.create({
     data: {
-      fundId: fundCommunityGardeningFund.id,
-      funderId: funderWoolworths.id,
+      name: "Woolworths",
+      about: "The Woolworths Trust oversees Woolworths' social development work in South Africa, in partnership with suppliers and community organisations.",
+      amount: 1200000,
+      fundingStatus: "Active",
+      fundingStart: day("2026-01-01"),
+      fundingEnd: day("2027-12-31"),
+      focusAreas: { connect: [{ id: climate.id }, { id: food.id }, { id: youth.id }] },
+      organisationDetail: { create: {} },
+    },
+  })
+  const shoprite = await prisma.funder.create({
+    data: {
+      name: "Shoprite",
+      about: "Shoprite funds youth development and climate resilience projects in the communities it serves.",
+      amount: 900000,
+      fundingStatus: "Active",
+      fundingStart: day("2026-04-01"),
+      fundingEnd: day("2028-03-31"),
+      focusAreas: { connect: [{ id: climate.id }] },
+      organisationDetail: { create: {} },
+    },
+  })
+  const csa = await prisma.funder.create({
+    data: {
+      name: "CSA",
+      about: "Cricket South Africa funds community cricket clubs.",
+      amount: 78923,
+      fundingStatus: "Cancelled",
+      fundingStart: day("2023-01-01"),
+      fundingEnd: day("2023-12-31"),
+      focusAreas: { connect: [{ id: transport.id }] },
+      organisationDetail: { create: {} },
+    },
+  })
+
+  const gardening = await prisma.fund.create({
+    data: {
+      name: "Community Gardening Fund",
+      about: FUND_ABOUT,
       amount: 500000,
-      fundingStart: new Date('2024-01-01'),
-      fundingEnd: new Date('2025-12-31'),
-      notes: 'Primary funder for community gardening initiative'
-    }
+      fundingStatus: "Active",
+      fundingStart: day("2026-01-01"),
+      fundingEnd: day("2027-12-31"),
+      focusAreas: { connect: [{ id: ecological.id }] },
+      organisationDetail: { create: {} },
+    },
   })
-
-  const funderCSA = await prisma.funder.create(
-    {
-      data: {
-        name: 'CSA',
-        about: `Cricket South Africa funds many worthwile cricket clubs`,
-        amount: 78923,
-        fundingStatus: 'Cancelled',
-        fundingStart: new Date('2023-01-01'),
-        fundingEnd: new Date('2023-12-31'),
-        focusAreas: {
-          connect: [{ id: focusAreaTransport.id }]
-        },
-        organisationDetail: {
-          create: {},
-        },
-      }
-    })
-
-  const fundCricket = await prisma.fund.create(
-    {
-      data: {
-        name: 'Strikers Cricket Fund ',
-        about: 'A fund for cricket lovers in parternship with Strikers',
-        amount: 500,
-        fundingStatus: 'Cancelled',
-        fundingStart: new Date('2023-01-01'),
-        fundingEnd: new Date('2023-12-31'),
-        focusAreas: {
-          connect: [{ id: focusAreaTransport.id }]
-        },
-        organisationDetail: {
-          create: {},
-        },
-      }
-    })
-
-  // Link Funder to Fund
-  await prisma.fundFunder.create({
+  const youthFund = await prisma.fund.create({
     data: {
-      fundId: fundCricket.id,
-      funderId: funderCSA.id,
-      amount: 500,
-      fundingStart: new Date('2023-01-01'),
-      fundingEnd: new Date('2023-12-31'),
-      notes: 'Cricket development funding'
-    }
-  })
-
-  const funderShoprite = await prisma.funder.create(
-    {
-      data: {
-        name: 'Shoprite',
-        about: "As a South African retailer, we are faced with complex social challenges, and we believe in working together to make a real difference. Every programme or initiative we launch makes room for collaboration with one or more of our partners or suppliers. We take this approach in every country in which we operate, and are sure to tailor the way we do things to their specific social context. In South Africa, our social development efforts are overseen by the Woolworths Trust. Established in 2003, The Woolworths Trust is managed by a Board of Trustees, and reports to the WHL Social and Ethics Committee.",
-        amount: 121921,
-        fundingStatus: 'Paused',
-        fundingStart: new Date('2024-01-01'),
-        fundingEnd: new Date('2025-12-31'),
-        focusAreas: {
-          connect: [
-            { id: focusAreaClimateResilience.id }
-          ],
-        },
-        organisationDetail: {
-          create: {},
-        },
-      }
-    })
-
-  const fundYouthDevelopmentFund = await prisma.fund.create(
-    {
-      data: {
-        name: 'Youth Development Fund',
-        about: `How can learners stay safe when many schools throughout South Africa don't have SUSTAINABLE access to water? Together with the MySchool MyVillage MyPlanet Programme, Woolworths started the WOOLIES WATER FUND to raise funds and give schools sustainable access to clean water. We did so by installing rainwater tanks in schools across three provinces as well as installing 600+ handwashing stations and helping to educate learners about the importance of water conservation and the preservation of this resource through the Woolworths Making the Programme digital platform.`,
-        amount: 891289,
-        fundingStatus: 'Active',
-        fundingStart: new Date('2024-06-01'),
-        fundingEnd: new Date('2026-05-31'),
-        focusAreas: {
-          connect: [{ id: focusAreaYouth.id }]
-        },
-        organisationDetail: {
-          create: {},
-        },
-      },
-    })
-
-  // Link Funder to Fund
-  await prisma.fundFunder.create({
-    data: {
-      fundId: fundYouthDevelopmentFund.id,
-      funderId: funderShoprite.id,
+      name: "Youth Development Fund",
+      about: FUND_ABOUT,
       amount: 891289,
-      fundingStart: new Date('2024-06-01'),
-      fundingEnd: new Date('2026-05-31'),
-      notes: 'Youth empowerment and development program'
-    }
+      fundingStatus: "Active",
+      fundingStart: day("2026-04-01"),
+      fundingEnd: day("2028-03-31"),
+      focusAreas: { connect: [{ id: youth.id }] },
+      organisationDetail: { create: {} },
+    },
   })
-
-  const ldaOtsile = await prisma.localDevelopmentAgency.create(
-    {
-      data: {
-        name: 'Otsile Bokamosho Community Organization',
-        about: 'The Inter-Church Local Development Agency (ILDA) was founded by Molly Blackburn, Bishop Michael Coleman, Judy Chalmers and other community leaders as a direct response to the Langa massacre. Initially its main objective was obtaining legal assistance for those affected along with offering support to families looking for missing relatives. These days they offer paralegal services and are currently championing the development and introduction of the Asset Based Community Development Approach in that part of the Eastern Cape.',
-        totalFundingRounds: 3,
-        developmentStage: { connect: { id: developmentStageEstablished.id } },
-        fundingStatus: { connect: { id: fundingStatusDead.id } },
-        amount: 1000,
-        focusAreas: { connect: { id: focusAreaTransport.id } },
-        location: { connect: { id: locationNorthernCape.id } },
-        programmeOfficer: { connect: { id: userNala.id } },
-        organisationDetail: {
-          create: {},
-        },
-      }
-    })
-
-  // Link LDA to Fund
-  await prisma.fundLocalDevelopmentAgency.create({
+  const cricket = await prisma.fund.create({
     data: {
-      fundId: fundCricket.id,
-      localDevelopmentAgencyId: ldaOtsile.id,
-      description: 'Cricket development funding for community organization',
-      fundingStart: new Date('2023-01-01'),
-      fundingEnd: new Date('2023-12-31'),
-      fundingStatus: 'Cancelled'
-    }
+      name: "Strikers Cricket Fund",
+      about: "A fund for cricket lovers in partnership with Strikers.",
+      amount: 500,
+      fundingStatus: "Cancelled",
+      fundingStart: day("2023-01-01"),
+      fundingEnd: day("2023-12-31"),
+      focusAreas: { connect: [{ id: transport.id }] },
+      organisationDetail: { create: {} },
+    },
+  })
+  await prisma.fundFunder.createMany({
+    data: [
+      { fundId: gardening.id, funderId: woolworths.id, amount: 500000, fundingStart: day("2026-01-01"), fundingEnd: day("2027-12-31"), notes: "Primary funder for community gardening" },
+      { fundId: youthFund.id, funderId: shoprite.id, amount: 891289, fundingStart: day("2026-04-01"), fundingEnd: day("2028-03-31"), notes: "Youth empowerment and development" },
+      { fundId: cricket.id, funderId: csa.id, amount: 500, fundingStart: day("2023-01-01"), fundingEnd: day("2023-12-31"), notes: "Cricket development funding" },
+    ],
   })
 
-  const ldaInterchurchLocalDevelopmentAgency = await prisma.localDevelopmentAgency.create(
-    {
-      data: {
-        name: 'Interchurch Local Development Agency',
-        about: 'The Inter-Church Local Development Agency (ILDA) was founded by Molly Blackburn, Bishop Michael Coleman, Judy Chalmers and other community leaders as a direct response to the Langa massacre. Initially its main objective was obtaining legal assistance for those affected along with offering support to families looking for missing relatives. These days they offer paralegal services and are currently championing the development and introduction of the Asset Based Community Development Approach in that part of the Eastern Cape.',
-        totalFundingRounds: 3,
-        developmentStage: { connect: { id: developmentStageDepreciated.id } },
-        fundingStatus: { connect: { id: fundingStatusDead.id } },
-        amount: 1000,
-        focusAreas: {
-          connect: { id: focusAreaTransport.id }
-        },
-        location: { connect: { id: locationNorthernCape.id } },
-        programmeOfficer: { connect: { id: userNala.id } },
-        organisationDetail: {
-          create: {},
+  // LDAs ----------------------------------------------------------------------
+  const zanoncedo = await prisma.localDevelopmentAgency.create({
+    data: {
+      name: "Zanoncedo Empowerment Centre",
+      about: LDA_ABOUT,
+      totalFundingRounds: 3,
+      amount: 250000,
+      developmentStage: { connect: { id: emerging.id } },
+      fundingStatus: { connect: { id: underway.id } },
+      location: { connect: { id: gauteng.id } },
+      programmeOfficer: { connect: { id: officer.id } },
+      focusAreas: { connect: [{ id: climate.id }, { id: youth.id }] },
+      organisationDetail: {
+        create: {
+          contactNumber: "+27613280567",
+          email: "contact@test.test",
+          website: "https://www.test.test",
+          physicalStreet: "12 Smith Street",
+          physicalComplexName: "Unit 2, James Park",
+          physicalCity: "Johannesburg",
+          physicalProvince: "Gauteng",
+          useDifferentPostalAddress: false,
+          latitude: -26.2041,
+          longitude: 28.0473,
+          mapAddress: "12 Smith Street, Johannesburg, Gauteng",
         },
       },
     },
-  )
-
-  // Link LDA to Fund
-  await prisma.fundLocalDevelopmentAgency.create({
+  })
+  const interchurch = await prisma.localDevelopmentAgency.create({
     data: {
-      fundId: fundCommunityGardeningFund.id,
-      localDevelopmentAgencyId: ldaInterchurchLocalDevelopmentAgency.id,
-      description: 'Community gardening initiative support',
-      fundingStart: new Date('2024-01-01'),
-      fundingEnd: new Date('2025-12-31'),
-      fundingStatus: 'Active'
-    }
+      name: "Interchurch Local Development Agency",
+      about: LDA_ABOUT,
+      totalFundingRounds: 2,
+      amount: 180000,
+      developmentStage: { connect: { id: established.id } },
+      fundingStatus: { connect: { id: underway.id } },
+      location: { connect: { id: easternCape.id } },
+      programmeOfficer: { connect: { id: officer.id } },
+      focusAreas: { connect: [{ id: food.id }] },
+      organisationDetail: { create: {} },
+    },
+  })
+  const otsile = await prisma.localDevelopmentAgency.create({
+    data: {
+      name: "Otsile Bokamosho Community Organization",
+      about: LDA_ABOUT,
+      totalFundingRounds: 1,
+      amount: 1000,
+      developmentStage: { connect: { id: established.id } },
+      fundingStatus: { connect: { id: delayed.id } },
+      location: { connect: { id: northernCape.id } },
+      programmeOfficer: { connect: { id: admin.id } },
+      focusAreas: { connect: [{ id: transport.id }] },
+      organisationDetail: { create: {} },
+    },
+  })
+  for (const lda of [zanoncedo, interchurch, otsile]) {
+    await prisma.organisationOperations.create({ data: { localDevelopmentAgencyId: lda.id } })
+  }
+  // Constance is a member of Zanoncedo, so she sees that LDA and its forms
+  await prisma.localDevelopmentAgencyUser.create({ data: { userId: member.id, localDevelopmentAgencyId: zanoncedo.id } })
+
+  await prisma.fundLocalDevelopmentAgency.createMany({
+    data: [
+      { fundId: gardening.id, localDevelopmentAgencyId: zanoncedo.id, description: "Community gardening and ecological development", fundingStart: day("2026-04-01"), fundingEnd: day("2027-03-31"), fundingStatus: "Active" },
+      { fundId: youthFund.id, localDevelopmentAgencyId: zanoncedo.id, description: "Youth empowerment and skills development", fundingStart: day("2026-04-01"), fundingEnd: day("2028-03-31"), fundingStatus: "Active" },
+      { fundId: gardening.id, localDevelopmentAgencyId: interchurch.id, description: "Community gardening support", fundingStart: day("2026-04-01"), fundingEnd: day("2027-03-31"), fundingStatus: "Active" },
+      { fundId: cricket.id, localDevelopmentAgencyId: otsile.id, description: "Cricket development funding", fundingStart: day("2023-01-01"), fundingEnd: day("2023-12-31"), fundingStatus: "Cancelled" },
+    ],
   })
 
-  const organisationDetailLdaZanoncedoEmpowermentCentre = await prisma.organisationDetail.create(
-    {
-      data: {
-        contactNumber: '+27613280567',
-        email: 'contact@test.test',
-        website: 'https://www.test.test',
-        physicalStreet: '12 Smith Street',
-        physicalComplexName: 'Unit 2, James Park',
-        physicalCity: 'Jameserton',
-        physicalProvince: 'Free State',
-        useDifferentPostalAddress: false,
-        postalStreet: '12 Smith Street',
-        postalComplexName: 'Unit 2, James Park',
-        postalCity: 'Jameserton',
-        postalProvince: 'Free State',
-        latitude: 52.681950,
-        longitude: -2.590400,
-        mapAddress: '12 Smith Street, Unit 2, James Park, Jameserton, Free State',
-      }
+  // Form categories and report timing -----------------------------------------
+  // Applications: primary forms group a funding period; secondary forms sit under one.
+  // Reports: their timing; attached to application categories below.
+  const category = (key: string, label: string, role: "PRIMARY" | "SECONDARY" | "REPORT", extra: Prisma.FormCategoryUncheckedCreateInput | object = {}) =>
+    prisma.formCategory.create({ data: { key, label, role, ...extra } })
+  const grantFunding = await category("grant_funding", "Grant Funding", "PRIMARY")
+  const frisApplication = await category("fris_application", "FRIS Application", "PRIMARY")
+  const dftApplication = await category("dft_application", "DFT Application", "SECONDARY", { parentCategoryId: grantFunding.id })
+  const frisClaim = await category("fris_claim", "FRIS Claim", "SECONDARY", { parentCategoryId: frisApplication.id })
+  const narrativeReport = await category("narrative_report", "Narrative Report", "REPORT", {
+    reportKind: "PERIODIC", reportPeriodMonths: 3, reportOpensDaysBefore: 14, reportDueDaysAfterPeriodEnd: 15,
+  })
+  const financeReport = await category("finance_report", "Finance Report", "REPORT", {
+    reportKind: "PERIODIC", reportPeriodMonths: 6, reportOpensDaysBefore: 14, reportDueDaysAfterPeriodEnd: 30,
+  })
+  const dftReport = await category("dft_report", "DFT Report", "REPORT", {
+    reportKind: "AFTER_STATUS", reportTriggerStatusId: statuses.Approved.id, reportDueDays: 30,
+  })
+
+  const attach = (parentCategoryId: number, reportCategoryId: number) =>
+    prisma.reportRule.create({ data: { parentCategoryId, reportCategoryId } })
+  await attach(grantFunding.id, narrativeReport.id)
+  await attach(grantFunding.id, financeReport.id)
+  const dftLink = await attach(dftApplication.id, dftReport.id)
+
+  // Form templates ------------------------------------------------------------
+  const template = (
+    name: string,
+    file: string,
+    formCategoryId: number | null,
+    roles: typeof APPLICATION_ROLES,
+    extra: { templateType?: "APPLICATION" | "REPORT"; active?: boolean; createdAt?: Date } = {},
+  ) =>
+    prisma.formTemplate.create({
+      data: { name, description: `${name} form template`, form: templateForm(file, name), formCategoryId, ...roles, ...extra },
     })
+  const grant2026 = await template("Grant Funding Application 2026", "grant-funding-application.json", grantFunding.id, APPLICATION_ROLES, { createdAt: day("2026-01-01") })
+  await template("Grant Funding Application 2027", "grant-funding-application-2027.json", grantFunding.id, APPLICATION_ROLES)
+  const dft = await template("DFT Application", "dft-application.json", dftApplication.id, APPLICATION_ROLES)
+  // Same form, but its DFT Report is created on submission instead of approval
+  const dftOnSubmission = await template("DFT Application (report on submission)", "dft-application.json", dftApplication.id, APPLICATION_ROLES)
+  await template("FRIS Application", "fris-application.json", frisApplication.id, APPLICATION_ROLES)
+  await template("FRIS Claim", "fris-claim.json", frisClaim.id, APPLICATION_ROLES)
+  await template("Narrative Report", "narrative-report.json", narrativeReport.id, REPORT_ROLES, { templateType: "REPORT" })
+  await template("Finance Report", "finance-report.json", financeReport.id, REPORT_ROLES, { templateType: "REPORT" })
+  await template("DFT Report", "dft-report.json", dftReport.id, REPORT_ROLES, { templateType: "REPORT" })
+  await template("Field Visit Report (SCAT PO)", "field-visit-report.json", null, STAFF_ONLY_ROLES, { templateType: "REPORT" })
 
-  const ldaZanoncedoEmpowermentCentre = await prisma.localDevelopmentAgency.create(
-    {
-      data: {
-        name: 'Zanoncedo Empowerment Centre',
-        about: 'The Inter-Church Local Development Agency (ILDA) was founded by Molly Blackburn, Bishop Michael Coleman, Judy Chalmers and other community leaders as a direct response to the Langa massacre. Initially its main objective was obtaining legal assistance for those affected along with offering support to families looking for missing relatives. These days they offer paralegal services and are currently championing the development and introduction of the Asset Based Community Development Approach in that part of the Eastern Cape.',
-        totalFundingRounds: 3,
-        developmentStageId: developmentStageEmerging.id,
-        fundingStatusId: fundingStatusDelayed.id,
-        amount: 1000,
-        focusAreas: {
-          connect: [{ id: focusAreaClimateResilience.id }, { id: focusAreaTransport.id }]
-        },
-        locationId: locationGauteng.id,
-        programmeOfficerId: userNala.id,
-        organisationDetailId: organisationDetailLdaZanoncedoEmpowermentCentre.id
-      }
-    })
-
-  // Link LDA to Funds
-  await prisma.fundLocalDevelopmentAgency.create({
-    data: {
-      fundId: fundCommunityGardeningFund.id,
-      localDevelopmentAgencyId: ldaZanoncedoEmpowermentCentre.id,
-      description: 'Community gardening and ecological development',
-      fundingStart: new Date('2024-01-01'),
-      fundingEnd: new Date('2025-12-31'),
-      fundingStatus: 'Active'
-    }
+  await prisma.reportRuleOverride.create({
+    data: { reportRuleId: dftLink.id, formTemplateId: dftOnSubmission.id, triggerStatusId: statuses.UnderReview.id },
   })
 
-  await prisma.fundLocalDevelopmentAgency.create({
-    data: {
-      fundId: fundYouthDevelopmentFund.id,
-      localDevelopmentAgencyId: ldaZanoncedoEmpowermentCentre.id,
-      description: 'Youth empowerment and skills development',
-      fundingStart: new Date('2024-06-01'),
-      fundingEnd: new Date('2026-05-31'),
-      fundingStatus: 'Active'
-    }
-  })
-
-  await prisma.localDevelopmentAgencyForm.create(
-    {
+  // Example forms -------------------------------------------------------------
+  // Created like the app does: grouped under their primary form, reports planned,
+  // and the reports that are already due created for their status.
+  async function form(data: {
+    lda: { id: number }
+    template: { id: number; name: string }
+    status: keyof typeof statuses
+    start: string
+    end: string
+    amount?: number
+    by: { id: number }
+  }) {
+    const approved = data.status === "Approved" || data.status === "Underway"
+    const submitted = approved || data.status === "UnderReview"
+    const record = await prisma.localDevelopmentAgencyForm.create({
       data: {
-        formStatusId: formStatusApproved.id,
-        localDevelopmentAgencyId: ldaZanoncedoEmpowermentCentre.id,
-        formTemplateId: formTemplateGrantFundingApplication.id,
+        localDevelopmentAgencyId: data.lda.id,
+        formTemplateId: data.template.id,
+        formStatusId: statuses[data.status].id,
         formData: {},
-        title: 'Grant Funding Application (2024)'
-      }
-    })
-
-  await prisma.media.create(
-    {
-      data: {
-        title: "The CDRA Legacy",
-        description: "SCAT is grateful for the legacy of the Community Development Resource Association (CDRA) which we are benefitting from in many ways. SCAT has been gifted CDRA House at 52-54 Francis Street in Woodstock, Cape Town.",
-        filePath: await uploadFile('db/seed/media/cdra_legacy.jpg'),
-        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
-      }
-    })
-
-  await prisma.media.create(
-    {
-      data: {
-        title: "Community Mapping",
-        description: "So the last blog made me reflect on community mapping experiences and if it would be a good idea to share a way to do it. I decided that it would be.",
-        filePath: await uploadFile('db/seed/media/community_mapping.jpg'),
-        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
-        mediaType: 'PHOTOGRAPH'
-      }
-    })
-
-  await prisma.media.create(
-    {
-      data: {
-        title: "The Basic Income Grant Campaign",
-        description: "SCAT is part of a group of civil society organizations that have seen a need to robustly engage our government about the socio – economic situation of the South Africa citizens who have little or no income.",
-        filePath: await uploadFile('db/seed/media/the_basic_income_grant_campaign.jpg'),
-        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
-        mediaType: 'GRAPHIC'
-      }
-    })
-
-  await prisma.document.create(
-    {
-      data: {
-        title: "Chairperson’s Report",
-        description: "Notice is hereby given that an Annual General Meeting of Social Change Assistance Trust (SCAT) – Trust Registration No, T70/85 will be hold via Zoom on Wednesday 22 June 2022 from 16h00 to 17h00.",
-        filePath: await uploadFile('db/seed/documents/Chairpersons-Report-2021_v4_20June.pdf'),
-        localDevelopmentAgency: { connect: { id: ldaOtsile.id } },
-        documentType: 'DOC',
-      }
-    })
-
-  // Find all LDAs where operations is null
-  const ldasWithoutOps = await prisma.localDevelopmentAgency.findMany({
-    where: { operations: null },
-    select: { id: true },
-  })
-
-  for (const lda of ldasWithoutOps) {
-    await prisma.organisationOperations.create({
-      data: {
-        localDevelopmentAgencyId: lda.id,
+        title: data.template.name,
+        amount: data.amount ?? 0,
+        fundingStart: day(data.start),
+        fundingEnd: day(data.end),
+        createdById: data.by.id,
+        ...(submitted && { submitted: day(data.start) }),
+        ...(approved && { approved: day(data.start), approvedById: officer.id }),
       },
     })
+    await placeForm(record.id)
+    await planReports(record.id)
+    // The same automatic title the app gives new forms (template name + period)
+    await refreshTitles([record.id])
+    const { created } = await applyStatusReports(record.id, TODAY)
+    console.log(`  ${data.lda === zanoncedo ? "Zanoncedo" : data.lda === interchurch ? "Interchurch" : "Otsile"} · ${data.template.name} (${data.status})${created.length ? ` → created ${created.map((r) => r.title).join(", ")}` : ""}`)
+    return record
   }
 
-  for (const provinceData of ZA_PROVINCES) {
-    // Create the province with districts as JSON
-    await prisma.province.upsert({
-      where: { code: provinceData.code },
-      update: {
-        name: provinceData.name,
-        districts: provinceData.districts ? JSON.parse(JSON.stringify(provinceData.districts)) : [], // Store districts as JSON
-      },
-      create: {
-        name: provinceData.name,
-        code: provinceData.code,
-        districts: provinceData.districts ? JSON.parse(JSON.stringify(provinceData.districts)) : [], // Store districts as JSON
-      },
-    })
+  console.log("Creating example forms…")
+  // Approved grant: its quarterly Narrative and half-yearly Finance reports that have opened are created
+  await form({ lda: zanoncedo, template: grant2026, status: "Approved", start: "2026-04-01", end: "2027-03-31", amount: 250000, by: member })
+  // Approved DFT application under it: DFT Report created on approval
+  await form({ lda: zanoncedo, template: dft, status: "Approved", start: "2026-06-01", end: "2026-11-30", amount: 40000, by: member })
+  // Submitted grant: reports planned, none created until it's approved
+  await form({ lda: interchurch, template: grant2026, status: "UnderReview", start: "2026-04-01", end: "2027-03-31", amount: 180000, by: officer })
+  // DFT application whose template creates the DFT Report on submission
+  await form({ lda: interchurch, template: dftOnSubmission, status: "UnderReview", start: "2026-07-01", end: "2026-12-31", amount: 25000, by: officer })
+  // Draft grant: reports planned only
+  await form({ lda: otsile, template: grant2026, status: "Draft", start: "2027-01-01", end: "2027-12-31", by: admin })
+
+  // Media and documents (uploaded to ImageKit when it's configured) -----------
+  const uploads: Array<{ kind: "media" | "document"; file: string; title: string; description: string; mediaType?: "PHOTOGRAPH" | "GRAPHIC" }> = [
+    { kind: "media", file: "db/seed/media/cdra_legacy.jpg", title: "The CDRA Legacy", description: "SCAT has been gifted CDRA House at 52-54 Francis Street in Woodstock, Cape Town." },
+    { kind: "media", file: "db/seed/media/community_mapping.jpg", title: "Community Mapping", description: "Sharing a way to do community mapping.", mediaType: "PHOTOGRAPH" },
+    { kind: "media", file: "db/seed/media/the_basic_income_grant_campaign.jpg", title: "The Basic Income Grant Campaign", description: "Engaging government about the socio-economic situation of citizens with little or no income.", mediaType: "GRAPHIC" },
+    { kind: "document", file: "db/seed/documents/Chairpersons-Report-2021_v4_20June.pdf", title: "Chairperson's Report", description: "Notice of the SCAT Annual General Meeting." },
+  ]
+  let uploaded = 0
+  for (const item of uploads) {
+    const filePath = await uploadFile(item.file)
+    if (!filePath) continue
+    uploaded++
+    if (item.kind === "media") {
+      await prisma.media.create({
+        data: { title: item.title, description: item.description, filePath, localDevelopmentAgencyId: zanoncedo.id, ...(item.mediaType && { mediaType: item.mediaType }) },
+      })
+    } else {
+      await prisma.document.create({
+        data: { title: item.title, description: item.description, filePath, localDevelopmentAgencyId: zanoncedo.id, documentType: "DOC" },
+      })
+    }
   }
+  if (uploaded < uploads.length) console.log(`  Media/documents: ${uploaded} of ${uploads.length} uploaded (ImageKit not configured or unreachable)`)
+
+  const planned = await prisma.plannedReport.groupBy({ by: ["status"], _count: true })
+  console.log(`\nSeeded. Planned reports: ${planned.map((p) => `${p._count} ${p.status.toLowerCase()}`).join(", ")}`)
+  console.log(`Sign in with super@test.test, nala@test.test (admin), sihle@test.test (programme officer) or constance@test.test (LDA member); password ${PASSWORD}`)
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect()
+  .catch((error) => {
+    console.error(error)
+    process.exitCode = 1
   })
-  .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+  .finally(() => prisma.$disconnect())

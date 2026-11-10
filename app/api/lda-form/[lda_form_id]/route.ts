@@ -13,7 +13,9 @@ import {
 import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 import { revalidateTag } from "next/cache";
-import { ensureLinkedForm, isLinkedFormTrigger, setLinkedFormStatus } from "@/lib/linked-form";
+import { applyStatusReports, recalculateReports } from "@/lib/report-rules";
+import { refreshTitles } from "@/lib/form-title";
+import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 
 
 export const dynamic = "force-dynamic"
@@ -126,7 +128,7 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     const updated = await prisma.localDevelopmentAgencyForm.update({
       where: { id: ldaFormId },
       data: {
-        ...(data.title && { title: data.title }),
+        ...(typeof data.title === "string" && data.title.trim() && { title: data.title.trim(), customTitle: true }),
         ...(data.submitted !== undefined && { submitted: data.submitted }),
         ...(data.dueDate && { dueDate: data.dueDate }),
         ...(data.approved !== undefined && { approved: data.approved }),
@@ -201,10 +203,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
       select: {
         localDevelopmentAgencyId: true,
         formData: true,
+        fundingStart: true,
+        fundingEnd: true,
         formTemplate: {
           select: {
             form: true,
-            approveRoles: true
+            approveRoles: true,
+            category: { select: { id: true, role: true } }
           }
         }
       }
@@ -334,7 +339,23 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ message: "No valid fields to update" }, { status: 400 });
     }
-    
+
+    // A primary form's new period can't overlap another primary of the same kind
+    const datesChanged = Boolean(updateData.fundingStart || updateData.fundingEnd);
+    const category = existingForm.formTemplate.category;
+    if (datesChanged && category?.role === "PRIMARY") {
+      const overlap = await primaryOverlapError(
+        existingForm.localDevelopmentAgencyId,
+        category.id,
+        updateData.fundingStart ?? existingForm.fundingStart,
+        updateData.fundingEnd ?? existingForm.fundingEnd,
+        ldaFormId
+      );
+      if (overlap) {
+        return NextResponse.json({ error: overlap }, { status: 400 });
+      }
+    }
+
     // Update the record
     const updatedRecord = await prisma.localDevelopmentAgencyForm.update({
       where: { id: ldaFormId },
@@ -353,12 +374,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
           select: {
             id: true,
             label: true
-          }
-        },
-        formTemplate: {
-          select: {
-            linkedFormTemplateId: true,
-            linkedFormTriggerStatusId: true
           }
         }
       }
@@ -380,22 +395,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     }
 
     if (data.fundingStart || data.fundingEnd) {
+      // New dates can move the form to another primary (or, for a primary, change what's under it)
+      await placeForm(ldaFormId).catch((error) => console.error("Failed to regroup form:", error));
+      // Planned reports follow the new dates; reports already created or edited by hand stay
+      await recalculateReports(ldaFormId).catch((error) => console.error("Failed to re-plan reports:", error));
+      // Automatic titles follow the new period (this form's and the forms under it)
+      await refreshTitles([ldaFormId]).catch((error) => console.error("Failed to update titles:", error));
       revalidateTag('lda-forms:list')
     }
 
-    // Handle the linked form (e.g. Report for an Application) — only on status
-    // changes, so editing the amount or dates leaves it alone
-    if (data.formStatusLabel && updatedRecord.formTemplate?.linkedFormTemplateId) {
-      if (isLinkedFormTrigger(updatedRecord.formTemplate, updatedRecord.formStatus)) {
-        const linkedForm = await ensureLinkedForm(ldaFormId);
-        if (linkedForm) {
-          return NextResponse.json({ ...updatedRecord, createdLinkedForm: linkedForm });
-        }
-      } else {
-        await setLinkedFormStatus(ldaFormId, data.formStatusLabel === "Rejected" ? "Rejected" : "Paused");
+    // Create, reopen or park this form's reports (e.g. the DFT Report of a DFT
+    // Application) — only on status changes, so editing the amount or dates leaves them alone
+    if (data.formStatusLabel) {
+      const reports = await applyStatusReports(ldaFormId, new Date());
+      if (reports.created.length > 0) {
+        revalidateTag('lda-forms:list');
+        return NextResponse.json({ ...updatedRecord, createdReports: reports.created });
       }
     }
-    
+
     return NextResponse.json(updatedRecord);
   } catch (error) {
     console.error("Error updating LDA form field:", error);

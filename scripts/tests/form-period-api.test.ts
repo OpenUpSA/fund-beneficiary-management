@@ -12,6 +12,9 @@ const source = ts.transpileModule(
 async function request(canApprove = true, failSave = false) {
   const tags: string[] = []
   const updates: Array<Record<string, Date>> = []
+  const placed: number[] = []
+  const recalculated: number[] = []
+  const retitled: number[] = []
   const body = { fundingStart: "2027-01-01T00:00:00.000Z", fundingEnd: "2027-12-31T00:00:00.000Z" }
   const dependencies: Record<string, unknown> = {
     "next/server": { NextResponse: { json: (data: unknown, init?: ResponseInit) => Response.json(data, init) } },
@@ -28,18 +31,25 @@ async function request(canApprove = true, failSave = false) {
     "@/lib/form-validation/validate-submission": {},
     "@/lib/lda-form-prefill": {},
     "@/lib/template-placeholders": {},
-    // Date edits are not status changes: the linked form must be left alone
-    "@/lib/linked-form": {
-      isLinkedFormTrigger: () => assert.fail("Date edit must not check the linked-form trigger"),
-      ensureLinkedForm: () => assert.fail("Date edit must not create a linked form"),
-      setLinkedFormStatus: () => assert.fail("Date edit must not move the linked form"),
+    // Date edits are not status changes: reports must be left alone
+    // Date edits re-plan the form's reports but aren't status changes
+    "@/lib/report-rules": {
+      applyStatusReports: () => assert.fail("Date edit must not create or park reports"),
+      recalculateReports: async (id: number) => { recalculated.push(id) },
+    },
+    // Date edits bring automatic titles up to date
+    "@/lib/form-title": { refreshTitles: async (ids: number[]) => { retitled.push(...ids) } },
+    // Date edits regroup the form; a non-primary template never checks overlaps
+    "@/lib/primary-form": {
+      placeForm: async (id: number) => { placed.push(id) },
+      primaryOverlapError: () => assert.fail("Only primary forms check for overlapping periods"),
     },
     "@/db": { default: { localDevelopmentAgencyForm: {
-      findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [] } }),
+      findUnique: async () => ({ localDevelopmentAgencyId: 1, formTemplate: { approveRoles: [], category: null } }),
       update: async ({ data }: { data: Record<string, Date> }) => {
         updates.push(data)
         if (failSave) throw new Error("Database unavailable")
-        return { id: 1, ...data, formTemplate: { linkedFormTemplateId: null } }
+        return { id: 1, ...data }
       },
     } } },
   }
@@ -53,7 +63,7 @@ async function request(canApprove = true, failSave = false) {
     console: { error: () => undefined },
   })
   const response = await exports.PATCH({ json: async () => body }, { params: { lda_form_id: "1" } })
-  return { response, updates, tags, body }
+  return { response, updates, tags, body, placed, recalculated, retitled }
 }
 
 async function main() {
@@ -63,6 +73,9 @@ async function main() {
   assert.equal(saved.updates[0].fundingStart.toISOString(), saved.body.fundingStart)
   assert.equal(saved.updates[0].fundingEnd.toISOString(), saved.body.fundingEnd)
   assert.deepEqual(saved.tags, ["lda-forms:list"])
+  assert.deepEqual(saved.placed, [1], "New dates regroup the form under its primary")
+  assert.deepEqual(saved.recalculated, [1], "New dates re-plan its reports")
+  assert.deepEqual(saved.retitled, [1], "New dates update automatic titles")
 
   const denied = await request(false)
   assert.equal(denied.response.status, 403)
@@ -72,6 +85,7 @@ async function main() {
   const failed = await request(true, true)
   assert.equal(failed.response.status, 500)
   assert.deepEqual(failed.tags, [])
+  assert.deepEqual(failed.placed, [])
   console.log("form-period-api: PATCH date persistence, permissions and cache checks passed")
 }
 

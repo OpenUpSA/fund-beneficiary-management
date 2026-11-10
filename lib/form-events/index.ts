@@ -47,7 +47,8 @@ export async function triggerFormEvent(
 ): Promise<void> {
   // Get the form template to determine which handlers to run
   const formTemplate = await prisma.formTemplate.findUnique({
-    where: { id: form.formTemplateId }
+    where: { id: form.formTemplateId },
+    include: { category: { select: { key: true } } },
   })
 
   if (!formTemplate) {
@@ -78,8 +79,8 @@ export async function triggerFormEvent(
   }
 
   // Then, run category-specific handlers
-  // Use formCategory if available, otherwise derive from template name
-  const category = (formTemplate as { formCategory?: string }).formCategory || 
+  // Use the category key if available, otherwise derive from template name
+  const category = formTemplate.category?.key ||
     formTemplate.name.toLowerCase().replace(/\s+/g, '_') || ''
   const categoryHandlers = handlerRegistry[category]
   

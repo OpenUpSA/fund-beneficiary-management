@@ -22,7 +22,8 @@ import { formPeriodDateForPicker, serializeFormPeriodDate } from "@/lib/form-per
 import { formDateLabels, type FormTemplateTypeValue } from "@/lib/form-template-type"
 // import { usePermissions } from "@/hooks/use-permissions"
 import { Input } from "@/components/ui/input"
-import { 
+import { confirmDateReplan } from "@/lib/confirm-replan"
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,6 +37,7 @@ interface LDAFormDetailViewProps {
     title: string
     formData: FormData | Record<string, unknown>
     formTemplate: {
+      name?: string
       form: Form | null;
       sidebarConfig?: { amount?: boolean; status?: boolean; startDate?: boolean; endDate?: boolean; dueDate?: boolean } | undefined;
       templateType?: FormTemplateTypeValue
@@ -262,14 +264,6 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
     }
   }
   
-  const getFormTypeName = () => {
-    if (ldaForm?.title.toLowerCase().includes("application")) {
-      return 'Application Form'
-    } else {
-      return 'Form'
-    }
-  }
-
   return (
     <div className="grid grid-cols-10 gap-4">
       {/* Application Form Card */}
@@ -287,7 +281,10 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
           )}
         >
           <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold text-slate-900">{focusMode ? ldaForm.title : getFormTypeName()}</h2>
+            {/* The page heading shows the title; here, which template it is (the title in focus mode, which hides the heading) */}
+            <h2 className="text-lg font-bold text-slate-900">
+              {focusMode ? ldaForm.title : ldaForm.formTemplate.name ?? ldaForm.title}
+            </h2>
             {focusMode && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-2">
@@ -548,10 +545,15 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={(date: Date | undefined) => {
+                            onSelect={async (date: Date | undefined) => {
+                              if (!date) return
+                              const previous = field.value
                               field.onChange(date)
-                              if (date) {
+                              // New dates re-plan this form's upcoming reports: ask first
+                              if (await confirmDateReplan(Number(ldaForm.id))) {
                                 updateField('fundingStart', date)
+                              } else {
+                                field.onChange(previous)
                               }
                             }}
                             initialFocus
@@ -585,10 +587,15 @@ export default function LDAFormDetailView({ ldaForm, dataChanged }: LDAFormDetai
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={(date: Date | undefined) => {
+                            onSelect={async (date: Date | undefined) => {
+                              if (!date) return
+                              const previous = field.value
                               field.onChange(date)
-                              if (date) {
+                              // New dates re-plan this form's upcoming reports: ask first
+                              if (await confirmDateReplan(Number(ldaForm.id))) {
                                 updateField('fundingEnd', date)
+                              } else {
+                                field.onChange(previous)
                               }
                             }}
                             initialFocus

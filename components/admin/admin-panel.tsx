@@ -15,14 +15,15 @@ import {
   MapPin,
   Upload,
   LayoutTemplate,
-  FileDown
+  FileDown,
+  FolderTree
 } from "lucide-react"
+import { Link } from "@/i18n/routing"
 import { FormTemplateWithRelations, LocalDevelopmentAgencyListItem } from "@/types/models"
 import { CreateFormPanel } from "./create-form-panel"
-import { FormTemplatesPanel } from "./form-templates-panel"
 import { ExportResponsesPanel } from "./export-responses-panel"
 import { CrudPanel, FieldConfig } from "./crud-panel"
-import { ReportSchedulesPanel } from "./report-schedules-panel"
+import { ReportsPanel } from "./reports-panel"
 import { CacheManagementPanel } from "./cache-management-panel"
 import { ProvincesPanel } from "./provinces-panel"
 import { BulkUploadPanel } from "./bulk-upload-panel"
@@ -35,6 +36,7 @@ interface AdminPanelProps {
 
 type AdminTool =
   | 'form-templates'
+  | 'form-categories'
   | 'assign-form'
   | 'export-responses'
   | 'development-stages'
@@ -54,6 +56,8 @@ interface ToolOption {
   description: string
   icon: React.ElementType
   category: 'forms' | 'data' | 'bulk' | 'system'
+  // Opens this page instead of a panel here, so there's one place to manage it
+  href?: string
 }
 
 const toolOptions: ToolOption[] = [
@@ -63,6 +67,15 @@ const toolOptions: ToolOption[] = [
     description: 'Build and manage form templates — sections, fields, and access',
     icon: LayoutTemplate,
     category: 'forms',
+    href: '/dashboard/form-templates',
+  },
+  {
+    id: 'form-categories',
+    title: 'Form Categories',
+    description: 'Group templates, attach reports and set when reports are due',
+    icon: FolderTree,
+    category: 'forms',
+    href: '/dashboard/form-templates/categories',
   },
   {
     id: 'assign-form',
@@ -80,8 +93,8 @@ const toolOptions: ToolOption[] = [
   },
   {
     id: 'report-schedules',
-    title: 'Report Schedules',
-    description: 'View and manage upcoming report schedules',
+    title: 'Reports',
+    description: 'Run report generation and see which reports open next',
     icon: Calendar,
     category: 'forms',
   },
@@ -198,9 +211,6 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
 
   const renderToolContent = () => {
     switch (selectedTool) {
-      case 'form-templates':
-        return <FormTemplatesPanel formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
-
       case 'assign-form':
         return <CreateFormPanel ldas={ldas} formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
 
@@ -208,7 +218,7 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
         return <ExportResponsesPanel formTemplates={formTemplates} onBack={() => setSelectedTool(null)} />
       
       case 'report-schedules':
-        return <ReportSchedulesPanel ldas={ldas} onBack={() => setSelectedTool(null)} />
+        return <ReportsPanel onBack={() => setSelectedTool(null)} />
       
       case 'cache-management':
         return <CacheManagementPanel onBack={() => setSelectedTool(null)} />
@@ -263,14 +273,14 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {tools.map((tool) => {
               const Icon = tool.icon
-              return (
+              const card = (
                 <Card
                   key={tool.id}
                   className={cn(
                     "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
-                    "group"
+                    "group h-full"
                   )}
-                  onClick={() => setSelectedTool(tool.id)}
+                  onClick={tool.href ? undefined : () => setSelectedTool(tool.id)}
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between text-base">
@@ -284,6 +294,7 @@ export function AdminPanel({ ldas, formTemplates }: AdminPanelProps) {
                   </CardHeader>
                 </Card>
               )
+              return tool.href ? <Link key={tool.id} href={tool.href}>{card}</Link> : card
             })}
           </div>
         </div>

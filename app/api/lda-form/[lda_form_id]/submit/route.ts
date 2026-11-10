@@ -8,7 +8,7 @@ import {
   type FormTemplateInput,
 } from "@/lib/form-validation/validate-submission";
 import { applyPrefill } from "@/lib/lda-form-prefill";
-import { ensureLinkedForm, isLinkedFormTrigger } from "@/lib/linked-form";
+import { applyStatusReports } from "@/lib/report-rules";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_form_id: string }> }) {
   try {
@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       select: {
         localDevelopmentAgencyId: true,
         formData: true,
-        formTemplate: { select: { form: true, fillRoles: true, linkedFormTemplateId: true, linkedFormTriggerStatusId: true } },
+        formTemplate: { select: { form: true, fillRoles: true } },
       },
     });
 
@@ -86,14 +86,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ lda_
       }
     });
 
-    // Create the linked form now if the template is set to do so on submission.
-    // The submission is already saved, so a failure here must not fail the request.
-    if (isLinkedFormTrigger(existingForm.formTemplate, underReviewStatus)) {
-      try {
-        await ensureLinkedForm(ldaFormId);
-      } catch (error) {
-        console.error("Failed to create linked form on submission:", error);
-      }
+    // Create reports set up to start on submission (e.g. a template whose DFT
+    // Report opens once the application is submitted). The submission is already
+    // saved, so a failure here must not fail the request.
+    try {
+      await applyStatusReports(ldaFormId, new Date());
+    } catch (error) {
+      console.error("Failed to create reports on submission:", error);
     }
 
     return NextResponse.json(updatedForm);
