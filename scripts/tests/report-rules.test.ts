@@ -15,6 +15,7 @@ const loadPure = (file: string) => {
 }
 const formatModule = loadPure("lib/report-rule-format.ts")
 const timingModule = loadPure("lib/report-timing.ts")
+const treeModule = loadPure("lib/form-tree.ts")
 const source = transpile("lib/report-rules.ts")
 
 // Values built inside the vm sandbox have that realm's prototypes; compare plain copies
@@ -148,6 +149,7 @@ function load(world: Partial<World>) {
     },
     localDevelopmentAgencyForm: {
       findUnique: async ({ where }: Row) => (form(where.id) ? formView(form(where.id)) : null),
+      findMany: async ({ where }: Row) => db.forms.filter((f) => matches(f, where)).map((f) => ({ id: f.id })),
       create: async ({ data }: Row) => {
         const row = { ...data, id: nextId++ }
         db.forms.push(row)
@@ -187,6 +189,7 @@ function load(world: Partial<World>) {
     require: (name: string) => {
       if (name === "@/lib/report-rule-format") return formatModule
       if (name === "@/lib/report-timing") return timingModule
+      if (name === "@/lib/form-tree") return treeModule
       assert.equal(name, "@/db", `Unexpected dependency: ${name}`)
       return { default: prisma }
     },
@@ -294,18 +297,18 @@ async function main() {
     const [q1, q2, q3] = rowsOf(db, 103)
     Object.assign(q1, { status: "CREATED", reportFormId: 5000 })
     Object.assign(q2, { status: "SKIPPED" })
-    Object.assign(q3, { edited: true, dueOn: d("2027-02-01") })
+    Object.assign(q3, { edited: true, label: "Year-end", dueOn: d("2027-02-01") })
     // Left behind when a report was detached from the category
     db.planned.push({ id: 900, parentFormId: 103, reportRuleId: null, reportCategoryId: 6, period: 0, label: "",
       periodStart: d("2026-04-01"), periodEnd: d("2027-03-31"), opensOn: null, status: "PLANNED", edited: false })
     db.forms[0].fundingEnd = d("2027-09-30") // the grant is extended by six months
 
-    same(await lib.recalculateReports(103), { removed: 1, added: 3 }, "Untouched Q4 is replaced; Q4–Q6 are added")
+    same(await lib.recalculateReports(103), { removed: 1, added: 3 }, "Untouched Q4 is replaced; Q4–Q6 are planned")
     same(rowsOf(db, 103).map((r) => [r.period, r.label, r.status, r.edited]), [
       [0, "", "PLANNED", false],
       [1, "Q1 2026", "CREATED", false],
       [2, "Q2 2026", "SKIPPED", false],
-      [3, "Q3 2026", "PLANNED", true],
+      [3, "Year-end", "PLANNED", true],
       [4, "Q4 2027", "PLANNED", false],
       [5, "Q1 2027", "PLANNED", false],
       [6, "Q2 2027", "PLANNED", false],
@@ -328,6 +331,22 @@ async function main() {
     ], "H1 overlaps the created Q1/Q2; H2 is new")
   }
 
+  // A settings change re-plans running forms from today: past periods and finished forms stay
+  {
+    const finished = grantForm(106, { fundingStart: d("2025-04-01"), fundingEnd: d("2026-03-31") })
+    const { lib, db } = load({ forms: [grantForm(105), finished], links: [narrativeLink] })
+    await lib.planReports(105)
+    await lib.planReports(106)
+    db.categories.find((c) => c.id === 5)!.reportPeriodMonths = 6 // quarterly → half-yearly
+
+    assert.equal(await lib.replanForms({ formTemplateId: 10 }, d("2026-07-01")), 1, "Only the running grant")
+    same(rowsOf(db, 105).map((r) => [r.label, r.status]), [
+      ["Q1 2026", "PLANNED"],
+      ["H2 2026", "PLANNED"],
+    ], "Q1 has ended so it stays; Q2–Q4 become H2 (H1 would overlap Q1)")
+    same(rowsOf(db, 106).map((r) => r.label), ["Q1 2025", "Q2 2025", "Q3 2025", "Q4 2026"], "The finished grant is untouched")
+  }
+
   // ─── Creating ──────────────────────────────────────────────────────────────
 
   // The job creates opened rows for approved parents, from the newest active template, once
@@ -347,7 +366,7 @@ async function main() {
     assert.equal((await lib.generateDueReports(d("2026-10-20"))).created, 0, "Running twice creates nothing new")
   }
 
-  // Parents that haven't reached the trigger get nothing; skipped rows are never created
+  // Parents that haven't reached the trigger get nothing; skipped reports are never created
   {
     const { lib, db } = load({
       forms: [grantForm(111, { formStatusId: STATUS.UnderReview.id }), grantForm(112, { formStatusId: STATUS.Approved.id })],
@@ -358,14 +377,15 @@ async function main() {
     rowsOf(db, 112)[0].status = "SKIPPED"
     await lib.generateDueReports(d("2026-10-20"))
     same(db.forms.filter((f) => f.linkedFormId).map((f) => [f.linkedFormId, f.title]), [[112, "Narrative Report 2026 – Q2 2026"]])
+    same(await lib.createReport(rowsOf(db, 112)[0].id, d("2026-10-20")), { ok: false, error: "Already created or skipped" }, "Not even by hand")
   }
 
-  // Create now ignores the opening date and uses edited dates; a missing template releases the row
+  // Creating ignores the opening date and uses the row's dates; a missing template releases the row
   {
     const { lib, db } = load({ forms: [grantForm(113)], links: [narrativeLink] })
     await lib.planReports(113)
     const q4 = rowsOf(db, 113)[3]
-    Object.assign(q4, { dueOn: d("2027-05-01"), edited: true })
+    Object.assign(q4, { dueOn: d("2027-05-01") })
     const created = await lib.createReport(q4.id, d("2026-05-01"))
     assert.ok(created.ok)
     const report = db.forms.find((f) => f.linkedFormId === 113)!
@@ -456,10 +476,13 @@ async function main() {
     assert.ok(await lib.reportOverrideInputError({ enabled: true, triggerStatusId: 404 }))
 
     const current = { periodStart: d("2026-04-01"), periodEnd: d("2026-06-30") }
-    same(lib.parsePlannedReportEdit({ dueOn: "2026-07-30", opensOn: null }, current), { edit: { opensOn: null, dueOn: "2026-07-30T00:00:00.000Z" } })
+    same(lib.parsePlannedReportEdit({ dueOn: "2026-07-30", opensOn: null, label: " Mid-year " }, current),
+      { edit: { opensOn: null, dueOn: "2026-07-30T00:00:00.000Z", label: "Mid-year" } })
     assert.ok("error" in lib.parsePlannedReportEdit({ periodEnd: "2026-03-01" }, current), "Must start before it ends")
     assert.ok("error" in lib.parsePlannedReportEdit({ dueOn: "not a date" }, current))
     assert.ok("error" in lib.parsePlannedReportEdit({ periodStart: null }, current))
+    assert.ok("error" in lib.parsePlannedReportEdit({ label: 5 }, current))
+    assert.ok("error" in lib.parsePlannedReportEdit({ label: "x".repeat(61) }, current))
   }
 
   console.log("report-rules: periods, timing, planning, recalculation, creation, triggers, upcoming and validation passed")

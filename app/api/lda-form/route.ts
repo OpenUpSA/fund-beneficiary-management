@@ -6,6 +6,7 @@ import { permissions, canApproveForm, canCreateForm, canReadForm } from "@/lib/p
 import { triggerFormEvent } from "@/lib/form-events";
 import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 import { planReports } from "@/lib/report-rules";
+import { refreshTitles } from "@/lib/form-title";
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const customTitle = typeof data.title === "string" && data.title.trim() ? data.title.trim() : undefined
     const query = {
       data: {
         localDevelopmentAgencyId: ldaId,
@@ -130,7 +132,9 @@ export async function POST(req: NextRequest) {
           ...(data.fundingStart && { fundingStart: data.fundingStart }),
           ...(data.fundingEnd && { fundingEnd: data.fundingEnd }),
         }),
-        title: formTemplate.name,
+        // A title typed in when creating is kept; otherwise it's filled in below
+        title: customTitle ?? formTemplate.name,
+        customTitle: customTitle !== undefined,
         formStatusId: pendingStatus.id,
         createdById: userId,
       },
@@ -140,8 +144,10 @@ export async function POST(req: NextRequest) {
     // Group it under its primary form (or, for a primary, gather the forms in its period).
     // The form is already saved, so a failure here must not fail the request.
     await placeForm(record.id).catch((error) => console.error("Failed to group new form:", error))
-    // Plan the reports this form will get, with real dates approvers can adjust
+    // Plan the reports this form will get
     await planReports(record.id).catch((error) => console.error("Failed to plan reports:", error))
+    // Fill in its title (template name + period), and those of forms it now groups
+    await refreshTitles([record.id]).catch((error) => console.error("Failed to set titles:", error))
 
     // Trigger form created event (handles data copying, notifications, etc.)
     await triggerFormEvent('created', record, parseInt(session.user.id, 10))

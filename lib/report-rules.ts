@@ -1,6 +1,8 @@
+import type { Prisma } from "@prisma/client"
 import prisma from "@/db"
 import { FREQUENCY_OPTIONS, REPORT_RULE_LIMITS, type ReportRuleNumberField } from "@/lib/report-rule-format"
 import { addDays, effectiveTiming, plannedRows, triggerReached, utcDay } from "@/lib/report-timing"
+import { autoFormTitle } from "@/lib/form-tree"
 
 export * from "@/lib/report-timing"
 
@@ -9,9 +11,9 @@ export * from "@/lib/report-timing"
 // 14 days before the period ends). A template can switch an attached report off
 // or change its trigger status (e.g. one DFT Application template creates its
 // DFT Report on submission). When a form is created its reports are planned with
-// real dates (PlannedReport); approvers can edit their dates, skip them or create
-// them early, and the daily job creates the rest as they open. Settings changes
-// only affect forms created afterwards, or recalculated.
+// real dates (PlannedReport), and the daily job creates them as they open.
+// Changing a setting re-plans the affected running forms' reports that haven't
+// been created yet, for periods that haven't ended (replanForms).
 
 // After-status reports in these statuses were parked by an earlier status change
 // on the parent and are reopened when the parent reaches the trigger again
@@ -73,25 +75,48 @@ export async function planReports(formId: number): Promise<number> {
 
 /**
  * Re-plan a form's reports from the current settings and its current dates.
- * Rows that were created, skipped or edited by hand stay as they are, and no new
- * row is added where it would overlap one of them. Rows of a detached report are
- * never touched.
+ * Reports already created, skipped or edited by hand stay as they are, and no new
+ * row is added where it would overlap one of them. Rows of a detached report are never touched.
+ * With `from`, periods that ended before that day are left as they are too.
  */
-export async function recalculateReports(formId: number): Promise<{ removed: number; added: number }> {
+export async function recalculateReports(formId: number, from?: Date): Promise<{ removed: number; added: number }> {
   const rows = await rowsFromSettings(formId)
+  const day = from && utcDay(from)
   return prisma.$transaction(async (tx) => {
     const { count: removed } = await tx.plannedReport.deleteMany({
-      where: { parentFormId: formId, reportRuleId: { not: null }, status: "PLANNED", edited: false },
+      where: { parentFormId: formId, reportRuleId: { not: null }, status: "PLANNED", edited: false, ...(day && { periodEnd: { gte: day } }) },
     })
     const kept = await tx.plannedReport.findMany({
       where: { parentFormId: formId },
       select: { reportCategoryId: true, periodStart: true, periodEnd: true },
     })
-    const fresh = rows.filter((row) => !kept.some((k) => k.reportCategoryId === row.reportCategoryId && overlaps(k, row)))
+    const fresh = rows.filter((row) =>
+      (!day || row.periodEnd >= day) && !kept.some((k) => k.reportCategoryId === row.reportCategoryId && overlaps(k, row)))
     if (fresh.length > 0) await tx.plannedReport.createMany({ data: fresh })
     return { removed, added: fresh.length }
   })
 }
+
+/**
+ * After a report setting changes, re-plan the reports these forms haven't got
+ * yet. Only forms still running are touched, and only periods that haven't
+ * ended: finished grants and past periods stay as they were, and reports
+ * already created, skipped or edited by hand never change. Returns how many forms were re-planned.
+ */
+export async function replanForms(where: Prisma.LocalDevelopmentAgencyFormWhereInput, today: Date): Promise<number> {
+  const forms = await prisma.localDevelopmentAgencyForm.findMany({ where: runningForms(where, today), select: { id: true } })
+  for (const form of forms) await recalculateReports(form.id, today)
+  return forms.length
+}
+
+/** Forms still running (end date today or later): the ones a settings change re-plans. */
+export const runningForms = (where: Prisma.LocalDevelopmentAgencyFormWhereInput, today: Date): Prisma.LocalDevelopmentAgencyFormWhereInput =>
+  ({ ...where, fundingEnd: { gte: utcDay(today) } })
+
+/** Forms whose category has this report category attached. */
+export const formsGettingReport = (reportCategoryId: number): Prisma.LocalDevelopmentAgencyFormWhereInput => ({
+  formTemplate: { category: { reportRules: { some: { reportCategoryId } } } },
+})
 
 // ─── Creating reports ────────────────────────────────────────────────────────
 
@@ -147,7 +172,7 @@ export async function createReport(rowId: number, today: Date): Promise<CreateRe
         formTemplateId: template.id,
         formStatusId: draft.id,
         formData: {},
-        title: row.label ? `${template.name} – ${row.label}` : template.name,
+        title: autoFormTitle(template.name, row.label),
         linkedFormId: row.parentFormId,
         // Grouped under the parent's primary form (or the parent itself if it is one)
         primaryFormId: parent.formTemplate.category?.role === "PRIMARY" ? row.parentFormId : parent.primaryFormId,
@@ -219,6 +244,7 @@ export interface UpcomingReport {
   id: number
   parentId: number
   parentTitle: string
+  ldaId: number
   ldaName: string
   reportName: string
   label: string
@@ -238,7 +264,7 @@ export async function upcomingReports(today: Date, days: number): Promise<Upcomi
       dueOn: true,
       parentFormId: true,
       reportCategory: { select: { label: true } },
-      parentForm: { select: { title: true, localDevelopmentAgency: { select: { name: true } } } },
+      parentForm: { select: { title: true, localDevelopmentAgency: { select: { id: true, name: true } } } },
     },
     orderBy: { opensOn: "asc" },
   })
@@ -246,6 +272,7 @@ export async function upcomingReports(today: Date, days: number): Promise<Upcomi
     id: row.id,
     parentId: row.parentFormId,
     parentTitle: row.parentForm.title,
+    ldaId: row.parentForm.localDevelopmentAgency.id,
     ldaName: row.parentForm.localDevelopmentAgency.name,
     reportName: row.reportCategory.label,
     label: row.label,
@@ -367,6 +394,10 @@ export async function reportOverrideInputError(data: Record<string, unknown>): P
   return statusError(data.triggerStatusId)
 }
 
+// ─── Editing a planned report (Admin) ────────────────────────────────────────
+
+export const MAX_LABEL_LENGTH = 60
+
 const parseDay = (value: unknown): Date | null | undefined => {
   if (value === undefined) return undefined
   if (value === null || value === "") return null
@@ -379,11 +410,13 @@ export interface PlannedReportEdit {
   periodEnd?: Date
   opensOn?: Date | null
   dueOn?: Date | null
+  label?: string
 }
 
 /**
- * Parse an approver's edit of a planned report's dates. Returns the changes or
- * an error. Clearing `opensOn` means "open when the trigger is reached".
+ * Parse an edit of a planned report: its period, opening and due dates, and the
+ * label shown in the Year / Quarter column and the report's title. Clearing
+ * `opensOn` means "open when the trigger is reached".
  */
 export function parsePlannedReportEdit(
   data: Record<string, unknown>,
@@ -396,6 +429,12 @@ export function parsePlannedReportEdit(
     if (day === undefined) return { error: `${field} isn't a valid date` }
     if (day === null && (field === "periodStart" || field === "periodEnd")) return { error: "A report needs a start and end date" }
     ;(edit as Record<string, Date | null>)[field] = day
+  }
+  if (data.label !== undefined) {
+    if (typeof data.label !== "string") return { error: "The label must be text" }
+    const label = data.label.trim()
+    if (label.length > MAX_LABEL_LENGTH) return { error: `Keep the label under ${MAX_LABEL_LENGTH} characters` }
+    edit.label = label
   }
   if ((edit.periodStart ?? current.periodStart) > (edit.periodEnd ?? current.periodEnd)) {
     return { error: "The period must start before it ends" }

@@ -57,4 +57,4 @@ Deploying repository JSON does not automatically update database templates.
    verify that a historical application still uses its original template.
 
 This branch prepares the JSON and release instructions only. It does not mutate
-database templates, reassign existing forms, or generate report schedules.
+database templates, reassign existing forms, or plan reports.

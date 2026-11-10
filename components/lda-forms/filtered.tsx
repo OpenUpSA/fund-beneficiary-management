@@ -17,6 +17,8 @@ import {
   Download,
   ChevronRightIcon,
   ExternalLinkIcon,
+  CalendarClockIcon,
+  PencilIcon,
 } from "lucide-react"
 import { formatCurrencyValue } from "@/lib/currency"
 import { FilterBar } from "@/components/ui/filter-bar"
@@ -47,6 +49,9 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { buildFormTree, formPeriodLabel } from "@/lib/form-tree"
 import { formTemplateTypeLabel } from "@/lib/form-template-type"
+import { PlannedReportsDialog } from "./planned-reports-dialog"
+import { EditFormDialog } from "./edit-form-dialog"
+import { canApproveForm, canFillForm } from "@/lib/permissions"
 
 interface Props {
   ldaForms: LocalDevelopmentAgencyFormListItem[]
@@ -61,7 +66,7 @@ type SortDirection = 'asc' | 'desc' | null
 type SortableColumn = 'name' | 'amount' | 'status' | 'startDate' | 'endDate' | null
 
 export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatuses = [], dataChanged }: Props) {
-  const { isSuperUser, canCreateForm } = usePermissions()
+  const { isSuperUser, canCreateForm, currentUser } = usePermissions()
   // Offer "New form" only when the user can create at least one active template
   const canCreateAnyForm = formTemplates.some(t => t.active && canCreateForm(t.createRoles))
   const [searchTerm, setSearchTerm] = useState("")
@@ -70,6 +75,18 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [formToDelete, setFormToDelete] = useState<LocalDevelopmentAgencyFormListItem | null>(null)
+  // Admin Tools users can see and adjust each form's planned reports from its menu
+  const [reportsFor, setReportsFor] = useState<LocalDevelopmentAgencyFormListItem | null>(null)
+  // Edit: the title for anyone who can fill in or approve the form; its dates for approvers,
+  // when the template uses them (as on the form page)
+  const [editing, setEditing] = useState<LocalDevelopmentAgencyFormListItem | null>(null)
+  const canEdit = (form: LocalDevelopmentAgencyFormListItem) =>
+    canFillForm(currentUser, form.formTemplate?.fillRoles) || canApproveForm(currentUser, form.formTemplate?.approveRoles)
+  const editableDates = (form: LocalDevelopmentAgencyFormListItem) => {
+    const sidebar = (form.formTemplate?.sidebarConfig ?? {}) as { startDate?: boolean; endDate?: boolean }
+    const approver = canApproveForm(currentUser, form.formTemplate?.approveRoles)
+    return { start: approver && !!sidebar.startDate, end: approver && !!sidebar.endDate }
+  }
   // Rows whose grouped forms are hidden; everything starts expanded
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set())
   const toggleCollapsed = (id: number) =>
@@ -404,7 +421,7 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                       </Link>
                     </div>
                   </TableCell>
-                  <TableCell>{formPeriodLabel(ldaForm.fundingStart, depth, rootStart)}</TableCell>
+                  <TableCell>{formPeriodLabel(ldaForm.fundingStart, depth, rootStart, ldaForm.plannedAs?.label)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-normal">
                       {formTemplateTypeLabel(ldaForm.formTemplate?.templateType)}
@@ -457,6 +474,22 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
                             Download PDF
                           </a>
                         </DropdownMenuItem>
+                        {canEdit(ldaForm) && (
+                          <DropdownMenuItem onSelect={() => setEditing(ldaForm)}>
+                            <div className="flex items-center gap-2 hover:cursor-pointer">
+                              <PencilIcon className="h-4 w-4" />
+                              Edit
+                            </div>
+                          </DropdownMenuItem>
+                        )}
+                        {isSuperUser() && ldaForm.formTemplate?.templateType !== "REPORT" && (
+                          <DropdownMenuItem onSelect={() => setReportsFor(ldaForm)}>
+                            <div className="flex items-center gap-2 hover:cursor-pointer">
+                              <CalendarClockIcon className="h-4 w-4" />
+                              Reports
+                            </div>
+                          </DropdownMenuItem>
+                        )}
                         {isSuperUser() && (
                           <DropdownMenuItem onSelect={() => setFormToDelete(ldaForm)}>
                             <div className="flex items-center gap-2 text-destructive hover:cursor-pointer">
@@ -484,6 +517,26 @@ export function FilteredLDAForms({ ldaForms, lda, formTemplates = [], formStatus
           Showing {filteredForms.length} of {ldaForms.length} applications
         </div>
       </div>
+      {editing && (
+        <EditFormDialog
+          form={{ ...editing, templateType: editing.formTemplate?.templateType }}
+          showStart={editableDates(editing).start}
+          showEnd={editableDates(editing).end}
+          onOpenChange={(open) => !open && setEditing(null)}
+          onSaved={() => dataChanged(editing.localDevelopmentAgencyId)}
+        />
+      )}
+
+      {reportsFor && (
+        <PlannedReportsDialog
+          formId={reportsFor.id}
+          formTitle={reportsFor.title}
+          open
+          onOpenChange={(open) => !open && setReportsFor(null)}
+          onChanged={() => dataChanged(reportsFor.localDevelopmentAgencyId)}
+        />
+      )}
+
       <AlertDialog open={!!formToDelete} onOpenChange={(open) => !open && setFormToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

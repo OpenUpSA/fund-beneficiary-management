@@ -22,8 +22,8 @@ yarn create-superuser # Interactively create an admin user
 yarn assign-pos       # Assign programme officers to LDAs from a CSV (dry run by default)
 yarn normalize-period-dates # One-off: move legacy funding/schedule dates to UTC midnight (dry run by default)
 yarn link-primary-forms # Group existing forms under their primary forms (dry run by default)
-yarn migrate-report-rules # One-off: turn old linked-form/report-schedule settings into report rules (dry run by default)
 yarn plan-reports       # Plan existing forms' reports from the current settings (dry run by default)
+yarn refresh-titles     # Give existing forms their automatic title: template name + period (dry run by default)
 yarn test             # Run the script-based tests in scripts/tests/
 ```
 
@@ -70,7 +70,7 @@ The `[locale]` segment is `en` or `xh` (Xhosa). Route protection is handled by `
 
 Key model relationships: `Funder` → `Fund` → `LocalDevelopmentAgency` → `LocalDevelopmentAgencyForm` (submitted against a `FormTemplate`).
 
-Each `FormTemplate` belongs to a `FormCategory` (role PRIMARY / SECONDARY / REPORT). Forms are grouped under a **primary form** (`primaryFormId`) by category and date; reports sit under the form they were created for (`linkedFormId`). Report timing lives on REPORT categories (after a status, or quarterly / half-yearly / yearly over the parent's funding period); `ReportRule` attaches a report category to a primary/secondary one, and a template can only switch it off or change its trigger status via `ReportRuleOverride`. Each form's reports are planned with real dates when it's created (`PlannedReport`; approvers can edit dates, skip, create now or recalculate on the form), and a daily Dokku cron (`app.json`) runs `/api/cron/generate-reports` to create them as they open. See [docs/FORM_CATEGORIES.md](docs/FORM_CATEGORIES.md), `lib/primary-form.ts` and `lib/report-rules.ts`.
+Each `FormTemplate` belongs to a `FormCategory` (role PRIMARY / SECONDARY / REPORT). Forms are grouped under a **primary form** (`primaryFormId`) by category and date; reports sit under the form they were created for (`linkedFormId`). Report timing lives on REPORT categories (after a status, or quarterly / half-yearly / yearly over the parent's funding period); `ReportRule` attaches a report category to a primary/secondary one, and a template can only switch it off or change its trigger status via `ReportRuleOverride`. Each form's reports are planned with real dates when it's created (`PlannedReport`, not shown on the form; re-planned when the form's dates change, and for running forms when a report setting is saved — see `replanForms`), and a daily Dokku cron (`app.json`) runs `/api/cron/generate-reports` to create them as they open. See [docs/FORM_CATEGORIES.md](docs/FORM_CATEGORIES.md), `lib/primary-form.ts` and `lib/report-rules.ts`.
 
 ### Auth & permissions
 

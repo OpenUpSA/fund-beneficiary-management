@@ -71,3 +71,7 @@ export function categoryTiming(category: {
     dueDaysAfterPeriodEnd: category.reportDueDaysAfterPeriodEnd,
   }
 }
+
+/** " · 3 running forms updated" after a settings save that re-planned forms; "" when none. */
+export const replannedNote = (count: unknown): string =>
+  typeof count === "number" && count > 0 ? ` · ${count} running form${count === 1 ? "" : "s"} updated` : ""

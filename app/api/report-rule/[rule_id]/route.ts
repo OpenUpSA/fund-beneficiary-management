@@ -3,6 +3,7 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
+import { utcDay } from "@/lib/report-timing"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -23,14 +24,20 @@ async function loadLink(ruleId: string) {
   return { link }
 }
 
-// New forms stop getting the report; forms that already have it planned keep it
+// Forms stop getting the report: planned (and skipped) ones for periods that
+// haven't ended are removed. Reports already created, and past periods, stay.
 export async function DELETE(_req: NextRequest, { params }: { params: { rule_id: string } }) {
   const { link, response } = await loadLink(params.rule_id)
   if (!link) return response
 
   try {
-    await prisma.reportRule.delete({ where: { id: link.id } })
-    return NextResponse.json({ success: true })
+    const [{ count: removed }] = await prisma.$transaction([
+      prisma.plannedReport.deleteMany({
+        where: { reportRuleId: link.id, status: { in: ["PLANNED", "SKIPPED"] }, periodEnd: { gte: utcDay(new Date()) } },
+      }),
+      prisma.reportRule.delete({ where: { id: link.id } }),
+    ])
+    return NextResponse.json({ success: true, removed })
   } catch (error) {
     console.error("Failed to detach report:", error)
     return NextResponse.json({ error: "Failed to detach" }, { status: 500 })

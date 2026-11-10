@@ -292,6 +292,7 @@ export type LocalDevelopmentAgencyFormListItem = Prisma.LocalDevelopmentAgencyFo
     formTemplate: {
       omit: { form: true }
     }
+    plannedAs: { select: { label: true } }
   }
 }>
 

@@ -3,6 +3,25 @@ import prisma from "@/db"
 export const FORM_CATEGORY_ROLES = ["PRIMARY", "SECONDARY", "REPORT"] as const
 export type FormCategoryRoleValue = (typeof FORM_CATEGORY_ROLES)[number]
 
+/** A template's type follows its category: report categories hold reports, the others applications. */
+export const templateTypeForRole = (role: string): "REPORT" | "APPLICATION" => (role === "REPORT" ? "REPORT" : "APPLICATION")
+
+/** The template type a template in this category has; undefined when it has no category (the type is chosen by hand). */
+export async function templateTypeForCategory(formCategoryId: number | null | undefined): Promise<"REPORT" | "APPLICATION" | undefined> {
+  if (formCategoryId == null) return
+  const category = await prisma.formCategory.findUnique({ where: { id: formCategoryId }, select: { role: true } })
+  return category ? templateTypeForRole(category.role) : undefined
+}
+
+/** "Narrative Report" -> "narrative_report"; adds _2, _3… when the key is taken. Keys are internal, never shown. */
+export async function uniqueCategoryKey(label: string): Promise<string> {
+  const base = label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").replace(/^(?=\d)|^$/, "c_")
+  for (let n = 1; ; n++) {
+    const key = n === 1 ? base : `${base}_${n}`
+    if (!(await prisma.formCategory.findUnique({ where: { key }, select: { id: true } }))) return key
+  }
+}
+
 /** Validate a template's `formCategoryId` from a create/update payload (null clears it). */
 export async function formCategoryIdError(value: unknown): Promise<string | undefined> {
   if (value === undefined || value === null) return

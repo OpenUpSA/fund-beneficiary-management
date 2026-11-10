@@ -3,12 +3,15 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { reportLinkInputError } from "@/lib/report-rules"
+import { replanForms, reportLinkInputError } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-/** Attach a report category to a primary or secondary category. Its timing comes from the report category. */
+/**
+ * Attach a report category to a primary or secondary category. Its timing comes
+ * from the report category. Running forms in the category get it planned too.
+ */
 export async function POST(req: NextRequest) {
   const session = await getServerSession(NEXT_AUTH_OPTIONS)
   if (!session?.user) {
@@ -35,7 +38,8 @@ export async function POST(req: NextRequest) {
     const link = await prisma.reportRule.create({
       data: { parentCategoryId: data.parentCategoryId, reportCategoryId: data.reportCategoryId },
     })
-    return NextResponse.json(link)
+    const replanned = await replanForms({ formTemplate: { formCategoryId: link.parentCategoryId } }, new Date())
+    return NextResponse.json({ ...link, replanned })
   } catch (error) {
     console.error("Failed to attach report:", error)
     return NextResponse.json({ error: "Failed to attach" }, { status: 500 })

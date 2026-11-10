@@ -1,10 +1,10 @@
 /**
  * Plan the reports of existing forms from the current report settings.
  *
- * New forms are planned when they're created; this covers forms that existed
- * before planned reports, or after reports were attached to their category.
- * It works like "Recalculate from settings" on each form: reports already
- * created, skipped or edited by hand stay, and nothing is planned over them.
+ * New forms are planned when they're created, and running forms are re-planned
+ * when a report setting is saved; this covers forms that existed
+ * before planned reports (or finished grants, which settings changes skip).
+ * Reports already created stay, and nothing is planned over them.
  *
  *   yarn plan-reports            # dry run: how many reports each form would get
  *   yarn plan-reports --commit   # apply

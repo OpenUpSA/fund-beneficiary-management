@@ -43,6 +43,7 @@ import { Control, UseFormReturn } from "react-hook-form"
 import { ASSIGNABLE_FORM_ROLES, getRoleDisplayName } from "@/lib/permissions"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { FORM_TEMPLATE_TYPE_OPTIONS, FORM_TEMPLATE_TYPE_VALUES, formTemplateTypeLabel } from "@/lib/form-template-type"
+import { confirmSettingsReplan } from "@/lib/confirm-replan"
 
 // Roles selectable in the form-permission pickers. SUPER_USER is excluded — it
 // always has full access. Labels use the configured terminology (e.g. "LDA User").
@@ -162,6 +163,7 @@ const CATEGORY_ROLE_LABELS: Record<string, string> = { PRIMARY: "Primary", SECON
 // get. Shared by the create and edit dialogs.
 function FormCategoryField({ form }: { form: UseFormReturn<FormTemplateFormValues> }) {
   const [categories, setCategories] = useState<FormCategory[]>([])
+  const categoryId = form.watch('formCategoryId')
 
   useEffect(() => {
     fetch('/api/form-category')
@@ -171,38 +173,71 @@ function FormCategoryField({ form }: { form: UseFormReturn<FormTemplateFormValue
   }, [])
 
   return (
-    <FormField
-      control={form.control}
-      name="formCategoryId"
-      render={({ field }) => (
-        <FormItem>
-          <div className="flex items-center gap-1.5">
-            <FormLabel>Form category</FormLabel>
-            <FieldInfo text="Primary forms (e.g. Grant Funding) group a funding period, secondary forms sit under the primary covering their start date, and reports sit under the form they were created for. Categories and their reports are managed on the Categories page." />
-          </div>
-          <Select
-            value={field.value?.toString() ?? 'none'}
-            onValueChange={(val) => field.onChange(val === 'none' ? null : parseInt(val, 10))}
-          >
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {categories
-                .filter((c) => c.active || c.id === field.value)
-                .map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.label} <span className="text-muted-foreground">· {CATEGORY_ROLE_LABELS[c.role]}</span>
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </FormItem>
+    <>
+      <FormField
+        control={form.control}
+        name="formCategoryId"
+        render={({ field }) => (
+          <FormItem>
+            <div className="flex items-center gap-1.5">
+              <FormLabel>Form category</FormLabel>
+              <FieldInfo text="What kind of form this is. Primary forms (e.g. Grant Funding) group a funding period, secondary forms sit under the primary covering their start date, and report categories hold reports. The category also sets whether this is an application or a report template. Categories and their reports are managed on the Categories page." />
+            </div>
+            <Select
+              value={field.value?.toString() ?? 'none'}
+              onValueChange={(val) => {
+                const id = val === 'none' ? null : parseInt(val, 10)
+                field.onChange(id)
+                // The template type follows the category
+                const role = categories.find((c) => c.id === id)?.role
+                if (role) form.setValue('templateType', role === 'REPORT' ? 'REPORT' : 'APPLICATION')
+              }}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {categories
+                  .filter((c) => c.active || c.id === field.value)
+                  .map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.label} <span className="text-muted-foreground">· {CATEGORY_ROLE_LABELS[c.role]}</span>
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </FormItem>
+        )}
+      />
+
+      {/* Without a category, the type is chosen here; with one, it comes from the category */}
+      {categoryId == null && (
+        <FormField
+          control={form.control}
+          name="templateType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Template type</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {FORM_TEMPLATE_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+          )}
+        />
       )}
-    />
+    </>
   )
 }
 
@@ -240,6 +275,9 @@ export function FormDialog({ formTemplate }: FormDialogProps) {
   })
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    // Moving the template to another category changes which reports its forms get
+    if (formTemplate && (data.formCategoryId ?? null) !== (formTemplate.formCategoryId ?? null)
+      && !(await confirmSettingsReplan(`templateId=${formTemplate.id}`))) return
     setOpen(false)
 
     if (formTemplate) {
@@ -312,28 +350,6 @@ export function FormDialog({ formTemplate }: FormDialogProps) {
                     <FormControl>
                       <Textarea rows={5} className="resize-none" {...field} />
                     </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="templateType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Template Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {FORM_TEMPLATE_TYPE_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </FormItem>
                 )}
               />
@@ -646,28 +662,6 @@ function CreateNewTemplateForm({ onClose }: CreateNewTemplateFormProps) {
                   <FormControl>
                     <Textarea rows={5} className="resize-none" {...field} />
                   </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="templateType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Template Type</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {FORM_TEMPLATE_TYPE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </FormItem>
               )}
             />

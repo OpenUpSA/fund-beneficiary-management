@@ -4,9 +4,10 @@ import { getServerSession } from "next-auth"
 import { revalidateTag } from "next/cache"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { formCategoryInputError } from "@/lib/form-category"
+import { formCategoryInputError, templateTypeForRole } from "@/lib/form-category"
 import { applyRegroup, planRegroup } from "@/lib/primary-form"
-import { reportTimingInputError, TIMING_FIELDS } from "@/lib/report-rules"
+import { refreshTitles } from "@/lib/form-title"
+import { formsGettingReport, replanForms, reportTimingInputError, TIMING_FIELDS } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -39,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: { params: { category_id:
 
     const data = await req.json()
     // Report timing (report categories only) is checked as it will be after this partial update.
-    // Changing it only affects forms created from now on.
+    // Changing it re-plans the reports running forms haven't got yet.
     const timingChanges = Object.fromEntries(TIMING_FIELDS.filter((f) => data[f] !== undefined).map((f) => [f, data[f]]))
     const role = data.role ?? existing.role
     const error = await formCategoryInputError(data, existing)
@@ -67,13 +68,20 @@ export async function PUT(req: NextRequest, { params }: { params: { category_id:
       },
     })
 
+    // Templates follow their category's role: a report category holds reports
+    if (templateTypeForRole(updated.role) !== templateTypeForRole(existing.role)) {
+      await prisma.formTemplate.updateMany({ where: { formCategoryId: id }, data: { templateType: templateTypeForRole(updated.role) } })
+    }
     // A new role or parent changes where existing forms sit
     if (updated.role !== existing.role || updated.parentCategoryId !== existing.parentCategoryId) {
-      await applyRegroup(await planRegroup())
+      const moves = await planRegroup()
+      await applyRegroup(moves)
+      await refreshTitles(moves.map((m) => m.id))
       revalidateTag("lda-forms:list")
     }
+    const replanned = Object.keys(timingChanges).length > 0 ? await replanForms(formsGettingReport(id), new Date()) : 0
     revalidateTag("form-templates:list")
-    return NextResponse.json(updated)
+    return NextResponse.json({ ...updated, replanned })
   } catch (error) {
     console.error("Failed to update form category:", error)
     return NextResponse.json({ error: "Failed to update" }, { status: 500 })

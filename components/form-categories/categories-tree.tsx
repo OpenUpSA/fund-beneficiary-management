@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
-import { ChevronDownIcon, ChevronRightIcon, FileClockIcon, FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
+import { AlertTriangleIcon, ChevronDownIcon, ChevronRightIcon, FileClockIcon, FolderTreeIcon, PencilIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Link } from "@/i18n/routing"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +20,7 @@ import { FormCategoryWithTemplates } from "@/types/models"
 import { cn } from "@/lib/utils"
 import { categoryTiming, describeRule, frequencyLabel } from "@/lib/report-rule-format"
 import { formTemplateTypeLabel } from "@/lib/form-template-type"
+import { confirmSettingsReplan, detachCount } from "@/lib/confirm-replan"
 import { AttachReportDialog, TimingDialog } from "./rule-dialog"
 import { ReportSettingsDialog } from "./report-settings-dialog"
 
@@ -44,22 +45,20 @@ interface TemplateOption {
   templateType: string
 }
 
-async function send(url: string, method: string, body?: unknown): Promise<boolean> {
+/** The response body when the request worked, otherwise null (and an error toast). */
+async function send(url: string, method: string, body?: unknown): Promise<Record<string, unknown> | null> {
   const response = await fetch(url, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
+  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = await response.json().catch(() => null)
-    toast.error(error?.error || "Something went wrong")
-    return false
+    toast.error(data?.error || "Something went wrong")
+    return null
   }
-  return true
+  return data
 }
-
-const slugify = (label: string) =>
-  label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").replace(/^(\d)/, "c_$1")
 
 // ─── Create / edit dialog ────────────────────────────────────────────────────
 
@@ -78,8 +77,6 @@ function CategoryDialog({
 }) {
   const router = useRouter()
   const [label, setLabel] = useState(category?.label ?? "")
-  const [key, setKey] = useState(category?.key ?? "")
-  const [keyEdited, setKeyEdited] = useState(false)
   const [role, setRole] = useState<Role>((category?.role as Role) ?? defaultRole)
   const [parentId, setParentId] = useState<number | null>(category?.parentCategoryId ?? null)
   const [saving, setSaving] = useState(false)
@@ -89,7 +86,6 @@ function CategoryDialog({
   async function save() {
     setSaving(true)
     const body = {
-      ...(!category && { key }),
       label,
       role,
       parentCategoryId: role === "SECONDARY" ? parentId : null,
@@ -117,26 +113,8 @@ function CategoryDialog({
             <Input
               id="category-label"
               value={label}
-              onChange={(e) => {
-                setLabel(e.target.value)
-                if (!category && !keyEdited) setKey(slugify(e.target.value))
-              }}
+              onChange={(e) => setLabel(e.target.value)}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="category-key">Key</Label>
-            <Input
-              id="category-key"
-              value={key}
-              disabled={!!category}
-              onChange={(e) => {
-                setKeyEdited(true)
-                setKey(e.target.value)
-              }}
-            />
-            <p className="text-xs text-muted-foreground">
-              {category ? "Fixed once created: code looks categories up by key." : "Lowercase letters, numbers and underscores."}
-            </p>
           </div>
           <div className="space-y-1.5">
             <Label>Role</Label>
@@ -174,7 +152,7 @@ function CategoryDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={saving || !label.trim() || !key}>
+          <Button onClick={save} disabled={saving || !label.trim()}>
             {category ? "Save" : "Create"}
           </Button>
         </DialogFooter>
@@ -245,6 +223,7 @@ function CategoryNode({
   const assignable = templates.filter((t) => t.formCategoryId !== category.id)
 
   async function assignTemplate(templateId: number, formCategoryId: number | null) {
+    if (!(await confirmSettingsReplan(`templateId=${templateId}`))) return
     if (await send(`/api/form-template/${templateId}`, "PUT", { formCategoryId })) {
       toast.success(formCategoryId ? "Template added to category" : "Template removed from category")
       router.refresh()
@@ -256,9 +235,13 @@ function CategoryNode({
   }
 
   async function removeRule(ruleId: number, name: string) {
-    if (!window.confirm(`Detach ${name}? New forms won't get it; forms that already have it planned keep it.`)) return
-    if (await send(`/api/report-rule/${ruleId}`, "DELETE")) {
-      toast.success("Report detached")
+    const removing = await detachCount(ruleId)
+    const upcoming = removing ? `${removing} upcoming planned report${removing === 1 ? "" : "s"} will be removed; ` : ""
+    if (!window.confirm(`Detach ${name}? Forms stop getting it: ${upcoming}reports already created stay.`)) return
+    const detached = await send(`/api/report-rule/${ruleId}`, "DELETE")
+    if (detached) {
+      const removed = Number(detached.removed) || 0
+      toast.success(`Report detached${removed ? ` · ${removed} planned report${removed === 1 ? "" : "s"} removed` : ""}`)
       router.refresh()
     }
   }
@@ -287,7 +270,6 @@ function CategoryNode({
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-semibold">{category.label}</h2>
             <Badge variant="outline" className="font-normal">{ROLE_LABELS[category.role as Role]}</Badge>
-            <code className="text-xs text-muted-foreground">{category.key}</code>
           </div>
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -494,6 +476,39 @@ function CategoryNode({
 
 type Tab = "applications" | "reports"
 
+interface SetupIssue { text: string; tab: Tab }
+
+/** What still needs setting up before forms get their reports, in plain words. */
+function setupIssues(categories: FormCategoryWithTemplates[], templates: TemplateOption[]): SetupIssue[] {
+  const issues: SetupIssue[] = []
+  const reports = categories.filter((c) => c.role === "REPORT" && c.active)
+  const attached = new Set(categories.flatMap((c) => c.reportRules.map((r) => r.reportCategoryId)))
+  for (const report of reports) {
+    const isAttached = attached.has(report.id)
+    if (isAttached && !report.reportKind) {
+      issues.push({ text: `${report.label} has no timing, so forms don't get it. Set its timing.`, tab: "reports" })
+    }
+    if (isAttached && !report.templates.some((t) => t.active)) {
+      issues.push({ text: `${report.label} has no active template, so its reports can't be created. Add one.`, tab: "reports" })
+    }
+    if (!isAttached) {
+      issues.push({ text: `${report.label} isn't attached to any application category, so no form gets it.`, tab: "applications" })
+    }
+  }
+  const uncategorised = templates.filter((t) => !t.formCategoryId)
+  if (uncategorised.length > 0) {
+    const reportTemplates = uncategorised.filter((t) => t.templateType === "REPORT").length
+    const applicationTemplates = uncategorised.length - reportTemplates
+    if (applicationTemplates > 0) {
+      issues.push({ text: `${applicationTemplates} application template${applicationTemplates === 1 ? " has" : "s have"} no category, so their forms aren't grouped and get no reports.`, tab: "applications" })
+    }
+    if (reportTemplates > 0) {
+      issues.push({ text: `${reportTemplates} report template${reportTemplates === 1 ? " has" : "s have"} no category, so ${reportTemplates === 1 ? "it isn't" : "they aren't"} used for planned reports (forms can still be created from ${reportTemplates === 1 ? "it" : "them"} by hand).`, tab: "reports" })
+    }
+  }
+  return issues
+}
+
 /** Categories in two tabs: applications (primary/secondary, with their report rules) and report types. */
 export function CategoriesTree({
   categories,
@@ -526,6 +541,7 @@ export function CategoriesTree({
   )
   const reports = categories.filter((c) => c.role === "REPORT")
   const uncategorised = templates.filter((t) => !t.formCategoryId)
+  const issues = setupIssues(categories, templates)
 
   const group = (title: string | null, items: FormCategoryWithTemplates[]) =>
     items.length > 0 && (
@@ -569,6 +585,29 @@ export function CategoriesTree({
           <NewCategoryButton categories={categories} defaultRole="REPORT" label="New report category" />
         )}
       </div>
+
+      {issues.length > 0 && (
+        <Card className="mt-4 border-amber-300 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+          <CardHeader className="flex flex-row items-center gap-2 space-y-0 p-4 pb-2">
+            <AlertTriangleIcon className="h-4 w-4 text-amber-600" />
+            <h2 className="font-semibold">Needs attention ({issues.length})</h2>
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <ul className="space-y-1 text-sm">
+              {issues.map((issue) => (
+                <li key={issue.text} className="flex flex-wrap items-baseline gap-x-2">
+                  <span>{issue.text}</span>
+                  {issue.tab !== tab && (
+                    <button type="button" onClick={() => changeTab(issue.tab)} className="text-xs font-medium underline">
+                      Go to {issue.tab === "reports" ? "Reports" : "Applications"}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <TabsContent value="applications" className="mt-4 space-y-6">
         <p className="text-sm text-muted-foreground">

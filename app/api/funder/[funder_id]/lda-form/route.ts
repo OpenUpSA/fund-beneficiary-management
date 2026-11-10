@@ -66,7 +66,8 @@ export async function GET(
         formTemplate: {
           omit: { form: true }
         },
-        formStatus: true
+        formStatus: true,
+        plannedAs: { select: { label: true } }
       },
       orderBy: {
         createdAt: 'desc'

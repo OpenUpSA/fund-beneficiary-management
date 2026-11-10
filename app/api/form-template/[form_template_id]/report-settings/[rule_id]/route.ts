@@ -3,7 +3,7 @@ import prisma from "@/db"
 import { getServerSession } from "next-auth"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { reportOverrideInputError } from "@/lib/report-rules"
+import { replanForms, reportOverrideInputError } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -54,16 +54,16 @@ export async function PUT(req: NextRequest, context: Params) {
     }
 
     const where = { reportRuleId_formTemplateId: { reportRuleId: rule.id, formTemplateId: template.id } }
-    if (data.enabled && data.triggerStatusId === null) {
-      await prisma.reportRuleOverride.deleteMany({ where: { reportRuleId: rule.id, formTemplateId: template.id } })
-      return NextResponse.json({ override: null })
-    }
-    const override = await prisma.reportRuleOverride.upsert({
-      where,
-      create: { ...data, reportRuleId: rule.id, formTemplateId: template.id },
-      update: data,
-    })
-    return NextResponse.json({ override })
+    const override = data.enabled && data.triggerStatusId === null
+      ? (await prisma.reportRuleOverride.deleteMany({ where: { reportRuleId: rule.id, formTemplateId: template.id } }), null)
+      : await prisma.reportRuleOverride.upsert({
+          where,
+          create: { ...data, reportRuleId: rule.id, formTemplateId: template.id },
+          update: data,
+        })
+    // This template's running forms follow the change
+    const replanned = await replanForms({ formTemplateId: template.id }, new Date())
+    return NextResponse.json({ override, replanned })
   } catch (error) {
     console.error("Failed to save report settings:", error)
     return NextResponse.json({ error: "Failed to save" }, { status: 500 })

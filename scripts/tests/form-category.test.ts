@@ -63,7 +63,20 @@ async function main() {
   assert.ok(await lib.formCategoryIdError(404))
   assert.ok(await lib.formCategoryIdError("1"))
 
-  console.log("form-category: keys, labels, roles, parents, partial updates and template category ids passed")
+  // Keys are made from the label, unique, and always valid
+  assert.equal(await lib.uniqueCategoryKey("Narrative Report"), "narrative_report")
+  assert.equal(await lib.uniqueCategoryKey("Grant Funding"), "grant_funding_2", "Taken keys get a number")
+  assert.equal(await lib.uniqueCategoryKey(" 2027 SOAR / Grant! "), "c_2027_soar_grant")
+  assert.equal(await lib.formCategoryInputError({ key: await lib.uniqueCategoryKey("2027 Report"), label: "2027 Report", role: "REPORT" }), undefined)
+
+  // A template's type follows its category
+  assert.equal(lib.templateTypeForRole("REPORT"), "REPORT")
+  assert.equal(lib.templateTypeForRole("SECONDARY"), "APPLICATION")
+  assert.equal(await lib.templateTypeForCategory(3), "REPORT")
+  assert.equal(await lib.templateTypeForCategory(1), "APPLICATION")
+  assert.equal(await lib.templateTypeForCategory(null), undefined, "No category: the type is chosen by hand")
+
+  console.log("form-category: keys, generated keys, labels, roles, parents, partial updates, template category ids and types passed")
 }
 
 main().catch((error) => {

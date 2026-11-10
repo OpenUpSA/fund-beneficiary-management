@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { revalidateTag } from "next/cache"
 import { NEXT_AUTH_OPTIONS } from "@/lib/auth"
 import { permissions } from "@/lib/permissions"
-import { formCategoryInputError } from "@/lib/form-category"
+import { formCategoryInputError, uniqueCategoryKey } from "@/lib/form-category"
 import { reportTimingInputError, TIMING_FIELDS } from "@/lib/report-rules"
 
 export const dynamic = "force-dynamic"
@@ -52,6 +52,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const data = await req.json()
+    // The key is internal: made from the label unless a script passes one
+    if (data.key === undefined && typeof data.label === "string" && data.label.trim()) {
+      data.key = await uniqueCategoryKey(data.label)
+    }
     const timing = Object.fromEntries(TIMING_FIELDS.filter((f) => data[f] !== undefined).map((f) => [f, data[f]]))
     const error = await formCategoryInputError(data)
       ?? (Object.keys(timing).length > 0 && data.role !== "REPORT" ? "Only report categories have report timing" : undefined)

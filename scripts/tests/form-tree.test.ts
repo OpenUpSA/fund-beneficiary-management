@@ -1,6 +1,6 @@
 // Run with: node -r tsx/cjs scripts/tests/form-tree.test.ts
 import assert from "node:assert/strict"
-import { buildFormTree, formPeriodLabel, type TreeForm } from "../../lib/form-tree"
+import { autoFormTitle, buildFormTree, formPeriodLabel, type TreeForm } from "../../lib/form-tree"
 
 const form = (id: number, start: string, parents: { linked?: number; primary?: number } = {}): TreeForm => ({
   id,
@@ -65,6 +65,17 @@ assert.equal(formPeriodLabel("2026-04-01T00:00:00.000Z", 1, "2026-04-01T00:00:00
 assert.equal(formPeriodLabel("2027-01-15T00:00:00.000Z", 1, "2026-04-01T00:00:00.000Z"), "Q4")
 assert.equal(formPeriodLabel("2027-04-01T00:00:00.000Z", 2, "2026-04-01T00:00:00.000Z"), "Q5", "Second year of a multi-year grant")
 assert.equal(formPeriodLabel("2026-02-01T00:00:00.000Z", 1, "2026-04-01T00:00:00.000Z"), "Q1", "Before the primary starts: calendar quarter")
+assert.equal(formPeriodLabel("2026-04-01T00:00:00.000Z", 1, "2026-03-01T00:00:00.000Z", "H1 2026"), "H1 2026", "Planned reports show their own period")
+assert.equal(formPeriodLabel("2026-07-01T00:00:00.000Z", 1, "2026-03-01T00:00:00.000Z", ""), "Q2", "No planned period: quarter from the start date")
+assert.equal(formPeriodLabel("2026-07-01T00:00:00.000Z", 0, null, "Q2 2026"), "2026", "Top-level forms show their year")
+
+// Automatic titles: template name + the period the list shows
+assert.equal(autoFormTitle("Grant Funding Application", "2026"), "Grant Funding Application – 2026")
+assert.equal(autoFormTitle("DFT Application", "Q2"), "DFT Application – Q2")
+assert.equal(autoFormTitle("Narrative Report", "H1 2026"), "Narrative Report – H1 2026")
+assert.equal(autoFormTitle("SOAR Grant 2026", "2026"), "SOAR Grant 2026", "The name already has the period")
+assert.equal(autoFormTitle("Field Visit Report", "-"), "Field Visit Report")
+assert.equal(autoFormTitle("DFT Report", ""), "DFT Report")
 // Rows carry their top-level form's start
 const withRoots = buildFormTree(all, all, new Set(), false)
 assert.equal(withRoots.find((r) => r.form.id === 20)!.rootStart, "2026-01-01T00:00:00.000Z")

@@ -16,6 +16,7 @@ import imagekit from "@/lib/imagekit"
 import { ZA_PROVINCES } from "@/constants/province"
 import { placeForm } from "@/lib/primary-form"
 import { applyStatusReports, planReports } from "@/lib/report-rules"
+import { refreshTitles } from "@/lib/form-title"
 
 // "Today" for the example forms; reports due by then are created
 const TODAY = new Date()
@@ -377,6 +378,8 @@ async function main() {
     })
     await placeForm(record.id)
     await planReports(record.id)
+    // The same automatic title the app gives new forms (template name + period)
+    await refreshTitles([record.id])
     const { created } = await applyStatusReports(record.id, TODAY)
     console.log(`  ${data.lda === zanoncedo ? "Zanoncedo" : data.lda === interchurch ? "Interchurch" : "Otsile"} · ${data.template.name} (${data.status})${created.length ? ` → created ${created.map((r) => r.title).join(", ")}` : ""}`)
     return record

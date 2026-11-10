@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { categoryTiming, describeRule, statusLabel } from "@/lib/report-rule-format"
+import { categoryTiming, describeRule, replannedNote, statusLabel } from "@/lib/report-rule-format"
+import { confirmSettingsReplan } from "@/lib/confirm-replan"
 import type { CategoryTiming } from "@/lib/report-timing"
 
 interface Status { id: number; label: string }
@@ -41,6 +42,7 @@ function ReportChange({ templateId, link, statuses, onSaved }: {
   const dirty = draft.enabled !== saved.enabled || draft.triggerStatusId !== saved.triggerStatusId
 
   async function save() {
+    if (!(await confirmSettingsReplan(`templateId=${templateId}`))) return
     setSaving(true)
     const response = await fetch(`/api/form-template/${templateId}/report-settings/${link.id}`, {
       method: "PUT",
@@ -53,7 +55,8 @@ function ReportChange({ templateId, link, statuses, onSaved }: {
       toast.error(error?.error || "Failed to save report settings")
       return
     }
-    toast.success("Report settings saved")
+    const result = await response.json().catch(() => ({}))
+    toast.success(`Report settings saved${replannedNote(result.replanned)}`)
     onSaved()
   }
 

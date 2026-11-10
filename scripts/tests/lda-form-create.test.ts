@@ -24,6 +24,7 @@ async function create(options: {
   const created: Array<Record<string, unknown>> = []
   const placed: number[] = []
   const planned: number[] = []
+  const retitled: number[] = []
   const overlapChecks: unknown[][] = []
   const template = {
     id: 5,
@@ -40,6 +41,7 @@ async function create(options: {
     "@/lib/permissions": permissionsModule,
     "@/lib/form-events": { triggerFormEvent: async () => undefined },
     "@/lib/report-rules": { planReports: async (id: number) => { planned.push(id) } },
+    "@/lib/form-title": { refreshTitles: async (ids: number[]) => { retitled.push(...ids) } },
     "@/lib/primary-form": {
       placeForm: async (id: number) => { placed.push(id) },
       primaryOverlapError: async (...args: unknown[]) => {
@@ -71,7 +73,7 @@ async function create(options: {
   })
   const body = { localDevelopmentAgencyId: 1, formTemplateId: 5, formData: {}, ...options.body }
   const response = await exports.POST(new Request("http://localhost/api/lda-form", { method: "POST", body: JSON.stringify(body) }))
-  return { response, created, placed, planned, overlapChecks }
+  return { response, created, placed, planned, retitled, overlapChecks }
 }
 
 async function main() {
@@ -126,6 +128,11 @@ async function main() {
   // New forms are grouped under their primary; primaries can't overlap another of the same kind
   assert.deepEqual(byApprover.placed, [10])
   assert.deepEqual(byApprover.planned, [10], "Its reports are planned straight away")
+  // The title is filled in from the template (and its period) unless one is typed in
+  assert.deepEqual(byApprover.retitled, [10])
+  assert.deepEqual([byApprover.created[0].title, byApprover.created[0].customTitle], ["Field Visit Report", false])
+  const titled = await create({ role: "PROGRAMME_OFFICER", body: { ...presets, title: "  GFA - 2026 " } })
+  assert.deepEqual([titled.created[0].title, titled.created[0].customTitle], ["GFA - 2026", true])
   assert.deepEqual(byApprover.overlapChecks, [], "Only primary forms check for overlaps")
   const primary = await create({ role: "PROGRAMME_OFFICER", isPrimary: true, body: presets })
   assert.equal(primary.response.status, 200)

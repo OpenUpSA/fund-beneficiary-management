@@ -14,6 +14,7 @@ import { applyPrefill } from "@/lib/lda-form-prefill";
 import { buildPlaceholderValues, substituteTemplatePlaceholders } from "@/lib/template-placeholders";
 import { revalidateTag } from "next/cache";
 import { applyStatusReports, recalculateReports } from "@/lib/report-rules";
+import { refreshTitles } from "@/lib/form-title";
 import { placeForm, primaryOverlapError } from "@/lib/primary-form";
 
 
@@ -127,7 +128,7 @@ export async function PUT(req: NextRequest, { params }: { params: { lda_form_id:
     const updated = await prisma.localDevelopmentAgencyForm.update({
       where: { id: ldaFormId },
       data: {
-        ...(data.title && { title: data.title }),
+        ...(typeof data.title === "string" && data.title.trim() && { title: data.title.trim(), customTitle: true }),
         ...(data.submitted !== undefined && { submitted: data.submitted }),
         ...(data.dueDate && { dueDate: data.dueDate }),
         ...(data.approved !== undefined && { approved: data.approved }),
@@ -396,8 +397,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { lda_form_i
     if (data.fundingStart || data.fundingEnd) {
       // New dates can move the form to another primary (or, for a primary, change what's under it)
       await placeForm(ldaFormId).catch((error) => console.error("Failed to regroup form:", error));
-      // Planned reports follow the new dates, except ones created, skipped or edited by hand
+      // Planned reports follow the new dates; reports already created or edited by hand stay
       await recalculateReports(ldaFormId).catch((error) => console.error("Failed to re-plan reports:", error));
+      // Automatic titles follow the new period (this form's and the forms under it)
+      await refreshTitles([ldaFormId]).catch((error) => console.error("Failed to update titles:", error));
       revalidateTag('lda-forms:list')
     }
 

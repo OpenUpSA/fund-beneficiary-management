@@ -125,6 +125,7 @@ async function request(options: {
   dependencies["@/lib/number-input"] = loadModule("lib/number-input.ts", dependencies)
   dependencies["@/lib/form-validation/validate-submission"] = loadModule("lib/form-validation/validate-submission.ts", dependencies)
   dependencies["@/lib/primary-form"] = { placeForm: async () => undefined, primaryOverlapError: async () => undefined }
+  dependencies["@/lib/form-title"] = { refreshTitles: async () => 0 }
   // Report rules run on every status change (rules themselves are covered in report-rules.test.ts)
   dependencies["@/lib/report-rules"] = {
     applyStatusReports: async (id: number) => {

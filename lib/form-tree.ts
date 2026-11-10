@@ -97,11 +97,29 @@ export function buildFormTree<T extends TreeForm>(
 }
 
 /**
+ * A form's automatic title: the template name and the period the forms list
+ * shows, e.g. "Grant Funding Application – 2026", "DFT Application – Q2",
+ * "Narrative Report – Q1 2026". The period is left off when there is none or the
+ * name already contains it ("SOAR Grant 2026" stays as it is).
+ */
+export function autoFormTitle(templateName: string, period: string | null | undefined): string {
+  if (!period || period === "-" || templateName.includes(period)) return templateName
+  return `${templateName} – ${period}`
+}
+
+/**
  * "2026" for a top-level form, "Q3" for a form grouped under another. Quarters
  * count from the top-level form's start, so an April–March grant's April–June
- * report is Q1, matching the report's own title.
+ * report is Q1. A report planned for a period shows that period instead
+ * ("Q1 2026", "H1 2026"), so the column matches its title.
  */
-export function formPeriodLabel(fundingStart: Date | string | null, depth: number, rootStart?: Date | string | null): string {
+export function formPeriodLabel(
+  fundingStart: Date | string | null,
+  depth: number,
+  rootStart?: Date | string | null,
+  plannedLabel?: string | null,
+): string {
+  if (depth > 0 && plannedLabel) return plannedLabel
   if (!fundingStart) return "-"
   const date = new Date(fundingStart)
   if (depth === 0) return String(date.getUTCFullYear())

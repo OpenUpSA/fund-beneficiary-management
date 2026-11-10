@@ -61,7 +61,7 @@ export default async function Layout({ params, children }: LDAApplicationLayoutP
               </Link>
             </Button>
             <h1 className="text-2xl font-bold">
-              {formTemplate?.name || "Application"}
+              {ldaForm.title || formTemplate?.name || "Application"}
             </h1>
           </div>
           {/* <Button variant="outline" size="sm" asChild>

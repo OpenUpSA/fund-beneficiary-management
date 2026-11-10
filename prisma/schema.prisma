@@ -228,7 +228,6 @@ model FormStatus {
   createdAt                   DateTime                     @default(now())
   updatedAt                   DateTime                     @updatedAt
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
-  linkedFormTriggerTemplates  FormTemplate[]               @relation("LinkedFormTriggerStatus")
   categoryReportTriggers      FormCategory[]               @relation("CategoryReportTrigger")
   plannedReportTriggers       PlannedReport[]              @relation("PlannedReportTrigger")
   reportOverrideTriggers      ReportRuleOverride[]         @relation("ReportOverrideTriggerStatus")
@@ -245,14 +244,6 @@ model FormTemplate {
   // the category decides where its forms sit and which reports they get
   formCategoryId              Int?
   category                    FormCategory?                @relation(fields: [formCategoryId], references: [id], onDelete: SetNull)
-  linkedFormTemplateId        Int?
-  linkedFormTemplate          FormTemplate?                @relation("LinkedFormTemplate", fields: [linkedFormTemplateId], references: [id])
-  linkedFromTemplates         FormTemplate[]               @relation("LinkedFormTemplate")
-  // Status of a form from this template that creates its linked form (null = Approved)
-  linkedFormTriggerStatusId   Int?
-  linkedFormTriggerStatus     FormStatus?                  @relation("LinkedFormTriggerStatus", fields: [linkedFormTriggerStatusId], references: [id])
-  // Days from that moment until the linked form is due (null = copy this form's due date)
-  linkedFormDueDays           Int?
   sidebarConfig               Json                         @default("{\"amount\": true, \"status\": true, \"startDate\": true, \"endDate\": true, \"dueDate\": true}")
   // Role-based permissions for forms built from this template. Each list holds the roles
   // allowed to perform that action; SUPER_USER is always implicitly allowed and never stored.
@@ -265,10 +256,6 @@ model FormTemplate {
   localDevelopmentAgencyForms LocalDevelopmentAgencyForm[]
   
   reportOverrides             ReportRuleOverride[]         @relation("TemplateReportOverrides")
-
-  // Report scheduling relations
-  reportConfigs               ReportScheduleConfig[]       @relation("ApplicationReportConfigs")
-  linkedAsReportIn            ReportScheduleConfig[]       @relation("ReportTemplateConfigs")
 }
 
 model LocalDevelopmentAgencyForm {
@@ -277,7 +264,10 @@ model LocalDevelopmentAgencyForm {
   formStatusId             Int
   formTemplateId           Int
   formData                 Json
+  // Filled in from the template name and period (e.g. "Grant Funding Application – 2026")
+  // and kept up to date until someone changes it by hand (customTitle)
   title                    String
+  customTitle              Boolean                      @default(false)
   createdById              Int?
   amount                   Decimal                      @default(0) @db.Money
   dueDate                  DateTime?
@@ -618,13 +608,14 @@ model ReportRule {
 
 enum PlannedReportStatus {
   PLANNED
+  // Not wanted for this form: never created, and kept when the form is re-planned
   SKIPPED
   CREATED
 }
 
 // A report a form will get, with real dates. Worked out from the settings when
-// the form is created; approvers can edit its dates, skip it or create it early.
-// The daily job turns opened ones into report forms, filled in with the newest
+// the form is created, and again when its dates or the settings change (unless
+// edited by hand in Admin). The daily job turns opened ones into report forms, filled in with the newest
 // active template of the report category.
 model PlannedReport {
   id               Int                         @id @default(autoincrement())
@@ -649,7 +640,7 @@ model PlannedReport {
   // No due date set: due this many days after the report is created
   dueDays          Int?
   status           PlannedReportStatus         @default(PLANNED)
-  // Changed by hand: never recalculated from the settings
+  // Changed by hand (dates or label): settings changes never re-plan it
   edited           Boolean                     @default(false)
   reportFormId     Int?                        @unique
   reportForm       LocalDevelopmentAgencyForm? @relation("PlannedReportForm", fields: [reportFormId], references: [id], onDelete: SetNull)
@@ -685,64 +676,3 @@ enum FormTemplateType {
   SURVEY
 }
 
-enum ReportFrequency {
-  MONTHLY
-  QUARTERLY
-  BIANNUALLY
-  ANNUALLY
-}
-
-// Configuration for linking report templates to application templates with scheduling
-model ReportScheduleConfig {
-  id                      Int              @id @default(autoincrement())
-  
-  // The APPLICATION form template this config belongs to
-  applicationTemplateId   Int
-  applicationTemplate     FormTemplate     @relation("ApplicationReportConfigs", fields: [applicationTemplateId], references: [id], onDelete: Cascade)
-  
-  // The REPORT form template to generate
-  reportTemplateId        Int
-  reportTemplate          FormTemplate     @relation("ReportTemplateConfigs", fields: [reportTemplateId], references: [id], onDelete: Cascade)
-  
-  // Scheduling configuration
-  frequency               ReportFrequency  @default(QUARTERLY)
-  availableDaysBefore     Int              @default(14)  // Days before period end when report becomes available
-  dueDaysAfterPeriodEnd   Int              @default(0)   // Days after period end for due date (negative = before)
-  
-  active                  Boolean          @default(true)
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
-  
-  // Generated schedules for this config
-  periodSchedules         ReportPeriodSchedule[]
-  
-  @@unique([applicationTemplateId, reportTemplateId, frequency])
-}
-
-// Pre-generated schedule for each period (allows manual date adjustments)
-model ReportPeriodSchedule {
-  id                      Int                    @id @default(autoincrement())
-  
-  reportConfigId          Int
-  reportConfig            ReportScheduleConfig   @relation(fields: [reportConfigId], references: [id], onDelete: Cascade)
-  
-  year                    Int                    // e.g., 2026
-  period                  Int                    // 1-12 for monthly, 1-4 for quarterly, 1-2 for biannually, 1 for annually
-  
-  // Period boundaries
-  periodStart             DateTime
-  periodEnd               DateTime
-  
-  // Calculated dates (editable by user)
-  availableDate           DateTime
-  dueDate                 DateTime
-  
-  // Track if user has customized dates
-  isCustomized            Boolean                @default(false)
-  note                    String?                // e.g., "Holiday adjustment"
-  
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
-  
-  @@unique([reportConfigId, year, period])
-}

@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FREQUENCY_OPTIONS, statusLabel } from "@/lib/report-rule-format"
+import { FREQUENCY_OPTIONS, replannedNote, statusLabel } from "@/lib/report-rule-format"
+import { confirmSettingsReplan } from "@/lib/confirm-replan"
 
 interface Option { id: number; label: string }
 
@@ -31,13 +32,15 @@ function initialWhen(category: ReportCategory): When {
 
 const toNumber = (value: string) => (value.trim() === "" ? null : Number(value))
 
-async function send(url: string, method: string, body: unknown): Promise<boolean> {
+/** The response body when the request worked, otherwise null (and an error toast). */
+async function send(url: string, method: string, body: unknown): Promise<Record<string, unknown> | null> {
   const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+  const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const error = await response.json().catch(() => null)
-    toast.error(error?.error || "Something went wrong")
+    toast.error(data?.error || "Something went wrong")
+    return null
   }
-  return response.ok
+  return data
 }
 
 /** Set a report category's base timing: when its reports are created and when they're due. */
@@ -63,8 +66,9 @@ export function TimingDialog({
   const periodic = when !== "after"
 
   async function save() {
+    if (!(await confirmSettingsReplan(`reportCategoryId=${category.id}`))) return
     setSaving(true)
-    const ok = await send(`/api/form-category/${category.id}`, "PUT", {
+    const saved = await send(`/api/form-category/${category.id}`, "PUT", {
       reportKind: periodic ? "PERIODIC" : "AFTER_STATUS",
       reportTriggerStatusId: triggerStatusId,
       reportDueDays: periodic ? null : toNumber(dueDays),
@@ -75,8 +79,8 @@ export function TimingDialog({
       }),
     })
     setSaving(false)
-    if (ok) {
-      toast.success("Timing saved")
+    if (saved) {
+      toast.success(`Timing saved${replannedNote(saved.replanned)}`)
       onOpenChange(false)
       router.refresh()
     }
@@ -174,11 +178,12 @@ export function AttachReportDialog({
   const chosen = reportCategories.find((c) => c.id === reportCategoryId)
 
   async function save() {
+    if (!(await confirmSettingsReplan(`parentCategoryId=${parentCategory.id}`))) return
     setSaving(true)
-    const ok = await send("/api/report-rule", "POST", { parentCategoryId: parentCategory.id, reportCategoryId })
+    const attached = await send("/api/report-rule", "POST", { parentCategoryId: parentCategory.id, reportCategoryId })
     setSaving(false)
-    if (ok) {
-      toast.success("Report attached")
+    if (attached) {
+      toast.success(`Report attached${replannedNote(attached.replanned)}`)
       onOpenChange(false)
       router.refresh()
     }
